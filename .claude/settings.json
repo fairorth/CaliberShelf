@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(npx shadcn@latest *)",
+      "Bash(npx supabase *)",
+      "Bash(npx tsc *)"
+    ],
+    "deny": [
+      "Read(.env.local)"
+    ]
+  }
+}
