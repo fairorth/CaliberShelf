@@ -2,6 +2,8 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Sidebar } from "@/components/layout/sidebar"
 import { NavHeader } from "@/components/layout/nav-header"
+import { CaptureFab } from "@/components/capture-fab"
+import { IosInstallPrompt } from "@/components/ios-install-prompt"
 
 export default async function DashboardLayout({
   children,
@@ -18,7 +20,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-dvh pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <NavHeader userEmail={user.email ?? ""} />
@@ -26,6 +28,8 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
+      <CaptureFab />
+      <IosInstallPrompt />
     </div>
   )
 }

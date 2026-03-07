@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
   { href: "/collection", label: "Collection", icon: "⌚" },
+  { href: "/capture", label: "Quick Capture", icon: "📸" },
   { href: "/valuations", label: "Valuations", icon: "💰" },
   { href: "/wear-log", label: "Wear Log", icon: "📅" },
   { href: "/config", label: "Config", icon: "⚙️" },

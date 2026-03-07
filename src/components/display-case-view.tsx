@@ -11,6 +11,23 @@ interface DisplayCaseViewProps {
   displayCase: DisplayCaseWithWatches
 }
 
+// Map case cols to responsive Tailwind classes
+// Using explicit classes so Tailwind can detect them at build time
+const desktopColsClass: Record<number, string> = {
+  1: "sm:grid-cols-1",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  4: "sm:grid-cols-4",
+}
+
+// Mobile: max 3 columns for touch-friendly sizing
+const mobileColsClass: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-3", // cap at 3 on mobile
+}
+
 export function DisplayCaseView({ displayCase }: DisplayCaseViewProps) {
   const capacity = parseInt(displayCase.capacity, 10)
   const [cols] = caseSizeLayouts[displayCase.capacity] ?? [4, 2]
@@ -39,10 +56,13 @@ export function DisplayCaseView({ displayCase }: DisplayCaseViewProps) {
         <p className="text-sm text-muted-foreground">{displayCase.description}</p>
       )}
 
-      {/* Full case grid */}
+      {/* Full case grid — capped at 3 cols on mobile for touch-friendly sizes */}
       <div
-        className="grid gap-2"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        className={cn(
+          "grid gap-2",
+          mobileColsClass[cols] ?? "grid-cols-3",
+          desktopColsClass[cols] ?? "sm:grid-cols-4",
+        )}
       >
         {Array.from({ length: capacity }, (_, i) => {
           const watch = slotMap.get(i)
