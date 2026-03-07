@@ -1,9 +1,17 @@
 import { createClient } from "@/lib/supabase/server"
 import { getSignedUrls, getSignedUrl } from "@/lib/storage"
-import type { Watch, WatchWithCover, WatchWithPhotos, WatchPhoto } from "@/lib/types/watch"
+import type {
+  Watch,
+  WatchWithCover,
+  WatchWithPhotos,
+  WatchPhoto,
+  Brand,
+  Movement,
+} from "@/lib/types/watch"
 
 /**
- * Get all watches for the current user, each with its cover photo URL.
+ * Get all watches for the current user, each with its cover photo URL
+ * and joined brand/movement data.
  * Sorted by most recently updated first.
  */
 export async function getWatches(): Promise<WatchWithCover[]> {
@@ -11,7 +19,7 @@ export async function getWatches(): Promise<WatchWithCover[]> {
 
   const { data: watches, error } = await supabase
     .from("watches")
-    .select("*")
+    .select("*, brands(*), movements(*)")
     .order("updated_at", { ascending: false })
 
   if (error) {
@@ -42,28 +50,31 @@ export async function getWatches(): Promise<WatchWithCover[]> {
   const signedUrlMap = await getSignedUrls(storagePaths)
 
   // Merge cover photo URLs into watches
-  return watches.map((watch: Watch) => {
+  return watches.map((watch: Watch & { brands: Brand; movements: Movement | null }) => {
     const coverPath = coverMap.get(watch.id)
     const coverUrl = coverPath ? signedUrlMap.get(coverPath) ?? null : null
     return {
       ...watch,
       cover_photo_url: coverUrl,
+      brand: watch.brands,
+      movement: watch.movements,
     } as WatchWithCover
   })
 }
 
 /**
- * Get a single watch by ID with all its photos and signed URLs.
+ * Get a single watch by ID with all its photos, signed URLs,
+ * and joined brand/movement data.
  * Returns null if not found (RLS will also filter).
  */
 export async function getWatchById(
   id: string
-): Promise<(WatchWithPhotos & { photo_urls: Map<string, string> }) | null> {
+): Promise<(WatchWithPhotos & { photo_urls: Map<string, string>; brand: Brand; movement: Movement | null }) | null> {
   const supabase = await createClient()
 
   const { data: watch, error } = await supabase
     .from("watches")
-    .select("*, watch_photos(*)")
+    .select("*, watch_photos(*), brands(*), movements(*)")
     .eq("id", id)
     .order("display_order", { referencedTable: "watch_photos", ascending: true })
     .single()
@@ -72,7 +83,7 @@ export async function getWatchById(
     return null
   }
 
-  const typedWatch = watch as WatchWithPhotos
+  const typedWatch = watch as WatchWithPhotos & { brands: Brand; movements: Movement | null }
 
   // Generate signed URLs for all photos
   const storagePaths = typedWatch.watch_photos.map((p) => p.storage_path)
@@ -81,6 +92,8 @@ export async function getWatchById(
   return {
     ...typedWatch,
     photo_urls: photoUrls,
+    brand: typedWatch.brands,
+    movement: typedWatch.movements,
   }
 }
 

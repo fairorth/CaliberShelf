@@ -1,7 +1,8 @@
 import Link from "next/link"
 import type { Metadata } from "next"
-import { getWatches } from "@/lib/queries/watches"
-import { WatchGrid } from "@/components/watch-grid"
+import { getDisplayCasesWithWatches } from "@/lib/queries/display-cases"
+import { getBrands } from "@/lib/queries/brands"
+import { DisplayCaseCard } from "@/components/display-case-card"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -10,7 +11,12 @@ export const metadata: Metadata = {
 }
 
 export default async function DashboardPage() {
-  const watches = await getWatches()
+  const [cases, brands] = await Promise.all([
+    getDisplayCasesWithWatches(),
+    getBrands(),
+  ])
+
+  const totalWatches = cases.reduce((sum, c) => sum + c.watches.length, 0)
 
   return (
     <div className="space-y-6">
@@ -25,7 +31,17 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{watches.length}</p>
+            <p className="text-3xl font-bold">{totalWatches}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Display Cases
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{cases.length}</p>
           </CardContent>
         </Card>
         <Card>
@@ -35,37 +51,42 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">
-              {new Set(watches.map((w) => w.brand)).size}
-            </p>
+            <p className="text-3xl font-bold">{brands.length}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent watches */}
+      {/* Display cases grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Recent Watches</h2>
-          <Button variant="outline" size="sm" render={<Link href="/collection" />}>
-            View All
+          <h2 className="text-xl font-semibold">Your Display Cases</h2>
+          <Button variant="outline" size="sm" render={<Link href="/config" />}>
+            Manage Cases
           </Button>
         </div>
 
-        {watches.length === 0 ? (
+        {cases.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <span className="text-4xl">⌚</span>
-              <h3 className="mt-4 text-lg font-semibold">Start Your Collection</h3>
+              <span className="text-4xl">🗄️</span>
+              <h3 className="mt-4 text-lg font-semibold">
+                Create Your First Display Case
+              </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Add your first watch to start tracking your collection.
+                Display cases hold your watches. Create one to start organizing your
+                collection.
               </p>
-              <Button className="mt-4" render={<Link href="/collection/new" />}>
-                Add Your First Watch
+              <Button className="mt-4" render={<Link href="/config" />}>
+                Go to Config
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <WatchGrid watches={watches.slice(0, 4)} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {cases.map((displayCase) => (
+              <DisplayCaseCard key={displayCase.id} displayCase={displayCase} />
+            ))}
+          </div>
         )}
       </div>
     </div>

@@ -12,6 +12,7 @@ const navItems = [
   { href: "/collection", label: "Collection" },
   { href: "/valuations", label: "Valuations" },
   { href: "/wear-log", label: "Wear Log" },
+  { href: "/config", label: "Config" },
 ]
 
 interface NavHeaderProps {

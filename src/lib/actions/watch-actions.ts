@@ -40,12 +40,14 @@ export async function createWatch(
     .from("watches")
     .insert({
       user_id: user.id,
-      brand: data.brand,
+      brand_id: data.brand_id,
       model: data.model,
       reference_number: data.reference_number || null,
       serial_number: data.serial_number || null,
       nickname: data.nickname || null,
-      movement: data.movement || null,
+      movement_id: data.movement_id || null,
+      case_id: data.case_id,
+      case_slot: data.case_slot,
       case_material: data.case_material || null,
       case_diameter_mm: data.case_diameter_mm,
       crystal: data.crystal || null,
@@ -64,10 +66,14 @@ export async function createWatch(
     .single()
 
   if (error) {
+    if (error.code === "23505") {
+      return { error: "That case slot is already occupied. Please choose a different slot." }
+    }
     return { error: error.message }
   }
 
   revalidatePath("/collection")
+  revalidatePath("/dashboard")
   redirect(`/watch/${watch.id}`)
 }
 
@@ -100,12 +106,14 @@ export async function updateWatch(
   const { error } = await supabase
     .from("watches")
     .update({
-      brand: data.brand,
+      brand_id: data.brand_id,
       model: data.model,
       reference_number: data.reference_number || null,
       serial_number: data.serial_number || null,
       nickname: data.nickname || null,
-      movement: data.movement || null,
+      movement_id: data.movement_id || null,
+      case_id: data.case_id,
+      case_slot: data.case_slot,
       case_material: data.case_material || null,
       case_diameter_mm: data.case_diameter_mm,
       crystal: data.crystal || null,
@@ -124,10 +132,14 @@ export async function updateWatch(
     .eq("user_id", user.id) // extra safety on top of RLS
 
   if (error) {
+    if (error.code === "23505") {
+      return { error: "That case slot is already occupied. Please choose a different slot." }
+    }
     return { error: error.message }
   }
 
   revalidatePath("/collection")
+  revalidatePath("/dashboard")
   revalidatePath(`/watch/${watchId}`)
   redirect(`/watch/${watchId}`)
 }
@@ -172,5 +184,6 @@ export async function deleteWatch(watchId: string): Promise<WatchActionState> {
   }
 
   revalidatePath("/collection")
+  revalidatePath("/dashboard")
   redirect("/collection")
 }

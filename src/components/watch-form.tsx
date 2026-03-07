@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -14,25 +14,49 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  movementLabels,
   caseMaterialLabels,
   crystalLabels,
   conditionLabels,
 } from "@/lib/validations/watch"
+import { caseSizeLabels } from "@/lib/validations/display-case"
+import { BrandCombobox } from "@/components/brand-combobox"
+import { MovementCombobox } from "@/components/movement-combobox"
+import { CaseSlotPicker } from "@/components/case-slot-picker"
 import type { WatchActionState } from "@/lib/actions/watch-actions"
-import type { Watch } from "@/lib/types/watch"
+import type { Watch, Brand, Movement, DisplayCase, WatchWithCover, CaseSize } from "@/lib/types/watch"
 
 interface WatchFormProps {
   action: (prevState: WatchActionState, formData: FormData) => Promise<WatchActionState>
-  watch?: Watch
+  watch?: Watch & { brand?: Brand; movement?: Movement | null }
   submitLabel?: string
+  brands: Brand[]
+  movements: Movement[]
+  cases: DisplayCase[]
+  /** Watches in all cases (for slot picker occupied display) */
+  caseWatches?: Map<string, WatchWithCover[]>
 }
 
-export function WatchForm({ action, watch, submitLabel = "Add Watch" }: WatchFormProps) {
+export function WatchForm({
+  action,
+  watch,
+  submitLabel = "Add Watch",
+  brands,
+  movements,
+  cases,
+  caseWatches,
+}: WatchFormProps) {
   const [state, formAction, isPending] = useActionState<WatchActionState, FormData>(
     action,
     {}
   )
+
+  // Track selected case for the slot picker
+  const [selectedCaseId, setSelectedCaseId] = useState(watch?.case_id ?? "")
+
+  const selectedCase = cases.find((c) => c.id === selectedCaseId)
+  const watchesInSelectedCase = selectedCaseId
+    ? caseWatches?.get(selectedCaseId) ?? []
+    : []
 
   // Convert cents back to dollars for form default
   const purchasePriceDefault =
@@ -55,13 +79,10 @@ export function WatchForm({ action, watch, submitLabel = "Add Watch" }: WatchFor
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="brand">Brand *</Label>
-            <Input
-              id="brand"
-              name="brand"
-              placeholder="e.g. Omega"
-              defaultValue={watch?.brand ?? ""}
-              required
+            <Label>Brand *</Label>
+            <BrandCombobox
+              brands={brands}
+              defaultBrandId={watch?.brand_id}
             />
           </div>
           <div className="space-y-2">
@@ -104,27 +125,18 @@ export function WatchForm({ action, watch, submitLabel = "Add Watch" }: WatchFor
         </CardContent>
       </Card>
 
-      {/* Specifications section */}
+      {/* Movement & Specifications */}
       <Card>
         <CardHeader>
           <CardTitle>Specifications</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="movement">Movement</Label>
-            <Select name="movement" defaultValue={watch?.movement ?? ""}>
-              <SelectTrigger id="movement">
-                <SelectValue placeholder="Select movement" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">None selected</SelectItem>
-                {Object.entries(movementLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+            <Label>Movement / Caliber</Label>
+            <MovementCombobox
+              movements={movements}
+              defaultMovementId={watch?.movement_id ?? undefined}
+            />
           </div>
 
           <div className="space-y-2">
@@ -207,6 +219,59 @@ export function WatchForm({ action, watch, submitLabel = "Add Watch" }: WatchFor
               defaultValue={watch?.complication ?? ""}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Storage — display case + slot */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Storage</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="case_id">Display Case *</Label>
+              <input type="hidden" name="case_id" value={selectedCaseId} />
+              <Select
+                value={selectedCaseId}
+                onValueChange={(val) => setSelectedCaseId(val ?? "")}
+              >
+                <SelectTrigger id="case_id">
+                  <SelectValue placeholder="Select a case" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cases.length === 0 ? (
+                    <SelectItem value="" disabled>
+                      No cases — create one in Config first
+                    </SelectItem>
+                  ) : (
+                    cases.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name} ({caseSizeLabels[c.capacity] ?? c.capacity})
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {selectedCase && (
+            <div className="space-y-2">
+              <Label>Select Slot *</Label>
+              <CaseSlotPicker
+                capacity={selectedCase.capacity as CaseSize}
+                occupiedSlots={watchesInSelectedCase.map((w) => ({
+                  slot: w.case_slot,
+                  watchName: `${w.brand.name} ${w.model}`,
+                  thumbnailUrl: w.cover_photo_url,
+                }))}
+                defaultSlot={watch?.case_id === selectedCaseId ? watch.case_slot : undefined}
+                excludeWatchId={watch?.id}
+                watches={watchesInSelectedCase}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

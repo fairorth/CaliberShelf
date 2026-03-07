@@ -16,10 +16,10 @@ import {
 } from "@/components/ui/alert-dialog"
 import { deleteWatch } from "@/lib/actions/watch-actions"
 import { toast } from "sonner"
-import type { Watch } from "@/lib/types/watch"
+import type { Watch, Brand } from "@/lib/types/watch"
 
 interface WatchDetailHeaderProps {
-  watch: Watch
+  watch: Watch & { brand: Brand }
 }
 
 export function WatchDetailHeader({ watch }: WatchDetailHeaderProps) {
@@ -43,7 +43,7 @@ export function WatchDetailHeader({ watch }: WatchDetailHeaderProps) {
         </Button>
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            {watch.brand}
+            {watch.brand.name}
           </p>
           <h1 className="text-2xl font-bold tracking-tight">
             {watch.nickname || watch.model}
@@ -63,7 +63,7 @@ export function WatchDetailHeader({ watch }: WatchDetailHeaderProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete this watch?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete &quot;{watch.brand} {watch.model}&quot;
+                This will permanently delete &quot;{watch.brand.name} {watch.model}&quot;
                 and all its photos. This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>

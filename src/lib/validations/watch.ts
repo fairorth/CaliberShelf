@@ -44,9 +44,18 @@ export const watchConditionSchema = z.enum([
 
 // Main watch form schema — validates user input for create/update
 export const watchFormSchema = z.object({
-  // Required fields
-  brand: z.string().min(1, "Brand is required"),
+  // Required FK fields
+  brand_id: z.string().min(1, "Brand is required"),
   model: z.string().min(1, "Model is required"),
+  case_id: z.string().min(1, "Display case is required"),
+  case_slot: z
+    .string()
+    .min(1, "Case slot is required")
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().min(0)),
+
+  // Optional FK
+  movement_id: z.string().optional().default(""),
 
   // Optional text fields
   reference_number: z.string().optional().default(""),
@@ -57,7 +66,6 @@ export const watchFormSchema = z.object({
   notes: z.string().optional().default(""),
 
   // Optional enum fields (empty string = null in the database)
-  movement: z.union([movementTypeSchema, z.literal("")]).optional().default(""),
   case_material: z.union([caseMaterialSchema, z.literal("")]).optional().default(""),
   crystal: z.union([crystalTypeSchema, z.literal("")]).optional().default(""),
   condition: z.union([watchConditionSchema, z.literal("")]).optional().default(""),

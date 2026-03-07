@@ -1,15 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { formatCurrency } from "@/lib/utils"
 import {
-  movementLabels,
   caseMaterialLabels,
   crystalLabels,
   conditionLabels,
+  movementLabels,
 } from "@/lib/validations/watch"
-import type { Watch } from "@/lib/types/watch"
+import type { Watch, Brand, Movement } from "@/lib/types/watch"
 
 interface WatchSpecsProps {
-  watch: Watch
+  watch: Watch & { brand: Brand; movement: Movement | null }
 }
 
 function SpecRow({ label, value }: { label: string; value: string | null | undefined }) {
@@ -23,6 +24,8 @@ function SpecRow({ label, value }: { label: string; value: string | null | undef
 }
 
 export function WatchSpecs({ watch }: WatchSpecsProps) {
+  const movement = watch.movement
+
   return (
     <div className="space-y-4">
       {/* Identity */}
@@ -31,7 +34,7 @@ export function WatchSpecs({ watch }: WatchSpecsProps) {
           <CardTitle className="text-base">Details</CardTitle>
         </CardHeader>
         <CardContent className="divide-y">
-          <SpecRow label="Brand" value={watch.brand} />
+          <SpecRow label="Brand" value={watch.brand.name} />
           <SpecRow label="Model" value={watch.model} />
           {watch.nickname && <SpecRow label="Nickname" value={watch.nickname} />}
           <SpecRow label="Reference" value={watch.reference_number} />
@@ -39,8 +42,62 @@ export function WatchSpecs({ watch }: WatchSpecsProps) {
         </CardContent>
       </Card>
 
-      {/* Specs */}
-      {(watch.movement || watch.case_material || watch.crystal ||
+      {/* Movement / Caliber */}
+      {movement && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base">Movement</CardTitle>
+              <Badge variant="secondary" className="text-xs">
+                {movementLabels[movement.movement_type] ?? movement.movement_type}
+              </Badge>
+              {movement.user_id === null && (
+                <span className="text-xs text-muted-foreground" title="System caliber">🌐</span>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="divide-y">
+            <SpecRow label="Caliber" value={movement.caliber_name} />
+            <SpecRow label="Manufacturer" value={movement.manufacturer} />
+            {movement.base_caliber && (
+              <SpecRow label="Base Caliber" value={movement.base_caliber} />
+            )}
+            <SpecRow
+              label="Jewels"
+              value={movement.jewel_count !== null ? `${movement.jewel_count}` : null}
+            />
+            <SpecRow
+              label="Beat Rate"
+              value={movement.beat_rate_vph !== null ? `${movement.beat_rate_vph.toLocaleString()} vph` : null}
+            />
+            <SpecRow
+              label="Power Reserve"
+              value={movement.power_reserve_hours !== null ? `${movement.power_reserve_hours}h` : null}
+            />
+            <SpecRow
+              label="Dimensions"
+              value={
+                movement.diameter_mm !== null
+                  ? `${movement.diameter_mm}mm × ${movement.height_mm ?? "?"}mm`
+                  : null
+              }
+            />
+            {/* Feature badges */}
+            {(movement.hacking || movement.hand_windable || movement.quickset_date) && (
+              <div className="flex flex-wrap gap-1 pt-2">
+                {movement.hacking && <Badge variant="outline" className="text-xs">Hacking</Badge>}
+                {movement.hand_windable && <Badge variant="outline" className="text-xs">Hand Wind</Badge>}
+                {movement.quickset_date && <Badge variant="outline" className="text-xs">Quickset Date</Badge>}
+              </div>
+            )}
+            <SpecRow label="Complications" value={movement.complications} />
+            <SpecRow label="Country" value={movement.country_of_origin} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Physical Specs */}
+      {(watch.case_material || watch.crystal ||
         watch.case_diameter_mm || watch.water_resistance_m ||
         watch.dial_color || watch.complication) && (
         <Card>
@@ -48,10 +105,6 @@ export function WatchSpecs({ watch }: WatchSpecsProps) {
             <CardTitle className="text-base">Specifications</CardTitle>
           </CardHeader>
           <CardContent className="divide-y">
-            <SpecRow
-              label="Movement"
-              value={watch.movement ? movementLabels[watch.movement] : null}
-            />
             <SpecRow
               label="Case Material"
               value={watch.case_material ? caseMaterialLabels[watch.case_material] : null}

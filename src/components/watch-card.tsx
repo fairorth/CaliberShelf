@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn, formatCurrency } from "@/lib/utils"
-import { conditionLabels, movementLabels } from "@/lib/validations/watch"
+import { conditionLabels } from "@/lib/validations/watch"
 import type { WatchWithCover } from "@/lib/types/watch"
 
 interface WatchCardProps {
@@ -21,7 +21,7 @@ export function WatchCard({ watch }: WatchCardProps) {
           {watch.cover_photo_url ? (
             <Image
               src={watch.cover_photo_url}
-              alt={`${watch.brand} ${watch.model}`}
+              alt={`${watch.brand.name} ${watch.model}`}
               fill
               className="object-cover transition-transform group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -37,7 +37,7 @@ export function WatchCard({ watch }: WatchCardProps) {
           {/* Brand & model */}
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {watch.brand}
+              {watch.brand.name}
             </p>
             <h3 className="font-semibold leading-tight">
               {watch.nickname || watch.model}
@@ -51,7 +51,7 @@ export function WatchCard({ watch }: WatchCardProps) {
           <div className="flex flex-wrap gap-1.5">
             {watch.movement && (
               <Badge variant="secondary" className="text-xs">
-                {movementLabels[watch.movement] ?? watch.movement}
+                {watch.movement.caliber_name}
               </Badge>
             )}
             {watch.condition && (
