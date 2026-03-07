@@ -8,6 +8,7 @@ import { signOut } from "@/lib/actions/auth-actions"
 import { cn } from "@/lib/utils"
 
 const navItems = [
+  { href: "/collection", label: "Collection", icon: "📋" },
   { href: "/wear-log", label: "Wear Log", icon: "📅" },
   { href: "/reports", label: "Reports", icon: "📊" },
   { href: "/config", label: "Config", icon: "⚙️" },
