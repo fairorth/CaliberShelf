@@ -1,4 +1,4 @@
-# WatchTracker
+# CaliberShelf
 
 A personal watch collection tracking app built with Next.js 15 (App Router), Supabase, Tailwind CSS, and shadcn/ui.
 
@@ -31,6 +31,11 @@ A personal watch collection tracking app built with Next.js 15 (App Router), Sup
 - Store money as BIGINT cents to avoid floating-point issues
 - One component per file; import directly (no barrel exports)
 
+## Zod v4 Notes
+- This project uses Zod v4 (package `zod@^4.x`)
+- Use `.issues` not `.errors` on ZodError (e.g., `parsed.error.issues[0].message`)
+- Schema inference: `z.infer<typeof schema>` works the same as v3
+
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000
 - `npm run build` - Production build
@@ -45,3 +50,4 @@ A personal watch collection tracking app built with Next.js 15 (App Router), Sup
 - RLS policies protect all data at the database level
 - After creating a new migration, regenerate database types
 - Use `revalidatePath()` in Server Actions after mutations
+- NEVER edit `package-lock.json` or `next-env.d.ts` manually

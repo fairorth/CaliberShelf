@@ -1,6 +1,6 @@
 ---
 name: add-feature
-description: Plan and implement a new feature end-to-end following WatchTracker conventions
+description: Plan and implement a new feature end-to-end following CaliberShelf conventions
 user-invocable: true
 argument-hint: [feature-description]
 ---

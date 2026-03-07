@@ -27,7 +27,17 @@ export default async function WatchPage({
 ## Mutations Pattern
 - All mutations use Server Actions from `src/lib/actions/`
 - Server Actions call `revalidatePath()` to refresh data after mutations
-- Forms call server actions directly or via `useTransition` + `startTransition`
+- Forms use `useActionState` (React 19) for Server Action integration:
+```tsx
+"use client"
+import { useActionState } from "react"
+import { myAction } from "@/lib/actions/my-actions"
+import type { MyState } from "@/lib/actions/my-actions"
+
+const [state, formAction, isPending] = useActionState<MyState, FormData>(myAction, {})
+// Use: <form action={formAction}>
+```
+- NOTE: `useActionState` replaces the deprecated `useFormState` from `react-dom`
 
 ## Route Groups
 - `(auth)` - Unauthenticated pages (login, signup). No sidebar or nav.

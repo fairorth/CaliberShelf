@@ -1,6 +1,6 @@
 ---
 name: new-component
-description: Create a new React component following WatchTracker conventions
+description: Create a new React component following CaliberShelf conventions
 user-invocable: true
 argument-hint: [ComponentName] [client|server]
 ---

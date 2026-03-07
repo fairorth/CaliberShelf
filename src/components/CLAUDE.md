@@ -4,6 +4,8 @@
 - Components in `ui/` are managed by `npx shadcn@latest add <name>` — do not create manually
 - Customizing a shadcn component: edit the file in `ui/` directly (they are project-owned)
 - Import shadcn components from `@/components/ui/<name>`
+- Use `sonner` for toasts (the `toast` component is deprecated in shadcn/ui v4)
+- NEVER manually edit `package-lock.json` — use npm commands instead
 
 ## Shared Components
 - Use named exports: `export function WatchForm() {}`
