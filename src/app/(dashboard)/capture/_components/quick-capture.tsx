@@ -60,18 +60,22 @@ export function QuickCapture({ watches }: QuickCaptureProps) {
     formData.set("photo", capturedFile)
 
     startTransition(async () => {
-      const result = await uploadWatchPhoto(selectedWatch.id, formData)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success("Photo uploaded!")
-        setUploadedWatchId(selectedWatch.id)
-        // Clean up
-        if (previewUrl) URL.revokeObjectURL(previewUrl)
-        setCapturedFile(null)
-        setPreviewUrl(null)
-        setSelectedWatch(null)
-        setStep("capture")
+      try {
+        const result = await uploadWatchPhoto(selectedWatch.id, formData)
+        if (result.error) {
+          toast.error(result.error)
+        } else {
+          toast.success("Photo uploaded!")
+          setUploadedWatchId(selectedWatch.id)
+          // Clean up
+          if (previewUrl) URL.revokeObjectURL(previewUrl)
+          setCapturedFile(null)
+          setPreviewUrl(null)
+          setSelectedWatch(null)
+          setStep("capture")
+        }
+      } catch {
+        toast.error("Upload failed. The photo may be too large — try a smaller image.")
       }
     })
   }

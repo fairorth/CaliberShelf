@@ -37,11 +37,15 @@ export function PhotoUploader({ watchId }: PhotoUploaderProps) {
       formData.set("photo", file)
 
       startTransition(async () => {
-        const result = await uploadWatchPhoto(watchId, formData)
-        if (result.error) {
-          toast.error(result.error)
-        } else {
-          toast.success("Photo uploaded!")
+        try {
+          const result = await uploadWatchPhoto(watchId, formData)
+          if (result.error) {
+            toast.error(result.error)
+          } else {
+            toast.success("Photo uploaded!")
+          }
+        } catch {
+          toast.error("Upload failed. The photo may be too large — try a smaller image.")
         }
         setPreview(null)
         // Reset file inputs
