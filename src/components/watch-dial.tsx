@@ -3,6 +3,7 @@
 import { useEffect, useRef, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { CaliberShelfLogo } from "@/components/calibershelf-logo"
 import { DialCaseMarker } from "@/components/dial-case-marker"
 import { Button } from "@/components/ui/button"
 import type { DisplayCaseWithWatches } from "@/lib/types/watch"
@@ -220,11 +221,20 @@ export function WatchDial({ cases, totalWatches }: WatchDialProps) {
         />
       </div>
 
-      {/* Layer 6: Center content */}
+      {/* Layer 6: Brand logo — positioned below 12 o'clock like a luxury dial */}
+      <div
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2"
+        style={{ top: "18%" }}
+      >
+        <CaliberShelfLogo size={40} className="opacity-70 sm:hidden" />
+        <CaliberShelfLogo size={56} className="hidden opacity-70 sm:block" />
+      </div>
+
+      {/* Layer 7: Center content — brand name + stats */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="pointer-events-auto flex flex-col items-center gap-1 text-center">
+        <div className="pointer-events-auto flex flex-col items-center gap-0.5 text-center">
           <span
-            className="text-[10px] font-light uppercase tracking-[0.25em] text-[oklch(0.65_0.02_85)] sm:text-xs"
+            className="text-[9px] font-light uppercase tracking-[0.3em] text-[oklch(0.65_0.02_85)] sm:text-[11px]"
             style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
           >
             CaliberShelf
@@ -232,7 +242,7 @@ export function WatchDial({ cases, totalWatches }: WatchDialProps) {
 
           {totalWatches > 0 ? (
             <span
-              className="text-[9px] text-[oklch(0.5_0.02_85)] sm:text-[10px]"
+              className="text-[8px] text-[oklch(0.5_0.02_85)] sm:text-[10px]"
               style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
             >
               {totalWatches} {totalWatches === 1 ? "watch" : "watches"}
@@ -248,7 +258,7 @@ export function WatchDial({ cases, totalWatches }: WatchDialProps) {
             </Button>
           ) : (
             <span
-              className="text-[9px] text-[oklch(0.5_0.02_85)] sm:text-[10px]"
+              className="text-[8px] text-[oklch(0.5_0.02_85)] sm:text-[10px]"
               style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
             >
               {cases.length} {cases.length === 1 ? "case" : "cases"}
