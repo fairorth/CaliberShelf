@@ -98,6 +98,18 @@ export const watchFormSchema = z.object({
 export type WatchFormValues = z.input<typeof watchFormSchema>
 export type WatchFormParsed = z.output<typeof watchFormSchema>
 
+// Minimal schema for the camera-first "Add Watch" mobile flow
+export const quickAddSchema = z.object({
+  brand_id: z.string().min(1, "Brand is required"),
+  model: z.string().min(1, "Model is required"),
+  case_id: z.string().min(1, "Display case is required"),
+  case_slot: z
+    .string()
+    .min(1, "Case slot is required")
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().min(0)),
+})
+
 // Display labels for enum values
 export const movementLabels: Record<string, string> = {
   automatic: "Automatic",

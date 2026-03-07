@@ -38,8 +38,8 @@ export function WatchDetailHeader({ watch }: WatchDetailHeaderProps) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" render={<Link href="/collection" />}>
-          &larr; Back
+        <Button variant="ghost" size="sm" render={<Link href="/dashboard" />}>
+          &larr; Gallery
         </Button>
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">

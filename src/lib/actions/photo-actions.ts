@@ -48,7 +48,7 @@ export async function uploadWatchPhoto(
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    return { error: "File must be smaller than 5MB." }
+    return { error: "File must be smaller than 10MB." }
   }
 
   if (!ALLOWED_TYPES.includes(file.type)) {
@@ -201,6 +201,6 @@ export async function setCoverPhoto(
   }
 
   revalidatePath(`/watch/${watchId}`)
-  revalidatePath("/collection")
+  revalidatePath("/dashboard")
   return { success: true }
 }

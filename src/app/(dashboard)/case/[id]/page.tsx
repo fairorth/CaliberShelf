@@ -33,7 +33,7 @@ export default async function CaseDetailPage({
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" render={<Link href="/dashboard" />}>
-          &larr; Back
+          &larr; Gallery
         </Button>
         <Button variant="outline" size="sm" render={<Link href="/config" />}>
           Edit Case

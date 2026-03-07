@@ -31,8 +31,8 @@ export default async function NewWatchPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" render={<Link href="/collection" />}>
-          &larr; Back
+        <Button variant="ghost" size="sm" render={<Link href="/dashboard" />}>
+          &larr; Gallery
         </Button>
         <h1 className="text-2xl font-bold tracking-tight">Add a Watch</h1>
       </div>

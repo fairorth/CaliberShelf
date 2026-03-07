@@ -127,3 +127,33 @@
     @apply font-sans;
   }
 }
+
+/* 3D Display Case — glass shine animation */
+@keyframes glassShine {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.glass-shine {
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.12) 45%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.12) 55%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: glassShine 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-shine {
+    animation: none;
+    background: rgba(255, 255, 255, 0.06);
+  }
+}

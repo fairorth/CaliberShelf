@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { watchFormSchema } from "@/lib/validations/watch"
+import { watchFormSchema, quickAddSchema } from "@/lib/validations/watch"
+import { buildStoragePath } from "@/lib/storage"
 import { dollarsToCents } from "@/lib/utils"
 
 export type WatchActionState = {
@@ -72,7 +73,6 @@ export async function createWatch(
     return { error: error.message }
   }
 
-  revalidatePath("/collection")
   revalidatePath("/dashboard")
   redirect(`/watch/${watch.id}`)
 }
@@ -138,7 +138,6 @@ export async function updateWatch(
     return { error: error.message }
   }
 
-  revalidatePath("/collection")
   revalidatePath("/dashboard")
   revalidatePath(`/watch/${watchId}`)
   redirect(`/watch/${watchId}`)
@@ -183,7 +182,93 @@ export async function deleteWatch(watchId: string): Promise<WatchActionState> {
     return { error: error.message }
   }
 
-  revalidatePath("/collection")
   revalidatePath("/dashboard")
-  redirect("/collection")
+  redirect("/dashboard")
+}
+
+const PHOTO_BUCKET = "watch-photos"
+const PHOTO_MAX_SIZE = 10 * 1024 * 1024 // 10MB
+const PHOTO_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"]
+
+/**
+ * Create a watch with an optional photo in one action.
+ * Used by the camera-first "Add Watch" mobile flow.
+ */
+export async function createWatchWithPhoto(
+  formData: FormData
+): Promise<WatchActionState> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: "You must be logged in to add a watch." }
+  }
+
+  // Parse form fields (minimal schema)
+  const raw = Object.fromEntries(formData.entries())
+  const parsed = quickAddSchema.safeParse(raw)
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message }
+  }
+
+  const data = parsed.data
+
+  // Insert the watch
+  const { data: watch, error } = await supabase
+    .from("watches")
+    .insert({
+      user_id: user.id,
+      brand_id: data.brand_id,
+      model: data.model,
+      case_id: data.case_id,
+      case_slot: data.case_slot,
+    })
+    .select("id")
+    .single()
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "That case slot is already occupied. Please choose a different slot." }
+    }
+    return { error: error.message }
+  }
+
+  // Handle photo upload if present
+  const photo = formData.get("photo") as File | null
+  if (photo && photo.size > 0) {
+    if (photo.size > PHOTO_MAX_SIZE) {
+      // Watch created, but photo too large — still redirect
+      revalidatePath("/dashboard")
+      redirect(`/watch/${watch.id}`)
+    }
+
+    if (PHOTO_ALLOWED_TYPES.includes(photo.type)) {
+      const ext = photo.name.split(".").pop() ?? "jpg"
+      const uniqueName = `${crypto.randomUUID()}.${ext}`
+      const storagePath = buildStoragePath(user.id, watch.id, uniqueName)
+
+      const { error: uploadError } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .upload(storagePath, photo, {
+          contentType: photo.type,
+          upsert: false,
+        })
+
+      if (!uploadError) {
+        await supabase.from("watch_photos").insert({
+          watch_id: watch.id,
+          user_id: user.id,
+          storage_path: storagePath,
+          display_order: 0,
+          is_cover: true,
+        })
+      }
+    }
+  }
+
+  revalidatePath("/dashboard")
+  redirect(`/watch/${watch.id}`)
 }

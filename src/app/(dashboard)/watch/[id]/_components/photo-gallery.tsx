@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { deleteWatchPhoto, setCoverPhoto } from "@/lib/actions/photo-actions"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 import type { WatchPhoto } from "@/lib/types/watch"
 
 interface PhotoGalleryProps {
@@ -26,7 +27,9 @@ interface PhotoGalleryProps {
 }
 
 export function PhotoGallery({ photos, photoUrls, watchId }: PhotoGalleryProps) {
-  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [selectedId, setSelectedId] = useState<string | null>(
+    photos[0]?.id ?? null
+  )
   const [isPending, startTransition] = useTransition()
 
   if (photos.length === 0) {
@@ -40,10 +43,7 @@ export function PhotoGallery({ photos, photoUrls, watchId }: PhotoGalleryProps) 
     )
   }
 
-  const selectedPhoto = photos[selectedIndex]
-  const selectedUrl = selectedPhoto
-    ? photoUrls[selectedPhoto.storage_path]
-    : undefined
+  const selectedPhoto = photos.find((p) => p.id === selectedId) ?? photos[0]
 
   function handleDelete(photoId: string) {
     startTransition(async () => {
@@ -52,9 +52,9 @@ export function PhotoGallery({ photos, photoUrls, watchId }: PhotoGalleryProps) 
         toast.error(result.error)
       } else {
         toast.success("Photo deleted")
-        if (selectedIndex >= photos.length - 1 && selectedIndex > 0) {
-          setSelectedIndex(selectedIndex - 1)
-        }
+        // Select the first remaining photo
+        const remaining = photos.filter((p) => p.id !== photoId)
+        setSelectedId(remaining[0]?.id ?? null)
       }
     })
   }
@@ -70,32 +70,111 @@ export function PhotoGallery({ photos, photoUrls, watchId }: PhotoGalleryProps) 
     })
   }
 
+  // Single photo — just show it large
+  if (photos.length === 1) {
+    const url = photoUrls[photos[0].storage_path]
+    return (
+      <div className="space-y-3">
+        <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+          {url ? (
+            <Image
+              src={url}
+              alt="Watch photo"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-muted-foreground">
+              Loading...
+            </div>
+          )}
+          {photos[0].is_cover && (
+            <Badge className="absolute left-2 top-2">Cover</Badge>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger render={<Button variant="destructive" size="sm" disabled={isPending} />}>
+              Delete
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this photo?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently remove the photo. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => handleDelete(photos[0].id)}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    )
+  }
+
+  // Multi-photo — 2-column grid with hero
   return (
     <div className="space-y-3">
-      {/* Main image */}
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
-        {selectedUrl ? (
-          <Image
-            src={selectedUrl}
-            alt="Watch photo"
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-            priority
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-muted-foreground">
-            Loading...
-          </div>
-        )}
-        {selectedPhoto?.is_cover && (
-          <Badge className="absolute left-2 top-2">Cover</Badge>
-        )}
+      {/* Photo grid: first image is hero (2×2), rest fill in */}
+      <div className="grid grid-cols-2 gap-2">
+        {photos.map((photo, index) => {
+          const url = photoUrls[photo.storage_path]
+          const isHero = index === 0
+          const isSelected = photo.id === selectedPhoto?.id
+
+          return (
+            <button
+              key={photo.id}
+              type="button"
+              onClick={() => setSelectedId(photo.id)}
+              className={cn(
+                "relative overflow-hidden rounded-lg bg-muted transition-all",
+                isHero ? "col-span-2 row-span-2 aspect-square" : "aspect-square",
+                isSelected
+                  ? "ring-2 ring-primary ring-offset-2"
+                  : "ring-1 ring-transparent hover:ring-muted-foreground/30"
+              )}
+            >
+              {url ? (
+                <Image
+                  src={url}
+                  alt={`Watch photo ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes={
+                    isHero
+                      ? "(max-width: 768px) 100vw, 50vw"
+                      : "(max-width: 768px) 50vw, 25vw"
+                  }
+                  priority={isHero}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-muted-foreground">
+                  Loading...
+                </div>
+              )}
+              {photo.is_cover && (
+                <Badge className="absolute left-2 top-2 text-[10px]">Cover</Badge>
+              )}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Photo actions */}
+      {/* Actions for selected photo */}
       {selectedPhoto && (
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            Selected: Photo {photos.indexOf(selectedPhoto) + 1}
+          </span>
+          <div className="flex-1" />
           {!selectedPhoto.is_cover && (
             <Button
               variant="outline"
@@ -119,46 +198,12 @@ export function PhotoGallery({ photos, photoUrls, watchId }: PhotoGalleryProps) 
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => handleDelete(selectedPhoto.id)}
-                >
+                <AlertDialogAction onClick={() => handleDelete(selectedPhoto.id)}>
                   Delete
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </div>
-      )}
-
-      {/* Thumbnails */}
-      {photos.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {photos.map((photo, index) => {
-            const url = photoUrls[photo.storage_path]
-            return (
-              <button
-                key={photo.id}
-                onClick={() => setSelectedIndex(index)}
-                className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
-                  index === selectedIndex
-                    ? "border-primary"
-                    : "border-transparent hover:border-muted-foreground/30"
-                }`}
-              >
-                {url ? (
-                  <Image
-                    src={url}
-                    alt={`Thumbnail ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="64px"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-muted" />
-                )}
-              </button>
-            )
-          })}
         </div>
       )}
     </div>
