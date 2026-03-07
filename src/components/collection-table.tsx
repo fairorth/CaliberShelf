@@ -38,7 +38,7 @@ export function CollectionTable({ watches }: CollectionTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px]">Photo</TableHead>
+                <TableHead className="w-[208px]">Photo</TableHead>
                 <TableHead>Brand</TableHead>
                 <TableHead>Model</TableHead>
                 <TableHead>Movement Type</TableHead>
@@ -50,17 +50,17 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                 <TableRow key={watch.id} className="group">
                   <TableCell>
                     <Link href={`/watch/${watch.id}`} className="block">
-                      <div className="relative h-16 w-16 overflow-hidden rounded-md bg-muted">
+                      <div className="relative h-48 w-48 overflow-hidden rounded-md bg-muted">
                         {watch.cover_photo_url ? (
                           <Image
                             src={watch.cover_photo_url}
                             alt={`${watch.brand.name} ${watch.model}`}
                             fill
                             className="object-cover transition-transform group-hover:scale-105"
-                            sizes="80px"
+                            sizes="192px"
                           />
                         ) : (
-                          <div className="flex h-full items-center justify-center text-lg text-muted-foreground">
+                          <div className="flex h-full items-center justify-center text-4xl text-muted-foreground">
                             ⌚
                           </div>
                         )}
@@ -108,17 +108,17 @@ export function CollectionTable({ watches }: CollectionTableProps) {
             href={`/watch/${watch.id}`}
             className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent"
           >
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
+            <div className="relative h-[168px] w-[168px] shrink-0 overflow-hidden rounded-md bg-muted">
               {watch.cover_photo_url ? (
                 <Image
                   src={watch.cover_photo_url}
                   alt={`${watch.brand.name} ${watch.model}`}
                   fill
                   className="object-cover"
-                  sizes="56px"
+                  sizes="168px"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-lg text-muted-foreground">
+                <div className="flex h-full items-center justify-center text-4xl text-muted-foreground">
                   ⌚
                 </div>
               )}
