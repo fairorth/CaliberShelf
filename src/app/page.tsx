@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
       <div className="text-center space-y-6">
-        <h1 className="text-5xl font-bold tracking-tight">WatchTracker</h1>
+        <h1 className="text-5xl font-bold tracking-tight">CaliberShelf</h1>
         <p className="text-xl text-muted-foreground max-w-md">
           Track, manage, and showcase your watch collection.
         </p>

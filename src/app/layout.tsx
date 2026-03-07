@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "WatchTracker",
+  title: "CaliberShelf",
   description: "Track and showcase your watch collection",
 }
 
