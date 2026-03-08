@@ -89,6 +89,47 @@ export async function deleteBrand(brandId: string): Promise<BrandActionState> {
 }
 
 /**
+ * Update a brand's name and country.
+ */
+export async function updateBrand(
+  brandId: string,
+  data: { name: string; country_of_origin: string }
+): Promise<BrandActionState> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: "You must be logged in." }
+  }
+
+  const parsed = brandFormSchema.safeParse(data)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message }
+  }
+
+  const { error } = await supabase
+    .from("brands")
+    .update({
+      name: parsed.data.name,
+      country_of_origin: parsed.data.country_of_origin || null,
+    })
+    .eq("id", brandId)
+    .eq("user_id", user.id)
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "A brand with this name already exists." }
+    }
+    return { error: error.message }
+  }
+
+  revalidatePath("/config")
+  return { success: true }
+}
+
+/**
  * Create a brand from the config form.
  */
 export async function createBrand(

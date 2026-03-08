@@ -252,7 +252,11 @@ export function WatchForm({
               onValueChange={(val) => setSelectedCategoryId(val ?? "")}
             >
               <SelectTrigger id="category_select">
-                <SelectValue placeholder="Select a category" />
+                <span>
+                  {selectedCategoryId
+                    ? categories.find((c) => c.id === selectedCategoryId)?.name ?? "Select a category"
+                    : "Select a category"}
+                </span>
               </SelectTrigger>
               <SelectContent>
                 {categories.length === 0 ? (

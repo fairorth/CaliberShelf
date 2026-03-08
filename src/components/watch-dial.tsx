@@ -1,16 +1,13 @@
 "use client"
 
 import { useEffect, useRef, useSyncExternalStore } from "react"
-import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { CaliberShelfLogo } from "@/components/calibershelf-logo"
 import { DialCategoryMarker } from "@/components/dial-category-marker"
-import { Button } from "@/components/ui/button"
 import type { CategoryWithWatches } from "@/lib/types/watch"
 
 interface WatchDialProps {
   categories: CategoryWithWatches[]
-  totalWatches: number
 }
 
 /** Compute hour and minute hand angles from current time */
@@ -71,7 +68,7 @@ const POSITIONS = Array.from({ length: 12 }, (_, i) => {
   }
 })
 
-export function WatchDial({ categories, totalWatches }: WatchDialProps) {
+export function WatchDial({ categories }: WatchDialProps) {
   const hands = useSyncExternalStore(subscribeHands, getHandsSnapshot, getHandsServerSnapshot)
   const secondHandRef = useRef<HTMLDivElement>(null)
 
@@ -83,16 +80,18 @@ export function WatchDial({ categories, totalWatches }: WatchDialProps) {
     }
   }, [])
 
-  // Map categories to dial positions (ordered by display_order, max 12)
+  // Map categories to dial positions by their explicit display_order (0-11)
   const categoryPositions = new Map<number, CategoryWithWatches>()
-  categories.slice(0, 12).forEach((c, i) => {
-    categoryPositions.set(i, c)
-  })
+  for (const c of categories) {
+    if (c.display_order >= 0 && c.display_order <= 11) {
+      categoryPositions.set(c.display_order, c)
+    }
+  }
 
   return (
     <div
       role="navigation"
-      aria-label="Display cases"
+      aria-label="Watch categories"
       className="relative mx-auto aspect-square w-[85vw] max-w-[600px]"
     >
       {/* Layer 1: Outer bezel — brushed steel */}
@@ -139,14 +138,10 @@ export function WatchDial({ categories, totalWatches }: WatchDialProps) {
             }}
           >
             {category ? (
-              <DialCategoryMarker
-                category={category}
-                hourPosition={pos.hourLabel}
-              />
+              <DialCategoryMarker category={category} />
             ) : (
               /* Empty tick mark — gold index pointing at center */
               <div
-                className="flex flex-col items-center gap-0.5"
                 aria-hidden="true"
               >
                 <div
@@ -155,9 +150,6 @@ export function WatchDial({ categories, totalWatches }: WatchDialProps) {
                     transform: `rotate(${pos.tickRotation}deg)`,
                   }}
                 />
-                <span className="text-[8px] font-light text-[oklch(0.85_0.03_85)]/40 sm:text-[10px]">
-                  {pos.hourLabel}
-                </span>
               </div>
             )}
           </div>
@@ -221,50 +213,19 @@ export function WatchDial({ categories, totalWatches }: WatchDialProps) {
         />
       </div>
 
-      {/* Layer 6: Brand logo — positioned below 12 o'clock like a luxury dial */}
+      {/* Layer 6: Brand logo + name — grouped above center */}
       <div
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2"
-        style={{ top: "18%" }}
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
+        style={{ top: "26%" }}
       >
-        <CaliberShelfLogo size={40} className="opacity-70 sm:hidden" />
-        <CaliberShelfLogo size={56} className="hidden opacity-70 sm:block" />
-      </div>
-
-      {/* Layer 7: Center content — brand name + stats */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="pointer-events-auto flex flex-col items-center gap-0.5 text-center">
-          <span
-            className="text-[9px] font-light uppercase tracking-[0.3em] text-[oklch(0.65_0.02_85)] sm:text-[11px]"
-            style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
-          >
-            CaliberShelf
-          </span>
-
-          {totalWatches > 0 ? (
-            <span
-              className="text-[8px] text-[oklch(0.5_0.02_85)] sm:text-[10px]"
-              style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
-            >
-              {totalWatches} {totalWatches === 1 ? "watch" : "watches"}
-            </span>
-          ) : categories.length === 0 ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-1 h-7 border-[oklch(0.85_0.03_85)]/30 bg-transparent text-[10px] text-[oklch(0.85_0.03_85)]/80 hover:bg-[oklch(0.85_0.03_85)]/10 sm:text-xs"
-              render={<Link href="/config" />}
-            >
-              Create your first category
-            </Button>
-          ) : (
-            <span
-              className="text-[8px] text-[oklch(0.5_0.02_85)] sm:text-[10px]"
-              style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
-            >
-              {categories.length} {categories.length === 1 ? "category" : "categories"}
-            </span>
-          )}
-        </div>
+        <CaliberShelfLogo size={36} className="opacity-70 sm:hidden" />
+        <CaliberShelfLogo size={48} className="hidden opacity-70 sm:block" />
+        <span
+          className="text-[9px] font-light uppercase tracking-[0.3em] text-[oklch(0.65_0.02_85)] sm:text-[11px]"
+          style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
+        >
+          CaliberShelf
+        </span>
       </div>
     </div>
   )

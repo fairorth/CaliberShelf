@@ -8,11 +8,10 @@ export const metadata: Metadata = {
 
 export default async function GalleryPage() {
   const categories = await getCategoriesWithWatches()
-  const totalWatches = categories.reduce((sum, c) => sum + c.watches.length, 0)
 
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] items-center justify-center py-4">
-      <WatchDial categories={categories} totalWatches={totalWatches} />
+      <WatchDial categories={categories} />
     </div>
   )
 }

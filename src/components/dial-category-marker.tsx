@@ -7,10 +7,9 @@ import type { CategoryWithWatches } from "@/lib/types/watch"
 
 interface DialCategoryMarkerProps {
   category: CategoryWithWatches
-  hourPosition: number // 1-12
 }
 
-export function DialCategoryMarker({ category, hourPosition }: DialCategoryMarkerProps) {
+export function DialCategoryMarker({ category }: DialCategoryMarkerProps) {
   const watchCount = category.watches.length
   const firstPhoto = category.watches.find((w) => w.cover_photo_url)?.cover_photo_url
 
@@ -26,7 +25,7 @@ export function DialCategoryMarker({ category, hourPosition }: DialCategoryMarke
       {/* Circular marker */}
       <div
         className={cn(
-          "relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full sm:h-14 sm:w-14",
+          "relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full sm:h-[72px] sm:w-[72px]",
           "ring-2 ring-[oklch(0.85_0.03_85)] shadow-md",
           "transition-shadow duration-200 group-hover/marker:shadow-[0_0_12px_rgba(200,180,120,0.4)]",
           firstPhoto ? "bg-black" : "bg-[oklch(0.18_0.01_260)]",
@@ -38,17 +37,17 @@ export function DialCategoryMarker({ category, hourPosition }: DialCategoryMarke
             alt={category.name}
             fill
             className="object-cover"
-            sizes="56px"
+            sizes="72px"
           />
         ) : (
           <span className="text-sm font-semibold text-[oklch(0.85_0.03_85)] sm:text-base">
-            {hourPosition}
+            {category.name.charAt(0).toUpperCase()}
           </span>
         )}
 
         {/* Count badge */}
         {watchCount > 0 && (
-          <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[oklch(0.85_0.03_85)] text-[8px] font-bold text-[oklch(0.12_0.01_260)] sm:h-5 sm:w-5 sm:text-[9px]">
+          <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[oklch(0.85_0.03_85)] text-[9px] font-bold text-[oklch(0.12_0.01_260)] sm:h-6 sm:w-6 sm:text-[10px]">
             {watchCount}
           </span>
         )}
