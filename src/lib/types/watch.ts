@@ -158,3 +158,30 @@ export interface WatchWithCover extends Watch {
   movement: Movement | null
   labels?: Label[]
 }
+
+// ── Wear Log ────────────────────────────────────────────────────
+
+export interface WearLog {
+  id: string
+  user_id: string
+  watch_id: string
+  worn_date: string // "YYYY-MM-DD"
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface WearLogWithWatch extends WearLog {
+  watch: WatchWithCover
+}
+
+export interface WearStats {
+  totalThisMonth: number
+  totalThisYear: number
+  totalAllTime: number
+  mostWorn: Array<{ watch: WatchWithCover; count: number }>
+  leastWorn: Array<{ watch: WatchWithCover; count: number }>
+  neverWorn: WatchWithCover[]
+  currentStreak: number
+  longestStreak: number
+}

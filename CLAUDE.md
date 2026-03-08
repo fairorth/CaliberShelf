@@ -36,6 +36,16 @@ A personal watch collection tracking app built with Next.js 15 (App Router), Sup
 - Use `.issues` not `.errors` on ZodError (e.g., `parsed.error.issues[0].message`)
 - Schema inference: `z.infer<typeof schema>` works the same as v3
 
+## Supabase Query Gotchas
+- Junction table joins (e.g., `.select("watch_id, labels(*)")`) need `as unknown as` for type casting — TS infers `any[]` for the nested relation
+- Direct server action calls (not form-bound) use signature `(id: string, data: {...})` — form-bound actions use `(prevState, formData)` pattern
+- Always check for `error.code === "23505"` (unique constraint) and `"23503"` (FK constraint) in actions
+
+## shadcn/ui Gotchas
+- Controlled `Select` with `value` prop: `SelectValue` may render the raw value (UUID) instead of display text — render the label manually in `SelectTrigger` as a workaround
+- `onValueChange` callback can pass `string | null` — guard with `if (val)` before parsing
+- When `Label` from `@/components/ui/label` conflicts with an app type named `Label`, import as `FormLabel`
+
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000
 - `npm run build` - Production build

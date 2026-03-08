@@ -15,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { deleteWatch } from "@/lib/actions/watch-actions"
+import { quickWear } from "@/lib/actions/wear-log-actions"
 import { labelColorMap } from "@/lib/validations/label"
 import { toast } from "sonner"
 import type { Watch, Brand, Label } from "@/lib/types/watch"
@@ -23,9 +24,10 @@ import type { LabelColor } from "@/lib/validations/label"
 interface WatchDetailHeaderProps {
   watch: Watch & { brand: Brand }
   labels?: Label[]
+  wearInfo?: { count: number; lastWorn: string | null }
 }
 
-export function WatchDetailHeader({ watch, labels = [] }: WatchDetailHeaderProps) {
+export function WatchDetailHeader({ watch, labels = [], wearInfo }: WatchDetailHeaderProps) {
   const [isPending, startTransition] = useTransition()
 
   function handleDelete() {
@@ -36,6 +38,22 @@ export function WatchDetailHeader({ watch, labels = [] }: WatchDetailHeaderProps
       }
       // Redirect happens in the server action
     })
+  }
+
+  function handleQuickWear() {
+    startTransition(async () => {
+      const result = await quickWear(watch.id)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success("Wear logged!")
+      }
+    })
+  }
+
+  function formatLastWorn(dateStr: string): string {
+    const date = new Date(dateStr + "T00:00:00")
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
   }
 
   return (
@@ -56,6 +74,14 @@ export function WatchDetailHeader({ watch, labels = [] }: WatchDetailHeaderProps
         </div>
 
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleQuickWear}
+            disabled={isPending}
+          >
+            ⌚ Wore Today
+          </Button>
           <Button variant="outline" size="sm" render={<Link href={`/watch/${watch.id}/edit`} />}>
             Edit
           </Button>
@@ -82,22 +108,30 @@ export function WatchDetailHeader({ watch, labels = [] }: WatchDetailHeaderProps
         </div>
       </div>
 
-      {/* Label badges */}
-      {labels.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pl-[52px]">
-          {labels.map((label) => {
-            const colors = labelColorMap[label.color as LabelColor] ?? labelColorMap.blue
-            return (
-              <span
-                key={label.id}
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}
-              >
-                {label.name}
-              </span>
-            )
-          })}
-        </div>
-      )}
+      {/* Wear info + Label badges row */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pl-[52px]">
+        {wearInfo && (
+          <span className="text-xs text-muted-foreground">
+            Worn {wearInfo.count} {wearInfo.count === 1 ? "time" : "times"}
+            {wearInfo.lastWorn && ` · Last: ${formatLastWorn(wearInfo.lastWorn)}`}
+          </span>
+        )}
+        {labels.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {labels.map((label) => {
+              const colors = labelColorMap[label.color as LabelColor] ?? labelColorMap.blue
+              return (
+                <span
+                  key={label.id}
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}
+                >
+                  {label.name}
+                </span>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

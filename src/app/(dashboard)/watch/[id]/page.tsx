@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { getWatchById } from "@/lib/queries/watches"
 import { getLabelsForWatch } from "@/lib/queries/labels"
+import { getWearCountForWatch } from "@/lib/queries/wear-logs"
 import { WatchDetailHeader } from "./_components/watch-detail-header"
 import { PhotoGallery } from "./_components/photo-gallery"
 import { PhotoUploader } from "./_components/photo-uploader"
@@ -25,9 +26,10 @@ export default async function WatchDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [watch, labels] = await Promise.all([
+  const [watch, labels, wearInfo] = await Promise.all([
     getWatchById(id),
     getLabelsForWatch(id),
+    getWearCountForWatch(id),
   ])
 
   if (!watch) {
@@ -42,7 +44,7 @@ export default async function WatchDetailPage({
 
   return (
     <div className="space-y-6">
-      <WatchDetailHeader watch={watch} labels={labels} />
+      <WatchDetailHeader watch={watch} labels={labels} wearInfo={wearInfo} />
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Left column: Photos */}

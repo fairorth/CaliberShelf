@@ -4,7 +4,10 @@
 - Sequential numbering: `00001_description.sql`, `00002_description.sql`
 - Each migration is a single logical change (one table or set of related policies)
 - Always include `IF NOT EXISTS` guards for idempotency
-- After creating a migration: run `npx supabase db push` then regenerate types
+- After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase)
+- `ALTER TABLE RENAME` preserves existing FK relationships — preferred over drop-and-recreate
+- When renaming tables, also rename: RLS policies, triggers, indexes, and FK column references
+- Junction tables (many-to-many): use composite PK, cascade deletes, and RLS that joins to the parent table's owner
 
 ## RLS Policies
 - EVERY table MUST have RLS enabled: `ALTER TABLE tablename ENABLE ROW LEVEL SECURITY;`

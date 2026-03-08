@@ -24,3 +24,8 @@
 - Use `cn()` from `@/lib/utils` for conditional classes
 - Use shadcn/ui color tokens: `bg-primary`, `text-muted-foreground`, etc.
 - Mobile-first responsive: use `sm:`, `md:`, `lg:` breakpoints
+
+## Common Patterns
+- Inline table editing: extract a `Row` component with `useState(editing)` + `useTransition` for save — avoids form-level state conflicts
+- Color maps: define a `Record<ColorName, { bg: string; text: string }>` with Tailwind classes for consistent badge/tag styling
+- Watch dial: categories map to positions via `display_order` (0=12 o'clock, 1=1 o'clock, etc.)

@@ -24,6 +24,10 @@ export default async function WatchPage({
 }
 ```
 
+## Build Cache
+- After deleting a route, stale `.next/types` may cause phantom TS errors — delete `.next/types` and `.next/dev/types`
+- `npm run build` always compiles from scratch; `npm run dev` uses incremental cache
+
 ## Mutations Pattern
 - All mutations use Server Actions from `src/lib/actions/`
 - Server Actions call `revalidatePath()` to refresh data after mutations
