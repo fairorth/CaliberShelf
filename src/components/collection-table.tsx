@@ -11,10 +11,23 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { movementLabels } from "@/lib/validations/watch"
-import type { WatchWithCover } from "@/lib/types/watch"
+import { labelColorMap } from "@/lib/validations/label"
+import type { WatchWithCover, Label } from "@/lib/types/watch"
+import type { LabelColor } from "@/lib/validations/label"
 
 interface CollectionTableProps {
   watches: WatchWithCover[]
+}
+
+function LabelBadge({ label }: { label: Label }) {
+  const colors = labelColorMap[label.color as LabelColor] ?? labelColorMap.blue
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}
+    >
+      {label.name}
+    </span>
+  )
 }
 
 export function CollectionTable({ watches }: CollectionTableProps) {
@@ -43,6 +56,7 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                 <TableHead>Model</TableHead>
                 <TableHead>Movement Type</TableHead>
                 <TableHead>Caliber</TableHead>
+                <TableHead>Labels</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -93,6 +107,17 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                       ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim()
                       : "—"}
                   </TableCell>
+                  <TableCell>
+                    {watch.labels && watch.labels.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {watch.labels.map((label) => (
+                          <LabelBadge key={label.id} label={label} />
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -135,6 +160,13 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                   {movementLabels[watch.movement.movement_type] ?? watch.movement.movement_type}
                   {watch.movement.caliber_name ? ` · ${watch.movement.caliber_name}` : ""}
                 </p>
+              )}
+              {watch.labels && watch.labels.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {watch.labels.map((label) => (
+                    <LabelBadge key={label.id} label={label} />
+                  ))}
+                </div>
               )}
             </div>
           </Link>

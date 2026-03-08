@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { watchFormSchema, quickAddSchema } from "@/lib/validations/watch"
+import { setWatchLabels } from "@/lib/actions/label-actions"
 import { buildStoragePath } from "@/lib/storage"
 import { dollarsToCents } from "@/lib/utils"
 
@@ -47,8 +48,7 @@ export async function createWatch(
       serial_number: data.serial_number || null,
       nickname: data.nickname || null,
       movement_id: data.movement_id || null,
-      case_id: data.case_id,
-      case_slot: data.case_slot,
+      category_id: data.category_id,
       case_material: data.case_material || null,
       case_diameter_mm: data.case_diameter_mm,
       crystal: data.crystal || null,
@@ -67,10 +67,12 @@ export async function createWatch(
     .single()
 
   if (error) {
-    if (error.code === "23505") {
-      return { error: "That case slot is already occupied. Please choose a different slot." }
-    }
     return { error: error.message }
+  }
+
+  // Sync labels
+  if (data.label_ids.length > 0) {
+    await setWatchLabels(watch.id, data.label_ids)
   }
 
   revalidatePath("/dashboard")
@@ -112,8 +114,7 @@ export async function updateWatch(
       serial_number: data.serial_number || null,
       nickname: data.nickname || null,
       movement_id: data.movement_id || null,
-      case_id: data.case_id,
-      case_slot: data.case_slot,
+      category_id: data.category_id,
       case_material: data.case_material || null,
       case_diameter_mm: data.case_diameter_mm,
       crystal: data.crystal || null,
@@ -132,11 +133,11 @@ export async function updateWatch(
     .eq("user_id", user.id) // extra safety on top of RLS
 
   if (error) {
-    if (error.code === "23505") {
-      return { error: "That case slot is already occupied. Please choose a different slot." }
-    }
     return { error: error.message }
   }
+
+  // Sync labels
+  await setWatchLabels(watchId, data.label_ids)
 
   revalidatePath("/dashboard")
   revalidatePath(`/watch/${watchId}`)
@@ -171,7 +172,7 @@ export async function deleteWatch(watchId: string): Promise<WatchActionState> {
     await supabase.storage.from("watch-photos").remove(paths)
   }
 
-  // Delete the watch (cascades to watch_photos rows)
+  // Delete the watch (cascades to watch_photos and watch_labels rows)
   const { error } = await supabase
     .from("watches")
     .delete()
@@ -223,16 +224,12 @@ export async function createWatchWithPhoto(
       user_id: user.id,
       brand_id: data.brand_id,
       model: data.model,
-      case_id: data.case_id,
-      case_slot: data.case_slot,
+      category_id: data.category_id,
     })
     .select("id")
     .single()
 
   if (error) {
-    if (error.code === "23505") {
-      return { error: "That case slot is already occupied. Please choose a different slot." }
-    }
     return { error: error.message }
   }
 

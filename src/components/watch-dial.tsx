@@ -4,12 +4,12 @@ import { useEffect, useRef, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { CaliberShelfLogo } from "@/components/calibershelf-logo"
-import { DialCaseMarker } from "@/components/dial-case-marker"
+import { DialCategoryMarker } from "@/components/dial-category-marker"
 import { Button } from "@/components/ui/button"
-import type { DisplayCaseWithWatches } from "@/lib/types/watch"
+import type { CategoryWithWatches } from "@/lib/types/watch"
 
 interface WatchDialProps {
-  cases: DisplayCaseWithWatches[]
+  categories: CategoryWithWatches[]
   totalWatches: number
 }
 
@@ -71,7 +71,7 @@ const POSITIONS = Array.from({ length: 12 }, (_, i) => {
   }
 })
 
-export function WatchDial({ cases, totalWatches }: WatchDialProps) {
+export function WatchDial({ categories, totalWatches }: WatchDialProps) {
   const hands = useSyncExternalStore(subscribeHands, getHandsSnapshot, getHandsServerSnapshot)
   const secondHandRef = useRef<HTMLDivElement>(null)
 
@@ -83,10 +83,10 @@ export function WatchDial({ cases, totalWatches }: WatchDialProps) {
     }
   }, [])
 
-  // Map cases to dial positions (ordered by display_order, max 12)
-  const casePositions = new Map<number, DisplayCaseWithWatches>()
-  cases.slice(0, 12).forEach((c, i) => {
-    casePositions.set(i, c)
+  // Map categories to dial positions (ordered by display_order, max 12)
+  const categoryPositions = new Map<number, CategoryWithWatches>()
+  categories.slice(0, 12).forEach((c, i) => {
+    categoryPositions.set(i, c)
   })
 
   return (
@@ -124,9 +124,9 @@ export function WatchDial({ cases, totalWatches }: WatchDialProps) {
         style={{ inset: "9%" }}
       />
 
-      {/* Layer 4: Hour markers / Case positions */}
+      {/* Layer 4: Hour markers / Category positions */}
       {POSITIONS.map((pos) => {
-        const displayCase = casePositions.get(pos.index)
+        const category = categoryPositions.get(pos.index)
 
         return (
           <div
@@ -138,9 +138,9 @@ export function WatchDial({ cases, totalWatches }: WatchDialProps) {
               transform: "translate(-50%, -50%)",
             }}
           >
-            {displayCase ? (
-              <DialCaseMarker
-                displayCase={displayCase}
+            {category ? (
+              <DialCategoryMarker
+                category={category}
                 hourPosition={pos.hourLabel}
               />
             ) : (
@@ -247,21 +247,21 @@ export function WatchDial({ cases, totalWatches }: WatchDialProps) {
             >
               {totalWatches} {totalWatches === 1 ? "watch" : "watches"}
             </span>
-          ) : cases.length === 0 ? (
+          ) : categories.length === 0 ? (
             <Button
               variant="outline"
               size="sm"
               className="mt-1 h-7 border-[oklch(0.85_0.03_85)]/30 bg-transparent text-[10px] text-[oklch(0.85_0.03_85)]/80 hover:bg-[oklch(0.85_0.03_85)]/10 sm:text-xs"
               render={<Link href="/config" />}
             >
-              Create your first case
+              Create your first category
             </Button>
           ) : (
             <span
               className="text-[8px] text-[oklch(0.5_0.02_85)] sm:text-[10px]"
               style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
             >
-              {cases.length} {cases.length === 1 ? "case" : "cases"}
+              {categories.length} {categories.length === 1 ? "category" : "categories"}
             </span>
           )}
         </div>

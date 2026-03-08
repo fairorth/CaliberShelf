@@ -7,6 +7,7 @@ import type {
   WatchPhoto,
   Brand,
   Movement,
+  Label,
 } from "@/lib/types/watch"
 
 /**
@@ -45,6 +46,21 @@ export async function getWatches(): Promise<WatchWithCover[]> {
     }
   }
 
+  // Fetch labels for all watches
+  const labelsByWatch = new Map<string, Label[]>()
+  const { data: watchLabels } = await supabase
+    .from("watch_labels")
+    .select("watch_id, labels(*)")
+    .in("watch_id", watchIds)
+
+  if (watchLabels) {
+    for (const wl of watchLabels as unknown as Array<{ watch_id: string; labels: Label }>) {
+      const existing = labelsByWatch.get(wl.watch_id) ?? []
+      existing.push(wl.labels)
+      labelsByWatch.set(wl.watch_id, existing)
+    }
+  }
+
   // Generate signed URLs for all cover photos
   const storagePaths = Array.from(coverMap.values())
   const signedUrlMap = await getSignedUrls(storagePaths)
@@ -58,6 +74,7 @@ export async function getWatches(): Promise<WatchWithCover[]> {
       cover_photo_url: coverUrl,
       brand: watch.brands,
       movement: watch.movements,
+      labels: labelsByWatch.get(watch.id) ?? [],
     } as WatchWithCover
   })
 }

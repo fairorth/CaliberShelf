@@ -3,26 +3,25 @@
 import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import type { DisplayCaseWithWatches } from "@/lib/types/watch"
+import type { CategoryWithWatches } from "@/lib/types/watch"
 
-interface DialCaseMarkerProps {
-  displayCase: DisplayCaseWithWatches
+interface DialCategoryMarkerProps {
+  category: CategoryWithWatches
   hourPosition: number // 1-12
 }
 
-export function DialCaseMarker({ displayCase, hourPosition }: DialCaseMarkerProps) {
-  const watchCount = displayCase.watches.length
-  const capacity = parseInt(displayCase.capacity, 10)
-  const firstPhoto = displayCase.watches.find((w) => w.cover_photo_url)?.cover_photo_url
+export function DialCategoryMarker({ category, hourPosition }: DialCategoryMarkerProps) {
+  const watchCount = category.watches.length
+  const firstPhoto = category.watches.find((w) => w.cover_photo_url)?.cover_photo_url
 
   return (
     <Link
-      href={`/case/${displayCase.id}`}
+      href={`/category/${category.id}`}
       className={cn(
         "group/marker flex flex-col items-center gap-1",
         "transition-transform duration-200 hover:scale-110",
       )}
-      aria-label={`${displayCase.name} case, ${watchCount} of ${capacity} watches`}
+      aria-label={`${category.name} category, ${watchCount} ${watchCount === 1 ? "watch" : "watches"}`}
     >
       {/* Circular marker */}
       <div
@@ -36,7 +35,7 @@ export function DialCaseMarker({ displayCase, hourPosition }: DialCaseMarkerProp
         {firstPhoto ? (
           <Image
             src={firstPhoto}
-            alt={displayCase.name}
+            alt={category.name}
             fill
             className="object-cover"
             sizes="56px"
@@ -48,14 +47,16 @@ export function DialCaseMarker({ displayCase, hourPosition }: DialCaseMarkerProp
         )}
 
         {/* Count badge */}
-        <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[oklch(0.85_0.03_85)] text-[8px] font-bold text-[oklch(0.12_0.01_260)] sm:h-5 sm:w-5 sm:text-[9px]">
-          {watchCount}
-        </span>
+        {watchCount > 0 && (
+          <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[oklch(0.85_0.03_85)] text-[8px] font-bold text-[oklch(0.12_0.01_260)] sm:h-5 sm:w-5 sm:text-[9px]">
+            {watchCount}
+          </span>
+        )}
       </div>
 
-      {/* Case name — visible on larger screens */}
+      {/* Category name — visible on larger screens */}
       <span className="hidden max-w-[60px] truncate text-center text-[9px] font-medium text-[oklch(0.7_0.02_85)] sm:block sm:max-w-[80px] sm:text-[10px]">
-        {displayCase.name}
+        {category.name}
       </span>
     </Link>
   )

@@ -2,21 +2,24 @@ import type { Metadata } from "next"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getBrands } from "@/lib/queries/brands"
 import { getMovements } from "@/lib/queries/movements"
-import { getDisplayCases } from "@/lib/queries/display-cases"
+import { getCategories } from "@/lib/queries/categories"
+import { getLabels } from "@/lib/queries/labels"
 import { getWatches } from "@/lib/queries/watches"
 import { BrandsTab } from "./_components/brands-tab"
 import { MovementsTab } from "./_components/movements-tab"
-import { CasesTab } from "./_components/cases-tab"
+import { CategoriesTab } from "./_components/categories-tab"
+import { LabelsTab } from "./_components/labels-tab"
 
 export const metadata: Metadata = {
   title: "Config | CaliberShelf",
 }
 
 export default async function ConfigPage() {
-  const [brands, movements, cases, watches] = await Promise.all([
+  const [brands, movements, categories, labels, watches] = await Promise.all([
     getBrands(),
     getMovements(),
-    getDisplayCases(),
+    getCategories(),
+    getLabels(),
     getWatches(),
   ])
 
@@ -26,10 +29,10 @@ export default async function ConfigPage() {
     watchCountByBrand.set(w.brand_id, (watchCountByBrand.get(w.brand_id) ?? 0) + 1)
   }
 
-  // Count watches per case
-  const watchCountByCase = new Map<string, number>()
+  // Count watches per category
+  const watchCountByCategory = new Map<string, number>()
   for (const w of watches) {
-    watchCountByCase.set(w.case_id, (watchCountByCase.get(w.case_id) ?? 0) + 1)
+    watchCountByCategory.set(w.category_id, (watchCountByCategory.get(w.category_id) ?? 0) + 1)
   }
 
   return (
@@ -40,7 +43,8 @@ export default async function ConfigPage() {
         <TabsList>
           <TabsTrigger value="brands">Brands ({brands.length})</TabsTrigger>
           <TabsTrigger value="movements">Movements ({movements.length})</TabsTrigger>
-          <TabsTrigger value="cases">Cases ({cases.length})</TabsTrigger>
+          <TabsTrigger value="categories">Categories ({categories.length})</TabsTrigger>
+          <TabsTrigger value="labels">Labels ({labels.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="brands" className="mt-4">
@@ -51,8 +55,12 @@ export default async function ConfigPage() {
           <MovementsTab movements={movements} />
         </TabsContent>
 
-        <TabsContent value="cases" className="mt-4">
-          <CasesTab cases={cases} watchCountByCase={watchCountByCase} />
+        <TabsContent value="categories" className="mt-4">
+          <CategoriesTab categories={categories} watchCountByCategory={watchCountByCategory} />
+        </TabsContent>
+
+        <TabsContent value="labels" className="mt-4">
+          <LabelsTab labels={labels} />
         </TabsContent>
       </Tabs>
     </div>

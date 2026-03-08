@@ -1,68 +1,69 @@
 import { createClient } from "@/lib/supabase/server"
 import { getSignedUrls } from "@/lib/storage"
 import type {
-  DisplayCase,
-  DisplayCaseWithWatches,
+  Category,
+  CategoryWithWatches,
   Watch,
   WatchWithCover,
   WatchPhoto,
   Brand,
   Movement,
+  Label,
 } from "@/lib/types/watch"
 
 /**
- * Get all display cases for the current user, sorted by display_order.
+ * Get all categories for the current user, sorted by display_order.
  */
-export async function getDisplayCases(): Promise<DisplayCase[]> {
+export async function getCategories(): Promise<Category[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("display_cases")
+    .from("categories")
     .select("*")
     .order("display_order", { ascending: true })
     .order("created_at", { ascending: true })
 
   if (error) {
-    console.error("Failed to fetch display cases:", error.message)
+    console.error("Failed to fetch categories:", error.message)
     return []
   }
 
-  return (data as DisplayCase[]) ?? []
+  return (data as Category[]) ?? []
 }
 
 /**
- * Get all display cases with their watches and cover photos.
+ * Get all categories with their watches, cover photos, and labels.
  * Used on the home page (dashboard).
  */
-export async function getDisplayCasesWithWatches(): Promise<DisplayCaseWithWatches[]> {
+export async function getCategoriesWithWatches(): Promise<CategoryWithWatches[]> {
   const supabase = await createClient()
 
-  // Fetch cases
-  const { data: cases, error: casesError } = await supabase
-    .from("display_cases")
+  // Fetch categories
+  const { data: categories, error: categoriesError } = await supabase
+    .from("categories")
     .select("*")
     .order("display_order", { ascending: true })
     .order("created_at", { ascending: true })
 
-  if (casesError || !cases) {
-    console.error("Failed to fetch display cases:", casesError?.message)
+  if (categoriesError || !categories) {
+    console.error("Failed to fetch categories:", categoriesError?.message)
     return []
   }
 
-  if (cases.length === 0) return []
+  if (categories.length === 0) return []
 
-  const caseIds = cases.map((c: DisplayCase) => c.id)
+  const categoryIds = categories.map((c: Category) => c.id)
 
-  // Fetch all watches in these cases with brand and movement joins
+  // Fetch all watches in these categories with brand and movement joins
   const { data: watches, error: watchesError } = await supabase
     .from("watches")
     .select("*, brands(*), movements(*)")
-    .in("case_id", caseIds)
-    .order("case_slot", { ascending: true })
+    .in("category_id", categoryIds)
+    .order("updated_at", { ascending: false })
 
   if (watchesError) {
-    console.error("Failed to fetch watches for cases:", watchesError.message)
-    return cases.map((c: DisplayCase) => ({ ...c, watches: [] })) as DisplayCaseWithWatches[]
+    console.error("Failed to fetch watches for categories:", watchesError.message)
+    return categories.map((c: Category) => ({ ...c, watches: [] })) as CategoryWithWatches[]
   }
 
   // Fetch cover photos for all watches
@@ -83,12 +84,29 @@ export async function getDisplayCasesWithWatches(): Promise<DisplayCaseWithWatch
     }
   }
 
+  // Fetch labels for all watches
+  const labelsByWatch = new Map<string, Label[]>()
+  if (watchIds.length > 0) {
+    const { data: watchLabels } = await supabase
+      .from("watch_labels")
+      .select("watch_id, labels(*)")
+      .in("watch_id", watchIds)
+
+    if (watchLabels) {
+      for (const wl of watchLabels as unknown as Array<{ watch_id: string; labels: Label }>) {
+        const existing = labelsByWatch.get(wl.watch_id) ?? []
+        existing.push(wl.labels)
+        labelsByWatch.set(wl.watch_id, existing)
+      }
+    }
+  }
+
   // Generate signed URLs for cover photos
   const storagePaths = Array.from(coverMap.values())
   const signedUrlMap = storagePaths.length > 0 ? await getSignedUrls(storagePaths) : new Map()
 
-  // Build watches with cover URLs grouped by case
-  const watchesByCase = new Map<string, WatchWithCover[]>()
+  // Build watches with cover URLs grouped by category
+  const watchesByCategory = new Map<string, WatchWithCover[]>()
   for (const watch of (watches ?? []) as Array<Watch & { brands: Brand; movements: Movement | null }>) {
     const coverPath = coverMap.get(watch.id)
     const coverUrl = coverPath ? signedUrlMap.get(coverPath) ?? null : null
@@ -97,40 +115,41 @@ export async function getDisplayCasesWithWatches(): Promise<DisplayCaseWithWatch
       cover_photo_url: coverUrl,
       brand: watch.brands,
       movement: watch.movements,
+      labels: labelsByWatch.get(watch.id) ?? [],
     }
-    const existing = watchesByCase.get(watch.case_id) ?? []
+    const existing = watchesByCategory.get(watch.category_id) ?? []
     existing.push(watchWithCover)
-    watchesByCase.set(watch.case_id, existing)
+    watchesByCategory.set(watch.category_id, existing)
   }
 
-  return cases.map((c: DisplayCase) => ({
+  return categories.map((c: Category) => ({
     ...c,
-    watches: watchesByCase.get(c.id) ?? [],
-  })) as DisplayCaseWithWatches[]
+    watches: watchesByCategory.get(c.id) ?? [],
+  })) as CategoryWithWatches[]
 }
 
 /**
- * Get a single display case by ID with its watches.
+ * Get a single category by ID with its watches, cover photos, and labels.
  */
-export async function getDisplayCaseById(
+export async function getCategoryById(
   id: string
-): Promise<DisplayCaseWithWatches | null> {
+): Promise<CategoryWithWatches | null> {
   const supabase = await createClient()
 
-  const { data: displayCase, error } = await supabase
-    .from("display_cases")
+  const { data: category, error } = await supabase
+    .from("categories")
     .select("*")
     .eq("id", id)
     .single()
 
-  if (error || !displayCase) return null
+  if (error || !category) return null
 
-  // Fetch watches in this case with brand and movement joins
+  // Fetch watches in this category with brand and movement joins
   const { data: watches } = await supabase
     .from("watches")
     .select("*, brands(*), movements(*)")
-    .eq("case_id", id)
-    .order("case_slot", { ascending: true })
+    .eq("category_id", id)
+    .order("updated_at", { ascending: false })
 
   // Fetch cover photos
   const watchIds = (watches ?? []).map((w: Watch) => w.id)
@@ -150,6 +169,23 @@ export async function getDisplayCaseById(
     }
   }
 
+  // Fetch labels for all watches
+  const labelsByWatch = new Map<string, Label[]>()
+  if (watchIds.length > 0) {
+    const { data: watchLabels } = await supabase
+      .from("watch_labels")
+      .select("watch_id, labels(*)")
+      .in("watch_id", watchIds)
+
+    if (watchLabels) {
+      for (const wl of watchLabels as unknown as Array<{ watch_id: string; labels: Label }>) {
+        const existing = labelsByWatch.get(wl.watch_id) ?? []
+        existing.push(wl.labels)
+        labelsByWatch.set(wl.watch_id, existing)
+      }
+    }
+  }
+
   const storagePaths = Array.from(coverMap.values())
   const signedUrlMap = storagePaths.length > 0 ? await getSignedUrls(storagePaths) : new Map()
 
@@ -161,47 +197,12 @@ export async function getDisplayCaseById(
       cover_photo_url: coverUrl,
       brand: watch.brands,
       movement: watch.movements,
+      labels: labelsByWatch.get(watch.id) ?? [],
     }
   })
 
   return {
-    ...(displayCase as DisplayCase),
+    ...(category as Category),
     watches: watchesWithCovers,
   }
-}
-
-/**
- * Get unoccupied slot numbers for a given case.
- */
-export async function getAvailableSlots(caseId: string): Promise<number[]> {
-  const supabase = await createClient()
-
-  // Get the case capacity
-  const { data: displayCase } = await supabase
-    .from("display_cases")
-    .select("capacity")
-    .eq("id", caseId)
-    .single()
-
-  if (!displayCase) return []
-
-  const capacity = parseInt((displayCase as { capacity: string }).capacity, 10)
-
-  // Get occupied slots
-  const { data: watches } = await supabase
-    .from("watches")
-    .select("case_slot")
-    .eq("case_id", caseId)
-
-  const occupied = new Set((watches ?? []).map((w: { case_slot: number }) => w.case_slot))
-
-  // Return all unoccupied slots (0-indexed)
-  const available: number[] = []
-  for (let i = 0; i < capacity; i++) {
-    if (!occupied.has(i)) {
-      available.push(i)
-    }
-  }
-
-  return available
 }

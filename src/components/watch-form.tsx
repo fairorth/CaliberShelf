@@ -4,7 +4,7 @@ import { useActionState, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label as FormLabel } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
@@ -18,12 +18,12 @@ import {
   crystalLabels,
   conditionLabels,
 } from "@/lib/validations/watch"
-import { caseSizeLabels } from "@/lib/validations/display-case"
+import { labelColorMap } from "@/lib/validations/label"
 import { BrandCombobox } from "@/components/brand-combobox"
 import { MovementCombobox } from "@/components/movement-combobox"
-import { CaseSlotPicker } from "@/components/case-slot-picker"
 import type { WatchActionState } from "@/lib/actions/watch-actions"
-import type { Watch, Brand, Movement, DisplayCase, WatchWithCover, CaseSize } from "@/lib/types/watch"
+import type { Watch, Brand, Movement, Category, Label } from "@/lib/types/watch"
+import type { LabelColor } from "@/lib/validations/label"
 
 interface WatchFormProps {
   action: (prevState: WatchActionState, formData: FormData) => Promise<WatchActionState>
@@ -31,9 +31,9 @@ interface WatchFormProps {
   submitLabel?: string
   brands: Brand[]
   movements: Movement[]
-  cases: DisplayCase[]
-  /** Watches in all cases (for slot picker occupied display) */
-  caseWatches?: Map<string, WatchWithCover[]>
+  categories: Category[]
+  labels: Label[]
+  defaultLabelIds?: string[]
 }
 
 export function WatchForm({
@@ -42,21 +42,34 @@ export function WatchForm({
   submitLabel = "Add Watch",
   brands,
   movements,
-  cases,
-  caseWatches,
+  categories,
+  labels,
+  defaultLabelIds = [],
 }: WatchFormProps) {
   const [state, formAction, isPending] = useActionState<WatchActionState, FormData>(
     action,
     {}
   )
 
-  // Track selected case for the slot picker
-  const [selectedCaseId, setSelectedCaseId] = useState(watch?.case_id ?? "")
+  // Track selected category
+  const [selectedCategoryId, setSelectedCategoryId] = useState(watch?.category_id ?? "")
 
-  const selectedCase = cases.find((c) => c.id === selectedCaseId)
-  const watchesInSelectedCase = selectedCaseId
-    ? caseWatches?.get(selectedCaseId) ?? []
-    : []
+  // Track selected labels
+  const [selectedLabelIds, setSelectedLabelIds] = useState<Set<string>>(
+    new Set(defaultLabelIds)
+  )
+
+  function toggleLabel(labelId: string) {
+    setSelectedLabelIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(labelId)) {
+        next.delete(labelId)
+      } else {
+        next.add(labelId)
+      }
+      return next
+    })
+  }
 
   // Convert cents back to dollars for form default
   const purchasePriceDefault =
@@ -72,6 +85,10 @@ export function WatchForm({
         </div>
       )}
 
+      {/* Hidden inputs for category and labels */}
+      <input type="hidden" name="category_id" value={selectedCategoryId} />
+      <input type="hidden" name="label_ids" value={Array.from(selectedLabelIds).join(",")} />
+
       {/* Identity section */}
       <Card>
         <CardHeader>
@@ -79,14 +96,14 @@ export function WatchForm({
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Brand *</Label>
+            <FormLabel>Brand *</FormLabel>
             <BrandCombobox
               brands={brands}
               defaultBrandId={watch?.brand_id}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="model">Model *</Label>
+            <FormLabel htmlFor="model">Model *</FormLabel>
             <Input
               id="model"
               name="model"
@@ -96,7 +113,7 @@ export function WatchForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="nickname">Nickname</Label>
+            <FormLabel htmlFor="nickname">Nickname</FormLabel>
             <Input
               id="nickname"
               name="nickname"
@@ -105,7 +122,7 @@ export function WatchForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="reference_number">Reference Number</Label>
+            <FormLabel htmlFor="reference_number">Reference Number</FormLabel>
             <Input
               id="reference_number"
               name="reference_number"
@@ -114,7 +131,7 @@ export function WatchForm({
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="serial_number">Serial Number</Label>
+            <FormLabel htmlFor="serial_number">Serial Number</FormLabel>
             <Input
               id="serial_number"
               name="serial_number"
@@ -132,7 +149,7 @@ export function WatchForm({
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-            <Label>Movement / Caliber</Label>
+            <FormLabel>Movement / Caliber</FormLabel>
             <MovementCombobox
               movements={movements}
               defaultMovementId={watch?.movement_id ?? undefined}
@@ -140,7 +157,7 @@ export function WatchForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="case_material">Case Material</Label>
+            <FormLabel htmlFor="case_material">Case Material</FormLabel>
             <Select name="case_material" defaultValue={watch?.case_material ?? ""}>
               <SelectTrigger id="case_material">
                 <SelectValue placeholder="Select material" />
@@ -157,7 +174,7 @@ export function WatchForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="crystal">Crystal</Label>
+            <FormLabel htmlFor="crystal">Crystal</FormLabel>
             <Select name="crystal" defaultValue={watch?.crystal ?? ""}>
               <SelectTrigger id="crystal">
                 <SelectValue placeholder="Select crystal" />
@@ -174,7 +191,7 @@ export function WatchForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="case_diameter_mm">Case Diameter (mm)</Label>
+            <FormLabel htmlFor="case_diameter_mm">Case Diameter (mm)</FormLabel>
             <Input
               id="case_diameter_mm"
               name="case_diameter_mm"
@@ -188,7 +205,7 @@ export function WatchForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="water_resistance_m">Water Resistance (m)</Label>
+            <FormLabel htmlFor="water_resistance_m">Water Resistance (m)</FormLabel>
             <Input
               id="water_resistance_m"
               name="water_resistance_m"
@@ -201,7 +218,7 @@ export function WatchForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dial_color">Dial Color</Label>
+            <FormLabel htmlFor="dial_color">Dial Color</FormLabel>
             <Input
               id="dial_color"
               name="dial_color"
@@ -211,7 +228,7 @@ export function WatchForm({
           </div>
 
           <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-            <Label htmlFor="complication">Complications</Label>
+            <FormLabel htmlFor="complication">Complications</FormLabel>
             <Input
               id="complication"
               name="complication"
@@ -222,58 +239,75 @@ export function WatchForm({
         </CardContent>
       </Card>
 
-      {/* Storage — display case + slot */}
+      {/* Category */}
       <Card>
         <CardHeader>
-          <CardTitle>Storage</CardTitle>
+          <CardTitle>Category</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="case_id">Display Case *</Label>
-              <input type="hidden" name="case_id" value={selectedCaseId} />
-              <Select
-                value={selectedCaseId}
-                onValueChange={(val) => setSelectedCaseId(val ?? "")}
-              >
-                <SelectTrigger id="case_id">
-                  <SelectValue placeholder="Select a case" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cases.length === 0 ? (
-                    <SelectItem value="" disabled>
-                      No cases — create one in Config first
+          <div className="max-w-sm space-y-2">
+            <FormLabel htmlFor="category_select">Category *</FormLabel>
+            <Select
+              value={selectedCategoryId}
+              onValueChange={(val) => setSelectedCategoryId(val ?? "")}
+            >
+              <SelectTrigger id="category_select">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.length === 0 ? (
+                  <SelectItem value="" disabled>
+                    No categories — create one in Config first
+                  </SelectItem>
+                ) : (
+                  categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
                     </SelectItem>
-                  ) : (
-                    cases.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name} ({caseSizeLabels[c.capacity] ?? c.capacity})
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           </div>
-
-          {selectedCase && (
-            <div className="space-y-2">
-              <Label>Select Slot *</Label>
-              <CaseSlotPicker
-                capacity={selectedCase.capacity as CaseSize}
-                occupiedSlots={watchesInSelectedCase.map((w) => ({
-                  slot: w.case_slot,
-                  watchName: `${w.brand.name} ${w.model}`,
-                  thumbnailUrl: w.cover_photo_url,
-                }))}
-                defaultSlot={watch?.case_id === selectedCaseId ? watch.case_slot : undefined}
-                excludeWatchId={watch?.id}
-                watches={watchesInSelectedCase}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
+
+      {/* Labels */}
+      {labels.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Labels</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {labels.map((label) => {
+                const isSelected = selectedLabelIds.has(label.id)
+                const colors = labelColorMap[label.color as LabelColor] ?? labelColorMap.blue
+                return (
+                  <button
+                    key={label.id}
+                    type="button"
+                    onClick={() => toggleLabel(label.id)}
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                      isSelected
+                        ? `${colors.bg} ${colors.text} ring-2 ring-current/30`
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {isSelected && <span className="mr-1">✓</span>}
+                    {label.name}
+                  </button>
+                )
+              })}
+            </div>
+            {labels.length > 0 && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Click to toggle labels. Labels can be managed in Config.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Ownership section */}
       <Card>
@@ -282,7 +316,7 @@ export function WatchForm({
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="condition">Condition</Label>
+            <FormLabel htmlFor="condition">Condition</FormLabel>
             <Select name="condition" defaultValue={watch?.condition ?? ""}>
               <SelectTrigger id="condition">
                 <SelectValue placeholder="Select condition" />
@@ -299,7 +333,7 @@ export function WatchForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="purchase_date">Purchase Date</Label>
+            <FormLabel htmlFor="purchase_date">Purchase Date</FormLabel>
             <Input
               id="purchase_date"
               name="purchase_date"
@@ -309,7 +343,7 @@ export function WatchForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="purchase_price">Purchase Price ($)</Label>
+            <FormLabel htmlFor="purchase_price">Purchase Price ($)</FormLabel>
             <Input
               id="purchase_price"
               name="purchase_price"
@@ -325,7 +359,7 @@ export function WatchForm({
           <input type="hidden" name="purchase_currency" value={watch?.purchase_currency ?? "USD"} />
 
           <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-            <Label htmlFor="notes">Notes</Label>
+            <FormLabel htmlFor="notes">Notes</FormLabel>
             <Textarea
               id="notes"
               name="notes"

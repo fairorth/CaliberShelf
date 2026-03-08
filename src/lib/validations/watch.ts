@@ -47,15 +47,17 @@ export const watchFormSchema = z.object({
   // Required FK fields
   brand_id: z.string().min(1, "Brand is required"),
   model: z.string().min(1, "Model is required"),
-  case_id: z.string().min(1, "Display case is required"),
-  case_slot: z
-    .string()
-    .min(1, "Case slot is required")
-    .transform((val) => parseInt(val, 10))
-    .pipe(z.number().min(0)),
+  category_id: z.string().min(1, "Category is required"),
 
   // Optional FK
   movement_id: z.string().optional().default(""),
+
+  // Labels — comma-separated IDs from hidden input
+  label_ids: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val ? val.split(",").filter(Boolean) : [])),
 
   // Optional text fields
   reference_number: z.string().optional().default(""),
@@ -102,12 +104,7 @@ export type WatchFormParsed = z.output<typeof watchFormSchema>
 export const quickAddSchema = z.object({
   brand_id: z.string().min(1, "Brand is required"),
   model: z.string().min(1, "Model is required"),
-  case_id: z.string().min(1, "Display case is required"),
-  case_slot: z
-    .string()
-    .min(1, "Case slot is required")
-    .transform((val) => parseInt(val, 10))
-    .pipe(z.number().min(0)),
+  category_id: z.string().min(1, "Category is required"),
 })
 
 // Display labels for enum values

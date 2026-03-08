@@ -12,38 +12,27 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { BrandCombobox } from "@/components/brand-combobox"
-import { CaseSlotPicker } from "@/components/case-slot-picker"
 import { createWatchWithPhoto } from "@/lib/actions/watch-actions"
-import { caseSizeLabels } from "@/lib/validations/display-case"
 import { toast } from "sonner"
-import type { Brand, DisplayCase, WatchWithCover, CaseSize } from "@/lib/types/watch"
+import type { Brand, Category } from "@/lib/types/watch"
 
 type Step = "capture" | "form"
 
 interface AddWatchFlowProps {
   brands: Brand[]
-  cases: DisplayCase[]
-  caseWatchesEntries: [string, WatchWithCover[]][]
+  categories: Category[]
 }
 
-export function AddWatchFlow({ brands, cases, caseWatchesEntries }: AddWatchFlowProps) {
+export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
 
   const [step, setStep] = useState<Step>("capture")
   const [capturedFile, setCapturedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [selectedCaseId, setSelectedCaseId] = useState("")
+  const [selectedCategoryId, setSelectedCategoryId] = useState("")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-
-  // Build a lookup map from the entries
-  const caseWatchesMap = new Map(caseWatchesEntries)
-
-  const selectedCase = cases.find((c) => c.id === selectedCaseId)
-  const watchesInSelectedCase = selectedCaseId
-    ? caseWatchesMap.get(selectedCaseId) ?? []
-    : []
 
   function handleFileCapture(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -193,48 +182,32 @@ export function AddWatchFlow({ brands, cases, caseWatchesEntries }: AddWatchFlow
               />
             </div>
 
-            {/* Display Case */}
+            {/* Category */}
             <div className="space-y-2">
-              <Label htmlFor="case_id">Display Case *</Label>
-              <input type="hidden" name="case_id" value={selectedCaseId} />
+              <Label htmlFor="category_id">Category *</Label>
+              <input type="hidden" name="category_id" value={selectedCategoryId} />
               <Select
-                value={selectedCaseId}
-                onValueChange={(val) => setSelectedCaseId(val ?? "")}
+                value={selectedCategoryId}
+                onValueChange={(val) => setSelectedCategoryId(val ?? "")}
               >
-                <SelectTrigger id="case_id" className="h-11">
-                  <SelectValue placeholder="Select a case" />
+                <SelectTrigger id="category_id" className="h-11">
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {cases.length === 0 ? (
+                  {categories.length === 0 ? (
                     <SelectItem value="" disabled>
-                      No cases — create one in Config first
+                      No categories — create one in Config first
                     </SelectItem>
                   ) : (
-                    cases.map((c) => (
+                    categories.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
-                        {c.name} ({caseSizeLabels[c.capacity] ?? c.capacity})
+                        {c.name}
                       </SelectItem>
                     ))
                   )}
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Case Slot */}
-            {selectedCase && (
-              <div className="space-y-2">
-                <Label>Select Slot *</Label>
-                <CaseSlotPicker
-                  capacity={selectedCase.capacity as CaseSize}
-                  occupiedSlots={watchesInSelectedCase.map((w) => ({
-                    slot: w.case_slot,
-                    watchName: `${w.brand.name} ${w.model}`,
-                    thumbnailUrl: w.cover_photo_url,
-                  }))}
-                  watches={watchesInSelectedCase}
-                />
-              </div>
-            )}
 
             <Button
               type="submit"

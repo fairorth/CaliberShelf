@@ -39,8 +39,6 @@ export type WatchCondition =
   | "fair"
   | "poor"
 
-export type CaseSize = "3" | "8" | "24" | "40"
-
 // ── Brand ──────────────────────────────────────────────────────
 
 export interface Brand {
@@ -81,22 +79,31 @@ export interface Movement {
   updated_at: string
 }
 
-// ── Display Case ───────────────────────────────────────────────
+// ── Category ────────────────────────────────────────────────────
 
-export interface DisplayCase {
+export interface Category {
   id: string
   user_id: string
   name: string
   description: string | null
-  capacity: CaseSize
-  case_type: string | null
+  color: string | null
   display_order: number
   created_at: string
   updated_at: string
 }
 
-export interface DisplayCaseWithWatches extends DisplayCase {
+export interface CategoryWithWatches extends Category {
   watches: WatchWithCover[]
+}
+
+// ── Label ───────────────────────────────────────────────────────
+
+export interface Label {
+  id: string
+  user_id: string
+  name: string
+  color: string
+  created_at: string
 }
 
 // ── Watch ──────────────────────────────────────────────────────
@@ -110,8 +117,7 @@ export interface Watch {
   serial_number: string | null
   nickname: string | null
   movement_id: string | null
-  case_id: string
-  case_slot: number
+  category_id: string
   case_material: CaseMaterial | null
   case_diameter_mm: number | null
   crystal: CrystalType | null
@@ -150,4 +156,5 @@ export interface WatchWithCover extends Watch {
   cover_photo_url: string | null
   brand: Brand
   movement: Movement | null
+  labels?: Label[]
 }
