@@ -30,10 +30,18 @@ interface MovementsTabProps {
 
 export function MovementsTab({ movements }: MovementsTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingMovement, setEditingMovement] = useState<Movement | null>(null)
   const [deletePending, startDeleteTransition] = useTransition()
 
-  const systemMovements = movements.filter((m) => m.user_id === null)
-  const userMovements = movements.filter((m) => m.user_id !== null)
+  function handleAdd() {
+    setEditingMovement(null)
+    setDialogOpen(true)
+  }
+
+  function handleEdit(movement: Movement) {
+    setEditingMovement(movement)
+    setDialogOpen(true)
+  }
 
   function handleDelete(movementId: string, caliberName: string) {
     if (!confirm(`Delete "${caliberName}"? Watches using it will have their movement cleared.`)) return
@@ -47,120 +55,102 @@ export function MovementsTab({ movements }: MovementsTabProps) {
     })
   }
 
+  function handleFormSuccess() {
+    setDialogOpen(false)
+    setEditingMovement(null)
+  }
+
   return (
     <div className="space-y-6">
-      {/* Add movement button */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {systemMovements.length} system movements, {userMovements.length} custom
+          {movements.length} movements
         </p>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger render={<Button size="sm" />}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) setEditingMovement(null)
+        }}>
+          <DialogTrigger render={<Button size="sm" onClick={handleAdd} />}>
             Add Movement
           </DialogTrigger>
           <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add Custom Movement</DialogTitle>
+              <DialogTitle>
+                {editingMovement ? "Edit Movement" : "Add Movement"}
+              </DialogTitle>
             </DialogHeader>
-            <MovementForm onSuccess={() => setDialogOpen(false)} />
+            <MovementForm
+              key={editingMovement?.id ?? "create"}
+              onSuccess={handleFormSuccess}
+              movement={editingMovement ?? undefined}
+            />
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* User movements first */}
-      {userMovements.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium">Your Movements</h3>
-          <MovementTable
-            movements={userMovements}
-            onDelete={handleDelete}
-            deletePending={deletePending}
-            isSystem={false}
-          />
-        </div>
-      )}
-
-      {/* System movements */}
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium">System Movements</h3>
-        <p className="text-xs text-muted-foreground">
-          Pre-loaded reference calibers. Read-only.
-        </p>
-        <MovementTable
-          movements={systemMovements}
-          onDelete={handleDelete}
-          deletePending={deletePending}
-          isSystem={true}
-        />
-      </div>
-    </div>
-  )
-}
-
-function MovementTable({
-  movements,
-  onDelete,
-  deletePending,
-  isSystem,
-}: {
-  movements: Movement[]
-  onDelete: (id: string, name: string) => void
-  deletePending: boolean
-  isSystem: boolean
-}) {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Caliber</TableHead>
-          <TableHead>Manufacturer</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead className="text-center">Jewels</TableHead>
-          <TableHead className="text-center">Beat Rate</TableHead>
-          <TableHead className="text-center">Reserve</TableHead>
-          {!isSystem && <TableHead className="w-20" />}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {movements.map((m) => (
-          <TableRow key={m.id}>
-            <TableCell className="font-medium">
-              {isSystem && <span className="mr-1" title="System caliber">🌐</span>}
-              {m.caliber_name}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {m.manufacturer ?? "—"}
-            </TableCell>
-            <TableCell>
-              <Badge variant="secondary" className="text-xs">
-                {movementLabels[m.movement_type] ?? m.movement_type}
-              </Badge>
-            </TableCell>
-            <TableCell className="text-center">
-              {m.jewel_count ?? "—"}
-            </TableCell>
-            <TableCell className="text-center">
-              {m.beat_rate_vph ? `${(m.beat_rate_vph / 1000).toFixed(1)}k` : "—"}
-            </TableCell>
-            <TableCell className="text-center">
-              {m.power_reserve_hours ? `${m.power_reserve_hours}h` : "—"}
-            </TableCell>
-            {!isSystem && (
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  disabled={deletePending}
-                  onClick={() => onDelete(m.id, m.caliber_name)}
-                  title="Delete movement"
-                >
-                  🗑️
-                </Button>
-              </TableCell>
-            )}
+      {/* Single unified table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Caliber</TableHead>
+            <TableHead>Manufacturer</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead className="text-center">Jewels</TableHead>
+            <TableHead className="text-center">Beat Rate</TableHead>
+            <TableHead className="text-center">Reserve</TableHead>
+            <TableHead className="w-24" />
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {movements.map((m) => (
+            <TableRow key={m.id}>
+              <TableCell className="font-medium">
+                {m.user_id === null && <span className="mr-1" title="System caliber">🌐</span>}
+                {m.caliber_name}
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {m.manufacturer ?? "—"}
+              </TableCell>
+              <TableCell>
+                <Badge variant="secondary" className="text-xs">
+                  {movementLabels[m.movement_type] ?? m.movement_type}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-center">
+                {m.jewel_count ?? "—"}
+              </TableCell>
+              <TableCell className="text-center">
+                {m.beat_rate_vph ? `${(m.beat_rate_vph / 1000).toFixed(1)}k` : "—"}
+              </TableCell>
+              <TableCell className="text-center">
+                {m.power_reserve_hours ? `${m.power_reserve_hours}h` : "—"}
+              </TableCell>
+              <TableCell>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => handleEdit(m)}
+                    title="Edit movement"
+                  >
+                    ✏️
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    disabled={deletePending}
+                    onClick={() => handleDelete(m.id, m.caliber_name)}
+                    title="Delete movement"
+                  >
+                    🗑️
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

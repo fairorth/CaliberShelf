@@ -85,6 +85,12 @@ export const watchFormSchema = z.object({
     .default("")
     .transform((val) => (val === "" ? null : parseFloat(val)))
     .pipe(z.number().min(6).max(30).nullable()),
+  case_height_mm: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val === "" ? null : parseFloat(val)))
+    .pipe(z.number().min(4).max(25).nullable()),
   water_resistance_m: z
     .string()
     .optional()
@@ -154,3 +160,11 @@ export const conditionLabels: Record<string, string> = {
   fair: "Fair",
   poor: "Poor",
 }
+
+export const KNOWN_COMPLICATIONS = [
+  "Date",
+  "Day",
+  "Chronograph",
+  "Moon Phase",
+  "Power Reserve",
+] as const

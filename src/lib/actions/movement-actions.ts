@@ -115,7 +115,6 @@ export async function updateMovement(
       production_year_end: data.production_year_end,
     })
     .eq("id", movementId)
-    .eq("user_id", user.id) // can only edit own movements
 
   if (error) {
     return { error: error.message }
@@ -126,7 +125,8 @@ export async function updateMovement(
 }
 
 /**
- * Delete a user-owned movement. Watches referencing it will have movement_id set to NULL.
+ * Delete a movement. Watches referencing it will have movement_id set to NULL.
+ * RLS ensures users can only delete movements they can see (own + system).
  */
 export async function deleteMovement(movementId: string): Promise<MovementActionState> {
   const supabase = await createClient()
@@ -142,7 +142,6 @@ export async function deleteMovement(movementId: string): Promise<MovementAction
     .from("movements")
     .delete()
     .eq("id", movementId)
-    .eq("user_id", user.id) // can only delete own movements
 
   if (error) {
     return { error: error.message }

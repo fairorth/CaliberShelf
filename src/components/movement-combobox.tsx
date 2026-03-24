@@ -12,11 +12,13 @@ import type { Movement } from "@/lib/types/watch"
 interface MovementComboboxProps {
   movements: Movement[]
   defaultMovementId?: string
+  onMovementChange?: (movement: Movement | null) => void
 }
 
 export function MovementCombobox({
   movements,
   defaultMovementId,
+  onMovementChange,
 }: MovementComboboxProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
@@ -39,12 +41,14 @@ export function MovementCombobox({
     setSelectedId(movement.id)
     setSearch("")
     setOpen(false)
+    onMovementChange?.(movement)
   }
 
   function handleClear() {
     setSelectedId("")
     setSearch("")
     setOpen(false)
+    onMovementChange?.(null)
   }
 
   const displayLabel = selectedMovement

@@ -28,10 +28,10 @@ export function WatchSpecs({ watch }: WatchSpecsProps) {
 
   return (
     <div className="space-y-4">
-      {/* Identity */}
+      {/* ── Identity & Ownership ──────────────────────────────── */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Details</CardTitle>
+          <CardTitle className="text-base">Identity & Ownership</CardTitle>
         </CardHeader>
         <CardContent className="divide-y">
           <SpecRow label="Brand" value={watch.brand.name} />
@@ -39,10 +39,47 @@ export function WatchSpecs({ watch }: WatchSpecsProps) {
           {watch.nickname && <SpecRow label="Nickname" value={watch.nickname} />}
           <SpecRow label="Reference" value={watch.reference_number} />
           <SpecRow label="Serial" value={watch.serial_number} />
+
+          {/* Ownership rows */}
+          {(watch.condition || watch.purchase_date || watch.purchase_price_cents !== null) && (
+            <>
+              <div className="pt-1" />
+              <SpecRow
+                label="Condition"
+                value={watch.condition ? conditionLabels[watch.condition] : null}
+              />
+              <SpecRow
+                label="Purchase Date"
+                value={
+                  watch.purchase_date
+                    ? new Date(watch.purchase_date + "T00:00:00").toLocaleDateString(
+                        "en-US",
+                        { year: "numeric", month: "long", day: "numeric" }
+                      )
+                    : null
+                }
+              />
+              <SpecRow
+                label="Purchase Price"
+                value={
+                  watch.purchase_price_cents !== null
+                    ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
+                    : null
+                }
+              />
+            </>
+          )}
+
+          {/* Notes */}
+          {watch.notes && (
+            <div className="pt-2">
+              <p className="text-sm whitespace-pre-wrap">{watch.notes}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Movement / Caliber */}
+      {/* ── Movement / Caliber ────────────────────────────────── */}
       {movement && (
         <Card>
           <CardHeader className="pb-3">
@@ -96,10 +133,10 @@ export function WatchSpecs({ watch }: WatchSpecsProps) {
         </Card>
       )}
 
-      {/* Physical Specs */}
+      {/* ── Specifications ────────────────────────────────────── */}
       {(watch.case_material || watch.crystal ||
-        watch.case_diameter_mm || watch.lug_width_mm || watch.water_resistance_m ||
-        watch.dial_color || watch.complication) && (
+        watch.case_diameter_mm || watch.lug_width_mm || watch.case_height_mm ||
+        watch.water_resistance_m || watch.dial_color || watch.complication) && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Specifications</CardTitle>
@@ -122,57 +159,25 @@ export function WatchSpecs({ watch }: WatchSpecsProps) {
               value={watch.lug_width_mm ? `${watch.lug_width_mm}mm` : null}
             />
             <SpecRow
+              label="Case Height"
+              value={watch.case_height_mm ? `${watch.case_height_mm}mm` : null}
+            />
+            <SpecRow
               label="Water Resistance"
               value={watch.water_resistance_m ? `${watch.water_resistance_m}m` : null}
             />
             <SpecRow label="Dial Color" value={watch.dial_color} />
-            <SpecRow label="Complications" value={watch.complication} />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Ownership */}
-      {(watch.condition || watch.purchase_date || watch.purchase_price_cents !== null) && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Ownership</CardTitle>
-          </CardHeader>
-          <CardContent className="divide-y">
-            <SpecRow
-              label="Condition"
-              value={watch.condition ? conditionLabels[watch.condition] : null}
-            />
-            <SpecRow
-              label="Purchase Date"
-              value={
-                watch.purchase_date
-                  ? new Date(watch.purchase_date + "T00:00:00").toLocaleDateString(
-                      "en-US",
-                      { year: "numeric", month: "long", day: "numeric" }
-                    )
-                  : null
-              }
-            />
-            <SpecRow
-              label="Purchase Price"
-              value={
-                watch.purchase_price_cents !== null
-                  ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
-                  : null
-              }
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Notes */}
-      {watch.notes && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{watch.notes}</p>
+            {/* Complications as badges */}
+            {watch.complication && (
+              <div className="flex items-start justify-between py-2">
+                <span className="text-sm text-muted-foreground">Complications</span>
+                <div className="flex flex-wrap gap-1 justify-end">
+                  {watch.complication.split(",").map((c) => c.trim()).filter(Boolean).map((c) => (
+                    <Badge key={c} variant="outline" className="text-xs">{c}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
