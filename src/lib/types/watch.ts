@@ -120,6 +120,7 @@ export interface Watch {
   category_id: string
   case_material: CaseMaterial | null
   case_diameter_mm: number | null
+  lug_width_mm: number | null
   crystal: CrystalType | null
   water_resistance_m: number | null
   dial_color: string | null

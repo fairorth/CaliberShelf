@@ -205,6 +205,20 @@ export function WatchForm({
           </div>
 
           <div className="space-y-2">
+            <FormLabel htmlFor="lug_width_mm">Lug Width (mm)</FormLabel>
+            <Input
+              id="lug_width_mm"
+              name="lug_width_mm"
+              type="number"
+              step="0.5"
+              min="6"
+              max="30"
+              placeholder="e.g. 20"
+              defaultValue={watch?.lug_width_mm?.toString() ?? ""}
+            />
+          </div>
+
+          <div className="space-y-2">
             <FormLabel htmlFor="water_resistance_m">Water Resistance (m)</FormLabel>
             <Input
               id="water_resistance_m"

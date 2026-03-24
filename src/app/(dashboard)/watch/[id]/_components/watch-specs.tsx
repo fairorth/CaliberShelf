@@ -98,7 +98,7 @@ export function WatchSpecs({ watch }: WatchSpecsProps) {
 
       {/* Physical Specs */}
       {(watch.case_material || watch.crystal ||
-        watch.case_diameter_mm || watch.water_resistance_m ||
+        watch.case_diameter_mm || watch.lug_width_mm || watch.water_resistance_m ||
         watch.dial_color || watch.complication) && (
         <Card>
           <CardHeader className="pb-3">
@@ -116,6 +116,10 @@ export function WatchSpecs({ watch }: WatchSpecsProps) {
             <SpecRow
               label="Case Diameter"
               value={watch.case_diameter_mm ? `${watch.case_diameter_mm}mm` : null}
+            />
+            <SpecRow
+              label="Lug Width"
+              value={watch.lug_width_mm ? `${watch.lug_width_mm}mm` : null}
             />
             <SpecRow
               label="Water Resistance"

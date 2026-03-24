@@ -79,6 +79,12 @@ export const watchFormSchema = z.object({
     .default("")
     .transform((val) => (val === "" ? null : parseFloat(val)))
     .pipe(z.number().min(10).max(60).nullable()),
+  lug_width_mm: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val === "" ? null : parseFloat(val)))
+    .pipe(z.number().min(6).max(30).nullable()),
   water_resistance_m: z
     .string()
     .optional()
