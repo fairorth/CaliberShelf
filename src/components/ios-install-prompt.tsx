@@ -10,7 +10,9 @@ function shouldShowPrompt(): boolean {
   const isIos =
     /iPad|iPhone|iPod/.test(navigator.userAgent) &&
     !("MSStream" in window)
-  const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+  const isStandalone =
+    ("standalone" in navigator && (navigator as Record<string, unknown>).standalone === true) ||
+    window.matchMedia("(display-mode: standalone)").matches
   const isDismissed = localStorage.getItem(STORAGE_KEY) === "true"
   return isIos && !isStandalone && !isDismissed
 }
