@@ -9,7 +9,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select"
 import { BrandCombobox } from "@/components/brand-combobox"
 import { createWatchWithPhoto } from "@/lib/actions/watch-actions"
@@ -191,7 +190,11 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
                 onValueChange={(val) => setSelectedCategoryId(val ?? "")}
               >
                 <SelectTrigger id="category_id" className="h-11">
-                  <SelectValue placeholder="Select a category" />
+                  <span>
+                    {selectedCategoryId
+                      ? categories.find((c) => c.id === selectedCategoryId)?.name ?? "Select a category"
+                      : "Select a category"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {categories.length === 0 ? (
