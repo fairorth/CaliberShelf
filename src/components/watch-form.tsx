@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label as FormLabel } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
@@ -18,12 +17,12 @@ import {
   caseMaterialLabels,
   crystalLabels,
   conditionLabels,
-  movementLabels,
   KNOWN_COMPLICATIONS,
 } from "@/lib/validations/watch"
 import { labelColorMap } from "@/lib/validations/label"
 import { BrandCombobox } from "@/components/brand-combobox"
 import { MovementCombobox } from "@/components/movement-combobox"
+import { MovementPreview } from "@/components/movement-preview"
 import type { WatchActionState } from "@/lib/actions/watch-actions"
 import type { Watch, Brand, Movement, Category, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
@@ -260,51 +259,9 @@ export function WatchForm({
             />
           </div>
 
-          {/* Movement preview (read-only) */}
+          {/* Movement preview (read-only) — shared component */}
           {selectedMovement && (
-            <div className="rounded-md border bg-muted/30 p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{selectedMovement.caliber_name}</span>
-                <Badge variant="secondary" className="text-xs">
-                  {movementLabels[selectedMovement.movement_type] ?? selectedMovement.movement_type}
-                </Badge>
-                {selectedMovement.user_id === null && (
-                  <span className="text-xs text-muted-foreground" title="System caliber">🌐</span>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                {selectedMovement.manufacturer && (
-                  <span>Mfr: {selectedMovement.manufacturer}</span>
-                )}
-                {selectedMovement.jewel_count !== null && (
-                  <span>{selectedMovement.jewel_count} jewels</span>
-                )}
-                {selectedMovement.beat_rate_vph !== null && (
-                  <span>{selectedMovement.beat_rate_vph.toLocaleString()} vph</span>
-                )}
-                {selectedMovement.power_reserve_hours !== null && (
-                  <span>{selectedMovement.power_reserve_hours}h reserve</span>
-                )}
-                {selectedMovement.diameter_mm !== null && (
-                  <span>
-                    {selectedMovement.diameter_mm}mm × {selectedMovement.height_mm ?? "?"}mm
-                  </span>
-                )}
-              </div>
-              {(selectedMovement.hacking || selectedMovement.hand_windable || selectedMovement.quickset_date) && (
-                <div className="flex flex-wrap gap-1">
-                  {selectedMovement.hacking && (
-                    <Badge variant="outline" className="border-green-500/30 bg-green-500/5 text-green-700 dark:text-green-400 text-[10px]">Hacking</Badge>
-                  )}
-                  {selectedMovement.hand_windable && (
-                    <Badge variant="outline" className="border-blue-500/30 bg-blue-500/5 text-blue-700 dark:text-blue-400 text-[10px]">Hand Wind</Badge>
-                  )}
-                  {selectedMovement.quickset_date && (
-                    <Badge variant="outline" className="border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400 text-[10px]">Quickset Date</Badge>
-                  )}
-                </div>
-              )}
-            </div>
+            <MovementPreview movement={selectedMovement} />
           )}
 
           {/* Case subsection */}
