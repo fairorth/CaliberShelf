@@ -12,76 +12,84 @@ interface MovementPreviewProps {
  */
 export function MovementPreview({ movement }: MovementPreviewProps) {
   return (
-    <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+    <div className="rounded-lg border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.04] to-violet-500/[0.04] p-4 space-y-3">
       {/* Header: caliber name + type badge */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">{movement.caliber_name}</span>
-        <Badge variant="secondary" className="text-xs">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-semibold tracking-tight">{movement.caliber_name}</span>
+        <Badge className="bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/25 text-[10px]">
           {movementLabels[movement.movement_type] ?? movement.movement_type}
         </Badge>
         {movement.user_id === null && (
-          <span className="text-xs text-muted-foreground" title="System caliber">🌐</span>
+          <span className="text-[10px] text-muted-foreground/60" title="System caliber">🌐 System</span>
         )}
       </div>
 
-      {/* Compact stats row */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+      {/* Compact stats in a flowing layout */}
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5">
         {movement.manufacturer && (
-          <span>Mfr: {movement.manufacturer}</span>
+          <Stat label="Manufacturer" value={movement.manufacturer} />
         )}
         {movement.base_caliber && (
-          <span>Base: {movement.base_caliber}</span>
+          <Stat label="Base" value={movement.base_caliber} />
         )}
         {movement.jewel_count !== null && (
-          <span>{movement.jewel_count} jewels</span>
+          <Stat label="Jewels" value={`${movement.jewel_count}`} />
         )}
         {movement.beat_rate_vph !== null && (
-          <span>{movement.beat_rate_vph.toLocaleString()} vph</span>
+          <Stat label="Beat Rate" value={`${movement.beat_rate_vph.toLocaleString()} vph`} />
         )}
         {movement.power_reserve_hours !== null && (
-          <span>{movement.power_reserve_hours}h reserve</span>
+          <Stat label="Reserve" value={`${movement.power_reserve_hours}h`} />
         )}
         {movement.diameter_mm !== null && (
-          <span>
-            {movement.diameter_mm}mm × {movement.height_mm ?? "?"}mm
-          </span>
+          <Stat label="Size" value={`${movement.diameter_mm} × ${movement.height_mm ?? "?"}mm`} />
         )}
         {movement.accuracy_range && (
-          <span>{movement.accuracy_range}</span>
+          <Stat label="Accuracy" value={movement.accuracy_range} />
         )}
         {movement.country_of_origin && (
-          <span>{movement.country_of_origin}</span>
+          <Stat label="Origin" value={movement.country_of_origin} />
         )}
       </div>
 
       {/* Feature badges */}
       {(movement.hacking || movement.hand_windable || movement.quickset_date) && (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
           {movement.hacking && (
-            <Badge variant="outline" className="border-green-500/30 bg-green-500/5 text-green-700 dark:text-green-400 text-[10px]">
-              Hacking
+            <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px]">
+              ✓ Hacking
             </Badge>
           )}
           {movement.hand_windable && (
-            <Badge variant="outline" className="border-blue-500/30 bg-blue-500/5 text-blue-700 dark:text-blue-400 text-[10px]">
-              Hand Wind
+            <Badge variant="outline" className="border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-400 text-[10px]">
+              ✓ Hand Wind
             </Badge>
           )}
           {movement.quickset_date && (
-            <Badge variant="outline" className="border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400 text-[10px]">
-              Quickset Date
+            <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[10px]">
+              ✓ Quickset Date
             </Badge>
           )}
         </div>
       )}
 
-      {/* Movement complications (from the movement table, not the watch) */}
+      {/* Movement complications */}
       {movement.complications && (
-        <div className="flex items-start gap-2 pt-1 text-xs">
+        <div className="flex items-start gap-2 text-xs border-t border-indigo-500/10 pt-2">
           <span className="text-muted-foreground">Complications:</span>
           <span className="font-medium">{movement.complications}</span>
         </div>
       )}
     </div>
+  )
+}
+
+/** Tiny label/value pair for the compact stats grid */
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="inline-flex items-baseline gap-1 text-xs">
+      <span className="text-muted-foreground/70">{label}</span>
+      <span className="font-semibold text-foreground/90">{value}</span>
+    </span>
   )
 }

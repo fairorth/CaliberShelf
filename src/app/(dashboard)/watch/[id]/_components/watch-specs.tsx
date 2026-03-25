@@ -17,22 +17,25 @@ interface WatchSpecsProps {
   labels?: Label[]
 }
 
-function SpecRow({ label, value }: { label: string; value: string | null | undefined }) {
+function SpecRow({ label, value, accent }: { label: string; value: string | null | undefined; accent?: string }) {
   return (
-    <div className="flex justify-between py-2.5">
+    <div className="flex justify-between py-2.5 group">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium">{value || "—"}</span>
+      <span className={`text-sm font-medium ${accent && value && value !== "—" ? accent : ""}`}>
+        {value || "—"}
+      </span>
     </div>
   )
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, icon }: { children: React.ReactNode; icon?: string }) {
   return (
-    <div className="flex items-center gap-2 pb-1 pt-3 first:pt-0">
-      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+    <div className="flex items-center gap-2 pb-1 pt-4 first:pt-1">
+      {icon && <span className="text-xs opacity-60">{icon}</span>}
+      <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
         {children}
       </h4>
-      <div className="h-px flex-1 bg-border/50" />
+      <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
     </div>
   )
 }
@@ -40,7 +43,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
   const movement = watch.movement
 
-  // Parse complications into known + other for display
   const complicationParts = (watch.complication ?? "")
     .split(",")
     .map((s) => s.trim())
@@ -49,21 +51,21 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
   return (
     <div className="space-y-4">
       {/* ── Card 1: Identity & Ownership ──────────────────────── */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-xs">
+      <Card className="overflow-hidden border-l-4 border-l-slate-400/40 dark:border-l-slate-500/30">
+        <CardHeader className="bg-gradient-to-br from-slate-100/80 via-slate-50/40 to-transparent dark:from-slate-800/30 dark:via-slate-900/10 dark:to-transparent pb-3">
+          <CardTitle className="flex items-center gap-2.5 text-base">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-200/80 dark:bg-slate-700/50 text-sm shadow-sm">
               🏷️
             </span>
             Identity & Ownership
           </CardTitle>
         </CardHeader>
-        <CardContent className="divide-y divide-border/50">
+        <CardContent className="divide-y divide-border/40">
           <SpecRow label="Brand" value={watch.brand.name} />
           <SpecRow label="Model" value={watch.model} />
-          <SpecRow label="Nickname" value={watch.nickname} />
-          <SpecRow label="Reference Number" value={watch.reference_number} />
-          <SpecRow label="Serial Number" value={watch.serial_number} />
+          <SpecRow label="Nickname" value={watch.nickname} accent="italic" />
+          <SpecRow label="Reference Number" value={watch.reference_number} accent="font-mono text-xs tracking-wide" />
+          <SpecRow label="Serial Number" value={watch.serial_number} accent="font-mono text-xs tracking-wide" />
           <SpecRow
             label="Condition"
             value={watch.condition ? conditionLabels[watch.condition] : null}
@@ -86,13 +88,16 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
                 ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
                 : null
             }
+            accent="text-emerald-700 dark:text-emerald-400"
           />
 
           {/* Notes */}
-          <div className="py-2.5">
+          <div className="py-3">
             <span className="text-sm text-muted-foreground">Notes</span>
             {watch.notes ? (
-              <p className="mt-1 text-sm italic whitespace-pre-wrap">{watch.notes}</p>
+              <div className="mt-2 rounded-md bg-muted/40 px-3 py-2">
+                <p className="text-sm italic leading-relaxed whitespace-pre-wrap text-foreground/80">{watch.notes}</p>
+              </div>
             ) : (
               <p className="mt-1 text-sm font-medium">—</p>
             )}
@@ -100,11 +105,11 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
         </CardContent>
       </Card>
 
-      {/* ── Card 2: Specifications (Movement + Case + Complications) ── */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-500/5 to-transparent pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-500/10 text-xs">
+      {/* ── Card 2: Specifications ────────────────────────────── */}
+      <Card className="overflow-hidden border-l-4 border-l-blue-400/40 dark:border-l-blue-500/30">
+        <CardHeader className="bg-gradient-to-br from-blue-50/80 via-sky-50/30 to-transparent dark:from-blue-950/30 dark:via-blue-900/10 dark:to-transparent pb-3">
+          <CardTitle className="flex items-center gap-2.5 text-base">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100/80 dark:bg-blue-900/40 text-sm shadow-sm">
               ⚙️
             </span>
             Specifications
@@ -112,16 +117,16 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
         </CardHeader>
         <CardContent className="space-y-1">
           {/* Movement subsection */}
-          <SectionLabel>Movement</SectionLabel>
+          <SectionLabel icon="⏱️">Movement</SectionLabel>
           {movement ? (
             <MovementPreview movement={movement} />
           ) : (
-            <p className="py-2 text-sm text-muted-foreground">No movement selected</p>
+            <p className="py-2 text-sm text-muted-foreground italic">No movement selected</p>
           )}
 
           {/* Case subsection */}
-          <SectionLabel>Case</SectionLabel>
-          <div className="divide-y divide-border/50">
+          <SectionLabel icon="🔩">Case</SectionLabel>
+          <div className="divide-y divide-border/40">
             <SpecRow
               label="Case Material"
               value={watch.case_material ? caseMaterialLabels[watch.case_material] : null}
@@ -145,19 +150,20 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
             <SpecRow
               label="Water Resistance"
               value={watch.water_resistance_m ? `${watch.water_resistance_m}m` : null}
+              accent="text-sky-700 dark:text-sky-400"
             />
             <SpecRow label="Dial Color" value={watch.dial_color} />
           </div>
 
           {/* Complications subsection */}
-          <SectionLabel>Complications</SectionLabel>
+          <SectionLabel icon="✨">Complications</SectionLabel>
           {complicationParts.length > 0 ? (
             <div className="flex flex-wrap gap-1.5 py-2">
               {complicationParts.map((c) => (
                 <Badge
                   key={c}
                   variant="outline"
-                  className="border-purple-500/30 bg-purple-500/5 text-purple-700 dark:text-purple-400 text-xs"
+                  className="border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300 text-xs font-medium"
                 >
                   {c}
                 </Badge>
@@ -170,10 +176,10 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
       </Card>
 
       {/* ── Card 3: Category & Labels ─────────────────────────── */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10 text-xs">
+      <Card className="overflow-hidden border-l-4 border-l-amber-400/40 dark:border-l-amber-500/30">
+        <CardHeader className="bg-gradient-to-br from-amber-50/80 via-orange-50/30 to-transparent dark:from-amber-950/20 dark:via-amber-900/10 dark:to-transparent pb-3">
+          <CardTitle className="flex items-center gap-2.5 text-base">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100/80 dark:bg-amber-900/40 text-sm shadow-sm">
               📂
             </span>
             Category & Labels
@@ -182,9 +188,13 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
         <CardContent className="space-y-4">
           <div className="flex justify-between py-2.5">
             <span className="text-sm text-muted-foreground">Category</span>
-            <span className="text-sm font-medium">
-              {category?.name ?? "—"}
-            </span>
+            {category ? (
+              <Badge className="bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/25 text-xs font-medium">
+                {category.name}
+              </Badge>
+            ) : (
+              <span className="text-sm font-medium">—</span>
+            )}
           </div>
 
           <div>
@@ -196,7 +206,7 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
                   return (
                     <span
                       key={label.id}
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium shadow-sm ${colors.bg} ${colors.text}`}
                     >
                       {label.name}
                     </span>

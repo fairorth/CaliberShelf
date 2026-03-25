@@ -125,10 +125,10 @@ export function WatchForm({
       <input type="hidden" name="purchase_currency" value={watch?.purchase_currency ?? "USD"} />
 
       {/* ── Card 1: Identity & Ownership ────────────────────────── */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
-          <CardTitle className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-xs">
+      <Card className="overflow-hidden border-l-4 border-l-slate-400/40 dark:border-l-slate-500/30">
+        <CardHeader className="bg-gradient-to-br from-slate-100/80 via-slate-50/40 to-transparent dark:from-slate-800/30 dark:via-slate-900/10 dark:to-transparent">
+          <CardTitle className="flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-200/80 dark:bg-slate-700/50 text-sm shadow-sm">
               🏷️
             </span>
             Identity & Ownership
@@ -235,10 +235,10 @@ export function WatchForm({
       </Card>
 
       {/* ── Card 2: Specifications ──────────────────────────────── */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-500/5 to-transparent">
-          <CardTitle className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-500/10 text-xs">
+      <Card className="overflow-hidden border-l-4 border-l-blue-400/40 dark:border-l-blue-500/30">
+        <CardHeader className="bg-gradient-to-br from-blue-50/80 via-sky-50/30 to-transparent dark:from-blue-950/30 dark:via-blue-900/10 dark:to-transparent">
+          <CardTitle className="flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100/80 dark:bg-blue-900/40 text-sm shadow-sm">
               ⚙️
             </span>
             Specifications
@@ -247,8 +247,9 @@ export function WatchForm({
         <CardContent className="space-y-5">
           {/* Movement subsection */}
           <div className="flex items-center gap-2 pt-1">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Movement</h4>
-            <div className="h-px flex-1 bg-border/50" />
+            <span className="text-xs opacity-60">⏱️</span>
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Movement</h4>
+            <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
           <div className="space-y-2">
             <FormLabel>Movement / Caliber</FormLabel>
@@ -266,8 +267,9 @@ export function WatchForm({
 
           {/* Case subsection */}
           <div className="flex items-center gap-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Case</h4>
-            <div className="h-px flex-1 bg-border/50" />
+            <span className="text-xs opacity-60">🔩</span>
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Case</h4>
+            <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
@@ -372,8 +374,9 @@ export function WatchForm({
 
           {/* Complications subsection */}
           <div className="flex items-center gap-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Complications</h4>
-            <div className="h-px flex-1 bg-border/50" />
+            <span className="text-xs opacity-60">✨</span>
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Complications</h4>
+            <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
           <div className="space-y-3">
             <div className="flex flex-wrap gap-4">
@@ -409,10 +412,10 @@ export function WatchForm({
       </Card>
 
       {/* ── Card 3: Category & Labels ───────────────────────────── */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent">
-          <CardTitle className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10 text-xs">
+      <Card className="overflow-hidden border-l-4 border-l-amber-400/40 dark:border-l-amber-500/30">
+        <CardHeader className="bg-gradient-to-br from-amber-50/80 via-orange-50/30 to-transparent dark:from-amber-950/20 dark:via-amber-900/10 dark:to-transparent">
+          <CardTitle className="flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100/80 dark:bg-amber-900/40 text-sm shadow-sm">
               📂
             </span>
             Category & Labels
