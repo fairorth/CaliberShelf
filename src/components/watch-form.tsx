@@ -126,9 +126,14 @@ export function WatchForm({
       <input type="hidden" name="purchase_currency" value={watch?.purchase_currency ?? "USD"} />
 
       {/* ── Card 1: Identity & Ownership ────────────────────────── */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Identity & Ownership</CardTitle>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+          <CardTitle className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-xs">
+              🏷️
+            </span>
+            Identity & Ownership
+          </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
@@ -231,12 +236,21 @@ export function WatchForm({
       </Card>
 
       {/* ── Card 2: Specifications ──────────────────────────────── */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Specifications</CardTitle>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-blue-500/5 to-transparent">
+          <CardTitle className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-500/10 text-xs">
+              ⚙️
+            </span>
+            Specifications
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Movement combobox (full width) */}
+        <CardContent className="space-y-5">
+          {/* Movement subsection */}
+          <div className="flex items-center gap-2 pt-1">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Movement</h4>
+            <div className="h-px flex-1 bg-border/50" />
+          </div>
           <div className="space-y-2">
             <FormLabel>Movement / Caliber</FormLabel>
             <MovementCombobox
@@ -279,15 +293,25 @@ export function WatchForm({
               </div>
               {(selectedMovement.hacking || selectedMovement.hand_windable || selectedMovement.quickset_date) && (
                 <div className="flex flex-wrap gap-1">
-                  {selectedMovement.hacking && <Badge variant="outline" className="text-[10px]">Hacking</Badge>}
-                  {selectedMovement.hand_windable && <Badge variant="outline" className="text-[10px]">Hand Wind</Badge>}
-                  {selectedMovement.quickset_date && <Badge variant="outline" className="text-[10px]">Quickset Date</Badge>}
+                  {selectedMovement.hacking && (
+                    <Badge variant="outline" className="border-green-500/30 bg-green-500/5 text-green-700 dark:text-green-400 text-[10px]">Hacking</Badge>
+                  )}
+                  {selectedMovement.hand_windable && (
+                    <Badge variant="outline" className="border-blue-500/30 bg-blue-500/5 text-blue-700 dark:text-blue-400 text-[10px]">Hand Wind</Badge>
+                  )}
+                  {selectedMovement.quickset_date && (
+                    <Badge variant="outline" className="border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400 text-[10px]">Quickset Date</Badge>
+                  )}
                 </div>
               )}
             </div>
           )}
 
-          {/* Case specs grid */}
+          {/* Case subsection */}
+          <div className="flex items-center gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Case</h4>
+            <div className="h-px flex-1 bg-border/50" />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <FormLabel htmlFor="case_material">Case Material</FormLabel>
@@ -389,9 +413,12 @@ export function WatchForm({
             </div>
           </div>
 
-          {/* Complications checkboxes */}
+          {/* Complications subsection */}
+          <div className="flex items-center gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Complications</h4>
+            <div className="h-px flex-1 bg-border/50" />
+          </div>
           <div className="space-y-3">
-            <FormLabel>Complications</FormLabel>
             <div className="flex flex-wrap gap-4">
               {KNOWN_COMPLICATIONS.map((name) => (
                 <label key={name} className="flex items-center gap-2 text-sm">
@@ -425,9 +452,14 @@ export function WatchForm({
       </Card>
 
       {/* ── Card 3: Category & Labels ───────────────────────────── */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Category & Labels</CardTitle>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent">
+          <CardTitle className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10 text-xs">
+              📂
+            </span>
+            Category & Labels
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Category */}
