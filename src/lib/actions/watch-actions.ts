@@ -57,7 +57,6 @@ export async function createWatch(
       water_resistance_m: data.water_resistance_m,
       dial_color: data.dial_color || null,
       complication: data.complication || null,
-      condition: data.condition || null,
       purchase_date: data.purchase_date || null,
       purchase_price_cents: data.purchase_price !== null
         ? dollarsToCents(data.purchase_price)
@@ -125,7 +124,6 @@ export async function updateWatch(
       water_resistance_m: data.water_resistance_m,
       dial_color: data.dial_color || null,
       complication: data.complication || null,
-      condition: data.condition || null,
       purchase_date: data.purchase_date || null,
       purchase_price_cents: data.purchase_price !== null
         ? dollarsToCents(data.purchase_price)

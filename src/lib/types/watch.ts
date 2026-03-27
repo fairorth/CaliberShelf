@@ -1,15 +1,6 @@
-// Enum types matching Postgres enums from migrations
+// Enum types matching Postgres enums/values from migrations
 
-export type MovementType =
-  | "automatic"
-  | "manual_wind"
-  | "quartz"
-  | "solar"
-  | "spring_drive"
-  | "smartwatch"
-  | "other"
-
-export type DisplayType = "analog" | "digital" | "ana_digi"
+export type CaliberType = "quartz" | "mechanical_manual" | "mechanical_automatic"
 
 export type CaseMaterial =
   | "stainless_steel"
@@ -30,15 +21,6 @@ export type CrystalType =
   | "hesalite"
   | "other"
 
-export type WatchCondition =
-  | "new"
-  | "like_new"
-  | "excellent"
-  | "very_good"
-  | "good"
-  | "fair"
-  | "poor"
-
 // ── Brand ──────────────────────────────────────────────────────
 
 export interface Brand {
@@ -55,26 +37,12 @@ export interface Brand {
 
 export interface Movement {
   id: string
-  user_id: string | null  // NULL = system/seed movement
+  user_id: string
   caliber_name: string
   manufacturer: string | null
-  base_caliber: string | null
-  aliases: string | null
-  movement_type: MovementType
-  display_type: DisplayType
-  diameter_mm: number | null
-  height_mm: number | null
-  jewel_count: number | null
-  beat_rate_vph: number | null
-  power_reserve_hours: number | null
-  accuracy_range: string | null
-  hacking: boolean
-  hand_windable: boolean
-  quickset_date: boolean
-  complications: string | null
-  country_of_origin: string | null
-  production_year_start: number | null
-  production_year_end: number | null
+  caliber_type: CaliberType | null
+  beat_rate: string | null
+  power_reserve: string | null
   created_at: string
   updated_at: string
 }
@@ -126,7 +94,6 @@ export interface Watch {
   water_resistance_m: number | null
   dial_color: string | null
   complication: string | null
-  condition: WatchCondition | null
   purchase_date: string | null
   purchase_price_cents: number | null
   purchase_currency: string

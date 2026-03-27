@@ -5,7 +5,6 @@ import { MovementPreview } from "@/components/movement-preview"
 import {
   caseMaterialLabels,
   crystalLabels,
-  conditionLabels,
 } from "@/lib/validations/watch"
 import { labelColorMap } from "@/lib/validations/label"
 import type { Watch, Brand, Movement, Category, Label } from "@/lib/types/watch"
@@ -66,10 +65,6 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
           <SpecRow label="Nickname" value={watch.nickname} accent="italic" />
           <SpecRow label="Reference Number" value={watch.reference_number} accent="font-mono text-xs tracking-wide" />
           <SpecRow label="Serial Number" value={watch.serial_number} accent="font-mono text-xs tracking-wide" />
-          <SpecRow
-            label="Condition"
-            value={watch.condition ? conditionLabels[watch.condition] : null}
-          />
           <SpecRow
             label="Purchase Date"
             value={

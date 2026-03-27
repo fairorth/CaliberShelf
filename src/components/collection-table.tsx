@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { movementLabels } from "@/lib/validations/watch"
+import { caliberTypeLabels } from "@/lib/validations/movement"
 import { labelColorMap } from "@/lib/validations/label"
 import { bulkDeleteWatches } from "@/lib/actions/watch-actions"
 import { toast } from "sonner"
@@ -47,7 +47,7 @@ function getSortValue(watch: WatchWithCover, key: SortKey): string {
       return watch.model.toLowerCase()
     case "movementType":
       return watch.movement
-        ? (movementLabels[watch.movement.movement_type] ?? watch.movement.movement_type).toLowerCase()
+        ? (watch.movement.caliber_type ? (caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type) : "—").toLowerCase()
         : "zzz" // push empty to bottom
     case "caliber":
       return watch.movement
@@ -332,7 +332,7 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {watch.movement
-                      ? movementLabels[watch.movement.movement_type] ?? watch.movement.movement_type
+                      ? watch.movement.caliber_type ? (caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type) : "—"
                       : "—"}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
@@ -397,7 +397,7 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
                 {watch.movement && (
                   <p className="truncate text-xs text-muted-foreground">
-                    {movementLabels[watch.movement.movement_type] ?? watch.movement.movement_type}
+                    {watch.movement.caliber_type ? (caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type) : "—"}
                     {watch.movement.caliber_name ? ` · ${watch.movement.caliber_name}` : ""}
                   </p>
                 )}

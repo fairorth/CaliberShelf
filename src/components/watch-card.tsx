@@ -5,7 +5,6 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn, formatCurrency } from "@/lib/utils"
-import { conditionLabels } from "@/lib/validations/watch"
 import type { WatchWithCover } from "@/lib/types/watch"
 
 interface WatchCardProps {
@@ -52,11 +51,6 @@ export function WatchCard({ watch }: WatchCardProps) {
             {watch.movement && (
               <Badge variant="secondary" className="text-xs">
                 {watch.movement.caliber_name}
-              </Badge>
-            )}
-            {watch.condition && (
-              <Badge variant="outline" className="text-xs">
-                {conditionLabels[watch.condition] ?? watch.condition}
               </Badge>
             )}
           </div>

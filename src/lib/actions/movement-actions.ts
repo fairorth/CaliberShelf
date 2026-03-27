@@ -10,7 +10,55 @@ export type MovementActionState = {
 }
 
 /**
- * Create a user-owned movement.
+ * Quick-create a movement from the combobox "create new" flow.
+ * Returns the new movement's id, or the existing one if name is taken.
+ */
+export async function createMovementInline(
+  name: string
+): Promise<{ id?: string; error?: string }> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: "You must be logged in." }
+  }
+
+  const trimmedName = name.trim()
+  if (!trimmedName) {
+    return { error: "Caliber name is required." }
+  }
+
+  const { data, error } = await supabase
+    .from("movements")
+    .insert({ user_id: user.id, caliber_name: trimmedName })
+    .select("id")
+    .single()
+
+  if (error) {
+    // Handle unique constraint violation
+    if (error.code === "23505") {
+      const { data: existing } = await supabase
+        .from("movements")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("caliber_name", trimmedName)
+        .single()
+      if (existing) {
+        return { id: (existing as { id: string }).id }
+      }
+      return { error: "Movement already exists." }
+    }
+    return { error: error.message }
+  }
+
+  revalidatePath("/config")
+  return { id: (data as { id: string }).id }
+}
+
+/**
+ * Create a movement via the config form.
  */
 export async function createMovement(
   _prevState: MovementActionState,
@@ -38,26 +86,15 @@ export async function createMovement(
     user_id: user.id,
     caliber_name: data.caliber_name,
     manufacturer: data.manufacturer || null,
-    base_caliber: data.base_caliber || null,
-    aliases: data.aliases || null,
-    movement_type: data.movement_type,
-    display_type: data.display_type,
-    diameter_mm: data.diameter_mm,
-    height_mm: data.height_mm,
-    jewel_count: data.jewel_count,
-    beat_rate_vph: data.beat_rate_vph,
-    power_reserve_hours: data.power_reserve_hours,
-    accuracy_range: data.accuracy_range || null,
-    hacking: data.hacking,
-    hand_windable: data.hand_windable,
-    quickset_date: data.quickset_date,
-    complications: data.complications || null,
-    country_of_origin: data.country_of_origin || null,
-    production_year_start: data.production_year_start,
-    production_year_end: data.production_year_end,
+    caliber_type: data.caliber_type || null,
+    beat_rate: data.beat_rate || null,
+    power_reserve: data.power_reserve || null,
   })
 
   if (error) {
+    if (error.code === "23505") {
+      return { error: "A movement with this caliber name already exists." }
+    }
     return { error: error.message }
   }
 
@@ -66,7 +103,7 @@ export async function createMovement(
 }
 
 /**
- * Update a user-owned movement.
+ * Update a movement.
  */
 export async function updateMovement(
   movementId: string,
@@ -96,27 +133,17 @@ export async function updateMovement(
     .update({
       caliber_name: data.caliber_name,
       manufacturer: data.manufacturer || null,
-      base_caliber: data.base_caliber || null,
-      aliases: data.aliases || null,
-      movement_type: data.movement_type,
-      display_type: data.display_type,
-      diameter_mm: data.diameter_mm,
-      height_mm: data.height_mm,
-      jewel_count: data.jewel_count,
-      beat_rate_vph: data.beat_rate_vph,
-      power_reserve_hours: data.power_reserve_hours,
-      accuracy_range: data.accuracy_range || null,
-      hacking: data.hacking,
-      hand_windable: data.hand_windable,
-      quickset_date: data.quickset_date,
-      complications: data.complications || null,
-      country_of_origin: data.country_of_origin || null,
-      production_year_start: data.production_year_start,
-      production_year_end: data.production_year_end,
+      caliber_type: data.caliber_type || null,
+      beat_rate: data.beat_rate || null,
+      power_reserve: data.power_reserve || null,
     })
     .eq("id", movementId)
+    .eq("user_id", user.id)
 
   if (error) {
+    if (error.code === "23505") {
+      return { error: "A movement with this caliber name already exists." }
+    }
     return { error: error.message }
   }
 
@@ -126,7 +153,6 @@ export async function updateMovement(
 
 /**
  * Delete a movement. Watches referencing it will have movement_id set to NULL.
- * RLS ensures users can only delete movements they can see (own + system).
  */
 export async function deleteMovement(movementId: string): Promise<MovementActionState> {
   const supabase = await createClient()
@@ -142,6 +168,7 @@ export async function deleteMovement(movementId: string): Promise<MovementAction
     .from("movements")
     .delete()
     .eq("id", movementId)
+    .eq("user_id", user.id)
 
   if (error) {
     return { error: error.message }

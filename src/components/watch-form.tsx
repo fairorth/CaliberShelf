@@ -16,7 +16,6 @@ import {
 import {
   caseMaterialLabels,
   crystalLabels,
-  conditionLabels,
   KNOWN_COMPLICATIONS,
 } from "@/lib/validations/watch"
 import { labelColorMap } from "@/lib/validations/label"
@@ -181,23 +180,6 @@ export function WatchForm({
           </div>
 
           {/* Ownership fields */}
-          <div className="space-y-2">
-            <FormLabel htmlFor="condition">Condition</FormLabel>
-            <Select name="condition" defaultValue={watch?.condition ?? ""}>
-              <SelectTrigger id="condition">
-                <SelectValue placeholder="Select condition" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">None selected</SelectItem>
-                {Object.entries(conditionLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="space-y-2">
             <FormLabel htmlFor="purchase_date">Purchase Date</FormLabel>
             <Input

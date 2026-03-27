@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog"
 import { MovementForm } from "./movement-form"
 import { deleteMovement } from "@/lib/actions/movement-actions"
-import { movementLabels } from "@/lib/validations/watch"
+import { caliberTypeLabels } from "@/lib/validations/movement"
 import { toast } from "sonner"
 import type { Movement } from "@/lib/types/watch"
 
@@ -65,19 +65,19 @@ export function MovementsTab({ movements }: MovementsTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {movements.length} movements
+          {movements.length} {movements.length === 1 ? "caliber" : "calibers"}
         </p>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
           setDialogOpen(open)
           if (!open) setEditingMovement(null)
         }}>
           <DialogTrigger render={<Button size="sm" onClick={handleAdd} />}>
-            Add Movement
+            Add Caliber
           </DialogTrigger>
-          <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {editingMovement ? "Edit Movement" : "Add Movement"}
+                {editingMovement ? "Edit Caliber" : "Add Caliber"}
               </DialogTitle>
             </DialogHeader>
             <MovementForm
@@ -89,68 +89,75 @@ export function MovementsTab({ movements }: MovementsTabProps) {
         </Dialog>
       </div>
 
-      {/* Single unified table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Caliber</TableHead>
-            <TableHead>Manufacturer</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-center">Jewels</TableHead>
-            <TableHead className="text-center">Beat Rate</TableHead>
-            <TableHead className="text-center">Reserve</TableHead>
-            <TableHead className="w-24" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {movements.map((m) => (
-            <TableRow key={m.id}>
-              <TableCell className="font-medium">
-                {m.user_id === null && <span className="mr-1" title="System caliber">🌐</span>}
-                {m.caliber_name}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {m.manufacturer ?? "—"}
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className="text-xs">
-                  {movementLabels[m.movement_type] ?? m.movement_type}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-center">
-                {m.jewel_count ?? "—"}
-              </TableCell>
-              <TableCell className="text-center">
-                {m.beat_rate_vph ? `${(m.beat_rate_vph / 1000).toFixed(1)}k` : "—"}
-              </TableCell>
-              <TableCell className="text-center">
-                {m.power_reserve_hours ? `${m.power_reserve_hours}h` : "—"}
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => handleEdit(m)}
-                    title="Edit movement"
-                  >
-                    ✏️
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    disabled={deletePending}
-                    onClick={() => handleDelete(m.id, m.caliber_name)}
-                    title="Delete movement"
-                  >
-                    🗑️
-                  </Button>
-                </div>
-              </TableCell>
+      {movements.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <span className="text-4xl">⏱️</span>
+          <p className="mt-3 text-sm text-muted-foreground">
+            No calibers yet. Add one here or type a new name when editing a watch.
+          </p>
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Caliber</TableHead>
+              <TableHead>Manufacturer</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Beat Rate</TableHead>
+              <TableHead>Reserve</TableHead>
+              <TableHead className="w-24" />
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {movements.map((m) => (
+              <TableRow key={m.id}>
+                <TableCell className="font-medium">
+                  {m.caliber_name}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {m.manufacturer ?? "—"}
+                </TableCell>
+                <TableCell>
+                  {m.caliber_type ? (
+                    <Badge variant="secondary" className="text-xs">
+                      {caliberTypeLabels[m.caliber_type] ?? m.caliber_type}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {m.beat_rate ?? "—"}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {m.power_reserve ?? "—"}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() => handleEdit(m)}
+                      title="Edit caliber"
+                    >
+                      ✏️
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      disabled={deletePending}
+                      onClick={() => handleDelete(m.id, m.caliber_name)}
+                      title="Delete caliber"
+                    >
+                      🗑️
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   )
 }

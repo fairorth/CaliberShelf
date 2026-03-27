@@ -1,16 +1,6 @@
 import { z } from "zod"
 
 // Enum schemas matching Postgres enums
-export const movementTypeSchema = z.enum([
-  "automatic",
-  "manual_wind",
-  "quartz",
-  "solar",
-  "spring_drive",
-  "smartwatch",
-  "other",
-])
-
 export const caseMaterialSchema = z.enum([
   "stainless_steel",
   "titanium",
@@ -30,16 +20,6 @@ export const crystalTypeSchema = z.enum([
   "acrylic",
   "hesalite",
   "other",
-])
-
-export const watchConditionSchema = z.enum([
-  "new",
-  "like_new",
-  "excellent",
-  "very_good",
-  "good",
-  "fair",
-  "poor",
 ])
 
 // Main watch form schema — validates user input for create/update
@@ -70,7 +50,6 @@ export const watchFormSchema = z.object({
   // Optional enum fields (empty string = null in the database)
   case_material: z.union([caseMaterialSchema, z.literal("")]).optional().default(""),
   crystal: z.union([crystalTypeSchema, z.literal("")]).optional().default(""),
-  condition: z.union([watchConditionSchema, z.literal("")]).optional().default(""),
 
   // Optional numeric fields
   case_diameter_mm: z
@@ -120,16 +99,6 @@ export const quickAddSchema = z.object({
 })
 
 // Display labels for enum values
-export const movementLabels: Record<string, string> = {
-  automatic: "Automatic",
-  manual_wind: "Manual Wind",
-  quartz: "Quartz",
-  solar: "Solar",
-  spring_drive: "Spring Drive",
-  smartwatch: "Smartwatch",
-  other: "Other",
-}
-
 export const caseMaterialLabels: Record<string, string> = {
   stainless_steel: "Stainless Steel",
   titanium: "Titanium",
@@ -149,16 +118,6 @@ export const crystalLabels: Record<string, string> = {
   acrylic: "Acrylic",
   hesalite: "Hesalite",
   other: "Other",
-}
-
-export const conditionLabels: Record<string, string> = {
-  new: "New / Unworn",
-  like_new: "Like New",
-  excellent: "Excellent",
-  very_good: "Very Good",
-  good: "Good",
-  fair: "Fair",
-  poor: "Poor",
 }
 
 export const KNOWN_COMPLICATIONS = [
