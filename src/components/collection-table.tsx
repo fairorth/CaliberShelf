@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useMemo, useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -11,14 +11,86 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 import { movementLabels } from "@/lib/validations/watch"
 import { labelColorMap } from "@/lib/validations/label"
+import { bulkDeleteWatches } from "@/lib/actions/watch-actions"
+import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 import type { WatchWithCover, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
 
 interface CollectionTableProps {
   watches: WatchWithCover[]
 }
+
+// ── Sorting ────────────────────────────────────────────────────────
+
+type SortKey = "brand" | "model" | "movementType" | "caliber" | "labels"
+type SortDir = "asc" | "desc"
+
+function getSortValue(watch: WatchWithCover, key: SortKey): string {
+  switch (key) {
+    case "brand":
+      return watch.brand.name.toLowerCase()
+    case "model":
+      return watch.model.toLowerCase()
+    case "movementType":
+      return watch.movement
+        ? (movementLabels[watch.movement.movement_type] ?? watch.movement.movement_type).toLowerCase()
+        : "zzz" // push empty to bottom
+    case "caliber":
+      return watch.movement
+        ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim().toLowerCase()
+        : "zzz"
+    case "labels":
+      return watch.labels?.map((l) => l.name).sort().join(",").toLowerCase() ?? ""
+  }
+}
+
+function SortableHeader({
+  label,
+  sortKey,
+  currentKey,
+  currentDir,
+  onSort,
+  className,
+}: {
+  label: string
+  sortKey: SortKey
+  currentKey: SortKey | null
+  currentDir: SortDir
+  onSort: (key: SortKey) => void
+  className?: string
+}) {
+  const isActive = currentKey === sortKey
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className="flex items-center gap-1 text-left font-medium hover:text-foreground"
+      >
+        {label}
+        <span className="text-[10px]">
+          {isActive ? (currentDir === "asc" ? "▲" : "▼") : "⇅"}
+        </span>
+      </button>
+    </TableHead>
+  )
+}
+
+// ── Sub-components ─────────────────────────────────────────────────
 
 function LabelBadge({ label }: { label: Label }) {
   const colors = labelColorMap[label.color as LabelColor] ?? labelColorMap.blue
@@ -40,9 +112,7 @@ function HoverPhoto({
   alt: string
   size: "sm" | "md"
 }) {
-  const thumbClass = size === "sm"
-    ? "h-12 w-12"
-    : "h-14 w-14"
+  const thumbClass = size === "sm" ? "h-12 w-12" : "h-14 w-14"
   const thumbPx = size === "sm" ? "48px" : "56px"
   const containerRef = useRef<HTMLDivElement>(null)
   const [showAbove, setShowAbove] = useState(false)
@@ -50,7 +120,6 @@ function HoverPhoto({
   function handleMouseEnter() {
     if (!containerRef.current) return
     const rect = containerRef.current.getBoundingClientRect()
-    // If thumbnail is in the top 300px of viewport, show popup below; otherwise above
     setShowAbove(rect.top > 300)
   }
 
@@ -60,24 +129,13 @@ function HoverPhoto({
       className="group/photo relative"
       onMouseEnter={handleMouseEnter}
     >
-      {/* Thumbnail */}
       <div className={`${thumbClass} overflow-hidden rounded-md bg-muted`}>
         {url ? (
-          <Image
-            src={url}
-            alt={alt}
-            fill
-            className="object-cover"
-            sizes={thumbPx}
-          />
+          <Image src={url} alt={alt} fill className="object-cover" sizes={thumbPx} />
         ) : (
-          <div className="flex h-full items-center justify-center text-lg text-muted-foreground">
-            ⌚
-          </div>
+          <div className="flex h-full items-center justify-center text-lg text-muted-foreground">⌚</div>
         )}
       </div>
-
-      {/* Hover preview — only if we have a photo */}
       {url && (
         <div
           className={`pointer-events-none invisible absolute left-14 z-50 opacity-0 transition-all duration-200 group-hover/photo:visible group-hover/photo:opacity-100 ${
@@ -86,13 +144,7 @@ function HoverPhoto({
         >
           <div className="overflow-hidden rounded-lg border bg-background shadow-xl">
             <div className="relative h-64 w-64">
-              <Image
-                src={url}
-                alt={alt}
-                fill
-                className="object-cover"
-                sizes="256px"
-              />
+              <Image src={url} alt={alt} fill className="object-cover" sizes="256px" />
             </div>
           </div>
         </div>
@@ -101,7 +153,66 @@ function HoverPhoto({
   )
 }
 
+// ── Main Component ─────────────────────────────────────────────────
+
 export function CollectionTable({ watches }: CollectionTableProps) {
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>("asc")
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
+  // Sort watches
+  const sorted = useMemo(() => {
+    if (!sortKey) return watches
+    return [...watches].sort((a, b) => {
+      const va = getSortValue(a, sortKey)
+      const vb = getSortValue(b, sortKey)
+      const cmp = va.localeCompare(vb)
+      return sortDir === "asc" ? cmp : -cmp
+    })
+  }, [watches, sortKey, sortDir])
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+    } else {
+      setSortKey(key)
+      setSortDir("asc")
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleAll() {
+    if (selected.size === sorted.length) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(sorted.map((w) => w.id)))
+    }
+  }
+
+  function handleBulkDelete() {
+    const ids = Array.from(selected)
+    startTransition(async () => {
+      const result = await bulkDeleteWatches(ids)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success(`${ids.length} ${ids.length === 1 ? "watch" : "watches"} deleted.`)
+        setSelected(new Set())
+      }
+      setShowDeleteConfirm(false)
+    })
+  }
+
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -114,25 +225,92 @@ export function CollectionTable({ watches }: CollectionTableProps) {
     )
   }
 
+  const allSelected = selected.size === sorted.length && sorted.length > 0
+  const someSelected = selected.size > 0
+
   return (
     <>
-      {/* Desktop table — hidden on small screens */}
+      {/* Bulk action bar */}
+      {someSelected && (
+        <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-2">
+          <span className="text-sm font-medium">
+            {selected.size} {selected.size === 1 ? "watch" : "watches"} selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isPending}
+          >
+            Delete Selected
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelected(new Set())}
+          >
+            Clear
+          </Button>
+        </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selected.size} {selected.size === 1 ? "watch" : "watches"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {selected.size} {selected.size === 1 ? "watch" : "watches"} and
+              all associated photos, wear logs, and labels. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={isPending}>
+              {isPending ? "Deleting..." : `Confirm Delete (${selected.size})`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Desktop table */}
       <div className="hidden sm:block">
         <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                    className="h-4 w-4 rounded border-border accent-primary"
+                    aria-label="Select all"
+                  />
+                </TableHead>
                 <TableHead className="w-[72px]">Photo</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead>Model</TableHead>
-                <TableHead>Movement Type</TableHead>
-                <TableHead>Caliber</TableHead>
-                <TableHead>Labels</TableHead>
+                <SortableHeader label="Brand" sortKey="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Model" sortKey="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Movement Type" sortKey="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Caliber" sortKey="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Labels" sortKey="labels" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {watches.map((watch) => (
-                <TableRow key={watch.id} className="group">
+              {sorted.map((watch) => (
+                <TableRow
+                  key={watch.id}
+                  className={cn("group", selected.has(watch.id) && "bg-destructive/5")}
+                >
+                  <TableCell className="py-2">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(watch.id)}
+                      onChange={() => toggleSelect(watch.id)}
+                      className="h-4 w-4 rounded border-border accent-primary"
+                      aria-label={`Select ${watch.brand.name} ${watch.model}`}
+                    />
+                  </TableCell>
                   <TableCell className="py-2">
                     <Link href={`/watch/${watch.id}`} className="block">
                       <HoverPhoto
@@ -143,18 +321,12 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <Link
-                      href={`/watch/${watch.id}`}
-                      className="font-medium hover:underline"
-                    >
+                    <Link href={`/watch/${watch.id}`} className="font-medium hover:underline">
                       {watch.brand.name}
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <Link
-                      href={`/watch/${watch.id}`}
-                      className="text-muted-foreground hover:underline"
-                    >
+                    <Link href={`/watch/${watch.id}`} className="text-muted-foreground hover:underline">
                       {watch.model}
                     </Link>
                   </TableCell>
@@ -186,51 +358,59 @@ export function CollectionTable({ watches }: CollectionTableProps) {
         </div>
       </div>
 
-      {/* Mobile stacked cards — visible on small screens */}
+      {/* Mobile stacked cards */}
       <div className="space-y-2 sm:hidden">
-        {watches.map((watch) => (
-          <Link
+        {sorted.map((watch) => (
+          <div
             key={watch.id}
-            href={`/watch/${watch.id}`}
-            className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent"
+            className={cn(
+              "flex items-center gap-3 rounded-lg border p-3 transition-colors",
+              selected.has(watch.id) && "border-destructive/30 bg-destructive/5"
+            )}
           >
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
-              {watch.cover_photo_url ? (
-                <Image
-                  src={watch.cover_photo_url}
-                  alt={`${watch.brand.name} ${watch.model}`}
-                  fill
-                  className="object-cover"
-                  sizes="56px"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-lg text-muted-foreground">
-                  ⌚
-                </div>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold leading-tight">
-                {watch.brand.name}
-              </p>
-              <p className="truncate text-sm text-muted-foreground">
-                {watch.model}
-              </p>
-              {watch.movement && (
-                <p className="truncate text-xs text-muted-foreground">
-                  {movementLabels[watch.movement.movement_type] ?? watch.movement.movement_type}
-                  {watch.movement.caliber_name ? ` · ${watch.movement.caliber_name}` : ""}
-                </p>
-              )}
-              {watch.labels && watch.labels.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {watch.labels.map((label) => (
-                    <LabelBadge key={label.id} label={label} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </Link>
+            <input
+              type="checkbox"
+              checked={selected.has(watch.id)}
+              onChange={() => toggleSelect(watch.id)}
+              className="h-4 w-4 shrink-0 rounded border-border accent-primary"
+              aria-label={`Select ${watch.brand.name} ${watch.model}`}
+            />
+            <Link
+              href={`/watch/${watch.id}`}
+              className="flex min-w-0 flex-1 items-center gap-3"
+            >
+              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
+                {watch.cover_photo_url ? (
+                  <Image
+                    src={watch.cover_photo_url}
+                    alt={`${watch.brand.name} ${watch.model}`}
+                    fill
+                    className="object-cover"
+                    sizes="56px"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-lg text-muted-foreground">⌚</div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold leading-tight">{watch.brand.name}</p>
+                <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
+                {watch.movement && (
+                  <p className="truncate text-xs text-muted-foreground">
+                    {movementLabels[watch.movement.movement_type] ?? watch.movement.movement_type}
+                    {watch.movement.caliber_name ? ` · ${watch.movement.caliber_name}` : ""}
+                  </p>
+                )}
+                {watch.labels && watch.labels.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {watch.labels.map((label) => (
+                      <LabelBadge key={label.id} label={label} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Link>
+          </div>
         ))}
       </div>
     </>

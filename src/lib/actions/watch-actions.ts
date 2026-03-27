@@ -191,6 +191,56 @@ export async function deleteWatch(watchId: string): Promise<WatchActionState> {
   redirect("/dashboard")
 }
 
+/**
+ * Bulk delete watches and all associated photos from storage.
+ */
+export async function bulkDeleteWatches(
+  watchIds: string[]
+): Promise<WatchActionState> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: "You must be logged in." }
+  }
+
+  if (watchIds.length === 0) {
+    return { error: "No watches selected." }
+  }
+
+  // Get all photo storage paths for these watches
+  const { data: photos } = await supabase
+    .from("watch_photos")
+    .select("storage_path")
+    .in("watch_id", watchIds)
+    .eq("user_id", user.id)
+
+  // Delete photos from storage bucket
+  if (photos && photos.length > 0) {
+    const paths = photos.map(
+      (p: { storage_path: string }) => p.storage_path
+    )
+    await supabase.storage.from("watch-photos").remove(paths)
+  }
+
+  // Delete the watches (cascades to watch_photos, watch_labels, wear_logs)
+  const { error } = await supabase
+    .from("watches")
+    .delete()
+    .in("id", watchIds)
+    .eq("user_id", user.id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath("/dashboard")
+  revalidatePath("/collection")
+  return { success: true }
+}
+
 const PHOTO_BUCKET = "watch-photos"
 const PHOTO_MAX_SIZE = 10 * 1024 * 1024 // 10MB
 const PHOTO_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"]
