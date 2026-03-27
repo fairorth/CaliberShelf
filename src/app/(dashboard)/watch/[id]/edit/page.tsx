@@ -6,6 +6,7 @@ import { getMovements } from "@/lib/queries/movements"
 import { getCategories } from "@/lib/queries/categories"
 import { getLabels, getLabelsForWatch } from "@/lib/queries/labels"
 import { WatchForm } from "@/components/watch-form"
+import { PhotoGallery } from "../_components/photo-gallery"
 import { updateWatch } from "@/lib/actions/watch-actions"
 import { Button } from "@/components/ui/button"
 
@@ -45,6 +46,12 @@ export default async function EditWatchPage({
   // Bind the watchId to the update action
   const boundUpdateWatch = updateWatch.bind(null, watch.id)
 
+  // Convert Map to plain object for client component serialization
+  const photoUrls: Record<string, string> = {}
+  for (const [key, value] of watch.photo_urls) {
+    photoUrls[key] = value
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center gap-4">
@@ -55,6 +62,15 @@ export default async function EditWatchPage({
           Edit {watch.brand.name} {watch.model}
         </h1>
       </div>
+
+      {/* Watch photo gallery — same as detail page */}
+      {watch.watch_photos.length > 0 && (
+        <PhotoGallery
+          photos={watch.watch_photos}
+          photoUrls={photoUrls}
+          watchId={watch.id}
+        />
+      )}
 
       <WatchForm
         action={boundUpdateWatch}
