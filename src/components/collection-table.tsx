@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -43,9 +44,22 @@ function HoverPhoto({
     ? "h-12 w-12"
     : "h-14 w-14"
   const thumbPx = size === "sm" ? "48px" : "56px"
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [showAbove, setShowAbove] = useState(false)
+
+  function handleMouseEnter() {
+    if (!containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    // If thumbnail is in the top 300px of viewport, show popup below; otherwise above
+    setShowAbove(rect.top > 300)
+  }
 
   return (
-    <div className="group/photo relative">
+    <div
+      ref={containerRef}
+      className="group/photo relative"
+      onMouseEnter={handleMouseEnter}
+    >
       {/* Thumbnail */}
       <div className={`${thumbClass} overflow-hidden rounded-md bg-muted`}>
         {url ? (
@@ -65,7 +79,11 @@ function HoverPhoto({
 
       {/* Hover preview — only if we have a photo */}
       {url && (
-        <div className="pointer-events-none invisible absolute bottom-0 left-14 z-50 opacity-0 transition-all duration-200 group-hover/photo:visible group-hover/photo:opacity-100">
+        <div
+          className={`pointer-events-none invisible absolute left-14 z-50 opacity-0 transition-all duration-200 group-hover/photo:visible group-hover/photo:opacity-100 ${
+            showAbove ? "bottom-0" : "top-0"
+          }`}
+        >
           <div className="overflow-hidden rounded-lg border bg-background shadow-xl">
             <div className="relative h-64 w-64">
               <Image
