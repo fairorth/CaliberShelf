@@ -9,51 +9,37 @@ const PHOTO_BUCKET = "watch-photos"
 const PHOTO_MAX_SIZE = 10 * 1024 * 1024 // 10MB
 const PHOTO_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"]
 
-export type BatchImportResult = {
-  totalRequested: number
-  successCount: number
-  errors: string[]
+export type BatchSetupResult = {
+  brandId?: string
+  nextBatchNum?: number
+  error?: string
+}
+
+export type SingleImportResult = {
+  success: boolean
+  error?: string
 }
 
 /**
- * Batch-create watches from uploaded images.
- * Each image becomes a new watch with a cover photo, auto-named "Batch N",
- * assigned to an "Unknown" brand (auto-created if needed) and the selected category.
+ * Step 1: Prepare for batch import.
+ * Ensures "Unknown" brand exists and finds the next batch number.
+ * Called once before the per-image loop.
  */
-export async function batchImportWatches(
-  formData: FormData
-): Promise<BatchImportResult> {
+export async function prepareBatchImport(): Promise<BatchSetupResult> {
   const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) {
-    return { totalRequested: 0, successCount: 0, errors: ["You must be logged in."] }
-  }
+  if (!user) return { error: "You must be logged in." }
 
-  const categoryId = formData.get("category_id") as string
-  if (!categoryId) {
-    return { totalRequested: 0, successCount: 0, errors: ["Category is required."] }
-  }
-
-  const files = formData.getAll("photos") as File[]
-  if (files.length === 0) {
-    return { totalRequested: 0, successCount: 0, errors: ["No images selected."] }
-  }
-
-  // Ensure "Unknown" brand exists for this user
+  // Ensure "Unknown" brand exists
   const brandResult = await createBrandInline("Unknown")
   if (!brandResult.id) {
-    return {
-      totalRequested: files.length,
-      successCount: 0,
-      errors: [brandResult.error ?? "Failed to create Unknown brand."],
-    }
+    return { error: brandResult.error ?? "Failed to create Unknown brand." }
   }
-  const unknownBrandId = brandResult.id
 
-  // Find the highest existing "Batch N" number so we continue the sequence
+  // Find highest existing "Batch N" number
   const { data: existingBatches } = await supabase
     .from("watches")
     .select("model")
@@ -71,82 +57,95 @@ export async function batchImportWatches(
     }
   }
 
-  const errors: string[] = []
-  let successCount = 0
+  return { brandId: brandResult.id, nextBatchNum }
+}
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i]
-    const batchName = `Batch ${nextBatchNum + i}`
+/**
+ * Step 2: Import a single watch with its photo.
+ * Called once per image from the client-side loop.
+ * Each call sends only one file, staying well under the body size limit.
+ */
+export async function importSingleWatch(
+  formData: FormData
+): Promise<SingleImportResult> {
+  const supabase = await createClient()
 
-    // Validate file
-    if (!file || file.size === 0) {
-      errors.push(`Image ${i + 1}: Empty file, skipped.`)
-      continue
-    }
-    if (file.size > PHOTO_MAX_SIZE) {
-      errors.push(`Image ${i + 1} (${file.name}): Exceeds 10MB limit, skipped.`)
-      continue
-    }
-    if (!PHOTO_ALLOWED_TYPES.includes(file.type)) {
-      errors.push(`Image ${i + 1} (${file.name}): Unsupported file type "${file.type}", skipped.`)
-      continue
-    }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: "You must be logged in." }
 
-    // Create the watch
-    const { data: watch, error: watchError } = await supabase
-      .from("watches")
-      .insert({
-        user_id: user.id,
-        brand_id: unknownBrandId,
-        model: batchName,
-        category_id: categoryId,
-      })
-      .select("id")
-      .single()
+  const brandId = formData.get("brand_id") as string
+  const categoryId = formData.get("category_id") as string
+  const batchName = formData.get("batch_name") as string
+  const file = formData.get("photo") as File
 
-    if (watchError || !watch) {
-      errors.push(`Image ${i + 1} (${file.name}): Failed to create watch — ${watchError?.message ?? "unknown error"}.`)
-      continue
-    }
+  if (!brandId || !categoryId || !batchName) {
+    return { success: false, error: "Missing required fields." }
+  }
 
-    const watchId = (watch as { id: string }).id
+  // Validate file
+  if (!file || file.size === 0) {
+    return { success: false, error: "Empty file." }
+  }
+  if (file.size > PHOTO_MAX_SIZE) {
+    return { success: false, error: "Exceeds 10MB limit." }
+  }
+  if (!PHOTO_ALLOWED_TYPES.includes(file.type)) {
+    return { success: false, error: `Unsupported file type "${file.type}".` }
+  }
 
-    // Upload photo
-    const ext = file.name.split(".").pop() ?? "jpg"
-    const uniqueName = `${crypto.randomUUID()}.${ext}`
-    const storagePath = buildStoragePath(user.id, watchId, uniqueName)
-
-    const { error: uploadError } = await supabase.storage
-      .from(PHOTO_BUCKET)
-      .upload(storagePath, file, {
-        contentType: file.type,
-        upsert: false,
-      })
-
-    if (uploadError) {
-      errors.push(`Image ${i + 1} (${file.name}): Watch created but photo upload failed — ${uploadError.message}.`)
-      successCount++ // watch was created, just no photo
-      continue
-    }
-
-    // Create photo record
-    await supabase.from("watch_photos").insert({
-      watch_id: watchId,
+  // Create the watch
+  const { data: watch, error: watchError } = await supabase
+    .from("watches")
+    .insert({
       user_id: user.id,
-      storage_path: storagePath,
-      display_order: 0,
-      is_cover: true,
+      brand_id: brandId,
+      model: batchName,
+      category_id: categoryId,
+    })
+    .select("id")
+    .single()
+
+  if (watchError || !watch) {
+    return { success: false, error: `Failed to create watch: ${watchError?.message ?? "unknown"}` }
+  }
+
+  const watchId = (watch as { id: string }).id
+
+  // Upload photo
+  const ext = file.name.split(".").pop() ?? "jpg"
+  const uniqueName = `${crypto.randomUUID()}.${ext}`
+  const storagePath = buildStoragePath(user.id, watchId, uniqueName)
+
+  const { error: uploadError } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .upload(storagePath, file, {
+      contentType: file.type,
+      upsert: false,
     })
 
-    successCount++
+  if (uploadError) {
+    return { success: true, error: `Watch created but photo failed: ${uploadError.message}` }
   }
 
+  // Create photo record
+  await supabase.from("watch_photos").insert({
+    watch_id: watchId,
+    user_id: user.id,
+    storage_path: storagePath,
+    display_order: 0,
+    is_cover: true,
+  })
+
+  return { success: true }
+}
+
+/**
+ * Step 3: Revalidate paths after batch is complete.
+ * Called once after all imports finish.
+ */
+export async function finalizeBatchImport(): Promise<void> {
   revalidatePath("/dashboard")
   revalidatePath("/collection")
-
-  return {
-    totalRequested: files.length,
-    successCount,
-    errors,
-  }
 }

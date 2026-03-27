@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useTransition, useCallback } from "react"
+import { useState, useRef, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -12,8 +12,11 @@ import {
   SelectTrigger,
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { batchImportWatches } from "@/lib/actions/batch-import-actions"
-import type { BatchImportResult } from "@/lib/actions/batch-import-actions"
+import {
+  prepareBatchImport,
+  importSingleWatch,
+  finalizeBatchImport,
+} from "@/lib/actions/batch-import-actions"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { Category } from "@/lib/types/watch"
@@ -27,13 +30,20 @@ interface PreviewImage {
   url: string
 }
 
+interface ImportResult {
+  totalRequested: number
+  successCount: number
+  errors: string[]
+}
+
 export function BatchImportForm({ categories }: BatchImportFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [images, setImages] = useState<PreviewImage[]>([])
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "")
   const [isDragging, setIsDragging] = useState(false)
-  const [isPending, startTransition] = useTransition()
-  const [result, setResult] = useState<BatchImportResult | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [progress, setProgress] = useState({ current: 0, total: 0 })
+  const [result, setResult] = useState<ImportResult | null>(null)
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const newImages: PreviewImage[] = []
@@ -70,33 +80,76 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
     }
   }
 
-  function handleImport() {
+  async function handleImport() {
     if (images.length === 0 || !categoryId) return
 
-    startTransition(async () => {
+    setImporting(true)
+    setProgress({ current: 0, total: images.length })
+
+    // Step 1: Prepare (get brand ID + batch numbering)
+    const setup = await prepareBatchImport()
+    if (setup.error || !setup.brandId || !setup.nextBatchNum) {
+      toast.error(setup.error ?? "Failed to prepare import.")
+      setImporting(false)
+      return
+    }
+
+    // Step 2: Import one image at a time
+    const errors: string[] = []
+    let successCount = 0
+
+    for (let i = 0; i < images.length; i++) {
+      setProgress({ current: i + 1, total: images.length })
+
+      const img = images[i]
+      const batchName = `Batch ${setup.nextBatchNum + i}`
+
       const formData = new FormData()
+      formData.set("brand_id", setup.brandId)
       formData.set("category_id", categoryId)
-      for (const img of images) {
-        formData.append("photos", img.file)
-      }
+      formData.set("batch_name", batchName)
+      formData.set("photo", img.file)
 
-      const importResult = await batchImportWatches(formData)
-      setResult(importResult)
+      const result = await importSingleWatch(formData)
 
-      if (importResult.successCount === importResult.totalRequested) {
-        toast.success(`All ${importResult.successCount} watches imported!`)
-        // Clear images after full success
-        for (const img of images) {
-          URL.revokeObjectURL(img.url)
+      if (result.success) {
+        successCount++
+        if (result.error) {
+          // Watch created but photo failed
+          errors.push(`${batchName} (${img.file.name}): ${result.error}`)
         }
-        setImages([])
-      } else if (importResult.successCount > 0) {
-        toast.success(`${importResult.successCount} of ${importResult.totalRequested} watches imported.`)
       } else {
-        toast.error("Import failed. Check errors below.")
+        errors.push(`${batchName} (${img.file.name}): ${result.error ?? "Unknown error"}`)
       }
-    })
+    }
+
+    // Step 3: Revalidate paths
+    await finalizeBatchImport()
+
+    const importResult: ImportResult = {
+      totalRequested: images.length,
+      successCount,
+      errors,
+    }
+    setResult(importResult)
+    setImporting(false)
+
+    if (successCount === images.length && errors.length === 0) {
+      toast.success(`All ${successCount} watches imported!`)
+      for (const img of images) {
+        URL.revokeObjectURL(img.url)
+      }
+      setImages([])
+    } else if (successCount > 0) {
+      toast.success(`${successCount} of ${images.length} watches imported.`)
+    } else {
+      toast.error("Import failed. Check errors below.")
+    }
   }
+
+  const progressPercent = progress.total > 0
+    ? Math.round((progress.current / progress.total) * 100)
+    : 0
 
   return (
     <div className="space-y-6">
@@ -157,32 +210,34 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
         className="hidden"
       />
 
-      <div
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-        onDragEnter={(e) => { e.preventDefault(); setIsDragging(true) }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={cn(
-          "flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors",
-          isDragging
-            ? "border-primary bg-primary/5"
-            : "border-border hover:border-primary/50 hover:bg-muted/30"
-        )}
-      >
-        <span className="text-4xl">📸</span>
-        <div className="text-center">
-          <p className="text-sm font-medium">
-            {isDragging ? "Drop images here" : "Drag & drop watch photos here"}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            or click to browse · JPEG, PNG, WebP, HEIC · max 10MB each
-          </p>
+      {!importing && (
+        <div
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+          onDragEnter={(e) => { e.preventDefault(); setIsDragging(true) }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={cn(
+            "flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors",
+            isDragging
+              ? "border-primary bg-primary/5"
+              : "border-border hover:border-primary/50 hover:bg-muted/30"
+          )}
+        >
+          <span className="text-4xl">📸</span>
+          <div className="text-center">
+            <p className="text-sm font-medium">
+              {isDragging ? "Drop images here" : "Drag & drop watch photos here"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              or click to browse · JPEG, PNG, WebP, HEIC · max 10MB each
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Preview grid */}
-      {images.length > 0 && (
+      {images.length > 0 && !importing && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base">
@@ -234,28 +289,34 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
       )}
 
       {/* Import button */}
-      {images.length > 0 && !result && (
+      {images.length > 0 && !result && !importing && (
         <div className="flex justify-end">
           <Button
             onClick={handleImport}
-            disabled={isPending || !categoryId}
+            disabled={!categoryId}
             size="lg"
           >
-            {isPending
-              ? `Importing ${images.length} watches...`
-              : `Import ${images.length} ${images.length === 1 ? "Watch" : "Watches"}`}
+            Import {images.length} {images.length === 1 ? "Watch" : "Watches"}
           </Button>
         </div>
       )}
 
-      {/* Progress indicator */}
-      {isPending && (
+      {/* Progress */}
+      {importing && (
         <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="flex items-center gap-3 py-4">
-            <span className="animate-spin text-lg">⏳</span>
-            <p className="text-sm">
-              Creating watches and uploading photos... This may take a moment for large batches.
-            </p>
+          <CardContent className="space-y-3 py-4">
+            <div className="flex items-center justify-between text-sm">
+              <span>
+                Importing watch {progress.current} of {progress.total}...
+              </span>
+              <span className="font-semibold">{progressPercent}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
           </CardContent>
         </Card>
       )}
