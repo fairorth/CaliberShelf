@@ -7,6 +7,7 @@ import { getCategories } from "@/lib/queries/categories"
 import { getLabels, getLabelsForWatch } from "@/lib/queries/labels"
 import { WatchForm } from "@/components/watch-form"
 import { PhotoGallery } from "../_components/photo-gallery"
+import { PhotoUploader } from "../_components/photo-uploader"
 import { updateWatch } from "@/lib/actions/watch-actions"
 import { Button } from "@/components/ui/button"
 
@@ -53,7 +54,7 @@ export default async function EditWatchPage({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" render={<Link href={`/watch/${watch.id}`} />}>
           &larr; Back
@@ -63,25 +64,33 @@ export default async function EditWatchPage({
         </h1>
       </div>
 
-      {/* Watch photo gallery — same as detail page */}
-      {watch.watch_photos.length > 0 && (
-        <PhotoGallery
-          photos={watch.watch_photos}
-          photoUrls={photoUrls}
-          watchId={watch.id}
-        />
-      )}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Left column: Sticky photo gallery */}
+        <div className="md:self-start md:sticky md:top-[calc(3.5rem+1.5rem)]">
+          <div className="space-y-4">
+            <PhotoGallery
+              photos={watch.watch_photos}
+              photoUrls={photoUrls}
+              watchId={watch.id}
+            />
+            <PhotoUploader watchId={watch.id} />
+          </div>
+        </div>
 
-      <WatchForm
-        action={boundUpdateWatch}
-        watch={watch}
-        submitLabel="Save Changes"
-        brands={brands}
-        movements={movements}
-        categories={categories}
-        labels={labels}
-        defaultLabelIds={watchLabels.map((l) => l.id)}
-      />
+        {/* Right column: Scrollable form */}
+        <div>
+          <WatchForm
+            action={boundUpdateWatch}
+            watch={watch}
+            submitLabel="Save Changes"
+            brands={brands}
+            movements={movements}
+            categories={categories}
+            labels={labels}
+            defaultLabelIds={watchLabels.map((l) => l.id)}
+          />
+        </div>
+      </div>
     </div>
   )
 }
