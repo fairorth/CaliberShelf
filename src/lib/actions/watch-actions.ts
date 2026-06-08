@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { watchFormSchema, quickAddSchema } from "@/lib/validations/watch"
+import {
+  watchFormSchema,
+  quickAddSchema,
+  dialFramingSchema,
+  type DialFramingValues,
+} from "@/lib/validations/watch"
 import { setWatchLabels } from "@/lib/actions/label-actions"
 import { buildStoragePath } from "@/lib/storage"
 import { dollarsToCents } from "@/lib/utils"
@@ -144,6 +149,38 @@ export async function updateWatch(
   revalidatePath("/dashboard")
   revalidatePath(`/watch/${watchId}`)
   redirect(`/watch/${watchId}`)
+}
+
+/**
+ * Update only the dial framing (focal point + zoom) for a watch.
+ * Direct-call action (not form-bound) — see CLAUDE.md gotcha.
+ */
+export async function updateDialFraming(
+  watchId: string,
+  data: DialFramingValues
+): Promise<WatchActionState> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: "You must be logged in." }
+
+  const parsed = dialFramingSchema.safeParse(data)
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  const { error } = await supabase
+    .from("watches")
+    .update(parsed.data)
+    .eq("id", watchId)
+    .eq("user_id", user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath("/dashboard")
+  revalidatePath(`/watch/${watchId}`)
+  revalidatePath(`/watch/${watchId}/edit`)
+  return { success: true }
 }
 
 /**

@@ -8,6 +8,7 @@ import type {
   Brand,
   Movement,
   Label,
+  Category,
 } from "@/lib/types/watch"
 
 /**
@@ -20,7 +21,7 @@ export async function getWatches(): Promise<WatchWithCover[]> {
 
   const { data: watches, error } = await supabase
     .from("watches")
-    .select("*, brands(*), movements(*)")
+    .select("*, brands(*), movements(*), categories(*)")
     .order("updated_at", { ascending: false })
 
   if (error) {
@@ -66,17 +67,20 @@ export async function getWatches(): Promise<WatchWithCover[]> {
   const signedUrlMap = await getSignedUrls(storagePaths)
 
   // Merge cover photo URLs into watches
-  return watches.map((watch: Watch & { brands: Brand; movements: Movement | null }) => {
-    const coverPath = coverMap.get(watch.id)
-    const coverUrl = coverPath ? signedUrlMap.get(coverPath) ?? null : null
-    return {
-      ...watch,
-      cover_photo_url: coverUrl,
-      brand: watch.brands,
-      movement: watch.movements,
-      labels: labelsByWatch.get(watch.id) ?? [],
-    } as WatchWithCover
-  })
+  return watches.map(
+    (watch: Watch & { brands: Brand; movements: Movement | null; categories: Category }) => {
+      const coverPath = coverMap.get(watch.id)
+      const coverUrl = coverPath ? signedUrlMap.get(coverPath) ?? null : null
+      return {
+        ...watch,
+        cover_photo_url: coverUrl,
+        brand: watch.brands,
+        movement: watch.movements,
+        category: watch.categories,
+        labels: labelsByWatch.get(watch.id) ?? [],
+      } as WatchWithCover
+    }
+  )
 }
 
 /**

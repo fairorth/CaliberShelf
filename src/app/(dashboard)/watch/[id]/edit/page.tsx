@@ -8,6 +8,7 @@ import { getLabels, getLabelsForWatch } from "@/lib/queries/labels"
 import { WatchForm } from "@/components/watch-form"
 import { PhotoGallery } from "../_components/photo-gallery"
 import { PhotoUploader } from "../_components/photo-uploader"
+import { DialFramingEditor } from "./_components/dial-framing-editor"
 import { updateWatch } from "@/lib/actions/watch-actions"
 import { Button } from "@/components/ui/button"
 
@@ -53,6 +54,10 @@ export default async function EditWatchPage({
     photoUrls[key] = value
   }
 
+  // Resolve the cover photo's signed URL for the dial-framing editor
+  const coverPhoto = watch.watch_photos.find((p) => p.is_cover)
+  const coverPhotoUrl = coverPhoto ? photoUrls[coverPhoto.storage_path] ?? null : null
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -74,6 +79,13 @@ export default async function EditWatchPage({
               watchId={watch.id}
             />
             <PhotoUploader watchId={watch.id} />
+            <DialFramingEditor
+              watchId={watch.id}
+              coverPhotoUrl={coverPhotoUrl}
+              initialFocalX={watch.dial_focal_x}
+              initialFocalY={watch.dial_focal_y}
+              initialZoom={watch.dial_zoom}
+            />
           </div>
         </div>
 

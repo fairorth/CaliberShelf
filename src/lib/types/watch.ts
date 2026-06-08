@@ -99,6 +99,9 @@ export interface Watch {
   purchase_currency: string
   notes: string | null
   is_public: boolean
+  dial_focal_x: number
+  dial_focal_y: number
+  dial_zoom: number
   created_at: string
   updated_at: string
 }
@@ -125,6 +128,7 @@ export interface WatchWithCover extends Watch {
   cover_photo_url: string | null
   brand: Brand
   movement: Movement | null
+  category?: Category
   labels?: Label[]
 }
 

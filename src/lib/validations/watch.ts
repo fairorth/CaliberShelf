@@ -91,6 +91,15 @@ export const watchFormSchema = z.object({
 export type WatchFormValues = z.input<typeof watchFormSchema>
 export type WatchFormParsed = z.output<typeof watchFormSchema>
 
+// Dial framing — focal point (% within cover photo) + zoom for the home-page dial marker
+export const dialFramingSchema = z.object({
+  dial_focal_x: z.number().min(0).max(100),
+  dial_focal_y: z.number().min(0).max(100),
+  dial_zoom: z.number().min(1).max(4),
+})
+
+export type DialFramingValues = z.infer<typeof dialFramingSchema>
+
 // Minimal schema for the camera-first "Add Watch" mobile flow
 export const quickAddSchema = z.object({
   brand_id: z.string().min(1, "Brand is required"),

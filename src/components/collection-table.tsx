@@ -36,11 +36,13 @@ interface CollectionTableProps {
 
 // ── Sorting ────────────────────────────────────────────────────────
 
-type SortKey = "brand" | "model" | "movementType" | "caliber" | "labels"
+type SortKey = "category" | "brand" | "model" | "movementType" | "caliber" | "labels"
 type SortDir = "asc" | "desc"
 
 function getSortValue(watch: WatchWithCover, key: SortKey): string {
   switch (key) {
+    case "category":
+      return (watch.category?.name ?? "zzz").toLowerCase()
     case "brand":
       return watch.brand.name.toLowerCase()
     case "model":
@@ -289,6 +291,7 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                   />
                 </TableHead>
                 <TableHead className="w-[72px]">Photo</TableHead>
+                <SortableHeader label="Category" sortKey="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Brand" sortKey="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Model" sortKey="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Movement Type" sortKey="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
@@ -319,6 +322,18 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                         size="sm"
                       />
                     </Link>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {watch.category ? (
+                      <Link
+                        href={`/category/${watch.category.id}`}
+                        className="hover:underline hover:text-foreground"
+                      >
+                        {watch.category.name}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
                   </TableCell>
                   <TableCell>
                     <Link href={`/watch/${watch.id}`} className="font-medium hover:underline">
@@ -393,6 +408,11 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                 )}
               </div>
               <div className="min-w-0 flex-1">
+                {watch.category && (
+                  <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {watch.category.name}
+                  </p>
+                )}
                 <p className="text-sm font-semibold leading-tight">{watch.brand.name}</p>
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
                 {watch.movement && (

@@ -1,18 +1,14 @@
 import type { Metadata } from "next"
 import { getWatches } from "@/lib/queries/watches"
-import { CollectionTable } from "@/components/collection-table"
+import { getCategories } from "@/lib/queries/categories"
+import { CollectionView } from "./_components/collection-view"
 
 export const metadata: Metadata = {
   title: "Collection | CaliberShelf",
 }
 
 export default async function CollectionPage() {
-  const watches = await getWatches()
+  const [watches, categories] = await Promise.all([getWatches(), getCategories()])
 
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold tracking-tight">Collection</h1>
-      <CollectionTable watches={watches} />
-    </div>
-  )
+  return <CollectionView watches={watches} categories={categories} />
 }

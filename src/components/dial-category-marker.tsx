@@ -7,27 +7,42 @@ import type { CategoryWithWatches } from "@/lib/types/watch"
 
 interface DialCategoryMarkerProps {
   category: CategoryWithWatches
+  /** Radial angle of this marker in degrees (-90 = 12 o'clock, 0 = 3 o'clock, …) */
+  angleDeg: number
 }
 
-export function DialCategoryMarker({ category }: DialCategoryMarkerProps) {
+export function DialCategoryMarker({ category, angleDeg }: DialCategoryMarkerProps) {
   const watchCount = category.watches.length
-  const firstPhoto = category.watches.find((w) => w.cover_photo_url)?.cover_photo_url
+  const coverWatch = category.watches.find((w) => w.cover_photo_url)
+  const firstPhoto = coverWatch?.cover_photo_url
+  const focalX = coverWatch?.dial_focal_x ?? 50
+  const focalY = coverWatch?.dial_focal_y ?? 50
+  const zoom = coverWatch?.dial_zoom ?? 1
+
+  // Unit vector pointing from the marker back toward the dial center.
+  // Used to push the caption inward so it never collides with neighbors.
+  const angleRad = (angleDeg * Math.PI) / 180
+  const inwardX = -Math.cos(angleRad)
+  const inwardY = -Math.sin(angleRad)
+  // Distance from marker center to caption center (px). Marker radius is 45 (sm)
+  // / 35 (mobile), plus a small gap and half the caption height.
+  const captionOffset = 56
 
   return (
     <Link
       href={`/category/${category.id}`}
       className={cn(
-        "group/marker flex flex-col items-center gap-1",
-        "transition-transform duration-200 hover:scale-110",
+        "group/marker relative block",
+        "transition-transform duration-300 ease-out hover:scale-[1.9] hover:z-50",
       )}
       aria-label={`${category.name} category, ${watchCount} ${watchCount === 1 ? "watch" : "watches"}`}
     >
       {/* Circular marker */}
       <div
         className={cn(
-          "relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full sm:h-[72px] sm:w-[72px]",
+          "relative flex h-[70px] w-[70px] items-center justify-center overflow-hidden rounded-full sm:h-[90px] sm:w-[90px]",
           "ring-2 ring-[oklch(0.85_0.03_85)] shadow-md",
-          "transition-shadow duration-200 group-hover/marker:shadow-[0_0_12px_rgba(200,180,120,0.4)]",
+          "transition-shadow duration-200 group-hover/marker:shadow-[0_0_18px_rgba(200,180,120,0.5)]",
           firstPhoto ? "bg-black" : "bg-[oklch(0.18_0.01_260)]",
         )}
       >
@@ -37,24 +52,32 @@ export function DialCategoryMarker({ category }: DialCategoryMarkerProps) {
             alt={category.name}
             fill
             className="object-cover"
-            sizes="72px"
+            sizes="240px"
+            style={{
+              objectPosition: `${focalX}% ${focalY}%`,
+              transform: zoom > 1 ? `scale(${zoom})` : undefined,
+            }}
           />
         ) : (
-          <span className="text-sm font-semibold text-[oklch(0.85_0.03_85)] sm:text-base">
+          <span className="text-base font-semibold text-[oklch(0.85_0.03_85)] sm:text-lg">
             {category.name.charAt(0).toUpperCase()}
-          </span>
-        )}
-
-        {/* Count badge */}
-        {watchCount > 0 && (
-          <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[oklch(0.85_0.03_85)] text-[9px] font-bold text-[oklch(0.12_0.01_260)] sm:h-6 sm:w-6 sm:text-[10px]">
-            {watchCount}
           </span>
         )}
       </div>
 
-      {/* Category name — visible on larger screens */}
-      <span className="hidden max-w-[60px] truncate text-center text-[9px] font-medium text-[oklch(0.7_0.02_85)] sm:block sm:max-w-[80px] sm:text-[10px]">
+      {/* Category name — positioned radially inward (toward dial center) so it
+          never collides with neighboring markers, even while hover-zoomed. */}
+      <span
+        className={cn(
+          "pointer-events-none absolute left-1/2 top-1/2 hidden whitespace-nowrap",
+          "text-[11px] font-medium uppercase tracking-wide text-[oklch(0.92_0.03_85)] sm:block",
+        )}
+        style={{
+          transform: `translate(-50%, -50%) translate(${inwardX * captionOffset}px, ${inwardY * captionOffset}px)`,
+          textShadow:
+            "0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.7), 0 0 12px rgba(0,0,0,0.5)",
+        }}
+      >
         {category.name}
       </span>
     </Link>

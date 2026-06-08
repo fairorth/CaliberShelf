@@ -57,10 +57,11 @@ function getHandsServerSnapshot() {
 const POSITIONS = Array.from({ length: 12 }, (_, i) => {
   const angleDeg = i * 30 - 90 // -90 so index 0 starts at top (12 o'clock)
   const angleRad = (angleDeg * Math.PI) / 180
-  const radius = 40 // percentage from center
+  const radius = 33 // percentage from center — keeps the larger markers inside the dial face
   return {
     index: i,
     hourLabel: i === 0 ? 12 : i,
+    angleDeg,
     x: 50 + radius * Math.cos(angleRad),
     y: 50 + radius * Math.sin(angleRad),
     // Rotation for tick marks — points toward center
@@ -130,7 +131,7 @@ export function WatchDial({ categories }: WatchDialProps) {
         return (
           <div
             key={pos.index}
-            className="absolute"
+            className="absolute hover:z-50"
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
@@ -138,7 +139,7 @@ export function WatchDial({ categories }: WatchDialProps) {
             }}
           >
             {category ? (
-              <DialCategoryMarker category={category} />
+              <DialCategoryMarker category={category} angleDeg={pos.angleDeg} />
             ) : (
               /* Empty tick mark — gold index pointing at center */
               <div
