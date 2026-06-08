@@ -99,6 +99,15 @@ export function MovementForm({ onSuccess, movement }: MovementFormProps) {
             defaultValue={movement?.power_reserve ?? ""}
           />
         </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="lift_angle">Lift Angle</Label>
+          <Input
+            id="lift_angle"
+            name="lift_angle"
+            placeholder="e.g. 52°"
+            defaultValue={movement?.lift_angle ?? ""}
+          />
+        </div>
       </div>
 
       <div className="flex justify-end gap-3">

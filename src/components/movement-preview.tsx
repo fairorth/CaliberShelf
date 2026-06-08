@@ -34,6 +34,9 @@ export function MovementPreview({ movement }: MovementPreviewProps) {
         {movement.power_reserve && (
           <Stat label="Reserve" value={movement.power_reserve} />
         )}
+        {movement.lift_angle && (
+          <Stat label="Lift Angle" value={movement.lift_angle} />
+        )}
       </div>
     </div>
   )

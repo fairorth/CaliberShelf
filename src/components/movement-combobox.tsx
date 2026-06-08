@@ -72,6 +72,7 @@ export function MovementCombobox({
           caliber_type: null,
           beat_rate: null,
           power_reserve: null,
+          lift_angle: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }

@@ -105,6 +105,7 @@ export function MovementsTab({ movements }: MovementsTabProps) {
               <TableHead>Type</TableHead>
               <TableHead>Beat Rate</TableHead>
               <TableHead>Reserve</TableHead>
+              <TableHead>Lift Angle</TableHead>
               <TableHead className="w-24" />
             </TableRow>
           </TableHeader>
@@ -131,6 +132,9 @@ export function MovementsTab({ movements }: MovementsTabProps) {
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {m.power_reserve ?? "—"}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {m.lift_angle ?? "—"}
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">

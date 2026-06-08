@@ -89,6 +89,7 @@ export async function createMovement(
     caliber_type: data.caliber_type || null,
     beat_rate: data.beat_rate || null,
     power_reserve: data.power_reserve || null,
+    lift_angle: data.lift_angle || null,
   })
 
   if (error) {
@@ -136,6 +137,7 @@ export async function updateMovement(
       caliber_type: data.caliber_type || null,
       beat_rate: data.beat_rate || null,
       power_reserve: data.power_reserve || null,
+      lift_angle: data.lift_angle || null,
     })
     .eq("id", movementId)
     .eq("user_id", user.id)

@@ -43,6 +43,7 @@ export interface Movement {
   caliber_type: CaliberType | null
   beat_rate: string | null
   power_reserve: string | null
+  lift_angle: string | null
   created_at: string
   updated_at: string
 }

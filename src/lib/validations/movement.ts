@@ -18,6 +18,7 @@ export const movementFormSchema = z.object({
   caliber_type: z.union([caliberTypeSchema, z.literal("")]).optional().default(""),
   beat_rate: z.string().optional().default(""),
   power_reserve: z.string().optional().default(""),
+  lift_angle: z.string().optional().default(""),
 })
 
 export type MovementFormValues = z.input<typeof movementFormSchema>
