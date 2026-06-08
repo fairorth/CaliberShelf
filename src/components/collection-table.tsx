@@ -326,7 +326,7 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                   <TableCell className="text-muted-foreground">
                     {watch.category ? (
                       <Link
-                        href={`/category/${watch.category.id}`}
+                        href={`/collection?category=${watch.category.id}`}
                         className="hover:underline hover:text-foreground"
                       >
                         {watch.category.name}

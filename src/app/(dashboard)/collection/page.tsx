@@ -7,8 +7,27 @@ export const metadata: Metadata = {
   title: "Collection | CaliberShelf",
 }
 
-export default async function CollectionPage() {
-  const [watches, categories] = await Promise.all([getWatches(), getCategories()])
+export default async function CollectionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>
+}) {
+  const [{ category }, watches, categories] = await Promise.all([
+    searchParams,
+    getWatches(),
+    getCategories(),
+  ])
 
-  return <CollectionView watches={watches} categories={categories} />
+  // Only honor the param if it matches an actual category — otherwise fall
+  // back to All so a stale/invalid URL doesn't show an empty table.
+  const initialCategoryId =
+    category && categories.some((c) => c.id === category) ? category : undefined
+
+  return (
+    <CollectionView
+      watches={watches}
+      categories={categories}
+      initialCategoryId={initialCategoryId}
+    />
+  )
 }

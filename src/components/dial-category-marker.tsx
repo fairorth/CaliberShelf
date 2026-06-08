@@ -30,7 +30,7 @@ export function DialCategoryMarker({ category, angleDeg }: DialCategoryMarkerPro
 
   return (
     <Link
-      href={`/category/${category.id}`}
+      href={`/collection?category=${category.id}`}
       className={cn(
         "group/marker relative block",
         "transition-transform duration-300 ease-out hover:scale-[1.9] hover:z-50",
