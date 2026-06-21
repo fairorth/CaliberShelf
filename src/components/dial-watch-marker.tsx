@@ -59,7 +59,9 @@ export function DialWatchMarker({
       {/* Circular marker */}
       <div
         className={cn(
-          "relative flex h-[70px] w-[70px] items-center justify-center overflow-hidden rounded-full sm:h-[90px] sm:w-[90px]",
+          // Mobile marker scales with the viewport so the watch-to-dial ratio
+          // matches desktop (markers don't overlap on the smaller mobile dial).
+          "relative flex h-[12vw] w-[12vw] items-center justify-center overflow-hidden rounded-full sm:h-[90px] sm:w-[90px]",
           "ring-2 ring-[oklch(0.85_0.03_85)] shadow-md",
           "transition-shadow duration-200 group-hover/marker:shadow-[0_0_18px_rgba(200,180,120,0.5)]",
           autoActive && "shadow-[0_0_18px_rgba(200,180,120,0.5)]",
