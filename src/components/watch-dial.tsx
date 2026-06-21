@@ -1,13 +1,16 @@
 "use client"
 
-import { useEffect, useRef, useSyncExternalStore } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { cn } from "@/lib/utils"
 import { CaliberShelfLogo } from "@/components/calibershelf-logo"
-import { DialCategoryMarker } from "@/components/dial-category-marker"
-import type { CategoryWithWatches } from "@/lib/types/watch"
+import { DialWatchMarker } from "@/components/dial-watch-marker"
+import type { WatchWithCover } from "@/lib/types/watch"
 
 interface WatchDialProps {
-  categories: CategoryWithWatches[]
+  /** All watches eligible to appear on the dial (must have a cover photo). */
+  watches: WatchWithCover[]
+  /** Server-generated seed so the initial random layout matches across SSR/hydration. */
+  seed: number
 }
 
 /** Compute hour and minute hand angles from current time */
@@ -62,37 +65,149 @@ const POSITIONS = Array.from({ length: 12 }, (_, i) => {
     index: i,
     hourLabel: i === 0 ? 12 : i,
     angleDeg,
-    x: 50 + radius * Math.cos(angleRad),
-    y: 50 + radius * Math.sin(angleRad),
+    // Round to 4 decimals so server and client serialize identical style strings
+    // (raw Math.cos/sin floats hydrate as a mismatch otherwise).
+    x: Math.round((50 + radius * Math.cos(angleRad)) * 10000) / 10000,
+    y: Math.round((50 + radius * Math.sin(angleRad)) * 10000) / 10000,
     // Rotation for tick marks — points toward center
     tickRotation: i * 30,
   }
 })
 
-export function WatchDial({ categories }: WatchDialProps) {
+// Auto-zoom hold window: the second hand sweeps 6°/sec, so 18° ≈ 3 seconds.
+// A marker stays zoomed for this long as the hand passes over its position.
+const AUTO_HOLD_DEG = 18
+
+/** Small seeded PRNG (mulberry32) — deterministic so SSR and hydration agree. */
+function mulberry32(seed: number) {
+  let a = seed >>> 0
+  return function () {
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/** Fisher–Yates shuffle (copy) using the supplied random fn. */
+function shuffleWith<T>(arr: T[], rng: () => number): T[] {
+  const copy = arr.slice()
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+
+/** Map a watch list onto the 12 dial positions, padding empty slots with null. */
+function toAssignment(list: WatchWithCover[]): (WatchWithCover | null)[] {
+  const out: (WatchWithCover | null)[] = Array(12).fill(null)
+  for (let i = 0; i < 12; i++) out[i] = list[i] ?? null
+  return out
+}
+
+export function WatchDial({ watches, seed }: WatchDialProps) {
   const hands = useSyncExternalStore(subscribeHands, getHandsSnapshot, getHandsServerSnapshot)
   const secondHandRef = useRef<HTMLDivElement>(null)
 
-  // Set second hand CSS animation start angle (DOM-only, no state)
+  // Only watches with a cover photo can appear on the dial.
+  const eligible = useMemo(
+    () => watches.filter((w) => w.cover_photo_url),
+    [watches]
+  )
+
+  // Initial 12 unique watches — seeded so SSR and the first client render agree
+  // (and so the layout is freshly random on each page load, with no flash).
+  const [assignments, setAssignments] = useState<(WatchWithCover | null)[]>(() =>
+    toAssignment(shuffleWith(eligible, mulberry32(Math.floor(seed * 0xffffffff))))
+  )
+
+  // Which marker is auto-zoomed right now (driven by the sweeping second hand).
+  const [autoActiveIndex, setAutoActiveIndex] = useState<number | null>(null)
+  // Tracks how many markers the cursor is currently over. While > 0, the user is
+  // hovering and manual hover takes precedence — auto-zoom pauses.
+  const hoverCountRef = useRef(0)
+  const userHoveringRef = useRef(false)
+  // Last position the second hand was over, used to detect when a zoom completes.
+  const lastActiveRef = useRef<number | null>(null)
+
+  function handleMarkerHover(hovering: boolean) {
+    hoverCountRef.current = Math.max(0, hoverCountRef.current + (hovering ? 1 : -1))
+    userHoveringRef.current = hoverCountRef.current > 0
+    if (userHoveringRef.current) {
+      setAutoActiveIndex(null)
+      lastActiveRef.current = null
+    }
+  }
+
+  // Replace the watch at position `p` with a random one not already on the dial,
+  // keeping all 12 displayed watches unique.
+  const swapPosition = useCallback(
+    (p: number) => {
+      setAssignments((prev) => {
+        if (eligible.length <= 12) return prev // no spare watches to rotate in
+        const shown = new Set(prev.map((w) => w?.id))
+        const candidates = eligible.filter((w) => !shown.has(w.id))
+        if (candidates.length === 0) return prev
+        const pick = candidates[Math.floor(Math.random() * candidates.length)]
+        const next = prev.slice()
+        next[p] = pick
+        return next
+      })
+    },
+    [eligible]
+  )
+
+  // Set second hand CSS animation start angle (DOM-only, no state).
+  // Includes the millisecond fraction so the visual hand aligns with the
+  // time-derived angle the auto-zoom ticker computes below.
   useEffect(() => {
     if (secondHandRef.current) {
-      const s = new Date().getSeconds()
+      const now = new Date()
+      const s = now.getSeconds() + now.getMilliseconds() / 1000
       secondHandRef.current.style.setProperty("--second-start", `${s * 6}deg`)
     }
   }, [])
 
-  // Map categories to dial positions by their explicit display_order (0-11)
-  const categoryPositions = new Map<number, CategoryWithWatches>()
-  for (const c of categories) {
-    if (c.display_order >= 0 && c.display_order <= 11) {
-      categoryPositions.set(c.display_order, c)
-    }
-  }
+  // Auto-zoom ticker: follow the second hand and zoom whichever position it is
+  // sweeping over. When a position's zoom finishes, swap in a fresh watch.
+  // Pauses entirely while the user is hovering.
+  useEffect(() => {
+    if (eligible.length === 0) return
+
+    const id = setInterval(() => {
+      if (userHoveringRef.current) {
+        setAutoActiveIndex(null)
+        lastActiveRef.current = null
+        return
+      }
+      const now = new Date()
+      // Hand angle clockwise from 12 o'clock; position i sits at i*30°.
+      const handAngle = ((now.getSeconds() + now.getMilliseconds() / 1000) * 6) % 360
+      let next: number | null = null
+      for (let i = 0; i < 12; i++) {
+        const delta = (((handAngle - i * 30) % 360) + 360) % 360
+        if (delta < AUTO_HOLD_DEG) {
+          next = i
+          break
+        }
+      }
+      // The hand just left a position (its 3s zoom completed) — rotate that watch.
+      const prev = lastActiveRef.current
+      if (prev !== null && prev !== next) {
+        swapPosition(prev)
+      }
+      lastActiveRef.current = next
+      setAutoActiveIndex((cur) => (cur === next ? cur : next))
+    }, 200)
+
+    return () => clearInterval(id)
+  }, [eligible, swapPosition])
 
   return (
     <div
       role="navigation"
-      aria-label="Watch categories"
+      aria-label="Watches"
       className="relative mx-auto aspect-square w-[85vw] max-w-[600px]"
     >
       {/* Layer 1: Outer bezel — brushed steel */}
@@ -124,27 +239,33 @@ export function WatchDial({ categories }: WatchDialProps) {
         style={{ inset: "9%" }}
       />
 
-      {/* Layer 4: Hour markers / Category positions */}
+      {/* Layer 4: Hour markers / Watch positions */}
       {POSITIONS.map((pos) => {
-        const category = categoryPositions.get(pos.index)
+        const watch = assignments[pos.index]
 
         return (
           <div
             key={pos.index}
-            className="absolute hover:z-50"
+            className={cn(
+              "absolute hover:z-50",
+              autoActiveIndex === pos.index && "z-50",
+            )}
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
               transform: "translate(-50%, -50%)",
             }}
           >
-            {category ? (
-              <DialCategoryMarker category={category} angleDeg={pos.angleDeg} />
+            {watch ? (
+              <DialWatchMarker
+                watch={watch}
+                angleDeg={pos.angleDeg}
+                autoActive={autoActiveIndex === pos.index}
+                onHoverChange={handleMarkerHover}
+              />
             ) : (
               /* Empty tick mark — gold index pointing at center */
-              <div
-                aria-hidden="true"
-              >
+              <div aria-hidden="true">
                 <div
                   className="h-3 w-[2px] rounded-full bg-[oklch(0.85_0.03_85)]/60 sm:h-4"
                   style={{
