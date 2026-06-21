@@ -135,8 +135,12 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
               value={watch.case_diameter_mm ? `${watch.case_diameter_mm}mm` : null}
             />
             <SpecRow
-              label="Lug Width"
-              value={watch.lug_width_mm ? `${watch.lug_width_mm}mm` : null}
+              label="Strap Width"
+              value={watch.strap_width_mm ? `${watch.strap_width_mm}mm` : null}
+            />
+            <SpecRow
+              label="Lug-to-Lug"
+              value={watch.lug_to_lug_mm ? `${watch.lug_to_lug_mm}mm` : null}
             />
             <SpecRow
               label="Case Height"

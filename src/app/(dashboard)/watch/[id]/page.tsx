@@ -3,10 +3,12 @@ import { getWatchById } from "@/lib/queries/watches"
 import { getLabelsForWatch } from "@/lib/queries/labels"
 import { getCategories } from "@/lib/queries/categories"
 import { getWearCountForWatch } from "@/lib/queries/wear-logs"
+import { getTimegrapherRuns } from "@/lib/queries/timegrapher"
 import { WatchDetailHeader } from "./_components/watch-detail-header"
 import { PhotoGallery } from "./_components/photo-gallery"
 import { PhotoUploader } from "./_components/photo-uploader"
 import { WatchSpecs } from "./_components/watch-specs"
+import { TimegrapherPanel } from "./_components/timegrapher-panel"
 
 export async function generateMetadata({
   params,
@@ -27,11 +29,12 @@ export default async function WatchDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [watch, labels, wearInfo, categories] = await Promise.all([
+  const [watch, labels, wearInfo, categories, timegrapherRuns] = await Promise.all([
     getWatchById(id),
     getLabelsForWatch(id),
     getWearCountForWatch(id),
     getCategories(),
+    getTimegrapherRuns(id),
   ])
 
   if (!watch) {
@@ -62,8 +65,11 @@ export default async function WatchDetailPage({
           <PhotoUploader watchId={watch.id} />
         </div>
 
-        {/* Right column: Specs */}
-        <WatchSpecs watch={watch} category={category} labels={labels} />
+        {/* Right column: Specs + Timegrapher */}
+        <div className="space-y-6">
+          <WatchSpecs watch={watch} category={category} labels={labels} />
+          <TimegrapherPanel watchId={watch.id} runs={timegrapherRuns} />
+        </div>
       </div>
     </div>
   )

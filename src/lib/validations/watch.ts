@@ -58,12 +58,18 @@ export const watchFormSchema = z.object({
     .default("")
     .transform((val) => (val === "" ? null : parseFloat(val)))
     .pipe(z.number().min(10).max(60).nullable()),
-  lug_width_mm: z
+  strap_width_mm: z
     .string()
     .optional()
     .default("")
     .transform((val) => (val === "" ? null : parseFloat(val)))
     .pipe(z.number().min(6).max(30).nullable()),
+  lug_to_lug_mm: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val === "" ? null : parseFloat(val)))
+    .pipe(z.number().min(20).max(80).nullable()),
   case_height_mm: z
     .string()
     .optional()

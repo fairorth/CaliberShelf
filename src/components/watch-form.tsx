@@ -303,16 +303,30 @@ export function WatchForm({
             </div>
 
             <div className="space-y-2">
-              <FormLabel htmlFor="lug_width_mm">Lug Width (mm)</FormLabel>
+              <FormLabel htmlFor="strap_width_mm">Strap Width (mm)</FormLabel>
               <Input
-                id="lug_width_mm"
-                name="lug_width_mm"
+                id="strap_width_mm"
+                name="strap_width_mm"
                 type="number"
                 step="0.5"
                 min="6"
                 max="30"
                 placeholder="e.g. 20"
-                defaultValue={watch?.lug_width_mm?.toString() ?? ""}
+                defaultValue={watch?.strap_width_mm?.toString() ?? ""}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <FormLabel htmlFor="lug_to_lug_mm">Lug-to-Lug (mm)</FormLabel>
+              <Input
+                id="lug_to_lug_mm"
+                name="lug_to_lug_mm"
+                type="number"
+                step="0.1"
+                min="20"
+                max="80"
+                placeholder="e.g. 46"
+                defaultValue={watch?.lug_to_lug_mm?.toString() ?? ""}
               />
             </div>
 

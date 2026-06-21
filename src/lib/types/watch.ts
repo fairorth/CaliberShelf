@@ -89,7 +89,8 @@ export interface Watch {
   category_id: string
   case_material: CaseMaterial | null
   case_diameter_mm: number | null
-  lug_width_mm: number | null
+  strap_width_mm: number | null
+  lug_to_lug_mm: number | null
   case_height_mm: number | null
   crystal: CrystalType | null
   water_resistance_m: number | null
@@ -147,6 +148,21 @@ export interface WearLog {
 
 export interface WearLogWithWatch extends WearLog {
   watch: WatchWithCover
+}
+
+// ── Timegrapher Run ─────────────────────────────────────────────
+
+export interface TimegrapherRun {
+  id: string
+  user_id: string
+  watch_id: string
+  run_date: string // "YYYY-MM-DD"
+  rate_sec_per_day: number | null
+  amplitude_deg: number | null
+  beat_error_ms: number | null
+  notes: string | null
+  created_at: string
+  updated_at: string
 }
 
 export interface WearStats {
