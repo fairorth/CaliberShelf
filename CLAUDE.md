@@ -46,6 +46,11 @@ A personal watch collection tracking app built with Next.js 15 (App Router), Sup
 - `onValueChange` callback can pass `string | null` — guard with `if (val)` before parsing
 - When `Label` from `@/components/ui/label` conflicts with an app type named `Label`, import as `FormLabel`
 
+## Next.js / React Gotchas
+- URL-as-state for client filters: use `useSearchParams()` directly in the client component, not `useState(initialFromProps)`. Soft navigation re-renders but doesn't re-mount, so useState ignores new prop values from the server.
+- `react-hooks/set-state-in-effect` lint rule fires only on the **first** setState in an effect. One `eslint-disable-next-line` above the first call covers all subsequent ones — directives on later calls trigger "unused" warnings.
+- localStorage hydration: read in `useEffect` (server can't access it). The first setState triggers the lint rule above; this is a legitimate exception worth disabling.
+
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000
 - `npm run build` - Production build

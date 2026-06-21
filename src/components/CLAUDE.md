@@ -29,3 +29,7 @@
 - Inline table editing: extract a `Row` component with `useState(editing)` + `useTransition` for save — avoids form-level state conflicts
 - Color maps: define a `Record<ColorName, { bg: string; text: string }>` with Tailwind classes for consistent badge/tag styling
 - Watch dial: categories map to positions via `display_order` (0=12 o'clock, 1=1 o'clock, etc.)
+
+## Stacking Context Gotchas
+- `transform: translate(...)` / `scale(...)` on a positioned element creates a new stacking context, **trapping** inner `z-index`. To lift an element above its siblings on hover, set `hover:z-50` on the transformed wrapper itself, not on a child.
+- z-index requires `position` non-static — `hover:z-50` on a class with no position (e.g. a default-flow `<Link>`) is silently ignored.
