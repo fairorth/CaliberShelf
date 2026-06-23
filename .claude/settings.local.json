@@ -54,7 +54,8 @@
       "WebFetch(domain:apps.apple.com)",
       "Bash(git rm *)",
       "Bash(curl -s -o /dev/null -w \"status=%{http_code} time=%{time_total}s\\\\n\" https://caliber-shelf.vercel.app/)",
-      "Bash(curl -s -o /dev/null -w \"login=%{http_code}\\\\n\" https://caliber-shelf.vercel.app/login)"
+      "Bash(curl -s -o /dev/null -w \"login=%{http_code}\\\\n\" https://caliber-shelf.vercel.app/login)",
+      "Bash(curl -s -o /dev/null -w \"prod=%{http_code} time=%{time_total}s\\\\n\" https://caliber-shelf.vercel.app/login)"
     ]
   }
 }
