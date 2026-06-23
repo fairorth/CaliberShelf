@@ -38,7 +38,7 @@ export default async function ConfigPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Configuration</h1>
+      <h1 className="text-lg font-bold tracking-tight">Configuration</h1>
 
       <Tabs defaultValue="brands">
         <TabsList>

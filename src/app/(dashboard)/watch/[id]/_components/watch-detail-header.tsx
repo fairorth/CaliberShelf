@@ -60,10 +60,10 @@ export function WatchDetailHeader({ watch, labels = [], wearInfo }: WatchDetailH
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-lg font-bold tracking-tight">
             {watch.brand.name}
           </p>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-base font-normal text-muted-foreground">
             {watch.nickname || watch.model}
           </h1>
         </div>

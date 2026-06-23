@@ -34,6 +34,10 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
   const pathname = usePathname()
   const isMobile = useSyncExternalStore(noopSubscribe, getTouchSnapshot, getTouchServerSnapshot)
 
+  // The "Return to Collections" shortcut only belongs on a watch detail page
+  // (not /watch/[id]/edit, and not on the home or collection screens).
+  const isWatchDetail = /^\/watch\/[^/]+$/.test(pathname)
+
   // On mobile, Add Watch goes to camera-first flow; on desktop, full form
   const addWatchHref = isMobile ? "/add" : "/collection/new"
 
@@ -70,17 +74,19 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
               )}
             </svg>
           </button>
-          <Link href="/dashboard" className="text-lg font-bold tracking-tight">
+          <Link href="/dashboard" className="text-xl font-bold tracking-tight">
             CaliberShelf
           </Link>
-          <Link
-            href="/collection"
-            title="Return to Collection"
-            className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Return to Collections</span>
-          </Link>
+          {isWatchDetail && (
+            <Link
+              href="/collection"
+              title="Return to Collection"
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Return to Collections</span>
+            </Link>
+          )}
         </div>
 
         {/* User info + sign out */}
