@@ -11,6 +11,11 @@ import {
 } from "@/components/ui/select"
 import { CollectionTable } from "@/components/collection-table"
 import { GalleryGrid } from "./gallery-grid"
+import {
+  CollectionFiltersDialog,
+  EMPTY_FILTERS,
+  type CollectionFilters,
+} from "./collection-filters"
 import { cn } from "@/lib/utils"
 import type { Category, WatchWithCover } from "@/lib/types/watch"
 
@@ -27,22 +32,87 @@ const DEFAULT_SIZE = 200
 const MIN_SIZE = 120
 const MAX_SIZE = 400
 
+const SELECT_CLASS =
+  "flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+
+type SortKey = "default" | "brand" | "price" | "purchaseDate" | "caseDiameter"
+type SortDir = "asc" | "desc"
+
+const SORT_LABELS: Record<SortKey, string> = {
+  default: "Sort: Default",
+  brand: "Sort: Brand",
+  price: "Sort: Price",
+  purchaseDate: "Sort: Purchase date",
+  caseDiameter: "Sort: Case size",
+}
+
+// ── Pure filter/sort helpers ───────────────────────────────────────
+
+function applyFilters(watches: WatchWithCover[], f: CollectionFilters): WatchWithCover[] {
+  const minCents = f.minPrice.trim() ? Math.round(parseFloat(f.minPrice) * 100) : null
+  const maxCents = f.maxPrice.trim() ? Math.round(parseFloat(f.maxPrice) * 100) : null
+  const priceActive = minCents !== null || maxCents !== null
+
+  return watches.filter((w) => {
+    if (f.brandId && w.brand_id !== f.brandId) return false
+    if (f.movementId && w.movement_id !== f.movementId) return false
+    if (f.caliberType && w.movement?.caliber_type !== f.caliberType) return false
+    if (f.caseMaterial && w.case_material !== f.caseMaterial) return false
+    if (priceActive) {
+      const p = w.purchase_price_cents
+      if (p === null) return false
+      if (minCents !== null && p < minCents) return false
+      if (maxCents !== null && p > maxCents) return false
+    }
+    return true
+  })
+}
+
+function sortValue(w: WatchWithCover, key: SortKey): string | number | null {
+  switch (key) {
+    case "brand":
+      return w.brand.name.toLowerCase()
+    case "price":
+      return w.purchase_price_cents
+    case "purchaseDate":
+      return w.purchase_date // "YYYY-MM-DD" sorts lexically
+    case "caseDiameter":
+      return w.case_diameter_mm
+    default:
+      return null
+  }
+}
+
+function sortWatches(watches: WatchWithCover[], key: SortKey, dir: SortDir): WatchWithCover[] {
+  if (key === "default") return watches
+  return [...watches].sort((a, b) => {
+    const va = sortValue(a, key)
+    const vb = sortValue(b, key)
+    // Push missing values to the bottom regardless of direction.
+    if (va === null && vb === null) return 0
+    if (va === null) return 1
+    if (vb === null) return -1
+    const cmp = typeof va === "string" ? va.localeCompare(vb as string) : (va as number) - (vb as number)
+    return dir === "asc" ? cmp : -cmp
+  })
+}
+
 export function CollectionView({ watches, categories }: CollectionViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
 
   // View + size preferences are personal, not URL-worthy → localStorage.
-  // Start on table to match prior behavior; upgrade after hydration if a
-  // saved preference exists. The brief flash is acceptable for SPA chrome.
   const [view, setView] = useState<ViewMode>("table")
   const [size, setSize] = useState<number>(DEFAULT_SIZE)
 
+  // Advanced filters + sort are session state (not URL) — the category filter
+  // stays URL-driven so it remains linkable from the dial and table.
+  const [filters, setFilters] = useState<CollectionFilters>(EMPTY_FILTERS)
+  const [sortKey, setSortKey] = useState<SortKey>("default")
+  const [sortDir, setSortDir] = useState<SortDir>("asc")
+
   useEffect(() => {
-    // One-time hydration of prefs from localStorage — server can't read it,
-    // so we render defaults on the server and upgrade on mount. This is the
-    // canonical "read external store after hydration" case that the
-    // set-state-in-effect rule is not meant to catch.
     const savedView = localStorage.getItem(VIEW_KEY)
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedView === "table" || savedView === "gallery") setView(savedView)
@@ -60,18 +130,49 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
     localStorage.setItem(SIZE_KEY, String(next))
   }
 
-  // URL is the source of truth for the category filter — soft navigations
-  // update it and this component re-reads on every render.
+  // URL is the source of truth for the category filter.
   const rawCategoryId = searchParams.get("category")
   const selectedId =
     rawCategoryId && categories.some((c) => c.id === rawCategoryId)
       ? rawCategoryId
       : ALL
 
-  const filteredWatches = useMemo(() => {
-    if (selectedId === ALL) return watches
-    return watches.filter((w) => w.category_id === selectedId)
-  }, [watches, selectedId])
+  // Filter options derived from the actual collection.
+  const { brandOptions, movementOptions, caliberTypes, caseMaterials } = useMemo(() => {
+    const brandMap = new Map<string, string>()
+    const movementMap = new Map<string, string>()
+    const caliberSet = new Set<string>()
+    const materialSet = new Set<string>()
+    for (const w of watches) {
+      brandMap.set(w.brand_id, w.brand.name)
+      if (w.movement) {
+        const label = `${w.movement.manufacturer ? w.movement.manufacturer + " " : ""}${w.movement.caliber_name}`.trim()
+        movementMap.set(w.movement.id, label)
+        if (w.movement.caliber_type) caliberSet.add(w.movement.caliber_type)
+      }
+      if (w.case_material) materialSet.add(w.case_material)
+    }
+    return {
+      brandOptions: [...brandMap.entries()]
+        .map(([id, name]) => ({ id, name }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+      movementOptions: [...movementMap.entries()]
+        .map(([id, label]) => ({ id, label }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+      caliberTypes: [...caliberSet].sort(),
+      caseMaterials: [...materialSet].sort(),
+    }
+  }, [watches])
+
+  const afterCategory = useMemo(
+    () => (selectedId === ALL ? watches : watches.filter((w) => w.category_id === selectedId)),
+    [watches, selectedId]
+  )
+  const afterFilters = useMemo(() => applyFilters(afterCategory, filters), [afterCategory, filters])
+  const displayed = useMemo(
+    () => sortWatches(afterFilters, sortKey, sortDir),
+    [afterFilters, sortKey, sortDir]
+  )
 
   function handleCategoryChange(val: string | null) {
     if (!val) return
@@ -81,8 +182,6 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
     })
   }
 
-  // Render the trigger label manually — base-ui's controlled SelectValue
-  // can otherwise display the raw value (UUID). See CLAUDE.md.
   const triggerLabel =
     selectedId === ALL
       ? "All"
@@ -94,7 +193,7 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
         <h1 className="text-2xl font-bold tracking-tight">Collection</h1>
 
         <Select value={selectedId} onValueChange={handleCategoryChange}>
-          <SelectTrigger className="h-9 w-[180px]">
+          <SelectTrigger className="h-9 w-[160px]">
             <span className="text-sm">{triggerLabel}</span>
           </SelectTrigger>
           <SelectContent>
@@ -107,8 +206,44 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
           </SelectContent>
         </Select>
 
+        <CollectionFiltersDialog
+          filters={filters}
+          onChange={setFilters}
+          brands={brandOptions}
+          movements={movementOptions}
+          caliberTypes={caliberTypes}
+          caseMaterials={caseMaterials}
+          matchCount={afterFilters.length}
+        />
+
+        {/* Sort */}
+        <div className="flex items-center gap-1">
+          <select
+            aria-label="Sort by"
+            className={SELECT_CLASS}
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+          >
+            {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
+              <option key={k} value={k}>
+                {SORT_LABELS[k]}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+            disabled={sortKey === "default"}
+            aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
+            title={sortDir === "asc" ? "Ascending" : "Descending"}
+            className="flex h-9 w-9 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+          >
+            {sortDir === "asc" ? "▲" : "▼"}
+          </button>
+        </div>
+
         <span className="text-sm text-muted-foreground">
-          {filteredWatches.length} of {watches.length}
+          {displayed.length} of {watches.length}
         </span>
 
         {/* Push view controls to the right on wider screens */}
@@ -169,9 +304,9 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
       </div>
 
       {view === "table" ? (
-        <CollectionTable watches={filteredWatches} />
+        <CollectionTable watches={displayed} />
       ) : (
-        <GalleryGrid watches={filteredWatches} itemSize={size} />
+        <GalleryGrid watches={displayed} itemSize={size} />
       )}
     </div>
   )
