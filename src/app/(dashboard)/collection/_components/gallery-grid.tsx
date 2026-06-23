@@ -3,15 +3,18 @@
 import Image from "next/image"
 import Link from "next/link"
 import { caliberTypeLabels } from "@/lib/validations/movement"
+import { formatCurrency } from "@/lib/utils"
 import type { WatchWithCover } from "@/lib/types/watch"
 
 interface GalleryGridProps {
   watches: WatchWithCover[]
   /** Min tile width in px — the grid uses auto-fill, so columns shrink as tiles grow */
   itemSize: number
+  /** Show each watch's purchase price (driven by the Config → Settings toggle). */
+  showCost?: boolean
 }
 
-export function GalleryGrid({ watches, itemSize }: GalleryGridProps) {
+export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGridProps) {
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -74,6 +77,13 @@ export function GalleryGrid({ watches, itemSize }: GalleryGridProps) {
             {movementLine && (
               <p className="truncate text-xs text-muted-foreground">
                 {movementLine}
+              </p>
+            )}
+            {showCost && (
+              <p className="text-xs font-medium tabular-nums">
+                {watch.purchase_price_cents !== null
+                  ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
+                  : "—"}
               </p>
             )}
           </div>

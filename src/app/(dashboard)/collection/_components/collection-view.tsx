@@ -17,6 +17,7 @@ import {
   type CollectionFilters,
 } from "./collection-filters"
 import { cn } from "@/lib/utils"
+import { SHOW_COST_KEY } from "@/lib/preferences"
 import type { Category, WatchWithCover } from "@/lib/types/watch"
 
 interface CollectionViewProps {
@@ -105,6 +106,7 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
   // View + size preferences are personal, not URL-worthy → localStorage.
   const [view, setView] = useState<ViewMode>("table")
   const [size, setSize] = useState<number>(DEFAULT_SIZE)
+  const [showCost, setShowCost] = useState(false)
 
   // Advanced filters + sort are session state (not URL) — the category filter
   // stays URL-driven so it remains linkable from the dial and table.
@@ -118,6 +120,7 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
     if (savedView === "table" || savedView === "gallery") setView(savedView)
     const savedSize = Number(localStorage.getItem(SIZE_KEY))
     if (savedSize >= MIN_SIZE && savedSize <= MAX_SIZE) setSize(savedSize)
+    setShowCost(localStorage.getItem(SHOW_COST_KEY) === "1")
   }, [])
 
   function updateView(next: ViewMode) {
@@ -304,9 +307,9 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
       </div>
 
       {view === "table" ? (
-        <CollectionTable watches={displayed} />
+        <CollectionTable watches={displayed} showCost={showCost} />
       ) : (
-        <GalleryGrid watches={displayed} itemSize={size} />
+        <GalleryGrid watches={displayed} itemSize={size} showCost={showCost} />
       )}
     </div>
   )

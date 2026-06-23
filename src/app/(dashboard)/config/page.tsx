@@ -9,6 +9,7 @@ import { BrandsTab } from "./_components/brands-tab"
 import { MovementsTab } from "./_components/movements-tab"
 import { CategoriesTab } from "./_components/categories-tab"
 import { LabelsTab } from "./_components/labels-tab"
+import { SettingsTab } from "./_components/settings-tab"
 
 export const metadata: Metadata = {
   title: "Config | CaliberShelf",
@@ -45,6 +46,7 @@ export default async function ConfigPage() {
           <TabsTrigger value="movements">Movements ({movements.length})</TabsTrigger>
           <TabsTrigger value="categories">Categories ({categories.length})</TabsTrigger>
           <TabsTrigger value="labels">Labels ({labels.length})</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="brands" className="mt-4">
@@ -61,6 +63,10 @@ export default async function ConfigPage() {
 
         <TabsContent value="labels" className="mt-4">
           <LabelsTab labels={labels} />
+        </TabsContent>
+
+        <TabsContent value="settings" className="mt-4">
+          <SettingsTab />
         </TabsContent>
       </Tabs>
     </div>

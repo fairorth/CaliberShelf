@@ -26,12 +26,20 @@ import { caliberTypeLabels } from "@/lib/validations/movement"
 import { labelColorMap } from "@/lib/validations/label"
 import { bulkDeleteWatches } from "@/lib/actions/watch-actions"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import type { WatchWithCover, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
 
 interface CollectionTableProps {
   watches: WatchWithCover[]
+  /** Show each watch's purchase price (driven by the Config → Settings toggle). */
+  showCost?: boolean
+}
+
+function priceLabel(watch: WatchWithCover): string {
+  return watch.purchase_price_cents !== null
+    ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
+    : "—"
 }
 
 // ── Sorting ────────────────────────────────────────────────────────
@@ -157,7 +165,7 @@ function HoverPhoto({
 
 // ── Main Component ─────────────────────────────────────────────────
 
-export function CollectionTable({ watches }: CollectionTableProps) {
+export function CollectionTable({ watches, showCost = false }: CollectionTableProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>("asc")
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -297,6 +305,7 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                 <SortableHeader label="Movement Type" sortKey="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Caliber" sortKey="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Labels" sortKey="labels" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
+                {showCost && <TableHead className="text-right">Price</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -366,6 +375,11 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                       <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
+                  {showCost && (
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {priceLabel(watch)}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -415,6 +429,9 @@ export function CollectionTable({ watches }: CollectionTableProps) {
                 )}
                 <p className="text-sm font-semibold leading-tight">{watch.brand.name}</p>
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
+                {showCost && (
+                  <p className="text-sm font-medium tabular-nums">{priceLabel(watch)}</p>
+                )}
                 {watch.movement && (
                   <p className="truncate text-xs text-muted-foreground">
                     {watch.movement.caliber_type ? (caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type) : "—"}
