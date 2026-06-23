@@ -27,6 +27,7 @@ export function DialFramingEditor({
   const [zoom, setZoom] = useState(initialZoom)
   const [isPending, startTransition] = useTransition()
   const photoRef = useRef<HTMLDivElement>(null)
+  const draggingRef = useRef(false)
 
   const dirty =
     Math.abs(focalX - initialFocalX) > 0.05 ||
@@ -46,12 +47,41 @@ export function DialFramingEditor({
     )
   }
 
-  function handlePhotoClick(e: React.MouseEvent<HTMLDivElement>) {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
-    const y = ((e.clientY - rect.top) / rect.height) * 100
+  // Convert a pointer position to a focal point as a percentage of the image.
+  // Because the editor shows the FULL image, these percentages map 1:1 to the
+  // object-position used by the preview and the home-page dial marker.
+  function setFocalFromPointer(clientX: number, clientY: number) {
+    const el = photoRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const x = ((clientX - rect.left) / rect.width) * 100
+    const y = ((clientY - rect.top) / rect.height) * 100
     setFocalX(Math.max(0, Math.min(100, x)))
     setFocalY(Math.max(0, Math.min(100, y)))
+  }
+
+  function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    draggingRef.current = true
+    setFocalFromPointer(e.clientX, e.clientY)
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      // setPointerCapture can throw without an active pointer — non-fatal.
+    }
+  }
+
+  function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!draggingRef.current) return
+    setFocalFromPointer(e.clientX, e.clientY)
+  }
+
+  function handlePointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    draggingRef.current = false
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    } catch {
+      // ignore
+    }
   }
 
   function handleReset() {
@@ -80,25 +110,28 @@ export function DialFramingEditor({
       <CardHeader>
         <CardTitle className="text-base">Dial framing</CardTitle>
         <p className="text-xs text-muted-foreground">
-          Click the dial in the photo, then zoom to crop tight. The preview shows
-          how it appears on the home-page watch face.
+          Drag the crosshair onto the part of the dial you want centered, then zoom
+          to crop tight. The preview shows how it appears on the home-page watch face.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-4">
-          {/* Editor photo with crosshair */}
+          {/* Editor photo (full image) with draggable crosshair */}
           <div className="flex-1 space-y-1">
             <div
               ref={photoRef}
-              onClick={handlePhotoClick}
-              className="relative aspect-square cursor-crosshair overflow-hidden rounded-md border bg-black select-none"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              style={{ touchAction: "none" }}
+              className="relative w-full cursor-crosshair overflow-hidden rounded-md border bg-black select-none"
             >
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element -- need natural aspect so the crosshair maps 1:1 to image coordinates */}
+              <img
                 src={coverPhotoUrl}
                 alt="Cover"
-                fill
-                sizes="(max-width: 768px) 50vw, 240px"
-                className="object-cover"
+                draggable={false}
+                className="block w-full select-none"
               />
               {/* Crosshair / focal marker */}
               <div
