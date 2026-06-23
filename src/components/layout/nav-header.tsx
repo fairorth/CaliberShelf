@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/actions/auth-actions"
 import { cn } from "@/lib/utils"
@@ -71,6 +72,14 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
           </button>
           <Link href="/dashboard" className="text-lg font-bold tracking-tight">
             CaliberShelf
+          </Link>
+          <Link
+            href="/collection"
+            title="Return to Collection"
+            className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Return to Collections</span>
           </Link>
         </div>
 

@@ -58,80 +58,75 @@ export function WatchDetailHeader({ watch, labels = [], wearInfo }: WatchDetailH
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" render={<Link href="/dashboard" />}>
-            &larr; Gallery
-          </Button>
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              {watch.brand.name}
-            </p>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {watch.nickname || watch.model}
-            </h1>
-          </div>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+            {watch.brand.name}
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {watch.nickname || watch.model}
+          </h1>
         </div>
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleQuickWear}
-            disabled={isPending}
-          >
-            ⌚ Wore Today
-          </Button>
-          <Button variant="outline" size="sm" render={<Link href={`/watch/${watch.id}/edit`} />}>
-            Edit
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger render={<Button variant="destructive" size="sm" disabled={isPending} />}>
-              Delete
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete this watch?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete &quot;{watch.brand.name} {watch.model}&quot;
-                  and all its photos. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>
-                  Delete Watch
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleQuickWear}
+              disabled={isPending}
+            >
+              ⌚ Wore Today
+            </Button>
+            <Button variant="outline" size="sm" render={<Link href={`/watch/${watch.id}/edit`} />}>
+              Edit
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger render={<Button variant="destructive" size="sm" disabled={isPending} />}>
+                Delete
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this watch?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete &quot;{watch.brand.name} {watch.model}&quot;
+                    and all its photos. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>
+                    Delete Watch
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+          {wearInfo && (
+            <span className="text-xs text-muted-foreground">
+              Worn {wearInfo.count} {wearInfo.count === 1 ? "time" : "times"}
+              {wearInfo.lastWorn && ` · Last: ${formatLastWorn(wearInfo.lastWorn)}`}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Wear info + Label badges row */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pl-[52px]">
-        {wearInfo && (
-          <span className="text-xs text-muted-foreground">
-            Worn {wearInfo.count} {wearInfo.count === 1 ? "time" : "times"}
-            {wearInfo.lastWorn && ` · Last: ${formatLastWorn(wearInfo.lastWorn)}`}
-          </span>
-        )}
-        {labels.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {labels.map((label) => {
-              const colors = labelColorMap[label.color as LabelColor] ?? labelColorMap.blue
-              return (
-                <span
-                  key={label.id}
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}
-                >
-                  {label.name}
-                </span>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      {/* Label badges row */}
+      {labels.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {labels.map((label) => {
+            const colors = labelColorMap[label.color as LabelColor] ?? labelColorMap.blue
+            return (
+              <span
+                key={label.id}
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}
+              >
+                {label.name}
+              </span>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
