@@ -29,6 +29,8 @@ const ALL = "all"
 type ViewMode = "table" | "gallery"
 const VIEW_KEY = "collection-view"
 const SIZE_KEY = "collection-gallery-size"
+const FILTERS_KEY = "collection-filters"
+const SORT_KEY = "collection-sort"
 const DEFAULT_SIZE = 200
 const MIN_SIZE = 120
 const MAX_SIZE = 400
@@ -121,6 +123,24 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
     const savedSize = Number(localStorage.getItem(SIZE_KEY))
     if (savedSize >= MIN_SIZE && savedSize <= MAX_SIZE) setSize(savedSize)
     setShowCost(localStorage.getItem(SHOW_COST_KEY) === "1")
+
+    // Restore saved filters + sort so they survive navigating away and back.
+    try {
+      const savedFilters = localStorage.getItem(FILTERS_KEY)
+      if (savedFilters) setFilters({ ...EMPTY_FILTERS, ...JSON.parse(savedFilters) })
+    } catch {
+      // ignore malformed stored value
+    }
+    try {
+      const savedSort = localStorage.getItem(SORT_KEY)
+      if (savedSort) {
+        const parsed = JSON.parse(savedSort) as { key?: SortKey; dir?: SortDir }
+        if (parsed.key && parsed.key in SORT_LABELS) setSortKey(parsed.key)
+        if (parsed.dir === "asc" || parsed.dir === "desc") setSortDir(parsed.dir)
+      }
+    } catch {
+      // ignore malformed stored value
+    }
   }, [])
 
   function updateView(next: ViewMode) {
@@ -131,6 +151,26 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
   function updateSize(next: number) {
     setSize(next)
     localStorage.setItem(SIZE_KEY, String(next))
+  }
+
+  function updateFilters(next: CollectionFilters) {
+    setFilters(next)
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(next))
+  }
+
+  function persistSort(key: SortKey, dir: SortDir) {
+    localStorage.setItem(SORT_KEY, JSON.stringify({ key, dir }))
+  }
+
+  function updateSortKey(key: SortKey) {
+    setSortKey(key)
+    persistSort(key, sortDir)
+  }
+
+  function toggleSortDir() {
+    const next = sortDir === "asc" ? "desc" : "asc"
+    setSortDir(next)
+    persistSort(sortKey, next)
   }
 
   // URL is the source of truth for the category filter.
@@ -211,7 +251,7 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
 
         <CollectionFiltersDialog
           filters={filters}
-          onChange={setFilters}
+          onChange={updateFilters}
           brands={brandOptions}
           movements={movementOptions}
           caliberTypes={caliberTypes}
@@ -225,7 +265,7 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
             aria-label="Sort by"
             className={SELECT_CLASS}
             value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            onChange={(e) => updateSortKey(e.target.value as SortKey)}
           >
             {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
               <option key={k} value={k}>
@@ -235,7 +275,7 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
           </select>
           <button
             type="button"
-            onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+            onClick={toggleSortDir}
             disabled={sortKey === "default"}
             aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
             title={sortDir === "asc" ? "Ascending" : "Descending"}
