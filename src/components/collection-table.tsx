@@ -44,7 +44,7 @@ function priceLabel(watch: WatchWithCover): string {
 
 // ── Sorting ────────────────────────────────────────────────────────
 
-type SortKey = "category" | "brand" | "model" | "movementType" | "caliber" | "labels"
+type SortKey = "category" | "brand" | "model" | "movementType" | "caliber" | "labels" | "price"
 type SortDir = "asc" | "desc"
 
 function getSortValue(watch: WatchWithCover, key: SortKey): string {
@@ -65,6 +65,8 @@ function getSortValue(watch: WatchWithCover, key: SortKey): string {
         : "zzz"
     case "labels":
       return watch.labels?.map((l) => l.name).sort().join(",").toLowerCase() ?? ""
+    case "price":
+      return "" // price sorts numerically in the comparator below
   }
 }
 
@@ -75,6 +77,7 @@ function SortableHeader({
   currentDir,
   onSort,
   className,
+  alignRight,
 }: {
   label: string
   sortKey: SortKey
@@ -82,6 +85,7 @@ function SortableHeader({
   currentDir: SortDir
   onSort: (key: SortKey) => void
   className?: string
+  alignRight?: boolean
 }) {
   const isActive = currentKey === sortKey
   return (
@@ -89,7 +93,10 @@ function SortableHeader({
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className="flex items-center gap-1 text-left font-medium hover:text-foreground"
+        className={cn(
+          "flex items-center gap-1 font-medium hover:text-foreground",
+          alignRight ? "w-full justify-end" : "text-left"
+        )}
       >
         {label}
         <span className="text-[10px]">
@@ -176,6 +183,15 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
   const sorted = useMemo(() => {
     if (!sortKey) return watches
     return [...watches].sort((a, b) => {
+      if (sortKey === "price") {
+        const pa = a.purchase_price_cents
+        const pb = b.purchase_price_cents
+        // Watches without a price always sort to the bottom.
+        if (pa === null && pb === null) return 0
+        if (pa === null) return 1
+        if (pb === null) return -1
+        return sortDir === "asc" ? pa - pb : pb - pa
+      }
       const va = getSortValue(a, sortKey)
       const vb = getSortValue(b, sortKey)
       const cmp = va.localeCompare(vb)
@@ -305,7 +321,9 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                 <SortableHeader label="Movement Type" sortKey="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Caliber" sortKey="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Labels" sortKey="labels" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-                {showCost && <TableHead className="text-right">Price</TableHead>}
+                {showCost && (
+                  <SortableHeader label="Price" sortKey="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} className="text-right" alignRight />
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
