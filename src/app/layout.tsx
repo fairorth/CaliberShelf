@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist, Fraunces, JetBrains_Mono } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar"
+import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -9,9 +10,18 @@ const geistSans = Geist({
   subsets: ["latin"],
 })
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Engraved-dial display serif for the marque and headings.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
+  display: "swap",
+})
+
+// Spec-sheet monospace for technical data (calibers, rates, refs, prices).
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  display: "swap",
 })
 
 export const viewport: Viewport = {
@@ -37,15 +47,22 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        {children}
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
         <ServiceWorkerRegistrar />
       </body>
     </html>

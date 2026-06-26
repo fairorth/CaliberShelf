@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useSyncExternalStore } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronLeft } from "lucide-react"
+import { useTheme } from "next-themes"
+import { ChevronLeft, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/actions/auth-actions"
 import { cn } from "@/lib/utils"
@@ -33,6 +34,12 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
   const isMobile = useSyncExternalStore(noopSubscribe, getTouchSnapshot, getTouchServerSnapshot)
+  const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- next-themes needs a mounted guard to avoid SSR theme mismatch
+    setMounted(true)
+  }, [])
 
   // The "Return to Collections" shortcut only belongs on a watch detail page
   // (not /watch/[id]/edit, and not on the home or collection screens).
@@ -74,7 +81,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
               )}
             </svg>
           </button>
-          <Link href="/dashboard" className="text-xl font-bold tracking-tight">
+          <Link href="/dashboard" className="font-display text-xl font-medium tracking-tight">
             CaliberShelf
           </Link>
           {isWatchDetail && (
@@ -89,11 +96,24 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
           )}
         </div>
 
-        {/* User info + sign out */}
+        {/* User info + theme toggle + sign out */}
         <div className="flex items-center gap-3">
           <span className="hidden text-sm text-muted-foreground sm:inline">
             {userEmail}
           </span>
+          <button
+            type="button"
+            aria-label="Toggle light/dark theme"
+            title="Toggle theme"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            {mounted && resolvedTheme === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </button>
           <form action={signOut}>
             <Button variant="outline" size="sm" type="submit">
               Sign Out
