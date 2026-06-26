@@ -141,7 +141,7 @@ function HoverPhoto({
     >
       <div className={`${thumbClass} overflow-hidden rounded-md bg-muted`}>
         {url ? (
-          <Image src={url} alt={alt} fill className="object-cover" sizes={thumbPx} />
+          <Image src={url} alt={alt} fill className="object-cover" sizes={thumbPx} unoptimized />
         ) : (
           <div className="flex h-full items-center justify-center text-lg text-muted-foreground">⌚</div>
         )}
@@ -154,7 +154,7 @@ function HoverPhoto({
         >
           <div className="overflow-hidden rounded-lg border bg-background shadow-xl">
             <div className="relative h-64 w-64">
-              <Image src={url} alt={alt} fill className="object-cover" sizes="256px" />
+              <Image src={url} alt={alt} fill className="object-cover" sizes="256px" unoptimized />
             </div>
           </div>
         </div>
@@ -416,6 +416,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     fill
                     className="object-cover"
                     sizes="56px"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-lg text-muted-foreground">⌚</div>

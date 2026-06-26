@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { buildStoragePath } from "@/lib/storage"
+import { generateThumbnail, thumbPathFor } from "@/lib/thumbnails"
 
 const BUCKET = "watch-photos"
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB — iPhone photos can be large
@@ -72,6 +73,9 @@ export async function uploadWatchPhoto(
     return { error: `Upload failed: ${uploadError.message}` }
   }
 
+  // Generate a small thumbnail for fast Collection loading (best-effort).
+  const thumbPath = await generateThumbnail(supabase, storagePath, await file.arrayBuffer())
+
   // Check if this is the first photo (make it the cover)
   const { count } = await supabase
     .from("watch_photos")
@@ -85,13 +89,14 @@ export async function uploadWatchPhoto(
     watch_id: watchId,
     user_id: user.id,
     storage_path: storagePath,
+    thumb_path: thumbPath,
     display_order: count ?? 0,
     is_cover: isFirstPhoto,
   })
 
   if (insertError) {
-    // Clean up uploaded file if DB insert fails
-    await supabase.storage.from(BUCKET).remove([storagePath])
+    // Clean up uploaded files if DB insert fails
+    await supabase.storage.from(BUCKET).remove([storagePath, thumbPathFor(storagePath)])
     return { error: `Failed to save photo: ${insertError.message}` }
   }
 
@@ -118,7 +123,7 @@ export async function deleteWatchPhoto(
   // Get the photo to find storage path
   const { data: photo } = await supabase
     .from("watch_photos")
-    .select("storage_path, is_cover")
+    .select("storage_path, thumb_path, is_cover")
     .eq("id", photoId)
     .eq("user_id", user.id)
     .single()
@@ -127,10 +132,12 @@ export async function deleteWatchPhoto(
     return { error: "Photo not found." }
   }
 
-  const typedPhoto = photo as { storage_path: string; is_cover: boolean }
+  const typedPhoto = photo as { storage_path: string; thumb_path: string | null; is_cover: boolean }
 
-  // Delete from storage
-  await supabase.storage.from(BUCKET).remove([typedPhoto.storage_path])
+  // Delete original + thumbnail from storage
+  await supabase.storage
+    .from(BUCKET)
+    .remove([typedPhoto.storage_path, typedPhoto.thumb_path ?? thumbPathFor(typedPhoto.storage_path)])
 
   // Delete from database
   const { error } = await supabase

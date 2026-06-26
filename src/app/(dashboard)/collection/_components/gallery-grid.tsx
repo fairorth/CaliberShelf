@@ -62,6 +62,10 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
                 alt={`${watch.brand.name} ${watch.model}`}
                 fill
                 sizes={sizesHint}
+                // Covers are already small pre-generated thumbnails (~65KB);
+                // load them straight from Supabase's CDN instead of paying for
+                // (uncacheable, signed-URL) Next image optimization.
+                unoptimized
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : (

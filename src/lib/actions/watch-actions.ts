@@ -11,6 +11,7 @@ import {
 } from "@/lib/validations/watch"
 import { setWatchLabels } from "@/lib/actions/label-actions"
 import { buildStoragePath } from "@/lib/storage"
+import { generateThumbnail, thumbPathFor } from "@/lib/thumbnails"
 import { dollarsToCents } from "@/lib/utils"
 
 export type WatchActionState = {
@@ -201,15 +202,16 @@ export async function deleteWatch(watchId: string): Promise<WatchActionState> {
   // First, get all photo storage paths so we can clean up storage
   const { data: photos } = await supabase
     .from("watch_photos")
-    .select("storage_path")
+    .select("storage_path, thumb_path")
     .eq("watch_id", watchId)
     .eq("user_id", user.id)
 
-  // Delete photos from storage bucket
+  // Delete photos (originals + thumbnails) from storage bucket
   if (photos && photos.length > 0) {
-    const paths = photos.map(
-      (p: { storage_path: string }) => p.storage_path
-    )
+    const paths = photos.flatMap((p: { storage_path: string; thumb_path: string | null }) => [
+      p.storage_path,
+      p.thumb_path ?? thumbPathFor(p.storage_path),
+    ])
     await supabase.storage.from("watch-photos").remove(paths)
   }
 
@@ -250,15 +252,16 @@ export async function bulkDeleteWatches(
   // Get all photo storage paths for these watches
   const { data: photos } = await supabase
     .from("watch_photos")
-    .select("storage_path")
+    .select("storage_path, thumb_path")
     .in("watch_id", watchIds)
     .eq("user_id", user.id)
 
-  // Delete photos from storage bucket
+  // Delete photos (originals + thumbnails) from storage bucket
   if (photos && photos.length > 0) {
-    const paths = photos.map(
-      (p: { storage_path: string }) => p.storage_path
-    )
+    const paths = photos.flatMap((p: { storage_path: string; thumb_path: string | null }) => [
+      p.storage_path,
+      p.thumb_path ?? thumbPathFor(p.storage_path),
+    ])
     await supabase.storage.from("watch-photos").remove(paths)
   }
 
@@ -346,10 +349,12 @@ export async function createWatchWithPhoto(
         })
 
       if (!uploadError) {
+        const thumbPath = await generateThumbnail(supabase, storagePath, await photo.arrayBuffer())
         await supabase.from("watch_photos").insert({
           watch_id: watch.id,
           user_id: user.id,
           storage_path: storagePath,
+          thumb_path: thumbPath,
           display_order: 0,
           is_cover: true,
         })

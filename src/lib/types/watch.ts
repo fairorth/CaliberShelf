@@ -114,6 +114,7 @@ export interface WatchPhoto {
   watch_id: string
   user_id: string
   storage_path: string
+  thumb_path: string | null
   display_order: number
   caption: string | null
   is_cover: boolean

@@ -39,11 +39,12 @@ export async function getWatches(): Promise<WatchWithCover[]> {
     .in("watch_id", watchIds)
     .eq("is_cover", true)
 
-  // Build a map of watch_id -> cover photo storage_path
+  // Build a map of watch_id -> cover image path. Prefer the small thumbnail
+  // (fast); fall back to the full image for photos not yet thumbnailed.
   const coverMap = new Map<string, string>()
   if (coverPhotos) {
     for (const photo of coverPhotos as WatchPhoto[]) {
-      coverMap.set(photo.watch_id, photo.storage_path)
+      coverMap.set(photo.watch_id, photo.thumb_path ?? photo.storage_path)
     }
   }
 

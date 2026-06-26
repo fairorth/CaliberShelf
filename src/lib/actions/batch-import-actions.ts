@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { buildStoragePath } from "@/lib/storage"
+import { generateThumbnail } from "@/lib/thumbnails"
 import { createBrandInline } from "@/lib/actions/brand-actions"
 
 const PHOTO_BUCKET = "watch-photos"
@@ -129,11 +130,15 @@ export async function importSingleWatch(
     return { success: true, error: `Watch created but photo failed: ${uploadError.message}` }
   }
 
+  // Generate a small thumbnail for fast Collection loading (best-effort).
+  const thumbPath = await generateThumbnail(supabase, storagePath, await file.arrayBuffer())
+
   // Create photo record
   await supabase.from("watch_photos").insert({
     watch_id: watchId,
     user_id: user.id,
     storage_path: storagePath,
+    thumb_path: thumbPath,
     display_order: 0,
     is_cover: true,
   })
