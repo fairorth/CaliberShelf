@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button"
 import { caliberTypeLabels } from "@/lib/validations/movement"
 import { labelColorMap } from "@/lib/validations/label"
 import { bulkDeleteWatches } from "@/lib/actions/watch-actions"
+import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import { toast } from "sonner"
 import { cn, formatCurrency } from "@/lib/utils"
 import type { WatchWithCover, Label } from "@/lib/types/watch"
@@ -371,6 +372,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     <Link href={`/watch/${watch.id}`} className="text-muted-foreground hover:underline">
                       {watch.model}
                     </Link>
+                    {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {watch.movement
@@ -446,7 +448,10 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     {watch.category.name}
                   </p>
                 )}
-                <p className="text-sm font-semibold leading-tight">{watch.brand.name}</p>
+                <p className="text-sm font-semibold leading-tight">
+                  {watch.brand.name}
+                  {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
+                </p>
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
                 {showCost && (
                   <p className="text-sm font-medium tabular-nums">{priceLabel(watch)}</p>

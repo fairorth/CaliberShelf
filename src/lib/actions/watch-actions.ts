@@ -70,6 +70,7 @@ export async function createWatch(
         : null,
       purchase_currency: data.purchase_currency,
       notes: data.notes || null,
+      is_coming_soon: data.is_coming_soon,
     })
     .select("id")
     .single()
@@ -138,6 +139,7 @@ export async function updateWatch(
         : null,
       purchase_currency: data.purchase_currency,
       notes: data.notes || null,
+      is_coming_soon: data.is_coming_soon,
     })
     .eq("id", watchId)
     .eq("user_id", user.id) // extra safety on top of RLS

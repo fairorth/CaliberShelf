@@ -47,6 +47,12 @@ export const watchFormSchema = z.object({
   complication: z.string().optional().default(""),
   notes: z.string().optional().default(""),
 
+  // Status — checkbox sends "on" when checked, nothing when unchecked
+  is_coming_soon: z
+    .string()
+    .optional()
+    .transform((v) => v === "on"),
+
   // Optional enum fields (empty string = null in the database)
   case_material: z.union([caseMaterialSchema, z.literal("")]).optional().default(""),
   crystal: z.union([crystalTypeSchema, z.literal("")]).optional().default(""),

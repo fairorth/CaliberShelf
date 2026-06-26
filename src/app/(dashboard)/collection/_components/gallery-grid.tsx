@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { caliberTypeLabels } from "@/lib/validations/movement"
+import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import { formatCurrency } from "@/lib/utils"
 import type { WatchWithCover } from "@/lib/types/watch"
 
@@ -72,6 +73,9 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
               <div className="flex h-full items-center justify-center text-4xl text-muted-foreground">
                 ⌚
               </div>
+            )}
+            {watch.is_coming_soon && (
+              <ComingSoonBadge className="absolute left-1.5 top-1.5 shadow-sm" />
             )}
           </div>
           <div className="px-1">

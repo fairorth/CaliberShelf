@@ -23,6 +23,7 @@ export interface CollectionFilters {
   movementId: string
   caliberType: string
   caseMaterial: string
+  comingSoon: string // "" = any, "yes", "no"
   minPrice: string // dollars, as typed
   maxPrice: string
 }
@@ -32,6 +33,7 @@ export const EMPTY_FILTERS: CollectionFilters = {
   movementId: "",
   caliberType: "",
   caseMaterial: "",
+  comingSoon: "",
   minPrice: "",
   maxPrice: "",
 }
@@ -42,6 +44,7 @@ export function activeFilterCount(f: CollectionFilters): number {
   if (f.movementId) n++
   if (f.caliberType) n++
   if (f.caseMaterial) n++
+  if (f.comingSoon) n++
   if (f.minPrice || f.maxPrice) n++
   return n
 }
@@ -177,6 +180,21 @@ export function CollectionFiltersDialog({
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Coming soon */}
+          <div className="space-y-1.5">
+            <FormLabel htmlFor="filter-coming-soon">Coming Soon</FormLabel>
+            <select
+              id="filter-coming-soon"
+              className={SELECT_CLASS}
+              value={filters.comingSoon}
+              onChange={(e) => set("comingSoon", e.target.value)}
+            >
+              <option value="">Any</option>
+              <option value="yes">Coming soon (awaiting arrival)</option>
+              <option value="no">In collection (arrived)</option>
+            </select>
           </div>
 
           {/* Price range */}

@@ -61,6 +61,8 @@ function applyFilters(watches: WatchWithCover[], f: CollectionFilters): WatchWit
     if (f.movementId && w.movement_id !== f.movementId) return false
     if (f.caliberType && w.movement?.caliber_type !== f.caliberType) return false
     if (f.caseMaterial && w.case_material !== f.caseMaterial) return false
+    if (f.comingSoon === "yes" && !w.is_coming_soon) return false
+    if (f.comingSoon === "no" && w.is_coming_soon) return false
     if (priceActive) {
       const p = w.purchase_price_cents
       if (p === null) return false

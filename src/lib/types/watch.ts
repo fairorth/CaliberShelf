@@ -101,6 +101,7 @@ export interface Watch {
   purchase_currency: string
   notes: string | null
   is_public: boolean
+  is_coming_soon: boolean
   dial_focal_x: number
   dial_focal_y: number
   dial_zoom: number

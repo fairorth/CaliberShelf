@@ -203,6 +203,21 @@ export function WatchForm({
             />
           </div>
 
+          <div className="sm:col-span-2 lg:col-span-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="is_coming_soon"
+                defaultChecked={watch?.is_coming_soon ?? false}
+                className="h-4 w-4 rounded border-border accent-primary"
+              />
+              <span className="font-medium">Coming soon</span>
+              <span className="text-xs text-muted-foreground">
+                — ordered, awaiting arrival (use Notes for sale details)
+              </span>
+            </label>
+          </div>
+
           <div className="space-y-2 sm:col-span-2 lg:col-span-3">
             <FormLabel htmlFor="notes">Notes</FormLabel>
             <Textarea
