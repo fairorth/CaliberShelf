@@ -34,6 +34,42 @@ export async function getSignedUrl(
   return data.signedUrl
 }
 
+/** Supabase Storage image transformation options (Pro plan). */
+export interface ImageTransform {
+  width?: number
+  height?: number
+  resize?: "cover" | "contain" | "fill"
+  quality?: number
+}
+
+/**
+ * Generate signed URLs that resize images on the fly via Supabase's transform
+ * endpoint (Pro feature). Signs each path individually since the batch API
+ * doesn't accept a transform. Returns a map from storage_path to signed URL.
+ */
+export async function getTransformedSignedUrls(
+  storagePaths: string[],
+  transform: ImageTransform
+): Promise<Map<string, string>> {
+  if (storagePaths.length === 0) return new Map()
+
+  const supabase = await createClient()
+  const entries = await Promise.all(
+    storagePaths.map(async (path) => {
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .createSignedUrl(path, SIGNED_URL_EXPIRY, { transform })
+      return [path, error || !data ? null : data.signedUrl] as const
+    })
+  )
+
+  const urlMap = new Map<string, string>()
+  for (const [path, url] of entries) {
+    if (url) urlMap.set(path, url)
+  }
+  return urlMap
+}
+
 /**
  * Generate signed URLs for multiple photos in batch.
  * Returns a map from storage_path to signed URL.

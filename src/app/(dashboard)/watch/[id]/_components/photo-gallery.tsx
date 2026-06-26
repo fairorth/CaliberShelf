@@ -24,11 +24,14 @@ import type { WatchPhoto } from "@/lib/types/watch"
 
 interface PhotoGalleryProps {
   photos: WatchPhoto[]
+  /** Display-sized signed URLs (keyed by storage_path). */
   photoUrls: Record<string, string>
+  /** Larger signed URLs for the zoom lightbox (falls back to photoUrls). */
+  fullPhotoUrls?: Record<string, string>
   watchId: string
 }
 
-export function PhotoGallery({ photos, photoUrls, watchId }: PhotoGalleryProps) {
+export function PhotoGallery({ photos, photoUrls, fullPhotoUrls, watchId }: PhotoGalleryProps) {
   const [selectedId, setSelectedId] = useState<string | null>(
     photos[0]?.id ?? null
   )
@@ -36,7 +39,10 @@ export function PhotoGallery({ photos, photoUrls, watchId }: PhotoGalleryProps) 
   const [isPending, startTransition] = useTransition()
 
   // Ordered signed URLs aligned to `photos` (index-stable for the lightbox).
-  const orderedUrls = photos.map((p) => photoUrls[p.storage_path] ?? "")
+  // Prefer the larger "full" URLs so zooming stays crisp.
+  const orderedUrls = photos.map(
+    (p) => fullPhotoUrls?.[p.storage_path] ?? photoUrls[p.storage_path] ?? ""
+  )
 
   const lightbox =
     lightboxIndex !== null ? (
@@ -103,6 +109,7 @@ export function PhotoGallery({ photos, photoUrls, watchId }: PhotoGalleryProps) 
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
+              unoptimized
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -176,6 +183,7 @@ export function PhotoGallery({ photos, photoUrls, watchId }: PhotoGalleryProps) 
                       : "(max-width: 768px) 50vw, 25vw"
                   }
                   priority={isHero}
+                  unoptimized
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">

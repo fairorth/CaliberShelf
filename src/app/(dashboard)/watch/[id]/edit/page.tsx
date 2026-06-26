@@ -48,10 +48,14 @@ export default async function EditWatchPage({
   // Bind the watchId to the update action
   const boundUpdateWatch = updateWatch.bind(null, watch.id)
 
-  // Convert Map to plain object for client component serialization
+  // Convert Maps to plain objects for client component serialization
   const photoUrls: Record<string, string> = {}
   for (const [key, value] of watch.photo_urls) {
     photoUrls[key] = value
+  }
+  const fullPhotoUrls: Record<string, string> = {}
+  for (const [key, value] of watch.full_photo_urls) {
+    fullPhotoUrls[key] = value
   }
 
   // Resolve the cover photo's signed URL for the dial-framing editor
@@ -76,6 +80,7 @@ export default async function EditWatchPage({
             <PhotoGallery
               photos={watch.watch_photos}
               photoUrls={photoUrls}
+              fullPhotoUrls={fullPhotoUrls}
               watchId={watch.id}
             />
             <PhotoUploader watchId={watch.id} />

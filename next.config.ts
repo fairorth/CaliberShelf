@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
         hostname: "ztmmhuaivirxfokmckvx.supabase.co",
         pathname: "/storage/v1/object/sign/**",
       },
+      {
+        // Pro image-transformation (resize) endpoint
+        protocol: "https",
+        hostname: "ztmmhuaivirxfokmckvx.supabase.co",
+        pathname: "/storage/v1/render/image/sign/**",
+      },
     ],
   },
   headers: async () => [

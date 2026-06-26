@@ -44,10 +44,14 @@ export default async function WatchDetailPage({
   // Look up the category for this watch
   const category = categories.find((c) => c.id === watch.category_id) ?? null
 
-  // Convert Map to plain object for client component serialization
+  // Convert Maps to plain objects for client component serialization
   const photoUrls: Record<string, string> = {}
   for (const [key, value] of watch.photo_urls) {
     photoUrls[key] = value
+  }
+  const fullPhotoUrls: Record<string, string> = {}
+  for (const [key, value] of watch.full_photo_urls) {
+    fullPhotoUrls[key] = value
   }
 
   return (
@@ -60,6 +64,7 @@ export default async function WatchDetailPage({
           <PhotoGallery
             photos={watch.watch_photos}
             photoUrls={photoUrls}
+            fullPhotoUrls={fullPhotoUrls}
             watchId={watch.id}
           />
           <PhotoUploader watchId={watch.id} />

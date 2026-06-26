@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { getSignedUrls, getSignedUrl } from "@/lib/storage"
+import { getSignedUrls, getSignedUrl, getTransformedSignedUrls } from "@/lib/storage"
 import type {
   Watch,
   WatchWithCover,
@@ -91,7 +91,15 @@ export async function getWatches(): Promise<WatchWithCover[]> {
  */
 export async function getWatchById(
   id: string
-): Promise<(WatchWithPhotos & { photo_urls: Map<string, string>; brand: Brand; movement: Movement | null }) | null> {
+): Promise<
+  | (WatchWithPhotos & {
+      photo_urls: Map<string, string>
+      full_photo_urls: Map<string, string>
+      brand: Brand
+      movement: Movement | null
+    })
+  | null
+> {
   const supabase = await createClient()
 
   const { data: watch, error } = await supabase
@@ -107,13 +115,19 @@ export async function getWatchById(
 
   const typedWatch = watch as WatchWithPhotos & { brands: Brand; movements: Movement | null }
 
-  // Generate signed URLs for all photos
+  // Serve right-sized images via Supabase transforms (Pro): a display size for
+  // the gallery/hero and a larger capped size for the zoom lightbox — both far
+  // smaller than the ~2MB originals.
   const storagePaths = typedWatch.watch_photos.map((p) => p.storage_path)
-  const photoUrls = await getSignedUrls(storagePaths)
+  const [photoUrls, fullPhotoUrls] = await Promise.all([
+    getTransformedSignedUrls(storagePaths, { width: 1000, quality: 80 }),
+    getTransformedSignedUrls(storagePaths, { width: 2000, quality: 82 }),
+  ])
 
   return {
     ...typedWatch,
     photo_urls: photoUrls,
+    full_photo_urls: fullPhotoUrls,
     brand: typedWatch.brands,
     movement: typedWatch.movements,
   }
