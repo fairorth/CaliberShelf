@@ -46,7 +46,7 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-bold tracking-tight">Reports</h1>
+      <h1 className="font-display text-lg font-medium tracking-tight">Reports</h1>
 
       <Card className="max-w-xl">
         <CardHeader>

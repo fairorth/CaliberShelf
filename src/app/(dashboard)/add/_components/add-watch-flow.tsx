@@ -81,7 +81,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-bold tracking-tight">Add Watch</h1>
+      <h1 className="font-display text-lg font-medium tracking-tight">Add Watch</h1>
 
       {/* Hidden inputs for camera & gallery */}
       <input

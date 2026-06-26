@@ -12,12 +12,12 @@ interface MovementPreviewProps {
  */
 export function MovementPreview({ movement }: MovementPreviewProps) {
   return (
-    <div className="rounded-lg border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.04] to-violet-500/[0.04] p-4 space-y-3">
+    <div className="rounded-lg border border-primary/20 bg-primary/[0.05] p-4 space-y-3">
       {/* Header: caliber name + type badge */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm font-semibold tracking-tight">{movement.caliber_name}</span>
+        <span className="font-mono text-sm font-medium tracking-tight">{movement.caliber_name}</span>
         {movement.caliber_type && (
-          <Badge className="bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/25 text-[10px]">
+          <Badge className="bg-primary/15 text-primary border-primary/25 text-[10px]">
             {caliberTypeLabels[movement.caliber_type] ?? movement.caliber_type}
           </Badge>
         )}
@@ -47,7 +47,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <span className="inline-flex items-baseline gap-1 text-xs">
       <span className="text-muted-foreground/70">{label}</span>
-      <span className="font-semibold text-foreground/90">{value}</span>
+      <span className="font-mono font-medium text-foreground/90">{value}</span>
     </span>
   )
 }

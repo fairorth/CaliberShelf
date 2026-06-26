@@ -17,7 +17,7 @@ export default async function BatchImportPage() {
         <Button variant="ghost" size="sm" render={<Link href="/dashboard" />}>
           &larr; Home
         </Button>
-        <h1 className="text-lg font-bold tracking-tight">Batch Import</h1>
+        <h1 className="font-display text-lg font-medium tracking-tight">Batch Import</h1>
       </div>
 
       <BatchImportForm categories={categories} />

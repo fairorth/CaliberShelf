@@ -235,7 +235,7 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-lg font-bold tracking-tight">Collection</h1>
+        <h1 className="font-display text-lg font-medium tracking-tight">Collection</h1>
 
         <Select value={selectedId} onValueChange={handleCategoryChange}>
           <SelectTrigger className="h-9 w-[160px]">

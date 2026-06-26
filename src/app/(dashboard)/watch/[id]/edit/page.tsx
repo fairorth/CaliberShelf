@@ -68,7 +68,7 @@ export default async function EditWatchPage({
         <Button variant="ghost" size="sm" render={<Link href={`/watch/${watch.id}`} />}>
           &larr; Back
         </Button>
-        <h1 className="text-lg font-bold tracking-tight">
+        <h1 className="font-display text-lg font-medium tracking-tight">
           Edit {watch.brand.name} {watch.model}
         </h1>
       </div>

@@ -61,7 +61,7 @@ export function WatchDetailHeader({ watch, labels = [], wearInfo }: WatchDetailH
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-lg font-bold tracking-tight">
+          <p className="font-display text-xl font-medium tracking-tight">
             {watch.brand.name}
             {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
           </p>
