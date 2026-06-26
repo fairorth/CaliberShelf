@@ -120,8 +120,9 @@ export async function getWatchById(
   // smaller than the ~2MB originals.
   const storagePaths = typedWatch.watch_photos.map((p) => p.storage_path)
   const [photoUrls, fullPhotoUrls] = await Promise.all([
-    getTransformedSignedUrls(storagePaths, { width: 1000, quality: 80 }),
-    getTransformedSignedUrls(storagePaths, { width: 2000, quality: 82 }),
+    // "contain" with a square box = cap the long edge, preserve aspect (no crop).
+    getTransformedSignedUrls(storagePaths, { width: 1000, height: 1000, resize: "contain", quality: 80 }),
+    getTransformedSignedUrls(storagePaths, { width: 2000, height: 2000, resize: "contain", quality: 82 }),
   ])
 
   return {
