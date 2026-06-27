@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation"
-import Link from "next/link"
 import { getWatchById } from "@/lib/queries/watches"
 import { getBrands } from "@/lib/queries/brands"
 import { getMovements } from "@/lib/queries/movements"
@@ -10,7 +9,6 @@ import { PhotoGallery } from "../_components/photo-gallery"
 import { PhotoUploader } from "../_components/photo-uploader"
 import { DialFramingEditor } from "./_components/dial-framing-editor"
 import { updateWatch } from "@/lib/actions/watch-actions"
-import { Button } from "@/components/ui/button"
 
 export async function generateMetadata({
   params,
@@ -64,15 +62,10 @@ export default async function EditWatchPage({
 
   return (
     <div className="space-y-6 pb-28">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" render={<Link href={`/watch/${watch.id}`} />}>
-          &larr; Back
-        </Button>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">
-          Edit {watch.brand.name}{" "}
-          <span className="text-muted-foreground">{watch.model}</span>
-        </h1>
-      </div>
+      <h1 className="font-display text-2xl font-semibold tracking-tight">
+        Edit {watch.brand.name}{" "}
+        <span className="text-muted-foreground">{watch.model}</span>
+      </h1>
 
       <div className="grid gap-6 lg:grid-cols-[420px_1fr] lg:items-start lg:gap-[26px]">
         {/* Left column: Sticky photo gallery */}

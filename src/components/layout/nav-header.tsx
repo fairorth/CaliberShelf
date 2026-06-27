@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { ChevronLeft, Moon, Sun } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/actions/auth-actions"
 import { cn } from "@/lib/utils"
@@ -30,10 +30,6 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- next-themes needs a mounted guard to avoid SSR theme mismatch
     setMounted(true)
   }, [])
-
-  // The "Return to Collections" shortcut only belongs on a watch detail page
-  // (not /watch/[id]/edit, and not on the home or collection screens).
-  const isWatchDetail = /^\/watch\/[^/]+$/.test(pathname)
 
   // Add Watch → the desktop-first quick-add (basics now, full specs on Edit).
   const addWatchHref = "/add"
@@ -106,16 +102,6 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
           <Link href="/dashboard" className="font-display text-xl font-medium tracking-tight">
             CaliberShelf
           </Link>
-          {isWatchDetail && (
-            <Link
-              href="/collection"
-              title="Return to Collection"
-              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Return to Collections</span>
-            </Link>
-          )}
         </div>
 
         {/* User info + theme toggle + sign out */}
