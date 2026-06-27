@@ -306,7 +306,7 @@ export function WatchForm({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <FormLabel htmlFor="case_material">Case Material</FormLabel>
-              <Select name="case_material" defaultValue={watch?.case_material ?? ""}>
+              <Select name="case_material" defaultValue={watch?.case_material ?? "stainless_steel"}>
                 <SelectTrigger id="case_material" className={FIELD}>
                   <SelectValue placeholder="Select material" />
                 </SelectTrigger>
@@ -323,7 +323,7 @@ export function WatchForm({
 
             <div className="space-y-2">
               <FormLabel htmlFor="crystal">Crystal</FormLabel>
-              <Select name="crystal" defaultValue={watch?.crystal ?? ""}>
+              <Select name="crystal" defaultValue={watch?.crystal ?? "sapphire"}>
                 <SelectTrigger id="crystal" className={FIELD}>
                   <SelectValue placeholder="Select crystal" />
                 </SelectTrigger>
@@ -347,7 +347,6 @@ export function WatchForm({
                 step="0.1"
                 min="10"
                 max="60"
-                placeholder="e.g. 42"
                 defaultValue={watch?.case_diameter_mm?.toString() ?? ""}
                 className={cn(FIELD, "font-mono")}
               />
@@ -362,8 +361,7 @@ export function WatchForm({
                 step="0.5"
                 min="6"
                 max="30"
-                placeholder="e.g. 20"
-                defaultValue={watch?.strap_width_mm?.toString() ?? ""}
+                defaultValue={watch?.strap_width_mm?.toString() ?? "20"}
                 className={cn(FIELD, "font-mono")}
               />
             </div>
@@ -377,7 +375,6 @@ export function WatchForm({
                 step="0.1"
                 min="20"
                 max="80"
-                placeholder="e.g. 46"
                 defaultValue={watch?.lug_to_lug_mm?.toString() ?? ""}
                 className={cn(FIELD, "font-mono")}
               />
@@ -392,7 +389,6 @@ export function WatchForm({
                 step="0.1"
                 min="4"
                 max="25"
-                placeholder="e.g. 13.5"
                 defaultValue={watch?.case_height_mm?.toString() ?? ""}
                 className={cn(FIELD, "font-mono")}
               />
@@ -406,8 +402,7 @@ export function WatchForm({
                 type="number"
                 min="0"
                 max="12000"
-                placeholder="e.g. 50"
-                defaultValue={watch?.water_resistance_m?.toString() ?? ""}
+                defaultValue={watch?.water_resistance_m?.toString() ?? "100"}
                 className={cn(FIELD, "font-mono")}
               />
             </div>
