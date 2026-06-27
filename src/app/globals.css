@@ -39,6 +39,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-brass: var(--brass);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -56,18 +57,20 @@
   --card-foreground: oklch(0.22 0.018 245);
   --popover: oklch(0.99 0.003 235);
   --popover-foreground: oklch(0.22 0.018 245);
-  --primary: oklch(0.58 0.13 220);
-  --primary-foreground: oklch(0.99 0.01 220);
+  --primary: oklch(0.55 0.11 252);
+  --primary-foreground: oklch(0.99 0.01 250);
   --secondary: oklch(0.94 0.008 235);
   --secondary-foreground: oklch(0.28 0.02 245);
   --muted: oklch(0.94 0.008 235);
   --muted-foreground: oklch(0.48 0.02 240);
-  --accent: oklch(0.91 0.05 218);
-  --accent-foreground: oklch(0.34 0.1 224);
+  --accent: oklch(0.92 0.04 250);
+  --accent-foreground: oklch(0.34 0.09 252);
   --destructive: oklch(0.55 0.2 27);
   --border: oklch(0.87 0.01 235);
   --input: oklch(0.89 0.01 235);
-  --ring: oklch(0.58 0.13 220);
+  --ring: oklch(0.55 0.11 252);
+  /* Brass — reserved for prices; darker in light mode for contrast. */
+  --brass: oklch(0.52 0.07 75);
   --chart-1: oklch(0.78 0.12 210);
   --chart-2: oklch(0.66 0.16 222);
   --chart-3: oklch(0.58 0.18 235);
@@ -85,30 +88,34 @@
 }
 
 .dark {
-  /* Slate & Ice — dark theme with a cool ice-cyan spark (instrument-panel feel) */
-  --background: oklch(0.33 0.006 245);
-  --foreground: oklch(0.94 0.006 230);
-  --card: oklch(0.375 0.007 245);
-  --card-foreground: oklch(0.94 0.006 230);
-  --popover: oklch(0.37 0.007 245);
-  --popover-foreground: oklch(0.93 0.008 230);
-  --primary: oklch(0.82 0.13 211);
-  --primary-foreground: oklch(0.22 0.05 235);
-  --secondary: oklch(0.42 0.008 245);
-  --secondary-foreground: oklch(0.94 0.006 230);
-  --muted: oklch(0.42 0.008 245);
-  --muted-foreground: oklch(0.69 0.018 232);
-  --accent: oklch(0.36 0.06 217);
-  --accent-foreground: oklch(0.88 0.12 208);
-  --destructive: oklch(0.62 0.2 26);
-  --border: oklch(0.8 0.02 225 / 14%);
-  --input: oklch(0.8 0.02 225 / 13%);
-  --ring: oklch(0.82 0.13 211);
-  --chart-1: oklch(0.82 0.12 205);
-  --chart-2: oklch(0.7 0.15 220);
-  --chart-3: oklch(0.62 0.17 235);
-  --chart-4: oklch(0.55 0.16 248);
-  --chart-5: oklch(0.48 0.14 260);
+  /* Steel & Navy — dark theme matching the CaliberShelf redesign hand-off.
+     Navy-black surfaces, a steel-blue interactive accent, and a brass token
+     reserved for prices. */
+  --background: #0f1318;
+  --foreground: #eef1f5;
+  --card: #161b21;
+  --card-foreground: #eef1f5;
+  --popover: #1a1f27;
+  --popover-foreground: #eef1f5;
+  --primary: #6ea2dd;
+  --primary-foreground: #0c1016;
+  --secondary: #1e242c;
+  --secondary-foreground: #eef1f5;
+  --muted: #1e242c;
+  --muted-foreground: #8c95a0;
+  --accent: #222a33;
+  --accent-foreground: #eef1f5;
+  --destructive: #c85046;
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: #6ea2dd;
+  /* Brass — reserved for prices (never an interactive accent). */
+  --brass: #c9a25e;
+  --chart-1: #6ea2dd;
+  --chart-2: #5aa37a;
+  --chart-3: #c9a25e;
+  --chart-4: #cf7a52;
+  --chart-5: #8fb6e4;
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -210,6 +217,18 @@
 }
 .watch-strap::after {
   right: 15%;
+}
+
+/* Caption cross-fade on the home dial when the spotlighted watch changes */
+@keyframes csfade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Smooth second hand — 60s full rotation, CSS-only */

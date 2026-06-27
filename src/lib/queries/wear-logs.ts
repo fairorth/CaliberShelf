@@ -291,6 +291,27 @@ export async function getWearStats(
 }
 
 /**
+ * Count wear-log entries from the last 7 days (for the home-dial stat line).
+ */
+export async function getWornThisWeekCount(): Promise<number> {
+  const supabase = await createClient()
+  const since = new Date()
+  since.setDate(since.getDate() - 7)
+  const sinceStr = since.toISOString().slice(0, 10)
+
+  const { count, error } = await supabase
+    .from("wear_logs")
+    .select("*", { count: "exact", head: true })
+    .gte("worn_date", sinceStr)
+
+  if (error) {
+    console.error("Failed to count wear logs this week:", error.message)
+    return 0
+  }
+  return count ?? 0
+}
+
+/**
  * Get wear count and last worn date for a specific watch.
  */
 export async function getWearCountForWatch(

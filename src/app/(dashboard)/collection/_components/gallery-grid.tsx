@@ -34,29 +34,43 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
 
   return (
     <div
-      className="grid gap-4"
+      className="grid gap-[18px]"
       style={{
         gridTemplateColumns: `repeat(auto-fill, minmax(${itemSize}px, 1fr))`,
       }}
     >
       {watches.map((watch) => {
-        const caliber = watch.movement?.caliber_name
         const typeLabel = watch.movement?.caliber_type
           ? caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type
           : null
-        const movementLine = caliber
-          ? typeLabel
-            ? `${caliber} (${typeLabel})`
-            : caliber
+        // Caliber line (bottom-left): manufacturer + caliber name, e.g. "Miyota 8215".
+        const caliberLine = watch.movement
+          ? `${watch.movement.manufacturer ? watch.movement.manufacturer + " " : ""}${watch.movement.caliber_name}`.trim()
           : null
+        const priceLabel =
+          showCost && watch.purchase_price_cents !== null
+            ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
+            : null
+        const showFooter = Boolean(caliberLine) || priceLabel !== null
 
         return (
         <Link
           key={watch.id}
           href={`/watch/${watch.id}`}
-          className="group flex flex-col gap-2"
+          className="group flex flex-col overflow-hidden rounded-[13px] border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/45 hover:shadow-[0_16px_30px_rgba(0,0,0,0.4)]"
         >
-          <div className="relative aspect-square overflow-hidden rounded-lg bg-muted ring-1 ring-border transition-all duration-200 group-hover:ring-2 group-hover:ring-primary/40 group-hover:shadow-md">
+          {/* Header strip — movement type sits above the photo (small, top-left)
+              so it never covers the watch image. */}
+          <div className="flex h-7 items-center px-3 pt-1">
+            {typeLabel && (
+              <span className="rounded-full bg-white/[0.06] px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.08em] text-muted-foreground">
+                {typeLabel}
+              </span>
+            )}
+            {watch.is_coming_soon && <ComingSoonBadge className="ml-auto" />}
+          </div>
+
+          <div className="relative aspect-square overflow-hidden border-y border-border/70 bg-[radial-gradient(circle_at_50%_38%,#222a33,#12161c_80%)]">
             {watch.cover_photo_url ? (
               <Image
                 src={watch.cover_photo_url}
@@ -74,25 +88,26 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
                 ⌚
               </div>
             )}
-            {watch.is_coming_soon && (
-              <ComingSoonBadge className="absolute left-1.5 top-1.5 shadow-sm" />
-            )}
           </div>
-          <div className="px-1">
-            <p className="truncate text-sm font-semibold leading-tight">
-              {watch.brand.name} {watch.model}
+          <div className="px-3.5 pb-4 pt-3">
+            <p className="truncate font-display text-base font-semibold leading-tight">
+              {watch.brand.name}
             </p>
-            {movementLine && (
-              <p className="truncate text-xs text-muted-foreground">
-                {movementLine}
-              </p>
-            )}
-            {showCost && (
-              <p className="text-xs font-medium tabular-nums">
-                {watch.purchase_price_cents !== null
-                  ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
-                  : "—"}
-              </p>
+            <p className="truncate text-[13px] text-muted-foreground">{watch.model}</p>
+            {showFooter && (
+              <div className="mt-2.5 flex items-start justify-between gap-2.5 border-t border-border pt-2.5">
+                {/* Caliber name wraps up to 3 lines (then ellipsis) so long
+                    movement names aren't clipped to a few characters when the
+                    price shares the row. */}
+                <span className="min-w-0 flex-1 font-mono text-[10.5px] leading-snug text-muted-foreground/80 [overflow-wrap:anywhere] line-clamp-3">
+                  {caliberLine ?? ""}
+                </span>
+                {priceLabel && (
+                  <span className="shrink-0 font-mono text-[13px] font-medium tabular-nums text-brass">
+                    {priceLabel}
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </Link>

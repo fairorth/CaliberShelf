@@ -31,15 +31,19 @@ function SpecRow({
   return (
     <div className="flex justify-between gap-4 py-2.5 group">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span
-        className={[
-          "text-sm",
-          mono ? "font-mono text-[13px] tracking-tight" : "font-medium",
-          hasValue && accent ? accent : "",
-        ].join(" ")}
-      >
-        {value || "—"}
-      </span>
+      {hasValue ? (
+        <span
+          className={[
+            "text-sm",
+            mono ? "font-mono text-[13px] tracking-tight" : "font-medium",
+            accent ?? "",
+          ].join(" ")}
+        >
+          {value}
+        </span>
+      ) : (
+        <span className="text-sm text-muted-foreground/45">Not set</span>
+      )}
     </div>
   )
 }
@@ -57,10 +61,10 @@ function SpecCard({
   children: React.ReactNode
 }) {
   return (
-    <Card className="overflow-hidden border-l-2 border-l-primary/40">
-      <CardHeader className="bg-primary/5 pb-3">
-        <CardTitle className="flex items-center gap-2.5 font-display text-base font-medium">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-sm">
+    <Card className="overflow-hidden rounded-2xl border-l-2 border-l-brass/40">
+      <CardHeader className="bg-brass/5 pb-3">
+        <CardTitle className="flex items-center gap-2.5 font-display text-[19px] font-semibold">
+          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-brass/15 text-sm text-brass">
             {icon}
           </span>
           {title}
@@ -119,7 +123,7 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
               : null
           }
           mono
-          accent="text-primary"
+          accent="text-brass"
         />
 
         {/* Notes */}
@@ -130,7 +134,7 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
               <p className="text-sm italic leading-relaxed whitespace-pre-wrap text-foreground/80">{watch.notes}</p>
             </div>
           ) : (
-            <p className="mt-1 text-sm font-medium">—</p>
+            <p className="mt-1 text-sm text-muted-foreground/45">Not set</p>
           )}
         </div>
       </SpecCard>
@@ -179,7 +183,7 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
             ))}
           </div>
         ) : (
-          <p className="py-2 text-sm font-medium">—</p>
+          <p className="py-2 text-sm text-muted-foreground/45">Not set</p>
         )}
       </SpecCard>
 
@@ -192,7 +196,7 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
               {category.name}
             </Badge>
           ) : (
-            <span className="text-sm font-medium">—</span>
+            <span className="text-sm text-muted-foreground/45">Not set</span>
           )}
         </div>
 
@@ -213,7 +217,7 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
               })}
             </div>
           ) : (
-            <p className="mt-1 text-sm font-medium">—</p>
+            <p className="mt-1 text-sm text-muted-foreground/45">Not set</p>
           )}
         </div>
       </SpecCard>

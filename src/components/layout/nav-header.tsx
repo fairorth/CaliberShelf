@@ -48,9 +48,41 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
   // On mobile, Add Watch goes to camera-first flow; on desktop, full form
   const addWatchHref = isMobile ? "/add" : "/collection/new"
 
+  // Centered top-level nav (desktop): Home = the dial, Collection = the list
+  // (and any watch detail, which is reached from the collection).
+  const isHome = pathname === "/dashboard"
+  const isCollection = pathname.startsWith("/collection") || pathname.startsWith("/watch")
+
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center justify-between px-4">
+      <div className="relative flex h-14 items-center justify-between px-4">
+        {/* Centered Home / Collection segmented nav (desktop only — the
+            hamburger covers navigation on mobile and the extra routes). */}
+        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-[11px] border border-border bg-white/[0.04] p-1 sm:flex">
+          <Link
+            href="/dashboard"
+            className={cn(
+              "rounded-lg px-4 py-1.5 text-[13.5px] font-medium transition-colors",
+              isHome
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Home
+          </Link>
+          <Link
+            href="/collection"
+            className={cn(
+              "rounded-lg px-4 py-1.5 text-[13.5px] font-medium transition-colors",
+              isCollection
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Collection
+          </Link>
+        </nav>
+
         {/* Hamburger + title — visible at all sizes */}
         <div className="flex items-center gap-3">
           <button

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Design hand-off reference bundle (third-party prototype runtime, not app code).
+    "Cluade Design Handoff/**",
   ]),
 ]);
 

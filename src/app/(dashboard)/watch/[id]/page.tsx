@@ -58,7 +58,7 @@ export default async function WatchDetailPage({
     <div className="space-y-6">
       <WatchDetailHeader watch={watch} labels={labels} wearInfo={wearInfo} />
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-[420px_1fr] lg:items-start lg:gap-[26px]">
         {/* Left column: Photos */}
         <div className="space-y-4">
           <PhotoGallery

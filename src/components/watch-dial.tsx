@@ -1,97 +1,42 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
-import { cn } from "@/lib/utils"
-import { CaliberShelfLogo } from "@/components/calibershelf-logo"
-import { DialWatchMarker } from "@/components/dial-watch-marker"
+import { useEffect, useMemo, useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { caliberTypeLabels } from "@/lib/validations/movement"
 import type { WatchWithCover } from "@/lib/types/watch"
+
+interface DialStats {
+  watches: number
+  brands: number
+  wornThisWeek: number
+}
 
 interface WatchDialProps {
   /** All watches eligible to appear on the dial (must have a cover photo). */
   watches: WatchWithCover[]
   /** Server-generated seed so the initial random layout matches across SSR/hydration. */
   seed: number
+  /** Headline stats for the line under the dial. */
+  stats: DialStats
 }
 
-/** Compute hour and minute hand angles from current time */
-function getHandAngles() {
-  const now = new Date()
-  const h = now.getHours() % 12
-  const m = now.getMinutes()
-  const s = now.getSeconds()
-  const hourAngle = h * 30 + m * 0.5
-  const minuteAngle = m * 6 + s * 0.1
-  return { hourAngle, minuteAngle }
-}
+/** Each watch is spotlighted for this many seconds before the dial advances. */
+const HIGHLIGHT_SECONDS = 5
 
-// useSyncExternalStore pattern for clock hands — subscribes to a 60s interval
-let handListeners: Array<() => void> = []
-let currentHands = { hourAngle: 0, minuteAngle: 0 }
-
-function subscribeHands(cb: () => void) {
-  handListeners.push(cb)
-  if (handListeners.length === 1) {
-    // First subscriber — start interval
-    currentHands = getHandAngles()
-    const id = setInterval(() => {
-      currentHands = getHandAngles()
-      handListeners.forEach((l) => l())
-    }, 60_000)
-    return () => {
-      handListeners = handListeners.filter((l) => l !== cb)
-      if (handListeners.length === 0) clearInterval(id)
-    }
-  }
-  return () => {
-    handListeners = handListeners.filter((l) => l !== cb)
-  }
-}
-
-function getHandsSnapshot() {
-  return currentHands
-}
-
-const serverHands = { hourAngle: 0, minuteAngle: 0 }
-function getHandsServerSnapshot() {
-  return serverHands
-}
-
-/** 12 positions around the dial — index 0 = 12 o'clock, 1 = 1 o'clock, etc. */
+/** 12 hour positions as percentages of the dial box.
+ *  i = 0 sits at 12 o'clock, advancing clockwise. The ring radius is 196/253 of
+ *  the dial radius (≈38.7% of the dial width from center), matching the design. */
+const RING_RADIUS_PCT = 38.7
 const POSITIONS = Array.from({ length: 12 }, (_, i) => {
-  const angleDeg = i * 30 - 90 // -90 so index 0 starts at top (12 o'clock)
-  const angleRad = (angleDeg * Math.PI) / 180
-  const radius = 33 // percentage from center — keeps the larger markers inside the dial face
+  const a = (i * 30 * Math.PI) / 180
   return {
     index: i,
-    hourLabel: i === 0 ? 12 : i,
-    angleDeg,
-    // Round to 4 decimals so server and client serialize identical style strings
-    // (raw Math.cos/sin floats hydrate as a mismatch otherwise).
-    x: Math.round((50 + radius * Math.cos(angleRad)) * 10000) / 10000,
-    y: Math.round((50 + radius * Math.sin(angleRad)) * 10000) / 10000,
-    // Rotation for tick marks — points toward center
-    tickRotation: i * 30,
+    // Round to 4dp so SSR and hydration serialize identical style strings.
+    x: Math.round((50 + RING_RADIUS_PCT * Math.sin(a)) * 10000) / 10000,
+    y: Math.round((50 - RING_RADIUS_PCT * Math.cos(a)) * 10000) / 10000,
   }
 })
-
-// Auto-zoom hold window: the second hand sweeps 6°/sec, so 18° ≈ 3 seconds.
-// A marker stays zoomed for this long as the hand passes over its position.
-const AUTO_HOLD_DEG = 18
-
-// Polished silver bezel: a top-down dome highlight layered over rotational
-// conic reflections (4 bright + 4 dark sweeps) so the ring reads as round,
-// shiny stainless steel rather than a flat gray disc.
-const SILVER_BEZEL =
-  "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 32%, rgba(0,0,0,0.18) 100%), " +
-  "conic-gradient(from 0deg, " +
-  "oklch(0.88 0.004 240) 0deg, oklch(0.55 0.006 248) 45deg, " +
-  "oklch(0.85 0.004 240) 90deg, oklch(0.5 0.006 248) 135deg, " +
-  "oklch(0.9 0.004 240) 180deg, oklch(0.55 0.006 248) 225deg, " +
-  "oklch(0.84 0.004 240) 270deg, oklch(0.5 0.006 248) 315deg, " +
-  "oklch(0.88 0.004 240) 360deg)"
-// Bright polished-steel gradient for small parts (lugs, crown stem/knob).
-const STEEL_PART =
-  "linear-gradient(135deg, oklch(0.86 0.006 240), oklch(0.52 0.008 248) 45%, oklch(0.72 0.008 240) 70%, oklch(0.46 0.006 252))"
 
 /** Small seeded PRNG (mulberry32) — deterministic so SSR and hydration agree. */
 function mulberry32(seed: number) {
@@ -114,346 +59,379 @@ function shuffleWith<T>(arr: T[], rng: () => number): T[] {
   return copy
 }
 
-/** Map a watch list onto the 12 dial positions, padding empty slots with null. */
-function toAssignment(list: WatchWithCover[]): (WatchWithCover | null)[] {
-  const out: (WatchWithCover | null)[] = Array(12).fill(null)
-  for (let i = 0; i < 12; i++) out[i] = list[i] ?? null
-  return out
+function metaLine(watch: WatchWithCover): string {
+  const m = watch.movement
+  if (!m) return ""
+  const type = m.caliber_type
+    ? caliberTypeLabels[m.caliber_type] ?? m.caliber_type
+    : null
+  const caliber = `${m.manufacturer ? m.manufacturer + " " : ""}${m.caliber_name}`.trim()
+  return [type, caliber].filter(Boolean).join("  ·  ")
 }
 
-export function WatchDial({ watches, seed }: WatchDialProps) {
-  const hands = useSyncExternalStore(subscribeHands, getHandsSnapshot, getHandsServerSnapshot)
-  const secondHandRef = useRef<HTMLDivElement>(null)
+export function WatchDial({ watches, seed, stats }: WatchDialProps) {
+  // The 12 watches shown around the dial — seeded so SSR and the first client
+  // render agree, and freshly random on each page load.
+  const dial = useMemo(() => {
+    const eligible = watches.filter((w) => w.cover_photo_url)
+    return shuffleWith(eligible, mulberry32(Math.floor(seed * 0xffffffff))).slice(0, 12)
+  }, [watches, seed])
 
-  // Only watches with a cover photo can appear on the dial.
-  const eligible = useMemo(
-    () => watches.filter((w) => w.cover_photo_url),
-    [watches]
-  )
-
-  // Initial 12 unique watches — seeded so SSR and the first client render agree
-  // (and so the layout is freshly random on each page load, with no flash).
-  const [assignments, setAssignments] = useState<(WatchWithCover | null)[]>(() =>
-    toAssignment(shuffleWith(eligible, mulberry32(Math.floor(seed * 0xffffffff))))
-  )
-
-  // Which marker is auto-zoomed right now (driven by the sweeping second hand).
-  const [autoActiveIndex, setAutoActiveIndex] = useState<number | null>(null)
-  // Tracks how many markers the cursor is currently over. While > 0, the user is
-  // hovering and manual hover takes precedence — auto-zoom pauses.
-  const hoverCountRef = useRef(0)
-  const userHoveringRef = useRef(false)
-  // Last position the second hand was over, used to detect when a zoom completes.
-  const lastActiveRef = useRef<number | null>(null)
-
-  function handleMarkerHover(hovering: boolean) {
-    hoverCountRef.current = Math.max(0, hoverCountRef.current + (hovering ? 1 : -1))
-    userHoveringRef.current = hoverCountRef.current > 0
-    if (userHoveringRef.current) {
-      setAutoActiveIndex(null)
-      lastActiveRef.current = null
-    }
-  }
-
-  // Replace the watch at position `p` with a random one not already on the dial,
-  // keeping all 12 displayed watches unique.
-  const swapPosition = useCallback(
-    (p: number) => {
-      setAssignments((prev) => {
-        if (eligible.length <= 12) return prev // no spare watches to rotate in
-        const shown = new Set(prev.map((w) => w?.id))
-        const candidates = eligible.filter((w) => !shown.has(w.id))
-        if (candidates.length === 0) return prev
-        const pick = candidates[Math.floor(Math.random() * candidates.length)]
-        const next = prev.slice()
-        next[p] = pick
-        return next
-      })
-    },
-    [eligible]
-  )
-
-  // Set second hand CSS animation start angle (DOM-only, no state).
-  // Includes the millisecond fraction so the visual hand aligns with the
-  // time-derived angle the auto-zoom ticker computes below.
+  // `now` drives the hands and the 5-second spotlight rotation. It starts null
+  // (server + first client render) so hydration matches; a 1s interval then
+  // takes over on the client.
+  const [now, setNow] = useState<Date | null>(null)
   useEffect(() => {
-    if (secondHandRef.current) {
-      const now = new Date()
-      const s = now.getSeconds() + now.getMilliseconds() / 1000
-      secondHandRef.current.style.setProperty("--second-start", `${s * 6}deg`)
-    }
+    // Start the clock on the client. The first setState is the documented
+    // exception to react-hooks/set-state-in-effect (server can't know the time).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNow(new Date())
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
   }, [])
 
-  // Auto-zoom ticker: follow the second hand and zoom whichever position it is
-  // sweeping over. When a position's zoom finishes, swap in a fresh watch.
-  // Pauses entirely while the user is hovering.
-  useEffect(() => {
-    if (eligible.length === 0) return
+  const s = now ? now.getSeconds() : 0
+  const m = now ? now.getMinutes() : 0
+  const h = now ? now.getHours() : 0
+  const hourDeg = (h % 12) * 30 + m * 0.5
+  const minDeg = m * 6 + s * 0.1
+  const secDeg = s * 6
 
-    const id = setInterval(() => {
-      if (userHoveringRef.current) {
-        setAutoActiveIndex(null)
-        lastActiveRef.current = null
-        return
-      }
-      const now = new Date()
-      // Hand angle clockwise from 12 o'clock; position i sits at i*30°.
-      const handAngle = ((now.getSeconds() + now.getMilliseconds() / 1000) * 6) % 360
-      let next: number | null = null
-      for (let i = 0; i < 12; i++) {
-        const delta = (((handAngle - i * 30) % 360) + 360) % 360
-        if (delta < AUTO_HOLD_DEG) {
-          next = i
-          break
-        }
-      }
-      // The hand just left a position (its 3s zoom completed) — rotate that watch.
-      const prev = lastActiveRef.current
-      if (prev !== null && prev !== next) {
-        swapPosition(prev)
-      }
-      lastActiveRef.current = next
-      setAutoActiveIndex((cur) => (cur === next ? cur : next))
-    }, 200)
-
-    return () => clearInterval(id)
-  }, [eligible, swapPosition])
+  // Swap one second early — as the sweeping second hand's leading edge first
+  // meets a marker (1s before its exact index), per the dial's minute spots.
+  const activeIndex = Math.floor((s + 1) / HIGHLIGHT_SECONDS) % 12
+  const active = dial[activeIndex] ?? null
+  const activeLabel = `${String(activeIndex + 1).padStart(2, "0")} / 12`
 
   return (
-    <div
-      role="navigation"
-      aria-label="Watches"
-      className="relative mx-auto aspect-square w-[82vw] max-w-[560px]"
-    >
-      {/* Layer 0: Strap + lugs + crown — rendered first so the case (bezel)
-          paints on top of them, letting their ends tuck under the case like a
-          real wristwatch. The protruding parts (strap ends, crown knob) stay
-          visible beyond the round case. */}
-
-      {/* Strap — top piece, extends up and behind the case */}
-      <div
-        aria-hidden="true"
-        className="watch-strap absolute"
-        style={{
-          left: "29%",
-          width: "42%",
-          top: "-34%",
-          height: "42%",
-          borderRadius: "18px 18px 6px 6px",
-        }}
-      />
-      {/* Strap — bottom piece, extends down and behind the case */}
-      <div
-        aria-hidden="true"
-        className="watch-strap absolute"
-        style={{
-          left: "29%",
-          width: "42%",
-          bottom: "-34%",
-          height: "42%",
-          borderRadius: "6px 6px 18px 18px",
-        }}
-      />
-
-      {/* Lugs — four polished-steel horns bridging the case to the strap */}
-      {[
-        { left: "27.5%", right: undefined, top: "3%", bottom: undefined, rotate: 22 },
-        { left: undefined, right: "27.5%", top: "3%", bottom: undefined, rotate: -22 },
-        { left: "27.5%", right: undefined, top: undefined, bottom: "3%", rotate: -22 },
-        { left: undefined, right: "27.5%", top: undefined, bottom: "3%", rotate: 22 },
-      ].map((lug, i) => (
+    <div className="flex flex-col items-center">
+      {/* Case + lugs + crown */}
+      <div className="relative mx-auto aspect-square w-[88vw] max-w-[560px]">
+        {/* Lug — top (two steel prongs + spring bar) */}
+        <Lug position="top" />
+        {/* Lug — bottom */}
+        <Lug position="bottom" />
+        {/* Crown — 3 o'clock */}
         <div
-          key={i}
           aria-hidden="true"
-          className="absolute"
-          style={{
-            left: lug.left,
-            right: lug.right,
-            top: lug.top,
-            bottom: lug.bottom,
-            width: "9%",
-            height: "16%",
-            background: STEEL_PART,
-            borderRadius: "5px",
-            transform: `rotate(${lug.rotate}deg)`,
-            boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.4)",
-          }}
-        />
-      ))}
-
-      {/* Crown — fluted silver crown at 3 o'clock */}
-      {/* Stem: short steel neck tucked under the case edge */}
-      <div
-        aria-hidden="true"
-        className="absolute"
-        style={{
-          right: "-1.5%",
-          top: "50%",
-          width: "4.5%",
-          height: "6%",
-          transform: "translateY(-50%)",
-          background: STEEL_PART,
-          borderRadius: "2px",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)",
-        }}
-      />
-      {/* Knob: fluted cylinder protruding past the case */}
-      <div
-        aria-hidden="true"
-        className="absolute"
-        style={{
-          right: "-5.5%",
-          top: "50%",
-          width: "5.5%",
-          height: "13%",
-          transform: "translateY(-50%)",
-          background:
-            "repeating-linear-gradient(90deg, oklch(0.9 0.005 240) 0px, oklch(0.9 0.005 240) 2px, oklch(0.52 0.008 248) 2px, oklch(0.52 0.008 248) 4px)",
-          borderRadius: "3px",
-          boxShadow:
-            "inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.45)",
-        }}
-      />
-
-      {/* Layer 1: Outer bezel — polished silver, domed */}
-      <div
-        className="absolute inset-0 rounded-full shadow-2xl"
-        style={{
-          background: SILVER_BEZEL,
-          boxShadow:
-            "0 10px 38px rgba(0,0,0,0.6), inset 0 3px 5px rgba(255,255,255,0.6), inset 0 -4px 7px rgba(0,0,0,0.55), inset 0 0 0 1.5px rgba(255,255,255,0.14)",
-        }}
-      />
-
-      {/* Layer 2: Inner dial face */}
-      <div
-        className={cn(
-          "dial-sunburst absolute rounded-full",
-          "inset-[5%]",
-        )}
-        style={{
-          boxShadow:
-            "inset 0 2px 8px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3)",
-        }}
-      />
-
-      {/* Layer 3: Minute track — subtle ring */}
-      <div
-        className="absolute rounded-full border border-[oklch(0.85_0.03_85)]/10"
-        style={{ inset: "9%" }}
-      />
-
-      {/* Layer 4: Hour markers / Watch positions */}
-      {POSITIONS.map((pos) => {
-        const watch = assignments[pos.index]
-
-        return (
+          className="absolute z-[1] flex items-center"
+          style={{ right: "-3.4%", top: "50%", transform: "translateY(-50%)" }}
+        >
           <div
-            key={pos.index}
-            className={cn(
-              "absolute hover:z-50",
-              autoActiveIndex === pos.index && "z-50",
-            )}
             style={{
-              left: `${pos.x}%`,
-              top: `${pos.y}%`,
-              transform: "translate(-50%, -50%)",
+              width: "2%",
+              height: "3%",
+              marginRight: "-0.35%",
+              borderRadius: "1px 2px 2px 1px",
+              background: "linear-gradient(180deg,#dadfe3,#909799 40%,#6c727a)",
+              boxShadow: "inset 0 1px 1px rgba(255,255,255,.5), 0 1px 2px rgba(0,0,0,.4)",
+            }}
+          />
+          <div
+            style={{
+              width: "3.9%",
+              height: "8.2%",
+              borderRadius: "2px 7px 7px 2px",
+              background:
+                "repeating-linear-gradient(90deg,#e6eaed 0 1.6px,#878d94 1.6px 3.2px)",
+              boxShadow:
+                "inset 0 4px 5px -2px rgba(255,255,255,.6), inset 0 -6px 7px -3px rgba(0,0,0,.55), inset -3px 0 5px -2px rgba(0,0,0,.4), 0 2px 5px rgba(0,0,0,.45)",
+            }}
+          />
+        </div>
+
+        {/* Case — polished steel */}
+        <div
+          className="absolute inset-0 z-[2] rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle at 36% 28%, #f0f2f4, #b4babf 42%, #6a7077 72%, #3f454b)",
+            boxShadow:
+              "0 26px 60px rgba(0,0,0,.55), inset 0 3px 6px rgba(255,255,255,.5), inset 0 -8px 18px rgba(0,0,0,.4)",
+          }}
+        >
+          {/* Dial — navy guilloché + sunburst rays */}
+          <div
+            className="absolute overflow-hidden rounded-full"
+            style={{
+              inset: "4.82%",
+              boxShadow: "inset 0 0 0 3px #0c1014, inset 0 0 40px rgba(0,0,0,.6)",
             }}
           >
-            {watch ? (
-              <DialWatchMarker
-                watch={watch}
-                angleDeg={pos.angleDeg}
-                autoActive={autoActiveIndex === pos.index}
-                onHoverChange={handleMarkerHover}
-              />
-            ) : (
-              /* Empty tick mark — gold index pointing at center */
-              <div aria-hidden="true">
-                <div
-                  className="h-3 w-[2px] rounded-full bg-[oklch(0.85_0.03_85)]/60 sm:h-4"
-                  style={{
-                    transform: `rotate(${pos.tickRotation}deg)`,
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        )
-      })}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background:
+                  "radial-gradient(circle at 50% 42%, #16406b, #081a30 78%)",
+              }}
+            />
+            <div
+              className="absolute inset-0 rounded-full opacity-50"
+              style={{
+                background:
+                  "repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.05) 0deg 2deg, rgba(255,255,255,0) 2deg 9deg)",
+              }}
+            />
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{ boxShadow: "inset 0 0 90px rgba(0,0,0,.55)" }}
+            />
 
-      {/* Layer 5: Clock hands */}
-      <div className="pointer-events-none absolute inset-0">
-        {/* Hour hand */}
-        <div
-          className="absolute left-1/2 origin-bottom"
-          style={{
-            bottom: "50%",
-            height: "22%",
-            width: "3px",
-            marginLeft: "-1.5px",
-            background: "linear-gradient(to top, oklch(0.85 0.03 85), oklch(0.75 0.02 85))",
-            borderRadius: "2px",
-            transform: `rotate(${hands.hourAngle}deg)`,
-            transition: "transform 0.3s ease",
-            boxShadow: "0 0 4px rgba(0,0,0,0.5)",
-          }}
-        />
-        {/* Minute hand */}
-        <div
-          className="absolute left-1/2 origin-bottom"
-          style={{
-            bottom: "50%",
-            height: "30%",
-            width: "2px",
-            marginLeft: "-1px",
-            background: "linear-gradient(to top, oklch(0.85 0.03 85), oklch(0.9 0.02 85))",
-            borderRadius: "1.5px",
-            transform: `rotate(${hands.minuteAngle}deg)`,
-            transition: "transform 0.3s ease",
-            boxShadow: "0 0 3px rgba(0,0,0,0.4)",
-          }}
-        />
-        {/* Second hand */}
-        <div
-          ref={secondHandRef}
-          className="absolute left-1/2 origin-bottom"
-          style={{
-            bottom: "50%",
-            height: "34%",
-            width: "1px",
-            marginLeft: "-0.5px",
-            background: "oklch(0.65 0.2 27)",
-            borderRadius: "1px",
-            animation: "secondHandSweep 60s linear infinite",
-            boxShadow: "0 0 2px rgba(0,0,0,0.3)",
-          }}
-        />
-        {/* Center cap */}
-        <div
-          className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full sm:h-4 sm:w-4"
-          style={{
-            background: "radial-gradient(circle at 35% 35%, oklch(0.85 0.03 85), oklch(0.5 0.02 80))",
-            boxShadow: "0 0 4px rgba(0,0,0,0.5)",
-          }}
-        />
+            {/* Monogram */}
+            <div
+              className="pointer-events-none absolute left-1/2 z-[3] -translate-x-1/2 -translate-y-1/2 text-center"
+              style={{ top: "27%" }}
+            >
+              <div
+                className="mx-auto mb-1.5 grid h-[26px] w-[26px] place-items-center rounded-full font-display text-[12px] sm:h-[30px] sm:w-[30px] sm:text-[13px]"
+                style={{
+                  border: "1px solid rgba(220,232,248,.45)",
+                  color: "rgba(220,232,248,.7)",
+                }}
+              >
+                CS
+              </div>
+              <div
+                className="font-display text-[8px] sm:text-[10px]"
+                style={{ letterSpacing: "4px", color: "rgba(220,232,248,.55)" }}
+              >
+                CALIBERSHELF
+              </div>
+            </div>
+
+            {/* Watch thumbnails */}
+            {POSITIONS.map((pos) => {
+              const watch = dial[pos.index]
+              if (!watch) return null
+              const isActive = pos.index === activeIndex
+              const focalX = watch.dial_focal_x ?? 50
+              const focalY = watch.dial_focal_y ?? 50
+              const zoom = watch.dial_zoom ?? 1
+              return (
+                <Link
+                  key={watch.id}
+                  href={`/watch/${watch.id}`}
+                  aria-label={`${watch.brand.name} ${watch.model}`}
+                  className="absolute overflow-hidden rounded-full"
+                  style={{
+                    left: `${pos.x}%`,
+                    top: `${pos.y}%`,
+                    width: "14.62%",
+                    height: "14.62%",
+                    transform: `translate(-50%,-50%) scale(${isActive ? 1.297 : 1})`,
+                    transition: "transform .55s cubic-bezier(.4,0,.2,1), box-shadow .55s ease",
+                    zIndex: isActive ? 6 : 2,
+                    opacity: isActive ? 1 : 0.8,
+                    background: "#15181b",
+                    boxShadow: isActive
+                      ? "0 0 0 2px var(--primary), 0 0 26px 3px color-mix(in srgb, var(--primary) 53%, transparent), 0 8px 18px rgba(0,0,0,.55)"
+                      : "0 3px 10px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.08)",
+                  }}
+                >
+                  <Image
+                    src={watch.cover_photo_url!}
+                    alt={`${watch.brand.name} ${watch.model}`}
+                    fill
+                    unoptimized
+                    sizes="120px"
+                    className="object-cover"
+                    style={{
+                      objectPosition: `${focalX}% ${focalY}%`,
+                      transform: zoom > 1 ? `scale(${zoom})` : undefined,
+                    }}
+                  />
+                </Link>
+              )
+            })}
+
+            {/* Hands */}
+            <div className="pointer-events-none absolute inset-0 z-[7]">
+              {/* Hour */}
+              <div
+                className="absolute left-1/2 origin-bottom"
+                style={{
+                  bottom: "50%",
+                  height: "20%",
+                  width: "3px",
+                  marginLeft: "-1.5px",
+                  borderRadius: "3px",
+                  background: "linear-gradient(to top, #99a0a7, #fdfdfd)",
+                  transform: `rotate(${hourDeg}deg)`,
+                  transition: now ? "transform 0.3s ease" : undefined,
+                  filter: "drop-shadow(0 2px 3px rgba(0,0,0,.45))",
+                }}
+              />
+              {/* Minute */}
+              <div
+                className="absolute left-1/2 origin-bottom"
+                style={{
+                  bottom: "50%",
+                  height: "31%",
+                  width: "2.5px",
+                  marginLeft: "-1.25px",
+                  borderRadius: "2.5px",
+                  background: "linear-gradient(to top, #99a0a7, #fdfdfd)",
+                  transform: `rotate(${minDeg}deg)`,
+                  transition: now ? "transform 0.3s ease" : undefined,
+                  filter: "drop-shadow(0 2px 3px rgba(0,0,0,.45))",
+                }}
+              />
+              {/* Second */}
+              <div
+                className="absolute left-1/2 origin-bottom"
+                style={{
+                  bottom: "50%",
+                  height: "39%",
+                  width: "1.4px",
+                  marginLeft: "-0.7px",
+                  background: "#c8402f",
+                  transform: `rotate(${secDeg}deg)`,
+                  transition: now ? "transform 0.2s cubic-bezier(.4,2.2,.6,1)" : undefined,
+                }}
+              />
+              {/* Center cap */}
+              <div
+                className="absolute left-1/2 top-1/2 h-[2.4%] w-[2.4%] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{ background: "#0e1116", boxShadow: "0 0 0 1.5px #c8402f" }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Layer 6: Brand logo + name — grouped above center */}
+      {/* Caption — "now showing" */}
       <div
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
-        style={{ top: "26%" }}
+        key={activeIndex}
+        className="mt-[88px] text-center sm:mt-[112px]"
+        style={{ animation: "csfade .5s ease" }}
       >
-        <CaliberShelfLogo size={36} className="opacity-70 sm:hidden" />
-        <CaliberShelfLogo size={48} className="hidden opacity-70 sm:block" />
-        <span
-          className="text-[9px] font-light uppercase tracking-[0.3em] text-[oklch(0.65_0.02_85)] sm:text-[11px]"
-          style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
-        >
-          CaliberShelf
+        <div className="mb-3 font-mono text-[11px] tracking-[3px] text-primary">
+          NOW SHOWING · {activeLabel}
+        </div>
+        <div className="font-display text-[28px] font-semibold leading-[1.05] sm:text-[34px]">
+          {active ? active.brand.name : "—"}
+        </div>
+        {active && (
+          <div className="mt-0.5 font-display text-[18px] italic text-muted-foreground sm:text-[20px]">
+            {active.nickname || active.model}
+          </div>
+        )}
+        {active && metaLine(active) && (
+          <div className="mt-3 font-mono text-[12px] text-muted-foreground">
+            {metaLine(active)}
+          </div>
+        )}
+        {active && (
+          <Link
+            href={`/watch/${active.id}`}
+            className="mt-5 inline-block rounded-[10px] border border-primary px-5 py-2 text-[13px] text-primary transition-colors hover:bg-primary/10"
+          >
+            View watch →
+          </Link>
+        )}
+      </div>
+
+      {/* Stat line */}
+      <div className="mt-10 flex gap-[26px] font-mono text-[12px] text-muted-foreground">
+        <span>
+          <span className="text-foreground/80">{stats.watches}</span> watches
+        </span>
+        <span className="opacity-40">|</span>
+        <span>
+          <span className="text-foreground/80">{stats.brands}</span> brands
+        </span>
+        <span className="opacity-40">|</span>
+        <span>
+          <span className="text-foreground/80">{stats.wornThisWeek}</span> worn this week
         </span>
       </div>
+    </div>
+  )
+}
+
+/** A steel lug: two prongs at the case edges with a spring bar spanning the gap. */
+function Lug({ position }: { position: "top" | "bottom" }) {
+  const top = position === "top"
+  const prongRadius = top ? "8px 8px 3px 3px" : "3px 3px 8px 8px"
+  const barEdge = top ? { top: "6%" } : { bottom: "6%" }
+  const prongEdge = top ? { bottom: 0 } : { top: 0 }
+  const pinEdge = top ? { top: "8%" } : { bottom: "8%" }
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute left-1/2 z-[1] -translate-x-1/2"
+      style={{
+        width: "49.6%",
+        height: "14.3%",
+        ...(top ? { top: "-8.2%" } : { bottom: "-8.2%" }),
+      }}
+    >
+      {/* Left prong */}
+      <div
+        className="absolute"
+        style={{
+          left: "0.7%",
+          ...prongEdge,
+          width: "6.5%",
+          height: "95%",
+          borderRadius: prongRadius,
+          background: "linear-gradient(100deg,#eef1f3,#a4aab0 48%,#5d636b)",
+          boxShadow:
+            "inset 1.5px 1px 1px rgba(255,255,255,.55), inset -1px 0 2px rgba(0,0,0,.3)",
+        }}
+      />
+      {/* Right prong */}
+      <div
+        className="absolute"
+        style={{
+          right: "0.7%",
+          ...prongEdge,
+          width: "6.5%",
+          height: "95%",
+          borderRadius: prongRadius,
+          background: "linear-gradient(-100deg,#eef1f3,#a4aab0 48%,#5d636b)",
+          boxShadow:
+            "inset -1.5px 1px 1px rgba(255,255,255,.55), inset 1px 0 2px rgba(0,0,0,.3)",
+        }}
+      />
+      {/* Spring bar */}
+      <div
+        className="absolute"
+        style={{
+          left: "0.8%",
+          right: "0.8%",
+          ...barEdge,
+          height: "11%",
+          borderRadius: "5px",
+          background: "linear-gradient(180deg,#f4f6f8,#b4bac0 42%,#787e86)",
+          boxShadow: "0 1px 2px rgba(0,0,0,.45), inset 0 1px 1px rgba(255,255,255,.6)",
+        }}
+      />
+      {/* End pins */}
+      <div
+        className="absolute"
+        style={{
+          left: 0,
+          ...pinEdge,
+          width: "2.5%",
+          height: "9%",
+          borderRadius: "2px",
+          background: "#d4d9dd",
+          boxShadow: "inset 0 1px 1px rgba(255,255,255,.6)",
+        }}
+      />
+      <div
+        className="absolute"
+        style={{
+          right: 0,
+          ...pinEdge,
+          width: "2.5%",
+          height: "9%",
+          borderRadius: "2px",
+          background: "#d4d9dd",
+          boxShadow: "inset 0 1px 1px rgba(255,255,255,.6)",
+        }}
+      />
     </div>
   )
 }

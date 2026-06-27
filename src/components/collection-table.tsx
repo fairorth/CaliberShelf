@@ -43,6 +43,17 @@ function priceLabel(watch: WatchWithCover): string {
     : "—"
 }
 
+/** Movement column text: "Mechanical · Automatic" for mechanical calibers, else
+ * the plain type label (e.g. "Quartz"). Matches the redesign's Movement column. */
+function movementTypeLabel(watch: WatchWithCover): string {
+  const ct = watch.movement?.caliber_type
+  if (!ct) return "—"
+  const label = caliberTypeLabels[ct] ?? ct
+  return /autom|manual/i.test(ct) || /Automatic|Manual/.test(label)
+    ? `Mechanical · ${label}`
+    : label
+}
+
 // ── Sorting ────────────────────────────────────────────────────────
 
 type SortKey = "category" | "brand" | "model" | "movementType" | "caliber" | "labels" | "price"
@@ -95,7 +106,8 @@ function SortableHeader({
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          "flex items-center gap-1 font-medium hover:text-foreground",
+          "flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80 transition-colors hover:text-foreground",
+          isActive && "text-foreground",
           alignRight ? "w-full justify-end" : "text-left"
         )}
       >
@@ -315,7 +327,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     aria-label="Select all"
                   />
                 </TableHead>
-                <TableHead className="w-[72px]">Photo</TableHead>
+                <TableHead className="w-[72px] text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80">Photo</TableHead>
                 <SortableHeader label="Category" sortKey="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Brand" sortKey="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Model" sortKey="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
@@ -373,7 +385,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     )}
                   </TableCell>
                   <TableCell>
-                    <Link href={`/watch/${watch.id}`} className="font-medium hover:underline">
+                    <Link href={`/watch/${watch.id}`} className="font-display text-[15.5px] font-semibold hover:underline">
                       {watch.brand.name}
                     </Link>
                   </TableCell>
@@ -384,11 +396,9 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {watch.movement
-                      ? watch.movement.caliber_type ? (caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type) : "—"
-                      : "—"}
+                    {movementTypeLabel(watch)}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="font-mono text-[12px] text-muted-foreground">
                     {watch.movement
                       ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim()
                       : "—"}
@@ -405,7 +415,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     )}
                   </TableCell>
                   {showCost && (
-                    <TableCell className="text-right font-medium tabular-nums">
+                    <TableCell className="text-right font-mono text-[13.5px] font-medium tabular-nums text-brass">
                       {priceLabel(watch)}
                     </TableCell>
                   )}
