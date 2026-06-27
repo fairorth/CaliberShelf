@@ -143,6 +143,16 @@
   }
 }
 
+/* Native <select> dropdown options: force theme colors so the popup is legible
+   in dark mode even where the browser ignores `color-scheme` for the option
+   list (e.g. Chromium on Windows). The vars flip with the theme, so this is
+   correct in light mode too. */
+select option,
+select optgroup {
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+}
+
 /* ── Watch Dial ── */
 
 .dial-sunburst {
