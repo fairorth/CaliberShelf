@@ -50,6 +50,8 @@
 }
 
 :root {
+  /* Render native controls (selects, date pickers, scrollbars) in light mode. */
+  color-scheme: light;
   /* Slate & Ice — light "daylight" theme (cool, technical) */
   --background: oklch(0.97 0.005 235);
   --foreground: oklch(0.22 0.018 245);
@@ -88,6 +90,9 @@
 }
 
 .dark {
+  /* Render native controls (selects, date pickers, scrollbars) in dark mode so
+     <option> popups are light-on-dark, not the illegible light-on-light default. */
+  color-scheme: dark;
   /* Steel & Navy — dark theme matching the CaliberShelf redesign hand-off.
      Navy-black surfaces, a steel-blue interactive accent, and a brass token
      reserved for prices. */
