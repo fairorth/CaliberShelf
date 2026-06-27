@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,6 +23,7 @@ import { labelColorMap } from "@/lib/validations/label"
 import { BrandCombobox } from "@/components/brand-combobox"
 import { MovementCombobox } from "@/components/movement-combobox"
 import { MovementPreview } from "@/components/movement-preview"
+import { cn } from "@/lib/utils"
 import type { WatchActionState } from "@/lib/actions/watch-actions"
 import type { Watch, Brand, Movement, Category, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
@@ -35,7 +37,20 @@ interface WatchFormProps {
   categories: Category[]
   labels: Label[]
   defaultLabelIds?: string[]
+  /** Render the fixed dirty-state save bar instead of an inline submit button. */
+  stickyBar?: boolean
+  /** Where Cancel navigates when stickyBar is on. */
+  cancelHref?: string
 }
+
+// Filled dark input with a brass focus ring (the redesign's field treatment).
+const FIELD = "bg-[#1b212a] border-white/12 focus-visible:border-brass/55 focus-visible:ring-brass/25"
+
+// Brass-accented spec card (matches the read-only Detail cards).
+const CARD = "overflow-hidden rounded-2xl border-l-2 border-l-brass/40"
+const CARD_HEADER = "bg-brass/5"
+const CARD_TITLE = "flex items-center gap-2.5 font-display text-[19px] font-semibold"
+const CHIP = "flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-brass/15 text-sm text-brass"
 
 export function WatchForm({
   action,
@@ -46,11 +61,18 @@ export function WatchForm({
   categories,
   labels,
   defaultLabelIds = [],
+  stickyBar = false,
+  cancelHref = "/collection",
 }: WatchFormProps) {
   const [state, formAction, isPending] = useActionState<WatchActionState, FormData>(
     action,
     {}
   )
+
+  // Dirty tracking for the sticky save bar. setState(true) is a no-op once set,
+  // so wiring it to every change handler stays cheap.
+  const [isDirty, setIsDirty] = useState(false)
+  const markDirty = () => setIsDirty(true)
 
   // Track selected category
   const [selectedCategoryId, setSelectedCategoryId] = useState(watch?.category_id ?? "")
@@ -92,6 +114,7 @@ export function WatchForm({
   const complicationValue = [...Array.from(checkedComplications), ...otherParts].join(", ")
 
   function toggleLabel(labelId: string) {
+    markDirty()
     setSelectedLabelIds((prev) => {
       const next = new Set(prev)
       if (next.has(labelId)) {
@@ -110,7 +133,12 @@ export function WatchForm({
       : ""
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form
+      action={formAction}
+      onInput={markDirty}
+      onChange={markDirty}
+      className={stickyBar ? "space-y-[18px] pb-4" : "space-y-6"}
+    >
       {state.error && (
         <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {state.error}
@@ -124,31 +152,31 @@ export function WatchForm({
       <input type="hidden" name="purchase_currency" value={watch?.purchase_currency ?? "USD"} />
 
       {/* ── Card 1: Identity & Ownership ────────────────────────── */}
-      <Card className="overflow-hidden border-l-2 border-l-primary/40">
-        <CardHeader className="bg-primary/5">
-          <CardTitle className="flex items-center gap-2.5 font-display font-medium">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-sm shadow-sm">
-              🏷️
-            </span>
+      <Card className={CARD}>
+        <CardHeader className={CARD_HEADER}>
+          <CardTitle className={CARD_TITLE}>
+            <span className={CHIP}>🏷️</span>
             Identity & Ownership
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
-            <FormLabel>Brand *</FormLabel>
+            <FormLabel>Brand <span className="text-brass">*</span></FormLabel>
             <BrandCombobox
               brands={brands}
               defaultBrandId={watch?.brand_id}
+              onChange={markDirty}
             />
           </div>
           <div className="space-y-2">
-            <FormLabel htmlFor="model">Model *</FormLabel>
+            <FormLabel htmlFor="model">Model <span className="text-brass">*</span></FormLabel>
             <Input
               id="model"
               name="model"
               placeholder="e.g. Speedmaster Professional"
               defaultValue={watch?.model ?? ""}
               required
+              className={FIELD}
             />
           </div>
           <div className="space-y-2">
@@ -158,6 +186,7 @@ export function WatchForm({
               name="nickname"
               placeholder="e.g. Moonwatch"
               defaultValue={watch?.nickname ?? ""}
+              className={FIELD}
             />
           </div>
           <div className="space-y-2">
@@ -167,6 +196,7 @@ export function WatchForm({
               name="reference_number"
               placeholder="e.g. 310.30.42.50.01.001"
               defaultValue={watch?.reference_number ?? ""}
+              className={cn(FIELD, "font-mono text-[13px]")}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
@@ -176,6 +206,7 @@ export function WatchForm({
               name="serial_number"
               placeholder="Private — only visible to you"
               defaultValue={watch?.serial_number ?? ""}
+              className={cn(FIELD, "font-mono text-[13px]")}
             />
           </div>
 
@@ -187,6 +218,7 @@ export function WatchForm({
               name="purchase_date"
               type="date"
               defaultValue={watch?.purchase_date ?? ""}
+              className={cn(FIELD, "[color-scheme:dark]")}
             />
           </div>
 
@@ -200,6 +232,7 @@ export function WatchForm({
               min="0"
               placeholder="e.g. 6500.00"
               defaultValue={purchasePriceDefault}
+              className={cn(FIELD, "font-mono")}
             />
           </div>
 
@@ -209,7 +242,7 @@ export function WatchForm({
                 type="checkbox"
                 name="is_coming_soon"
                 defaultChecked={watch?.is_coming_soon ?? false}
-                className="h-4 w-4 rounded border-border accent-primary"
+                className="h-4 w-4 rounded border-border accent-brass"
               />
               <span className="font-medium">Coming soon</span>
               <span className="text-xs text-muted-foreground">
@@ -226,18 +259,17 @@ export function WatchForm({
               placeholder="Any additional details about this watch..."
               rows={3}
               defaultValue={watch?.notes ?? ""}
+              className={FIELD}
             />
           </div>
         </CardContent>
       </Card>
 
       {/* ── Card 2: Specifications ──────────────────────────────── */}
-      <Card className="overflow-hidden border-l-2 border-l-primary/40">
-        <CardHeader className="bg-primary/5">
-          <CardTitle className="flex items-center gap-2.5 font-display font-medium">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-sm shadow-sm">
-              ⚙️
-            </span>
+      <Card className={CARD}>
+        <CardHeader className={CARD_HEADER}>
+          <CardTitle className={CARD_TITLE}>
+            <span className={CHIP}>⚙️</span>
             Specifications
           </CardTitle>
         </CardHeader>
@@ -253,7 +285,10 @@ export function WatchForm({
             <MovementCombobox
               movements={movements}
               defaultMovementId={watch?.movement_id ?? undefined}
-              onMovementChange={setSelectedMovement}
+              onMovementChange={(m) => {
+                markDirty()
+                setSelectedMovement(m)
+              }}
             />
           </div>
 
@@ -272,7 +307,7 @@ export function WatchForm({
             <div className="space-y-2">
               <FormLabel htmlFor="case_material">Case Material</FormLabel>
               <Select name="case_material" defaultValue={watch?.case_material ?? ""}>
-                <SelectTrigger id="case_material">
+                <SelectTrigger id="case_material" className={FIELD}>
                   <SelectValue placeholder="Select material" />
                 </SelectTrigger>
                 <SelectContent>
@@ -289,7 +324,7 @@ export function WatchForm({
             <div className="space-y-2">
               <FormLabel htmlFor="crystal">Crystal</FormLabel>
               <Select name="crystal" defaultValue={watch?.crystal ?? ""}>
-                <SelectTrigger id="crystal">
+                <SelectTrigger id="crystal" className={FIELD}>
                   <SelectValue placeholder="Select crystal" />
                 </SelectTrigger>
                 <SelectContent>
@@ -314,6 +349,7 @@ export function WatchForm({
                 max="60"
                 placeholder="e.g. 42"
                 defaultValue={watch?.case_diameter_mm?.toString() ?? ""}
+                className={cn(FIELD, "font-mono")}
               />
             </div>
 
@@ -328,6 +364,7 @@ export function WatchForm({
                 max="30"
                 placeholder="e.g. 20"
                 defaultValue={watch?.strap_width_mm?.toString() ?? ""}
+                className={cn(FIELD, "font-mono")}
               />
             </div>
 
@@ -342,6 +379,7 @@ export function WatchForm({
                 max="80"
                 placeholder="e.g. 46"
                 defaultValue={watch?.lug_to_lug_mm?.toString() ?? ""}
+                className={cn(FIELD, "font-mono")}
               />
             </div>
 
@@ -356,6 +394,7 @@ export function WatchForm({
                 max="25"
                 placeholder="e.g. 13.5"
                 defaultValue={watch?.case_height_mm?.toString() ?? ""}
+                className={cn(FIELD, "font-mono")}
               />
             </div>
 
@@ -369,6 +408,7 @@ export function WatchForm({
                 max="12000"
                 placeholder="e.g. 50"
                 defaultValue={watch?.water_resistance_m?.toString() ?? ""}
+                className={cn(FIELD, "font-mono")}
               />
             </div>
 
@@ -379,6 +419,7 @@ export function WatchForm({
                 name="dial_color"
                 placeholder="e.g. Black"
                 defaultValue={watch?.dial_color ?? ""}
+                className={FIELD}
               />
             </div>
           </div>
@@ -395,9 +436,10 @@ export function WatchForm({
                 <label key={name} className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
-                    className="rounded"
+                    className="h-4 w-4 rounded accent-brass"
                     checked={checkedComplications.has(name)}
                     onChange={(e) => {
+                      markDirty()
                       setCheckedComplications((prev) => {
                         const next = new Set(prev)
                         if (e.target.checked) {
@@ -417,30 +459,32 @@ export function WatchForm({
               placeholder="Other complications (comma-separated)"
               value={otherComplication}
               onChange={(e) => setOtherComplication(e.target.value)}
+              className={FIELD}
             />
           </div>
         </CardContent>
       </Card>
 
       {/* ── Card 3: Category & Labels ───────────────────────────── */}
-      <Card className="overflow-hidden border-l-2 border-l-primary/40">
-        <CardHeader className="bg-primary/5">
-          <CardTitle className="flex items-center gap-2.5 font-display font-medium">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-sm shadow-sm">
-              📂
-            </span>
+      <Card className={CARD}>
+        <CardHeader className={CARD_HEADER}>
+          <CardTitle className={CARD_TITLE}>
+            <span className={CHIP}>📂</span>
             Category & Labels
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Category */}
           <div className="max-w-sm space-y-2">
-            <FormLabel htmlFor="category_select">Category *</FormLabel>
+            <FormLabel htmlFor="category_select">Category <span className="text-brass">*</span></FormLabel>
             <Select
               value={selectedCategoryId}
-              onValueChange={(val) => setSelectedCategoryId(val ?? "")}
+              onValueChange={(val) => {
+                markDirty()
+                setSelectedCategoryId(val ?? "")
+              }}
             >
-              <SelectTrigger id="category_select">
+              <SelectTrigger id="category_select" className={FIELD}>
                 <span>
                   {selectedCategoryId
                     ? categories.find((c) => c.id === selectedCategoryId)?.name ?? "Select a category"
@@ -496,11 +540,41 @@ export function WatchForm({
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-3">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving..." : submitLabel}
-        </Button>
-      </div>
+      {stickyBar ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 py-3 backdrop-blur">
+          <div className="mx-auto flex w-full max-w-[1180px] items-center gap-4 px-4 sm:px-[30px]">
+            <span
+              className={cn(
+                "h-2 w-2 rounded-full transition-all",
+                isDirty
+                  ? "bg-brass shadow-[0_0_8px_var(--brass)]"
+                  : "bg-muted-foreground/50"
+              )}
+            />
+            <span className={cn("text-sm", isDirty ? "text-brass" : "text-muted-foreground")}>
+              {isDirty ? "Unsaved changes" : "All changes saved"}
+            </span>
+            <div className="ml-auto flex gap-2.5">
+              <Button type="button" variant="outline" render={<Link href={cancelHref} />}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={!isDirty || isPending}
+                className="bg-brass text-[#1a1206] hover:bg-brass/90 disabled:opacity-50"
+              >
+                {isPending ? "Saving…" : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-end gap-3">
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Saving..." : submitLabel}
+          </Button>
+        </div>
+      )}
     </form>
   )
 }

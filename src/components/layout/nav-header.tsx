@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useSyncExternalStore } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
@@ -17,15 +17,6 @@ const navItems = [
   { href: "/config", label: "Config", icon: "⚙️" },
 ]
 
-// Touch detection via useSyncExternalStore (avoids lint error with setState in effect)
-const noopSubscribe = () => () => {}
-function getTouchSnapshot(): boolean {
-  return "ontouchstart" in window || navigator.maxTouchPoints > 0
-}
-function getTouchServerSnapshot(): boolean {
-  return false
-}
-
 interface NavHeaderProps {
   userEmail: string
 }
@@ -33,7 +24,6 @@ interface NavHeaderProps {
 export function NavHeader({ userEmail }: NavHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
-  const isMobile = useSyncExternalStore(noopSubscribe, getTouchSnapshot, getTouchServerSnapshot)
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
@@ -45,8 +35,8 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
   // (not /watch/[id]/edit, and not on the home or collection screens).
   const isWatchDetail = /^\/watch\/[^/]+$/.test(pathname)
 
-  // On mobile, Add Watch goes to camera-first flow; on desktop, full form
-  const addWatchHref = isMobile ? "/add" : "/collection/new"
+  // Add Watch → the desktop-first quick-add (basics now, full specs on Edit).
+  const addWatchHref = "/add"
 
   // Centered top-level nav (desktop): Home = the dial, Collection = the list
   // (and any watch detail, which is reached from the collection).

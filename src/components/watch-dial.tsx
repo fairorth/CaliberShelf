@@ -101,7 +101,6 @@ export function WatchDial({ watches, seed, stats }: WatchDialProps) {
   // meets a marker (1s before its exact index), per the dial's minute spots.
   const activeIndex = Math.floor((s + 1) / HIGHLIGHT_SECONDS) % 12
   const active = dial[activeIndex] ?? null
-  const activeLabel = `${String(activeIndex + 1).padStart(2, "0")} / 12`
 
   return (
     <div className="flex flex-col items-center">
@@ -111,26 +110,30 @@ export function WatchDial({ watches, seed, stats }: WatchDialProps) {
         <Lug position="top" />
         {/* Lug — bottom */}
         <Lug position="bottom" />
-        {/* Crown — 3 o'clock */}
+        {/* Crown — 3 o'clock. The wrapper needs an explicit width/height so the
+            stem/knob percentages resolve against it (an auto-width flex parent
+            collapses percentage children to zero). */}
         <div
           aria-hidden="true"
           className="absolute z-[1] flex items-center"
-          style={{ right: "-3.4%", top: "50%", transform: "translateY(-50%)" }}
+          style={{ right: "-4.2%", top: "50%", width: "6%", height: "8.2%", transform: "translateY(-50%)" }}
         >
+          {/* stem — tucks under the case edge */}
           <div
             style={{
-              width: "2%",
-              height: "3%",
-              marginRight: "-0.35%",
+              width: "34%",
+              height: "42%",
+              marginRight: "-6%",
               borderRadius: "1px 2px 2px 1px",
               background: "linear-gradient(180deg,#dadfe3,#909799 40%,#6c727a)",
               boxShadow: "inset 0 1px 1px rgba(255,255,255,.5), 0 1px 2px rgba(0,0,0,.4)",
             }}
           />
+          {/* knob — fluted, protrudes past the case */}
           <div
             style={{
-              width: "3.9%",
-              height: "8.2%",
+              width: "66%",
+              height: "100%",
               borderRadius: "2px 7px 7px 2px",
               background:
                 "repeating-linear-gradient(90deg,#e6eaed 0 1.6px,#878d94 1.6px 3.2px)",
@@ -305,15 +308,12 @@ export function WatchDial({ watches, seed, stats }: WatchDialProps) {
         className="mt-[88px] text-center sm:mt-[112px]"
         style={{ animation: "csfade .5s ease" }}
       >
-        <div className="mb-3 font-mono text-[11px] tracking-[3px] text-primary">
-          NOW SHOWING · {activeLabel}
-        </div>
-        <div className="font-display text-[28px] font-semibold leading-[1.05] sm:text-[34px]">
-          {active ? active.brand.name : "—"}
+        <div className="font-display text-[24px] font-semibold leading-[1.1] sm:text-[28px]">
+          {active ? active.nickname || active.model : "—"}
         </div>
         {active && (
-          <div className="mt-0.5 font-display text-[18px] italic text-muted-foreground sm:text-[20px]">
-            {active.nickname || active.model}
+          <div className="mt-0.5 font-display text-[17px] text-muted-foreground sm:text-[19px]">
+            {active.brand.name}
           </div>
         )}
         {active && metaLine(active) && (

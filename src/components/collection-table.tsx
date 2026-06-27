@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useMemo, useTransition } from "react"
+import { useRef, useState, useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -11,22 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import { caliberTypeLabels } from "@/lib/validations/movement"
 import { labelColorMap } from "@/lib/validations/label"
-import { bulkDeleteWatches } from "@/lib/actions/watch-actions"
 import { ComingSoonBadge } from "@/components/coming-soon-badge"
-import { toast } from "sonner"
 import { cn, formatCurrency } from "@/lib/utils"
 import type { WatchWithCover, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
@@ -56,7 +43,7 @@ function movementTypeLabel(watch: WatchWithCover): string {
 
 // ── Sorting ────────────────────────────────────────────────────────
 
-type SortKey = "category" | "brand" | "model" | "movementType" | "caliber" | "labels" | "price"
+type SortKey = "category" | "brand" | "model" | "movementType" | "caliber" | "labels" | "wearCount" | "price"
 type SortDir = "asc" | "desc"
 
 function getSortValue(watch: WatchWithCover, key: SortKey): string {
@@ -77,8 +64,9 @@ function getSortValue(watch: WatchWithCover, key: SortKey): string {
         : "zzz"
     case "labels":
       return watch.labels?.map((l) => l.name).sort().join(",").toLowerCase() ?? ""
+    case "wearCount":
     case "price":
-      return "" // price sorts numerically in the comparator below
+      return "" // these sort numerically in the comparator below
   }
 }
 
@@ -188,9 +176,6 @@ function HoverPhoto({
 export function CollectionTable({ watches, showCost = false }: CollectionTableProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>("asc")
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [isPending, startTransition] = useTransition()
 
   // Sort watches
   const sorted = useMemo(() => {
@@ -204,6 +189,11 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
         if (pa === null) return 1
         if (pb === null) return -1
         return sortDir === "asc" ? pa - pb : pb - pa
+      }
+      if (sortKey === "wearCount") {
+        const wa = a.wear_count ?? 0
+        const wb = b.wear_count ?? 0
+        return sortDir === "asc" ? wa - wb : wb - wa
       }
       const va = getSortValue(a, sortKey)
       const vb = getSortValue(b, sortKey)
@@ -221,37 +211,6 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
     }
   }
 
-  function toggleSelect(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  function toggleAll() {
-    if (selected.size === sorted.length) {
-      setSelected(new Set())
-    } else {
-      setSelected(new Set(sorted.map((w) => w.id)))
-    }
-  }
-
-  function handleBulkDelete() {
-    const ids = Array.from(selected)
-    startTransition(async () => {
-      const result = await bulkDeleteWatches(ids)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success(`${ids.length} ${ids.length === 1 ? "watch" : "watches"} deleted.`)
-        setSelected(new Set())
-      }
-      setShowDeleteConfirm(false)
-    })
-  }
-
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -264,69 +223,14 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
     )
   }
 
-  const allSelected = selected.size === sorted.length && sorted.length > 0
-  const someSelected = selected.size > 0
-
   return (
     <>
-      {/* Bulk action bar */}
-      {someSelected && (
-        <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-2">
-          <span className="text-sm font-medium">
-            {selected.size} {selected.size === 1 ? "watch" : "watches"} selected
-          </span>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setShowDeleteConfirm(true)}
-            disabled={isPending}
-          >
-            Delete Selected
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelected(new Set())}
-          >
-            Clear
-          </Button>
-        </div>
-      )}
-
-      {/* Delete confirmation dialog */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selected.size} {selected.size === 1 ? "watch" : "watches"}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete {selected.size} {selected.size === 1 ? "watch" : "watches"} and
-              all associated photos, wear logs, and labels. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleBulkDelete} disabled={isPending}>
-              {isPending ? "Deleting..." : `Confirm Delete (${selected.size})`}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {/* Desktop table */}
       <div className="hidden sm:block">
         <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[40px]">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    onChange={toggleAll}
-                    className="h-4 w-4 rounded border-border accent-primary"
-                    aria-label="Select all"
-                  />
-                </TableHead>
                 <TableHead className="w-[72px] text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80">Photo</TableHead>
                 <SortableHeader label="Category" sortKey="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Brand" sortKey="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
@@ -334,6 +238,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                 <SortableHeader label="Movement Type" sortKey="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Caliber" sortKey="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Labels" sortKey="labels" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Worn" sortKey="wearCount" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} className="text-right" alignRight />
                 {showCost && (
                   <SortableHeader label="Price" sortKey="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} className="text-right" alignRight />
                 )}
@@ -345,24 +250,12 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                   key={watch.id}
                   className={cn(
                     "group",
-                    // Zebra striping: a faint neutral band alternating with a
-                    // faint blue band. Selection tint overrides the stripe.
-                    selected.has(watch.id)
-                      ? "bg-destructive/10"
-                      : i % 2 === 0
-                        ? "bg-[oklch(0.78_0.012_245_/_0.05)]"
-                        : "bg-[oklch(0.6_0.11_233_/_0.12)]"
+                    // Zebra striping: a faint neutral band alternating with a faint blue band.
+                    i % 2 === 0
+                      ? "bg-[oklch(0.78_0.012_245_/_0.05)]"
+                      : "bg-[oklch(0.6_0.11_233_/_0.12)]"
                   )}
                 >
-                  <TableCell className="py-2">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(watch.id)}
-                      onChange={() => toggleSelect(watch.id)}
-                      className="h-4 w-4 rounded border-border accent-primary"
-                      aria-label={`Select ${watch.brand.name} ${watch.model}`}
-                    />
-                  </TableCell>
                   <TableCell className="py-2">
                     <Link href={`/watch/${watch.id}`} className="block">
                       <HoverPhoto
@@ -414,6 +307,9 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                       <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
+                  <TableCell className="text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                    {watch.wear_count ?? 0}
+                  </TableCell>
                   {showCost && (
                     <TableCell className="text-right font-mono text-[13.5px] font-medium tabular-nums text-brass">
                       {priceLabel(watch)}
@@ -431,18 +327,8 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
         {sorted.map((watch) => (
           <div
             key={watch.id}
-            className={cn(
-              "flex items-center gap-3 rounded-lg border p-3 transition-colors",
-              selected.has(watch.id) && "border-destructive/30 bg-destructive/5"
-            )}
+            className="flex items-center gap-3 rounded-lg border p-3 transition-colors"
           >
-            <input
-              type="checkbox"
-              checked={selected.has(watch.id)}
-              onChange={() => toggleSelect(watch.id)}
-              className="h-4 w-4 shrink-0 rounded border-border accent-primary"
-              aria-label={`Select ${watch.brand.name} ${watch.model}`}
-            />
             <Link
               href={`/watch/${watch.id}`}
               className="flex min-w-0 flex-1 items-center gap-3"

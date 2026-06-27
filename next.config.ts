@@ -3,7 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb",
+      // Generous cap so an un-optimizable phone capture (large HEIC/48MP) never
+      // hard-fails the whole request before the watch is created; the add flow
+      // downscales client-side first, so real bodies are a few hundred KB.
+      bodySizeLimit: "25mb",
     },
   },
   images: {

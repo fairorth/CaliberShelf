@@ -67,6 +67,18 @@ export async function getWatches(): Promise<WatchWithCover[]> {
   const storagePaths = Array.from(coverMap.values())
   const signedUrlMap = await getSignedUrls(storagePaths)
 
+  // Tally wear-log entries per watch (for the collection's wear-count column).
+  const wearCountByWatch = new Map<string, number>()
+  const { data: wearRows } = await supabase
+    .from("wear_logs")
+    .select("watch_id")
+    .in("watch_id", watchIds)
+  if (wearRows) {
+    for (const row of wearRows as Array<{ watch_id: string }>) {
+      wearCountByWatch.set(row.watch_id, (wearCountByWatch.get(row.watch_id) ?? 0) + 1)
+    }
+  }
+
   // Merge cover photo URLs into watches
   return watches.map(
     (watch: Watch & { brands: Brand; movements: Movement | null; categories: Category }) => {
@@ -79,6 +91,7 @@ export async function getWatches(): Promise<WatchWithCover[]> {
         movement: watch.movements,
         category: watch.categories,
         labels: labelsByWatch.get(watch.id) ?? [],
+        wear_count: wearCountByWatch.get(watch.id) ?? 0,
       } as WatchWithCover
     }
   )

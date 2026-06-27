@@ -14,7 +14,7 @@ export default async function AddWatchPage() {
   ])
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto max-w-[640px]">
       <AddWatchFlow
         brands={brands}
         categories={categories}

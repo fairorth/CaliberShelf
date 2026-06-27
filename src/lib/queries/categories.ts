@@ -12,7 +12,7 @@ import type {
 } from "@/lib/types/watch"
 
 /**
- * Get all categories for the current user, sorted by display_order.
+ * Get all categories for the current user, sorted by name.
  */
 export async function getCategories(): Promise<Category[]> {
   const supabase = await createClient()
@@ -20,8 +20,7 @@ export async function getCategories(): Promise<Category[]> {
   const { data, error } = await supabase
     .from("categories")
     .select("*")
-    .order("display_order", { ascending: true })
-    .order("created_at", { ascending: true })
+    .order("name", { ascending: true })
 
   if (error) {
     console.error("Failed to fetch categories:", error.message)
@@ -42,8 +41,7 @@ export async function getCategoriesWithWatches(): Promise<CategoryWithWatches[]>
   const { data: categories, error: categoriesError } = await supabase
     .from("categories")
     .select("*")
-    .order("display_order", { ascending: true })
-    .order("created_at", { ascending: true })
+    .order("name", { ascending: true })
 
   if (categoriesError || !categories) {
     console.error("Failed to fetch categories:", categoriesError?.message)

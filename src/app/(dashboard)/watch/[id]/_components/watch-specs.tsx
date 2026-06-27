@@ -48,6 +48,30 @@ function SpecRow({
   )
 }
 
+/** Dial color row with a small swatch dot. The swatch uses the last word of the
+ * color name (e.g. "Sunburst Blue" → "blue"), which is a valid CSS color for the
+ * common cases; a hairline border keeps an unrecognized color visible. */
+function DialColorRow({ value }: { value: string | null | undefined }) {
+  const hasValue = !!value && value !== "—"
+  const swatch = hasValue ? value!.trim().split(/\s+/).pop()!.toLowerCase() : null
+  return (
+    <div className="flex justify-between gap-4 py-2.5">
+      <span className="text-sm text-muted-foreground">Dial Color</span>
+      {hasValue ? (
+        <span className="flex items-center gap-2 text-sm font-medium">
+          <span
+            className="h-3 w-3 rounded-full border border-white/20"
+            style={{ background: swatch ?? "transparent" }}
+          />
+          {value}
+        </span>
+      ) : (
+        <span className="text-sm text-muted-foreground/45">Not set</span>
+      )}
+    </div>
+  )
+}
+
 /** Unified spec card — brass spine, serif title, brass-tinted icon chip. */
 function SpecCard({
   icon,
@@ -165,7 +189,7 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
           <SpecRow label="Lug-to-Lug" value={watch.lug_to_lug_mm ? `${watch.lug_to_lug_mm} mm` : null} mono />
           <SpecRow label="Case Height" value={watch.case_height_mm ? `${watch.case_height_mm} mm` : null} mono />
           <SpecRow label="Water Resistance" value={watch.water_resistance_m ? `${watch.water_resistance_m} m` : null} mono />
-          <SpecRow label="Dial Color" value={watch.dial_color} />
+          <DialColorRow value={watch.dial_color} />
         </div>
 
         {/* Complications subsection */}
@@ -192,9 +216,13 @@ export function WatchSpecs({ watch, category, labels = [] }: WatchSpecsProps) {
         <div className="flex justify-between py-2.5">
           <span className="text-sm text-muted-foreground">Category</span>
           {category ? (
-            <Badge className="bg-accent text-accent-foreground border-primary/25 text-xs font-medium">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium">
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: category.color ?? "var(--muted-foreground)" }}
+              />
               {category.name}
-            </Badge>
+            </span>
           ) : (
             <span className="text-sm text-muted-foreground/45">Not set</span>
           )}

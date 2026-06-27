@@ -151,7 +151,7 @@ export function DialFramingEditor({
           {/* Live 72px dial-marker preview */}
           <div className="flex flex-col items-center gap-1">
             <div
-              className="relative h-[72px] w-[72px] overflow-hidden rounded-full bg-black ring-2 ring-[oklch(0.85_0.03_85)] shadow-md"
+              className="relative h-[72px] w-[72px] overflow-hidden rounded-full bg-black ring-2 ring-brass shadow-md"
               aria-label="Dial preview"
             >
               <Image
@@ -184,7 +184,7 @@ export function DialFramingEditor({
             step={0.05}
             value={zoom}
             onChange={(e) => setZoom(parseFloat(e.target.value))}
-            className="w-full accent-foreground"
+            className="w-full accent-brass"
           />
         </div>
 

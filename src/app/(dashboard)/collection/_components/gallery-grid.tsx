@@ -52,6 +52,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
             ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
             : null
         const showFooter = Boolean(caliberLine) || priceLabel !== null
+        const wearCount = watch.wear_count ?? 0
 
         return (
         <Link
@@ -67,7 +68,17 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
                 {typeLabel}
               </span>
             )}
-            {watch.is_coming_soon && <ComingSoonBadge className="ml-auto" />}
+            <div className="ml-auto flex items-center gap-1.5">
+              {watch.is_coming_soon && <ComingSoonBadge />}
+              {wearCount > 0 && (
+                <span
+                  title={`Worn ${wearCount} ${wearCount === 1 ? "time" : "times"}`}
+                  className="font-mono text-[10px] text-muted-foreground"
+                >
+                  ◷ {wearCount}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="relative aspect-square overflow-hidden border-y border-border/70 bg-[radial-gradient(circle_at_50%_38%,#222a33,#12161c_80%)]">

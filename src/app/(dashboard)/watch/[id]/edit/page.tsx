@@ -63,19 +63,20 @@ export default async function EditWatchPage({
   const coverPhotoUrl = coverPhoto ? photoUrls[coverPhoto.storage_path] ?? null : null
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" render={<Link href={`/watch/${watch.id}`} />}>
           &larr; Back
         </Button>
-        <h1 className="font-display text-lg font-medium tracking-tight">
-          Edit {watch.brand.name} {watch.model}
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
+          Edit {watch.brand.name}{" "}
+          <span className="text-muted-foreground">{watch.model}</span>
         </h1>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-[420px_1fr] lg:items-start lg:gap-[26px]">
         {/* Left column: Sticky photo gallery */}
-        <div className="md:self-start md:sticky md:top-[calc(3.5rem+1.5rem)]">
+        <div className="lg:self-start lg:sticky lg:top-[calc(3.5rem+1.5rem)]">
           <div className="space-y-4">
             <PhotoGallery
               photos={watch.watch_photos}
@@ -105,6 +106,8 @@ export default async function EditWatchPage({
             categories={categories}
             labels={labels}
             defaultLabelIds={watchLabels.map((l) => l.id)}
+            stickyBar
+            cancelHref={`/watch/${watch.id}`}
           />
         </div>
       </div>

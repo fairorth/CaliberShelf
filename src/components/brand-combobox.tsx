@@ -11,9 +11,11 @@ import type { Brand } from "@/lib/types/watch"
 interface BrandComboboxProps {
   brands: Brand[]
   defaultBrandId?: string
+  /** Notified when the selected brand changes (e.g. to mark a form dirty). */
+  onChange?: (brandId: string) => void
 }
 
-export function BrandCombobox({ brands, defaultBrandId }: BrandComboboxProps) {
+export function BrandCombobox({ brands, defaultBrandId, onChange }: BrandComboboxProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [selectedId, setSelectedId] = useState(defaultBrandId ?? "")
@@ -34,6 +36,7 @@ export function BrandCombobox({ brands, defaultBrandId }: BrandComboboxProps) {
 
   function handleSelect(brand: Brand) {
     setSelectedId(brand.id)
+    onChange?.(brand.id)
     setSearch("")
     setOpen(false)
   }
@@ -56,6 +59,7 @@ export function BrandCombobox({ brands, defaultBrandId }: BrandComboboxProps) {
         }
         setLocalBrands((prev) => [...prev, newBrand].sort((a, b) => a.name.localeCompare(b.name)))
         setSelectedId(result.id)
+        onChange?.(result.id)
         setSearch("")
         setOpen(false)
       }

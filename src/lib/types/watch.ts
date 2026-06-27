@@ -56,7 +56,6 @@ export interface Category {
   name: string
   description: string | null
   color: string | null
-  display_order: number
   created_at: string
   updated_at: string
 }
@@ -134,6 +133,8 @@ export interface WatchWithCover extends Watch {
   movement: Movement | null
   category?: Category
   labels?: Label[]
+  /** Total wear-log entries for this watch (populated by getWatches). */
+  wear_count?: number
 }
 
 // ── Wear Log ────────────────────────────────────────────────────

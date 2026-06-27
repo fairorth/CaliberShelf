@@ -313,6 +313,13 @@ export async function createWatchWithPhoto(
 
   const data = parsed.data
 
+  // Post-create destination: the quick-add screen offers "Save & add details"
+  // (continue to the full Edit form) vs "Save & close" (go to the detail page).
+  const destination =
+    formData.get("redirect_to") === "edit"
+      ? `/watch/__ID__/edit`
+      : `/watch/__ID__`
+
   // Insert the watch
   const { data: watch, error } = await supabase
     .from("watches")
@@ -329,13 +336,15 @@ export async function createWatchWithPhoto(
     return { error: error.message }
   }
 
+  const target = destination.replace("__ID__", watch.id)
+
   // Handle photo upload if present
   const photo = formData.get("photo") as File | null
   if (photo && photo.size > 0) {
     if (photo.size > PHOTO_MAX_SIZE) {
       // Watch created, but photo too large — still redirect
       revalidatePath("/dashboard")
-      redirect(`/watch/${watch.id}`)
+      redirect(target)
     }
 
     if (PHOTO_ALLOWED_TYPES.includes(photo.type)) {
@@ -365,5 +374,5 @@ export async function createWatchWithPhoto(
   }
 
   revalidatePath("/dashboard")
-  redirect(`/watch/${watch.id}`)
+  redirect(target)
 }

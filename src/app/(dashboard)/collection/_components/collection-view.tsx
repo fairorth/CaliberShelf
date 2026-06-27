@@ -38,7 +38,7 @@ const MAX_SIZE = 400
 const SELECT_CLASS =
   "flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
 
-type SortKey = "default" | "brand" | "price" | "purchaseDate" | "caseDiameter"
+type SortKey = "default" | "brand" | "price" | "purchaseDate" | "caseDiameter" | "wearCount"
 type SortDir = "asc" | "desc"
 
 const SORT_LABELS: Record<SortKey, string> = {
@@ -47,6 +47,7 @@ const SORT_LABELS: Record<SortKey, string> = {
   price: "Sort: Price",
   purchaseDate: "Sort: Purchase date",
   caseDiameter: "Sort: Case size",
+  wearCount: "Sort: Wear count",
 }
 
 // ── Pure filter/sort helpers ───────────────────────────────────────
@@ -83,6 +84,8 @@ function sortValue(w: WatchWithCover, key: SortKey): string | number | null {
       return w.purchase_date // "YYYY-MM-DD" sorts lexically
     case "caseDiameter":
       return w.case_diameter_mm
+    case "wearCount":
+      return w.wear_count ?? 0
     default:
       return null
   }
