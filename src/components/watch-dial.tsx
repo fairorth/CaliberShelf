@@ -78,6 +78,21 @@ const POSITIONS = Array.from({ length: 12 }, (_, i) => {
 // A marker stays zoomed for this long as the hand passes over its position.
 const AUTO_HOLD_DEG = 18
 
+// Polished silver bezel: a top-down dome highlight layered over rotational
+// conic reflections (4 bright + 4 dark sweeps) so the ring reads as round,
+// shiny stainless steel rather than a flat gray disc.
+const SILVER_BEZEL =
+  "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 32%, rgba(0,0,0,0.18) 100%), " +
+  "conic-gradient(from 0deg, " +
+  "oklch(0.88 0.004 240) 0deg, oklch(0.55 0.006 248) 45deg, " +
+  "oklch(0.85 0.004 240) 90deg, oklch(0.5 0.006 248) 135deg, " +
+  "oklch(0.9 0.004 240) 180deg, oklch(0.55 0.006 248) 225deg, " +
+  "oklch(0.84 0.004 240) 270deg, oklch(0.5 0.006 248) 315deg, " +
+  "oklch(0.88 0.004 240) 360deg)"
+// Bright polished-steel gradient for small parts (lugs, crown stem/knob).
+const STEEL_PART =
+  "linear-gradient(135deg, oklch(0.86 0.006 240), oklch(0.52 0.008 248) 45%, oklch(0.72 0.008 240) 70%, oklch(0.46 0.006 252))"
+
 /** Small seeded PRNG (mulberry32) — deterministic so SSR and hydration agree. */
 function mulberry32(seed: number) {
   let a = seed >>> 0
@@ -208,16 +223,106 @@ export function WatchDial({ watches, seed }: WatchDialProps) {
     <div
       role="navigation"
       aria-label="Watches"
-      className="relative mx-auto aspect-square w-[85vw] max-w-[600px]"
+      className="relative mx-auto aspect-square w-[82vw] max-w-[560px]"
     >
-      {/* Layer 1: Outer bezel — brushed steel */}
+      {/* Layer 0: Strap + lugs + crown — rendered first so the case (bezel)
+          paints on top of them, letting their ends tuck under the case like a
+          real wristwatch. The protruding parts (strap ends, crown knob) stay
+          visible beyond the round case. */}
+
+      {/* Strap — top piece, extends up and behind the case */}
+      <div
+        aria-hidden="true"
+        className="watch-strap absolute"
+        style={{
+          left: "29%",
+          width: "42%",
+          top: "-34%",
+          height: "42%",
+          borderRadius: "18px 18px 6px 6px",
+        }}
+      />
+      {/* Strap — bottom piece, extends down and behind the case */}
+      <div
+        aria-hidden="true"
+        className="watch-strap absolute"
+        style={{
+          left: "29%",
+          width: "42%",
+          bottom: "-34%",
+          height: "42%",
+          borderRadius: "6px 6px 18px 18px",
+        }}
+      />
+
+      {/* Lugs — four polished-steel horns bridging the case to the strap */}
+      {[
+        { left: "27.5%", right: undefined, top: "3%", bottom: undefined, rotate: 22 },
+        { left: undefined, right: "27.5%", top: "3%", bottom: undefined, rotate: -22 },
+        { left: "27.5%", right: undefined, top: undefined, bottom: "3%", rotate: -22 },
+        { left: undefined, right: "27.5%", top: undefined, bottom: "3%", rotate: 22 },
+      ].map((lug, i) => (
+        <div
+          key={i}
+          aria-hidden="true"
+          className="absolute"
+          style={{
+            left: lug.left,
+            right: lug.right,
+            top: lug.top,
+            bottom: lug.bottom,
+            width: "9%",
+            height: "16%",
+            background: STEEL_PART,
+            borderRadius: "5px",
+            transform: `rotate(${lug.rotate}deg)`,
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.4)",
+          }}
+        />
+      ))}
+
+      {/* Crown — fluted silver crown at 3 o'clock */}
+      {/* Stem: short steel neck tucked under the case edge */}
+      <div
+        aria-hidden="true"
+        className="absolute"
+        style={{
+          right: "-1.5%",
+          top: "50%",
+          width: "4.5%",
+          height: "6%",
+          transform: "translateY(-50%)",
+          background: STEEL_PART,
+          borderRadius: "2px",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)",
+        }}
+      />
+      {/* Knob: fluted cylinder protruding past the case */}
+      <div
+        aria-hidden="true"
+        className="absolute"
+        style={{
+          right: "-5.5%",
+          top: "50%",
+          width: "5.5%",
+          height: "13%",
+          transform: "translateY(-50%)",
+          background:
+            "repeating-linear-gradient(90deg, oklch(0.9 0.005 240) 0px, oklch(0.9 0.005 240) 2px, oklch(0.52 0.008 248) 2px, oklch(0.52 0.008 248) 4px)",
+          borderRadius: "3px",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.45)",
+        }}
+      />
+
+      {/* Layer 1: Outer bezel — polished silver, domed */}
       <div
         className="absolute inset-0 rounded-full shadow-2xl"
         style={{
-          background:
-            "linear-gradient(145deg, oklch(0.45 0.015 80), oklch(0.30 0.01 70) 30%, oklch(0.38 0.012 75) 60%, oklch(0.25 0.008 60))",
+          background: SILVER_BEZEL,
           boxShadow:
-            "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.3)",
+            "0 10px 38px rgba(0,0,0,0.6), inset 0 3px 5px rgba(255,255,255,0.6), inset 0 -4px 7px rgba(0,0,0,0.55), inset 0 0 0 1.5px rgba(255,255,255,0.14)",
         }}
       />
 

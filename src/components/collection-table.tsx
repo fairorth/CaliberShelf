@@ -328,10 +328,19 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sorted.map((watch) => (
+              {sorted.map((watch, i) => (
                 <TableRow
                   key={watch.id}
-                  className={cn("group", selected.has(watch.id) && "bg-destructive/5")}
+                  className={cn(
+                    "group",
+                    // Zebra striping: a faint neutral band alternating with a
+                    // faint blue band. Selection tint overrides the stripe.
+                    selected.has(watch.id)
+                      ? "bg-destructive/10"
+                      : i % 2 === 0
+                        ? "bg-[oklch(0.78_0.012_245_/_0.05)]"
+                        : "bg-[oklch(0.6_0.11_233_/_0.12)]"
+                  )}
                 >
                   <TableCell className="py-2">
                     <input

@@ -126,17 +126,15 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
       {menuOpen && (
         <nav className="border-t p-3">
           <div className="space-y-1">
-            {/* Add Watch — visually distinct */}
+            {/* Add Watch */}
             <Link
               href={addWatchHref}
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               <span>➕</span>
               Add Watch
             </Link>
-
-            <div className="my-2 border-t" />
 
             {navItems.map((item) => (
               <Link

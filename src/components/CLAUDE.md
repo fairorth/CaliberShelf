@@ -28,7 +28,7 @@
 ## Common Patterns
 - Inline table editing: extract a `Row` component with `useState(editing)` + `useTransition` for save — avoids form-level state conflicts
 - Color maps: define a `Record<ColorName, { bg: string; text: string }>` with Tailwind classes for consistent badge/tag styling
-- Watch dial: categories map to positions via `display_order` (0=12 o'clock, 1=1 o'clock, etc.)
+- Watch dial (`watch-dial.tsx`): 12 hour positions hold random unique watches (NOT category-based anymore), index 0=12 o'clock. Dressed as a full wristwatch — smoked-blue sunburst face, polished domed silver bezel, leather strap (top+bottom), four lugs, and a fluted crown at 3 o'clock. Strap/lugs/crown render before the bezel in DOM so the round case paints over their inner ends.
 
 ## Stacking Context Gotchas
 - `transform: translate(...)` / `scale(...)` on a positioned element creates a new stacking context, **trapping** inner `z-index`. To lift an element above its siblings on hover, set `hover:z-50` on the transformed wrapper itself, not on a child.
