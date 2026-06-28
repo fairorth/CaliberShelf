@@ -1,71 +1,65 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getWatches } from "@/lib/queries/watches"
-import { formatCurrency } from "@/lib/utils"
 
 export const metadata: Metadata = {
   title: "Reports | CaliberShelf",
 }
 
-/** A watch still needs initial editing if its brand is missing or a placeholder. */
-function needsBrandEditing(brandName: string | null | undefined): boolean {
-  const n = (brandName ?? "").trim().toLowerCase()
-  return n === "" || n.startsWith("unknown")
+interface ReportLink {
+  slug: string
+  title: string
+  description: string
+  available: boolean
 }
 
-function SummaryRow({
-  label,
-  value,
-  hint,
-}: {
-  label: string
-  value: string
-  hint?: string
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 py-3">
-      <div>
-        <span className="text-sm font-medium">{label}</span>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-      </div>
-      <span className="text-lg font-semibold tabular-nums">{value}</span>
-    </div>
-  )
-}
+const REPORTS: ReportLink[] = [
+  {
+    slug: "collection-summary",
+    title: "Collection Summary",
+    description: "Counts, watches needing details, and total collection value.",
+    available: true,
+  },
+  {
+    slug: "wear-summary",
+    title: "Wear Summary",
+    description: "How often and how recently you wear each watch.",
+    available: false,
+  },
+  {
+    slug: "investment",
+    title: "Investment",
+    description: "Cost basis, current valuation, and gains over time.",
+    available: false,
+  },
+]
 
-export default async function ReportsPage() {
-  const watches = await getWatches()
-
-  const totalWatches = watches.length
-  const unknownBrandCount = watches.filter((w) => needsBrandEditing(w.brand?.name)).length
-  const pricedWatches = watches.filter((w) => w.purchase_price_cents !== null)
-  const totalValueCents = pricedWatches.reduce(
-    (sum, w) => sum + (w.purchase_price_cents ?? 0),
-    0
-  )
-
+export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <h1 className="font-display text-lg font-medium tracking-tight">Reports</h1>
 
-      <Card className="max-w-xl">
-        <CardHeader>
-          <CardTitle className="text-base">Collection Summary</CardTitle>
-        </CardHeader>
-        <CardContent className="divide-y divide-border/60">
-          <SummaryRow label="Total Watches" value={totalWatches.toLocaleString()} />
-          <SummaryRow
-            label="Unknown / Missing Brand"
-            value={unknownBrandCount.toLocaleString()}
-            hint="Watches still needing initial details"
-          />
-          <SummaryRow
-            label="Total Value"
-            value={formatCurrency(totalValueCents, "USD")}
-            hint={`From ${pricedWatches.length} of ${totalWatches} watches with a recorded price`}
-          />
-        </CardContent>
-      </Card>
+      <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
+        {REPORTS.map((report) => (
+          <Link key={report.slug} href={`/reports/${report.slug}`} className="group block">
+            <Card className="h-full transition-colors group-hover:border-primary/50">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between gap-2 text-base">
+                  {report.title}
+                  {!report.available && (
+                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-400">
+                      Coming soon
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{report.description}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
