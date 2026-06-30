@@ -7,8 +7,9 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Track and showcase your watch collection",
     start_url: "/dashboard",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#0a0a0a",
+    // Match the dark app surface so the PWA splash/launch doesn't flash white.
+    background_color: "#0f1318",
+    theme_color: "#0f1318",
     orientation: "portrait",
     icons: [
       {
