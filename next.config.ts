@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
+import { version } from "./package.json";
 
 const nextConfig: NextConfig = {
+  // Expose package.json's version to the client bundle (read in src/lib/version.ts)
+  // so the header badge always matches the released version — single source of truth.
+  env: {
+    NEXT_PUBLIC_APP_VERSION: version,
+  },
   experimental: {
     serverActions: {
       // Generous cap so an un-optimizable phone capture (large HEIC/48MP) never
