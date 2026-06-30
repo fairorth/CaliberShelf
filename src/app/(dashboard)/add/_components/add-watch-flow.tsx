@@ -120,8 +120,10 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
           setError(result.error)
           toast.error(result.error)
         }
-      } catch {
-        toast.error("Failed to create watch. Try again.")
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e)
+        setError(`Failed to create watch: ${message}`)
+        toast.error(`Failed to create watch: ${message}`)
       }
     })
   }
