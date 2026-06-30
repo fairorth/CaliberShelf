@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -73,6 +74,7 @@ async function downscaleImage(file: File, maxEdge = 2000, quality = 0.85): Promi
 }
 
 export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
+  const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   // Which CTA was pressed — read by the form action to choose the redirect.
   const destRef = useRef<"edit" | "close">("close")
@@ -115,10 +117,13 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
     startTransition(async () => {
       try {
         const result = await createWatchWithPhoto(formData)
-        // On success the server action redirects; only errors come back.
+        // The action returns a destination on success; navigate from the client
+        // so we never rely on a throw-based redirect() (which a try/catch eats).
         if (result?.error) {
           setError(result.error)
           toast.error(result.error)
+        } else if (result?.redirectTo) {
+          router.push(result.redirectTo)
         }
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e)

@@ -17,6 +17,9 @@ import { dollarsToCents } from "@/lib/utils"
 export type WatchActionState = {
   error?: string
   success?: boolean
+  /** Set by imperatively-called actions so the client can navigate (see
+   *  createWatchWithPhoto) instead of relying on a throw-based redirect(). */
+  redirectTo?: string
 }
 
 /**
@@ -338,15 +341,10 @@ export async function createWatchWithPhoto(
 
   const target = destination.replace("__ID__", watch.id)
 
-  // Handle photo upload if present
+  // Handle photo upload if present. Skip silently if it's too large — the watch
+  // is already created and we still navigate to it below.
   const photo = formData.get("photo") as File | null
-  if (photo && photo.size > 0) {
-    if (photo.size > PHOTO_MAX_SIZE) {
-      // Watch created, but photo too large — still redirect
-      revalidatePath("/dashboard")
-      redirect(target)
-    }
-
+  if (photo && photo.size > 0 && photo.size <= PHOTO_MAX_SIZE) {
     if (PHOTO_ALLOWED_TYPES.includes(photo.type)) {
       const ext = photo.name.split(".").pop() ?? "jpg"
       const uniqueName = `${crypto.randomUUID()}.${ext}`
@@ -374,5 +372,9 @@ export async function createWatchWithPhoto(
   }
 
   revalidatePath("/dashboard")
-  redirect(target)
+  // Return the destination instead of calling redirect(). This action is invoked
+  // imperatively from a client try/catch, and redirect() works by THROWING a
+  // NEXT_REDIRECT error — which that catch grabs and shows as a bogus failure
+  // (seen on iOS PWA, where navigation lags the throw). The client navigates.
+  return { success: true, redirectTo: target }
 }
