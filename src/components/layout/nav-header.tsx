@@ -8,6 +8,7 @@ import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/actions/auth-actions"
 import { cn } from "@/lib/utils"
+import { APP_VERSION } from "@/lib/version"
 
 const navItems = [
   { href: "/collection", label: "Collection", icon: "📋" },
@@ -99,8 +100,13 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
               )}
             </svg>
           </button>
-          <Link href="/dashboard" className="font-display text-xl font-medium tracking-tight">
-            CaliberShelf
+          <Link href="/dashboard" className="flex items-baseline gap-1.5">
+            <span className="font-display text-xl font-medium tracking-tight">
+              CaliberShelf
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              v{APP_VERSION}
+            </span>
           </Link>
         </div>
 
