@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { caliberTypeLabels } from "@/lib/validations/movement"
+import { DEFAULT_HERO_DWELL_SECONDS, readHeroDwellSeconds } from "@/lib/preferences"
 import type { WatchWithCover } from "@/lib/types/watch"
 
 interface HeroStats {
@@ -21,11 +22,8 @@ interface WatchHeroProps {
   stats: HeroStats
 }
 
-/** Each watch is shown full-frame for this many seconds before advancing. */
-const DWELL_SECONDS = 30
-
 /** The brass rim line completes one full lap every this many seconds — a
- *  continuous minute sweep, independent of the watch swap. */
+ *  continuous minute sweep, independent of the (configurable) watch swap. */
 const RING_SECONDS = 60
 
 /** Countdown ring geometry (viewBox 0..100). Dash length 300 ≥ circumference
@@ -96,9 +94,16 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
 
   const [idx, setIdx] = useState(0)
 
-  // Read the live list length from a ref so the swap interval can mount exactly
-  // once (empty deps). This prevents a second interval from ever being stacked
-  // by re-renders / Strict Mode / Fast Refresh, which would swap too fast.
+  // Per-device dwell (seconds each watch stays up). Starts at the default so SSR
+  // and first client render agree; the saved preference is read after mount.
+  const [dwellSeconds, setDwellSeconds] = useState(DEFAULT_HERO_DWELL_SECONDS)
+  useEffect(() => {
+    setDwellSeconds(readHeroDwellSeconds())
+  }, [])
+
+  // Read the live list length from a ref so the swap interval only re-creates on
+  // a genuine dwell change — never stacked by re-renders / Strict Mode / Fast
+  // Refresh, which would swap too fast.
   const orderLenRef = useRef(order.length)
   useEffect(() => {
     orderLenRef.current = order.length
@@ -108,9 +113,9 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
     const id = setInterval(() => {
       const n = orderLenRef.current
       if (n > 1) setIdx((i) => (i + 1) % n)
-    }, DWELL_SECONDS * 1000)
+    }, dwellSeconds * 1000)
     return () => clearInterval(id)
-  }, [])
+  }, [dwellSeconds])
 
   const current = order.length ? order[idx % order.length] : null
 
