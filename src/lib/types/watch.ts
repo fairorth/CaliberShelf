@@ -135,6 +135,8 @@ export interface WatchWithCover extends Watch {
   labels?: Label[]
   /** Total wear-log entries for this watch (populated by getWatches). */
   wear_count?: number
+  /** ISO date "YYYY-MM-DD" of the most recent wear, or null if never worn. */
+  last_worn_date?: string | null
 }
 
 // ── Wear Log ────────────────────────────────────────────────────

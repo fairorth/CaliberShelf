@@ -67,15 +67,19 @@ export async function getWatches(): Promise<WatchWithCover[]> {
   const storagePaths = Array.from(coverMap.values())
   const signedUrlMap = await getSignedUrls(storagePaths)
 
-  // Tally wear-log entries per watch (for the collection's wear-count column).
+  // Tally wear-log entries per watch (count + most-recent date). worn_date is
+  // "YYYY-MM-DD", so lexical comparison finds the latest.
   const wearCountByWatch = new Map<string, number>()
+  const lastWornByWatch = new Map<string, string>()
   const { data: wearRows } = await supabase
     .from("wear_logs")
-    .select("watch_id")
+    .select("watch_id, worn_date")
     .in("watch_id", watchIds)
   if (wearRows) {
-    for (const row of wearRows as Array<{ watch_id: string }>) {
+    for (const row of wearRows as Array<{ watch_id: string; worn_date: string }>) {
       wearCountByWatch.set(row.watch_id, (wearCountByWatch.get(row.watch_id) ?? 0) + 1)
+      const prev = lastWornByWatch.get(row.watch_id)
+      if (!prev || row.worn_date > prev) lastWornByWatch.set(row.watch_id, row.worn_date)
     }
   }
 
@@ -92,6 +96,7 @@ export async function getWatches(): Promise<WatchWithCover[]> {
         category: watch.categories,
         labels: labelsByWatch.get(watch.id) ?? [],
         wear_count: wearCountByWatch.get(watch.id) ?? 0,
+        last_worn_date: lastWornByWatch.get(watch.id) ?? null,
       } as WatchWithCover
     }
   )

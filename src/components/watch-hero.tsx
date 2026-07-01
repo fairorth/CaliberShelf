@@ -59,6 +59,25 @@ function metaLine(watch: WatchWithCover): string {
   return [type, caliber].filter(Boolean).join("  ·  ")
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+/** Format an ISO "YYYY-MM-DD" as "Jun 28, 2026". Deterministic (no Date/locale)
+ *  so SSR and hydration produce identical markup. */
+function formatWornDate(iso: string): string {
+  const [y, m, d] = iso.split("-")
+  return `${MONTHS[Number(m) - 1]} ${Number(d)}, ${y}`
+}
+
+/** "Worn 12 times · Last worn Jun 28, 2026" — or "Not yet worn". */
+function wearLine(watch: WatchWithCover): string {
+  const count = watch.wear_count ?? 0
+  if (count === 0) return "Not yet worn"
+  const times = `Worn ${count} ${count === 1 ? "time" : "times"}`
+  return watch.last_worn_date
+    ? `${times}  ·  Last worn ${formatWornDate(watch.last_worn_date)}`
+    : times
+}
+
 /** One full-frame photo layer, framed by the watch's saved dial focal point + zoom. */
 function PhotoLayer({ watch, fade }: { watch: WatchWithCover; fade?: boolean }) {
   const focalX = watch.dial_focal_x ?? 50
@@ -244,6 +263,7 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
         {metaLine(current) && (
           <div className="mt-3 font-mono text-[12px] text-muted-foreground">{metaLine(current)}</div>
         )}
+        <div className="mt-1.5 font-mono text-[12px] text-muted-foreground">{wearLine(current)}</div>
         <Link
           href={`/watch/${current.id}`}
           className="mt-5 inline-block rounded-[10px] border border-primary px-5 py-2 text-[13px] text-primary transition-colors hover:bg-primary/10"
