@@ -22,14 +22,23 @@ interface WatchHeroProps {
   stats: HeroStats
 }
 
-/** The brass rim line completes one full lap every this many seconds — a
- *  continuous minute sweep, independent of the (configurable) watch swap. */
+/** The brass rim line laps once per minute — phase-locked to the wall clock, so
+ *  its leading tip is a live seconds hand. (Independent of the watch swap.) */
 const RING_SECONDS = 60
 
-/** Countdown ring geometry (viewBox 0..100). Dash length 300 ≥ circumference
- *  (~298.5) so the ring reads as empty at the start of each lap. */
+/** Ring + marker geometry (viewBox 0..100). Dash length 300 ≥ circumference
+ *  (~298.5) so the ring reads as empty at the top of each minute. The hour
+ *  marker rides just inside the rim, the minute marker just outside. */
 const RING_R = 47.5
 const RING_LEN = 300
+const HOUR_R = 42
+const MIN_R = 49
+
+/** Point on a circle of radius r (viewBox 0..100): 0° = 12 o'clock, clockwise. */
+function polar(deg: number, r: number): { x: number; y: number } {
+  const a = (deg * Math.PI) / 180
+  return { x: 50 + r * Math.sin(a), y: 50 - r * Math.cos(a) }
+}
 
 /** Small seeded PRNG (mulberry32) — deterministic so SSR and hydration agree. */
 function mulberry32(seed: number) {
@@ -147,6 +156,23 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
     setPrevious(current)
   }, [current])
 
+  // Real-time clock — drives the hour/minute markers and phase-locks the rim
+  // "seconds" sweep. `now` starts null so SSR and first client render match.
+  const [now, setNow] = useState<Date | null>(null)
+  // Fractional seconds captured once at mount → a negative animation-delay that
+  // phase-aligns the 60s rim sweep to the wall clock (its leading tip = seconds).
+  const [ringDelay, setRingDelay] = useState<number | null>(null)
+  useEffect(() => {
+    const d = new Date()
+    setNow(d)
+    setRingDelay(d.getSeconds() + d.getMilliseconds() / 1000)
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const hourPos = now ? polar((now.getHours() % 12) * 30 + now.getMinutes() * 0.5, HOUR_R) : null
+  const minPos = now ? polar(now.getMinutes() * 6 + now.getSeconds() * 0.1, MIN_R) : null
+
   if (!current) {
     return (
       <div className="flex flex-col items-center">
@@ -228,8 +254,9 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
               }}
             />
 
-            {/* Brass rim line — one continuous lap per minute, independent of the
-                30s watch swap (no idx key, so it never restarts on a swap). */}
+            {/* Brass rim line — a live seconds hand. Laps once per minute; the
+                negative animation-delay (set after mount) phase-locks its leading
+                tip to the wall clock. Rotated -90° so the sweep starts at 12. */}
             <svg
               viewBox="0 0 100 100"
               className="pointer-events-none absolute inset-0 h-full w-full -rotate-90"
@@ -245,9 +272,34 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
                 strokeWidth="0.8"
                 strokeLinecap="round"
                 strokeDasharray={RING_LEN}
-                style={{ animation: `cshero-ring ${RING_SECONDS}s linear infinite` }}
+                // Empty until the clock mounts; the animation then overrides this.
+                strokeDashoffset={RING_LEN}
+                style={
+                  ringDelay != null
+                    ? {
+                        animation: `cshero-ring ${RING_SECONDS}s linear infinite`,
+                        animationDelay: `-${ringDelay}s`,
+                      }
+                    : undefined
+                }
               />
             </svg>
+
+            {/* Hour + minute markers — synced to the current time. Hour rides
+                just inside the seconds rim, minute just outside. */}
+            {hourPos && minPos && (
+              <svg
+                viewBox="0 0 100 100"
+                className="pointer-events-none absolute inset-0 h-full w-full"
+                aria-hidden="true"
+                style={{ filter: "drop-shadow(0 0.4px 0.8px rgba(0,0,0,.7))" }}
+              >
+                {/* Hour — bold brass dot */}
+                <circle cx={hourPos.x} cy={hourPos.y} r="2.8" fill="#f1da9f" stroke="#8f6a2c" strokeWidth="0.5" />
+                {/* Minute — smaller steel dot */}
+                <circle cx={minPos.x} cy={minPos.y} r="1.8" fill="#eef2f6" stroke="rgba(0,0,0,.35)" strokeWidth="0.35" />
+              </svg>
+            )}
           </Link>
         </div>
       </div>
