@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { getWatches } from "@/lib/queries/watches"
 import { getWornThisWeekCount } from "@/lib/queries/wear-logs"
-import { WatchDial } from "@/components/watch-dial"
+import { WatchHero } from "@/components/watch-hero"
 
 export const metadata: Metadata = {
   title: "Gallery | CaliberShelf",
@@ -12,17 +12,17 @@ export default async function GalleryPage() {
     getWatches(),
     getWornThisWeekCount(),
   ])
-  // Only watches with a cover photo can appear on the dial.
-  const dialWatches = watches.filter((w) => w.cover_photo_url)
+  // Only watches with a cover photo can be featured in the hero.
+  const heroWatches = watches.filter((w) => w.cover_photo_url)
 
-  // Headline stats for the line under the dial.
+  // Headline stats for the line under the hero.
   const stats = {
     watches: watches.length,
     brands: new Set(watches.map((w) => w.brand_id)).size,
     wornThisWeek,
   }
 
-  // Per-request seed for the dial's initial random layout. This Server Component
+  // Per-request seed for the hero's initial shuffle. This Server Component
   // renders once per request and is never re-rendered on the client, so a random
   // value here is stable for the lifetime of the tree.
   // eslint-disable-next-line react-hooks/purity
@@ -30,7 +30,7 @@ export default async function GalleryPage() {
 
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col items-center justify-center py-8">
-      <WatchDial watches={dialWatches} seed={seed} stats={stats} />
+      <WatchHero watches={heroWatches} seed={seed} stats={stats} />
     </div>
   )
 }

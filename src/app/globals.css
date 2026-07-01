@@ -246,6 +246,27 @@ select optgroup {
   }
 }
 
+/* Home hero — plain photo cross-fade as the spotlighted watch changes */
+@keyframes cshero-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Home hero — brass rim ring fills over the 15s dwell (a countdown to the next
+   watch). 300 ≥ the r=47.5 circle circumference (~298.5), so it starts empty. */
+@keyframes cshero-ring {
+  from {
+    stroke-dashoffset: 300;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* Smooth second hand — 60s full rotation, CSS-only */
 @keyframes secondHandSweep {
   from {
