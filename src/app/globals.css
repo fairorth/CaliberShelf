@@ -256,8 +256,8 @@ select optgroup {
   }
 }
 
-/* Home hero — brass rim ring fills over the 15s dwell (a countdown to the next
-   watch). 300 ≥ the r=47.5 circle circumference (~298.5), so it starts empty. */
+/* Home hero — brass rim line sweeps one full lap per minute (looped infinitely).
+   300 ≥ the r=47.5 circle circumference (~298.5), so it starts empty. */
 @keyframes cshero-ring {
   from {
     stroke-dashoffset: 300;

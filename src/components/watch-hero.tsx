@@ -22,10 +22,14 @@ interface WatchHeroProps {
 }
 
 /** Each watch is shown full-frame for this many seconds before advancing. */
-const DWELL_SECONDS = 15
+const DWELL_SECONDS = 30
+
+/** The brass rim line completes one full lap every this many seconds — a
+ *  continuous minute sweep, independent of the watch swap. */
+const RING_SECONDS = 60
 
 /** Countdown ring geometry (viewBox 0..100). Dash length 300 ≥ circumference
- *  (~298.5) so the ring reads as empty at the start of each dwell. */
+ *  (~298.5) so the ring reads as empty at the start of each lap. */
 const RING_R = 47.5
 const RING_LEN = 300
 
@@ -189,9 +193,9 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
               }}
             />
 
-            {/* Brass countdown ring — fills over the 15s dwell */}
+            {/* Brass rim line — one continuous lap per minute, independent of the
+                30s watch swap (no idx key, so it never restarts on a swap). */}
             <svg
-              key={`ring-${idx}`}
               viewBox="0 0 100 100"
               className="pointer-events-none absolute inset-0 h-full w-full -rotate-90"
               aria-hidden="true"
@@ -206,7 +210,7 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
                 strokeWidth="0.8"
                 strokeLinecap="round"
                 strokeDasharray={RING_LEN}
-                style={{ animation: `cshero-ring ${DWELL_SECONDS}s linear` }}
+                style={{ animation: `cshero-ring ${RING_SECONDS}s linear infinite` }}
               />
             </svg>
           </Link>
