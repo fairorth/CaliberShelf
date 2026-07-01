@@ -31,8 +31,10 @@ const RING_SECONDS = 60
  *  marker rides just inside the rim, the minute marker just outside. */
 const RING_R = 47.5
 const RING_LEN = 300
-const HOUR_R = 42
-const MIN_R = 49
+/** Hour + minute markers ride the steel bezel (CASE coords, viewBox 0..100), out
+ *  past the dial photo so they never obscure the watch. Same radius; the bezel is
+ *  too narrow for two rings, so they overlap when aligned — like real hands. */
+const BEZEL_R = 47.6
 
 /** Point on a circle of radius r (viewBox 0..100): 0° = 12 o'clock, clockwise. */
 function polar(deg: number, r: number): { x: number; y: number } {
@@ -170,8 +172,8 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
     return () => clearInterval(id)
   }, [])
 
-  const hourPos = now ? polar((now.getHours() % 12) * 30 + now.getMinutes() * 0.5, HOUR_R) : null
-  const minPos = now ? polar(now.getMinutes() * 6 + now.getSeconds() * 0.1, MIN_R) : null
+  const hourPos = now ? polar((now.getHours() % 12) * 30 + now.getMinutes() * 0.5, BEZEL_R) : null
+  const minPos = now ? polar(now.getMinutes() * 6 + now.getSeconds() * 0.1, BEZEL_R) : null
 
   if (!current) {
     return (
@@ -284,23 +286,23 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
                 }
               />
             </svg>
-
-            {/* Hour + minute markers — synced to the current time. Hour rides
-                just inside the seconds rim, minute just outside. */}
-            {hourPos && minPos && (
-              <svg
-                viewBox="0 0 100 100"
-                className="pointer-events-none absolute inset-0 h-full w-full"
-                aria-hidden="true"
-                style={{ filter: "drop-shadow(0 0.4px 0.8px rgba(0,0,0,.7))" }}
-              >
-                {/* Hour — bold brass dot */}
-                <circle cx={hourPos.x} cy={hourPos.y} r="2.8" fill="#f1da9f" stroke="#8f6a2c" strokeWidth="0.5" />
-                {/* Minute — smaller steel dot */}
-                <circle cx={minPos.x} cy={minPos.y} r="1.8" fill="#eef2f6" stroke="rgba(0,0,0,.35)" strokeWidth="0.35" />
-              </svg>
-            )}
           </Link>
+
+          {/* Hour + minute markers — synced to the current time, riding the steel
+              bezel (case-level svg) so they never sit on the watch photo. */}
+          {hourPos && minPos && (
+            <svg
+              viewBox="0 0 100 100"
+              className="pointer-events-none absolute inset-0 h-full w-full"
+              aria-hidden="true"
+              style={{ filter: "drop-shadow(0 0.4px 1px rgba(0,0,0,.6))" }}
+            >
+              {/* Hour — bold brass dot */}
+              <circle cx={hourPos.x} cy={hourPos.y} r="2.4" fill="#c9a25e" stroke="#6d4f22" strokeWidth="0.5" />
+              {/* Minute — smaller blued-steel dot (contrasts on the light bezel) */}
+              <circle cx={minPos.x} cy={minPos.y} r="1.6" fill="#12233d" stroke="rgba(255,255,255,.55)" strokeWidth="0.4" />
+            </svg>
+          )}
         </div>
       </div>
 
