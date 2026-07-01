@@ -308,11 +308,11 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
 
       {/* Caption — "now showing" */}
       <div key={current.id} className="mt-[88px] text-center sm:mt-[112px]" style={{ animation: "csfade .5s ease" }}>
-        <div className="font-display text-[24px] font-semibold leading-[1.1] sm:text-[28px]">
-          {current.nickname || current.model}
-        </div>
-        <div className="mt-0.5 font-display text-[17px] text-muted-foreground sm:text-[19px]">
+        <div className="font-display text-[24px] font-bold leading-[1.15] sm:text-[28px]">
           {current.brand.name}
+        </div>
+        <div className="mt-0.5 font-display text-[24px] font-normal leading-[1.15] sm:text-[28px]">
+          {current.nickname || current.model}
         </div>
         {metaLine(current) && (
           <div className="mt-3 font-mono text-[12px] text-muted-foreground">{metaLine(current)}</div>
