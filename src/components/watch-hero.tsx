@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { caliberTypeLabels } from "@/lib/validations/movement"
@@ -95,11 +95,22 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
   }, [watches, seed])
 
   const [idx, setIdx] = useState(0)
+
+  // Read the live list length from a ref so the swap interval can mount exactly
+  // once (empty deps). This prevents a second interval from ever being stacked
+  // by re-renders / Strict Mode / Fast Refresh, which would swap too fast.
+  const orderLenRef = useRef(order.length)
   useEffect(() => {
-    if (order.length <= 1) return
-    const id = setInterval(() => setIdx((i) => (i + 1) % order.length), DWELL_SECONDS * 1000)
-    return () => clearInterval(id)
+    orderLenRef.current = order.length
   }, [order.length])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const n = orderLenRef.current
+      if (n > 1) setIdx((i) => (i + 1) % n)
+    }, DWELL_SECONDS * 1000)
+    return () => clearInterval(id)
+  }, [])
 
   const current = order.length ? order[idx % order.length] : null
 
