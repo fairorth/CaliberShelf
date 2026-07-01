@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getWatches } from "@/lib/queries/watches"
 import { getWornThisWeekCount } from "@/lib/queries/wear-logs"
 import { WatchDial } from "@/components/watch-dial"
+import { HomeSearch } from "./_components/home-search"
 
 export const metadata: Metadata = {
   title: "Gallery | CaliberShelf",
@@ -29,7 +30,8 @@ export default async function GalleryPage() {
   const seed = Math.random()
 
   return (
-    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col items-center justify-center py-8">
+    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col items-center justify-center gap-8 py-8">
+      <HomeSearch />
       <WatchDial watches={dialWatches} seed={seed} stats={stats} />
     </div>
   )

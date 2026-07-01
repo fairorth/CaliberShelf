@@ -10,6 +10,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select"
 import { CollectionTable } from "@/components/collection-table"
+import { SearchInput } from "@/components/search-input"
 import { GalleryGrid } from "./gallery-grid"
 import {
   CollectionFiltersDialog,
@@ -51,6 +52,17 @@ const SORT_LABELS: Record<SortKey, string> = {
 }
 
 // ── Pure filter/sort helpers ───────────────────────────────────────
+
+/** Free-text match across brand, model, nickname, and reference number.
+ *  Whitespace-separated terms are AND-ed (all must appear). */
+function matchesQuery(w: WatchWithCover, query: string): boolean {
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
+  if (terms.length === 0) return true
+  const haystack = [w.brand.name, w.model, w.nickname ?? "", w.reference_number ?? ""]
+    .join(" ")
+    .toLowerCase()
+  return terms.every((t) => haystack.includes(t))
+}
 
 function applyFilters(watches: WatchWithCover[], f: CollectionFilters): WatchWithCover[] {
   const minCents = f.minPrice.trim() ? Math.round(parseFloat(f.minPrice) * 100) : null
@@ -121,6 +133,12 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
   const [sortKey, setSortKey] = useState<SortKey>("default")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
+  // Search text. Local state drives filtering (instant); we seed it from ?q so
+  // the home dial can hand a query off, and mirror it back to ?q for shareable
+  // URLs. Safe to seed from searchParams here: arriving from home is a fresh
+  // mount, and once mounted this box is the sole writer of ?q.
+  const [query, setQuery] = useState(() => searchParams.get("q") ?? "")
+
   useEffect(() => {
     const savedView = localStorage.getItem(VIEW_KEY)
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -147,6 +165,20 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
       // ignore malformed stored value
     }
   }, [])
+
+  // Mirror the search box to ?q (debounced), preserving ?category. Keeps the URL
+  // shareable/reloadable without spamming history (replace, not push).
+  useEffect(() => {
+    if ((searchParams.get("q") ?? "") === query) return
+    const t = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (query.trim()) params.set("q", query)
+      else params.delete("q")
+      const qs = params.toString()
+      router.replace(qs ? `/collection?${qs}` : "/collection", { scroll: false })
+    }, 300)
+    return () => clearTimeout(t)
+  }, [query, searchParams, router])
 
   function updateView(next: ViewMode) {
     setView(next)
@@ -217,9 +249,13 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
     [watches, selectedId]
   )
   const afterFilters = useMemo(() => applyFilters(afterCategory, filters), [afterCategory, filters])
+  const afterSearch = useMemo(
+    () => (query.trim() ? afterFilters.filter((w) => matchesQuery(w, query)) : afterFilters),
+    [afterFilters, query]
+  )
   const displayed = useMemo(
-    () => sortWatches(afterFilters, sortKey, sortDir),
-    [afterFilters, sortKey, sortDir]
+    () => sortWatches(afterSearch, sortKey, sortDir),
+    [afterSearch, sortKey, sortDir]
   )
 
   function handleCategoryChange(val: string | null) {
@@ -239,6 +275,14 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="font-display text-lg font-medium tracking-tight">Collection</h1>
+
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          placeholder="Search brand, model, nickname, ref…"
+          ariaLabel="Search collection"
+          className="w-full sm:w-64"
+        />
 
         <Select value={selectedId} onValueChange={handleCategoryChange}>
           <SelectTrigger className="h-9 w-[160px]">
@@ -351,7 +395,18 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
         </div>
       </div>
 
-      {view === "table" ? (
+      {displayed.length === 0 ? (
+        <div className="rounded-lg border border-dashed py-16 text-center text-sm text-muted-foreground">
+          {query.trim() ? (
+            <>
+              No watches match{" "}
+              <span className="font-medium text-foreground">“{query.trim()}”</span>.
+            </>
+          ) : (
+            "No watches to show."
+          )}
+        </div>
+      ) : view === "table" ? (
         <CollectionTable watches={displayed} showCost={showCost} />
       ) : (
         <GalleryGrid watches={displayed} itemSize={size} showCost={showCost} />
