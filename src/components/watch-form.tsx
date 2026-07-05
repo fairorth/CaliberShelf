@@ -251,6 +251,21 @@ export function WatchForm({
             </label>
           </div>
 
+          <div className="sm:col-span-2 lg:col-span-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="is_wishlist"
+                defaultChecked={watch?.is_wishlist ?? false}
+                className="h-4 w-4 rounded border-border accent-brass"
+              />
+              <span className="font-medium">Wish list</span>
+              <span className="text-xs text-muted-foreground">
+                — not owned; excluded from collection counts and total value
+              </span>
+            </label>
+          </div>
+
           <div className="space-y-2 sm:col-span-2 lg:col-span-3">
             <FormLabel htmlFor="notes">Notes</FormLabel>
             <Textarea

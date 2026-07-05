@@ -279,6 +279,19 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Wish list */}
+          <label className="mt-[18px] flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="is_wishlist"
+              className="h-4 w-4 rounded border-border accent-brass"
+            />
+            <span className="font-medium">Wish list</span>
+            <span className="text-xs text-muted-foreground">
+              — not owned yet; kept out of collection counts
+            </span>
+          </label>
         </div>
 
         {/* Two CTAs */}

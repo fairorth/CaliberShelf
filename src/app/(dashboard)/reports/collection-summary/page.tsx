@@ -37,10 +37,14 @@ function SummaryRow({
 export default async function CollectionSummaryPage() {
   const watches = await getWatches()
 
-  const totalWatches = watches.length
-  const comingSoonCount = watches.filter((w) => w.is_coming_soon).length
-  const unknownBrandCount = watches.filter((w) => needsBrandEditing(w.brand?.name)).length
-  const pricedWatches = watches.filter((w) => w.purchase_price_cents !== null)
+  // Wish-list watches aren't owned — they stay out of every count and total.
+  const owned = watches.filter((w) => !w.is_wishlist)
+  const wishlistCount = watches.length - owned.length
+
+  const totalWatches = owned.length
+  const comingSoonCount = owned.filter((w) => w.is_coming_soon).length
+  const unknownBrandCount = owned.filter((w) => needsBrandEditing(w.brand?.name)).length
+  const pricedWatches = owned.filter((w) => w.purchase_price_cents !== null)
   const totalValueCents = pricedWatches.reduce(
     (sum, w) => sum + (w.purchase_price_cents ?? 0),
     0
@@ -68,6 +72,11 @@ export default async function CollectionSummaryPage() {
             hint="Ordered, awaiting arrival"
           />
           <SummaryRow
+            label="Wish List"
+            value={wishlistCount.toLocaleString()}
+            hint="Not owned — excluded from all counts and totals"
+          />
+          <SummaryRow
             label="Unknown / Missing Brand"
             value={unknownBrandCount.toLocaleString()}
             hint="Watches still needing initial details"
@@ -75,7 +84,7 @@ export default async function CollectionSummaryPage() {
           <SummaryRow
             label="Total Value"
             value={formatCurrency(totalValueCents, "USD")}
-            hint={`From ${pricedWatches.length} of ${totalWatches} watches with a recorded price (includes coming-soon)`}
+            hint={`From ${pricedWatches.length} of ${totalWatches} owned watches with a recorded price (includes coming-soon, excludes wish list)`}
           />
         </CardContent>
       </Card>

@@ -12,13 +12,15 @@ export default async function GalleryPage() {
     getWatches(),
     getWornThisWeekCount(),
   ])
+  // Wish-list watches aren't owned — keep them off the hero and out of the stats.
+  const owned = watches.filter((w) => !w.is_wishlist)
   // Only watches with a cover photo can be featured in the hero.
-  const heroWatches = watches.filter((w) => w.cover_photo_url)
+  const heroWatches = owned.filter((w) => w.cover_photo_url)
 
   // Headline stats for the line under the hero.
   const stats = {
-    watches: watches.length,
-    brands: new Set(watches.map((w) => w.brand_id)).size,
+    watches: owned.length,
+    brands: new Set(owned.map((w) => w.brand_id)).size,
     wornThisWeek,
   }
 

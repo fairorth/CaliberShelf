@@ -18,7 +18,10 @@ import { caliberTypeLabels } from "@/lib/validations/movement"
 
 // ── Filter shape ───────────────────────────────────────────────────
 
+export type Ownership = "owned" | "wishlist" | "both"
+
 export interface CollectionFilters {
+  ownership: Ownership // "owned" = default (wish-list watches hidden)
   brandId: string
   movementId: string
   caliberType: string
@@ -29,6 +32,7 @@ export interface CollectionFilters {
 }
 
 export const EMPTY_FILTERS: CollectionFilters = {
+  ownership: "owned",
   brandId: "",
   movementId: "",
   caliberType: "",
@@ -40,6 +44,7 @@ export const EMPTY_FILTERS: CollectionFilters = {
 
 export function activeFilterCount(f: CollectionFilters): number {
   let n = 0
+  if (f.ownership !== "owned") n++
   if (f.brandId) n++
   if (f.movementId) n++
   if (f.caliberType) n++
@@ -110,6 +115,21 @@ export function CollectionFiltersDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Ownership */}
+          <div className="space-y-1.5">
+            <FormLabel htmlFor="filter-ownership">Ownership</FormLabel>
+            <select
+              id="filter-ownership"
+              className={SELECT_CLASS}
+              value={filters.ownership}
+              onChange={(e) => set("ownership", e.target.value as Ownership)}
+            >
+              <option value="owned">Owned</option>
+              <option value="wishlist">Wish List</option>
+              <option value="both">Both</option>
+            </select>
+          </div>
+
           {/* Brand */}
           <div className="space-y-1.5">
             <FormLabel htmlFor="filter-brand">Brand</FormLabel>

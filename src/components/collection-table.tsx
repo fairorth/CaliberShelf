@@ -14,6 +14,7 @@ import {
 import { caliberTypeLabels } from "@/lib/validations/movement"
 import { labelColorMap } from "@/lib/validations/label"
 import { ComingSoonBadge } from "@/components/coming-soon-badge"
+import { WishlistBadge } from "@/components/wishlist-badge"
 import { cn, formatCurrency } from "@/lib/utils"
 import type { WatchWithCover, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
@@ -287,6 +288,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                       {watch.model}
                     </Link>
                     {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
+                    {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {movementTypeLabel(watch)}
@@ -356,6 +358,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                 <p className="text-sm font-semibold leading-tight">
                   {watch.brand.name}
                   {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
+                  {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
                 {showCost && (

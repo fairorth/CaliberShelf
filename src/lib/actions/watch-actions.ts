@@ -74,6 +74,7 @@ export async function createWatch(
       purchase_currency: data.purchase_currency,
       notes: data.notes || null,
       is_coming_soon: data.is_coming_soon,
+      is_wishlist: data.is_wishlist,
     })
     .select("id")
     .single()
@@ -143,6 +144,7 @@ export async function updateWatch(
       purchase_currency: data.purchase_currency,
       notes: data.notes || null,
       is_coming_soon: data.is_coming_soon,
+      is_wishlist: data.is_wishlist,
     })
     .eq("id", watchId)
     .eq("user_id", user.id) // extra safety on top of RLS
@@ -331,6 +333,7 @@ export async function createWatchWithPhoto(
       brand_id: data.brand_id,
       model: data.model,
       category_id: data.category_id,
+      is_wishlist: data.is_wishlist,
     })
     .select("id")
     .single()

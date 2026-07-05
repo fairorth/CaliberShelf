@@ -101,6 +101,7 @@ export interface Watch {
   notes: string | null
   is_public: boolean
   is_coming_soon: boolean
+  is_wishlist: boolean
   dial_focal_x: number
   dial_focal_y: number
   dial_zoom: number

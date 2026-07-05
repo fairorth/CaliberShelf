@@ -17,6 +17,7 @@ import {
 import { deleteWatch } from "@/lib/actions/watch-actions"
 import { quickWear } from "@/lib/actions/wear-log-actions"
 import { ComingSoonBadge } from "@/components/coming-soon-badge"
+import { WishlistBadge } from "@/components/wishlist-badge"
 import { labelColorMap } from "@/lib/validations/label"
 import { toast } from "sonner"
 import type { Watch, Brand, Label } from "@/lib/types/watch"
@@ -64,6 +65,7 @@ export function WatchDetailHeader({ watch, labels = [], wearInfo }: WatchDetailH
           <h1 className="font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-[38px]">
             {watch.brand.name}
             {watch.is_coming_soon && <ComingSoonBadge className="ml-3 align-middle" />}
+            {watch.is_wishlist && <WishlistBadge className="ml-3 align-middle" />}
           </h1>
           <p className="mt-1 font-display text-lg text-muted-foreground sm:text-[21px]">
             {watch.nickname || watch.model}

@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { caliberTypeLabels } from "@/lib/validations/movement"
 import { ComingSoonBadge } from "@/components/coming-soon-badge"
+import { WishlistBadge } from "@/components/wishlist-badge"
 import { formatCurrency } from "@/lib/utils"
 import type { WatchWithCover } from "@/lib/types/watch"
 
@@ -70,6 +71,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
             )}
             <div className="ml-auto flex items-center gap-1.5">
               {watch.is_coming_soon && <ComingSoonBadge />}
+              {watch.is_wishlist && <WishlistBadge />}
               {wearCount > 0 && (
                 <span
                   title={`Worn ${wearCount} ${wearCount === 1 ? "time" : "times"}`}

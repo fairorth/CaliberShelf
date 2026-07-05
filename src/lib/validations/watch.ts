@@ -52,6 +52,10 @@ export const watchFormSchema = z.object({
     .string()
     .optional()
     .transform((v) => v === "on"),
+  is_wishlist: z
+    .string()
+    .optional()
+    .transform((v) => v === "on"),
 
   // Optional enum fields (empty string = null in the database)
   case_material: z.union([caseMaterialSchema, z.literal("")]).optional().default(""),
@@ -117,6 +121,10 @@ export const quickAddSchema = z.object({
   brand_id: z.string().min(1, "Brand is required"),
   model: z.string().min(1, "Model is required"),
   category_id: z.string().min(1, "Category is required"),
+  is_wishlist: z
+    .string()
+    .optional()
+    .transform((v) => v === "on"),
 })
 
 // Display labels for enum values
