@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useTransition } from "react"
+import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -87,15 +87,35 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  async function attachFile(f: File | undefined | null) {
+  const attachFile = useCallback(async (f: File | undefined | null) => {
     if (!f) return
     setProcessing(true)
     const prepared = await downscaleImage(f)
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
     setFile(prepared)
-    setPreviewUrl(URL.createObjectURL(prepared))
+    setPreviewUrl((old) => {
+      if (old) URL.revokeObjectURL(old)
+      return URL.createObjectURL(prepared)
+    })
     setProcessing(false)
-  }
+  }, [])
+
+  // Let a copied image (e.g. from a web page, for wish-list watches) be pasted
+  // anywhere on the page. Only image pastes are intercepted — text pastes into
+  // the Brand/Model inputs behave normally.
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      const item = Array.from(e.clipboardData?.items ?? []).find((i) =>
+        i.type.startsWith("image/")
+      )
+      const pasted = item?.getAsFile()
+      if (pasted) {
+        e.preventDefault()
+        attachFile(pasted)
+      }
+    }
+    window.addEventListener("paste", onPaste)
+    return () => window.removeEventListener("paste", onPaste)
+  }, [attachFile])
 
   function removeFile() {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
@@ -216,7 +236,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
                   "Optimizing photo…"
                 ) : (
                   <>
-                    <span className="font-medium text-brass">Browse</span> or drag a photo here
+                    <span className="font-medium text-brass">Browse</span>, drag, or paste a photo here
                   </>
                 )}
               </span>

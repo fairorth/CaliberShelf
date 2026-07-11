@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useTransition, useSyncExternalStore } from "react"
+import { useCallback, useEffect, useRef, useState, useTransition, useSyncExternalStore } from "react"
 import { Button } from "@/components/ui/button"
 import { uploadWatchPhoto } from "@/lib/actions/photo-actions"
 import { toast } from "sonner"
@@ -25,9 +25,8 @@ export function PhotoUploader({ watchId }: PhotoUploaderProps) {
   const [preview, setPreview] = useState<string | null>(null)
   const isMobile = useSyncExternalStore(noopSubscribe, getTouchSnapshot, getTouchServerSnapshot)
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) {
+  const uploadFile = useCallback(
+    (file: File) => {
       // Show preview
       const url = URL.createObjectURL(file)
       setPreview(url)
@@ -52,8 +51,33 @@ export function PhotoUploader({ watchId }: PhotoUploaderProps) {
         if (fileInputRef.current) fileInputRef.current.value = ""
         if (cameraInputRef.current) cameraInputRef.current.value = ""
       })
-    }
+    },
+    [watchId]
+  )
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) uploadFile(file)
   }
+
+  // Paste-to-upload: a copied image (e.g. from a web page, for wish-list
+  // watches) pasted anywhere on the page uploads directly. Text pastes into
+  // form fields are untouched.
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      if (isPending) return
+      const item = Array.from(e.clipboardData?.items ?? []).find((i) =>
+        i.type.startsWith("image/")
+      )
+      const pasted = item?.getAsFile()
+      if (pasted) {
+        e.preventDefault()
+        uploadFile(pasted)
+      }
+    }
+    window.addEventListener("paste", onPaste)
+    return () => window.removeEventListener("paste", onPaste)
+  }, [isPending, uploadFile])
 
   return (
     <div className="space-y-2">
@@ -96,14 +120,19 @@ export function PhotoUploader({ watchId }: PhotoUploaderProps) {
           </Button>
         </div>
       ) : (
-        <Button
-          variant="outline"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isPending}
-          className="w-full"
-        >
-          {isPending ? "Uploading..." : "Upload Photo"}
-        </Button>
+        <div className="space-y-1.5">
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isPending}
+            className="w-full"
+          >
+            {isPending ? "Uploading..." : "Upload Photo"}
+          </Button>
+          <p className="text-center font-mono text-[11px] text-muted-foreground">
+            or paste a copied image (Ctrl+V)
+          </p>
+        </div>
       )}
 
       {preview && (
