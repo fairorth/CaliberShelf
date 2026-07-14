@@ -121,6 +121,13 @@ export const quickAddSchema = z.object({
   brand_id: z.string().min(1, "Brand is required"),
   model: z.string().min(1, "Model is required"),
   category_id: z.string().min(1, "Category is required"),
+  // For wish-list entries this is the estimated future purchase price.
+  purchase_price: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val === "" ? null : parseFloat(val)))
+    .pipe(z.number().min(0).nullable()),
   is_wishlist: z
     .string()
     .optional()

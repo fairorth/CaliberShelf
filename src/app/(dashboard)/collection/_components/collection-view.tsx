@@ -18,7 +18,7 @@ import {
   type CollectionFilters,
   type Ownership,
 } from "./collection-filters"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import { SHOW_COST_KEY } from "@/lib/preferences"
 import type { Category, WatchWithCover } from "@/lib/types/watch"
 
@@ -274,6 +274,13 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
     [afterSearch, sortKey, sortDir]
   )
 
+  // Total value of the watches currently shown (filters + search applied).
+  // Only rendered when the per-device "show cost" preference is on.
+  const displayedTotalCents = useMemo(
+    () => displayed.reduce((sum, w) => sum + (w.purchase_price_cents ?? 0), 0),
+    [displayed]
+  )
+
   function handleCategoryChange(val: string | null) {
     if (!val) return
     const url = val === ALL ? "/collection" : `/collection?category=${val}`
@@ -352,6 +359,14 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
 
         <span className="text-sm text-muted-foreground">
           {displayed.length} of {ownershipTotal}
+          {showCost && displayedTotalCents > 0 && (
+            <>
+              {" · "}
+              <span className="font-mono text-brass">
+                {formatCurrency(displayedTotalCents, "USD", true)}
+              </span>
+            </>
+          )}
         </span>
 
         {/* Push view controls to the right on wider screens */}

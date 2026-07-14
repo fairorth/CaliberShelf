@@ -300,6 +300,32 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
             </Select>
           </div>
 
+          {/* Purchase price — for wish-list entries this is the estimated cost */}
+          <div className="mt-[18px] space-y-2">
+            <Label htmlFor="purchase_price">
+              Purchase price{" "}
+              <span className="font-normal text-muted-foreground/70">— optional</span>
+            </Label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-brass">
+                $
+              </span>
+              <Input
+                id="purchase_price"
+                name="purchase_price"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 1250"
+                className="h-11 pl-7"
+              />
+            </div>
+            <p className="text-[12px] leading-relaxed text-muted-foreground">
+              For wish-list watches, use the estimated cost to buy it.
+            </p>
+          </div>
+
           {/* Wish list */}
           <label className="mt-[18px] flex items-center gap-2 text-sm">
             <input

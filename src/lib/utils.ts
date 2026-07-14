@@ -8,11 +8,17 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Format cents (BIGINT) to a display currency string.
  * Example: formatCurrency(15000, "USD") => "$150.00"
+ * Pass wholeDollars for summary stats: formatCurrency(1522550, "USD", true) => "$15,226"
  */
-export function formatCurrency(cents: number, currency: string = "USD"): string {
+export function formatCurrency(
+  cents: number,
+  currency: string = "USD",
+  wholeDollars = false
+): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
+    ...(wholeDollars ? { maximumFractionDigits: 0 } : {}),
   }).format(cents / 100)
 }
 

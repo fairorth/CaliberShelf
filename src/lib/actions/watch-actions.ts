@@ -333,6 +333,9 @@ export async function createWatchWithPhoto(
       brand_id: data.brand_id,
       model: data.model,
       category_id: data.category_id,
+      purchase_price_cents: data.purchase_price !== null
+        ? dollarsToCents(data.purchase_price)
+        : null,
       is_wishlist: data.is_wishlist,
     })
     .select("id")
