@@ -1,0 +1,48 @@
+# Monthly market-valuation run (scripts/price-check.mjs).
+#
+# Schedule: 1st of each month, 14:00 UTC. Also runnable on demand from the
+# Actions tab ("Run workflow"), with an optional cap on watches per run.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   SUPABASE_SERVICE_ROLE_KEY   Supabase dashboard -> Settings -> API
+#   ANTHROPIC_API_KEY           console.anthropic.com
+# The Supabase URL is public (it ships in the client bundle), so it is set
+# inline below rather than stored as a secret.
+
+name: Monthly price check
+
+on:
+  schedule:
+    - cron: "0 14 1 * *"
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Max watches to value (blank = all flagged)"
+        required: false
+        default: ""
+
+jobs:
+  price-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run valuation agent
+        run: |
+          if [ -n "${{ inputs.limit }}" ]; then
+            npm run price-check -- --limit "${{ inputs.limit }}"
+          else
+            npm run price-check
+          fi
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://ztmmhuaivirxfokmckvx.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
