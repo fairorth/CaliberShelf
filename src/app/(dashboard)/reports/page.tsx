@@ -32,12 +32,6 @@ const REPORTS: ReportLink[] = [
     description: "How often and how recently you wear each watch.",
     available: false,
   },
-  {
-    slug: "investment",
-    title: "Investment",
-    description: "Cost basis, current valuation, and gains over time.",
-    available: false,
-  },
 ]
 
 export default function ReportsPage() {

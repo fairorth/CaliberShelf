@@ -20,6 +20,8 @@ import { caliberTypeLabels } from "@/lib/validations/movement"
 
 export type Ownership = "owned" | "wishlist" | "both"
 
+export type PriceTracking = "" | "tracked" | "untracked" // "" = all watches
+
 export interface CollectionFilters {
   ownership: Ownership // "owned" = default (wish-list watches hidden)
   brandId: string
@@ -27,6 +29,7 @@ export interface CollectionFilters {
   caliberType: string
   caseMaterial: string
   comingSoon: string // "" = any, "yes", "no"
+  priceTracking: PriceTracking
   minPrice: string // dollars, as typed
   maxPrice: string
 }
@@ -38,6 +41,7 @@ export const EMPTY_FILTERS: CollectionFilters = {
   caliberType: "",
   caseMaterial: "",
   comingSoon: "",
+  priceTracking: "",
   minPrice: "",
   maxPrice: "",
 }
@@ -50,6 +54,7 @@ export function activeFilterCount(f: CollectionFilters): number {
   if (f.caliberType) n++
   if (f.caseMaterial) n++
   if (f.comingSoon) n++
+  if (f.priceTracking) n++
   if (f.minPrice || f.maxPrice) n++
   return n
 }
@@ -214,6 +219,21 @@ export function CollectionFiltersDialog({
               <option value="">Any</option>
               <option value="yes">Coming soon (awaiting arrival)</option>
               <option value="no">In collection (arrived)</option>
+            </select>
+          </div>
+
+          {/* Price tracking */}
+          <div className="space-y-1.5">
+            <FormLabel htmlFor="filter-price-tracking">Price Tracking</FormLabel>
+            <select
+              id="filter-price-tracking"
+              className={SELECT_CLASS}
+              value={filters.priceTracking}
+              onChange={(e) => set("priceTracking", e.target.value as PriceTracking)}
+            >
+              <option value="">All Watches</option>
+              <option value="tracked">Tracked Only</option>
+              <option value="untracked">Not Tracked</option>
             </select>
           </div>
 

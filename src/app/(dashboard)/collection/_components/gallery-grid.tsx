@@ -72,6 +72,14 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
             <div className="ml-auto flex items-center gap-1.5">
               {watch.is_coming_soon && <ComingSoonBadge />}
               {watch.is_wishlist && <WishlistBadge />}
+              {watch.price_check_enabled && (
+                <span
+                  title="Price checking enabled"
+                  className="font-mono text-[11px] font-semibold text-emerald-600 dark:text-emerald-400"
+                >
+                  $$
+                </span>
+              )}
               {wearCount > 0 && (
                 <span
                   title={`Worn ${wearCount} ${wearCount === 1 ? "time" : "times"}`}

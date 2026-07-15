@@ -408,6 +408,14 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     </Link>
                     {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
                     {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
+                    {watch.price_check_enabled && (
+                      <span
+                        title="Price checking enabled"
+                        className="ml-2 align-middle font-mono text-[13px] font-semibold text-emerald-600 dark:text-emerald-400"
+                      >
+                        $$
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {watch.nickname ? (
@@ -479,6 +487,14 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                   {watch.brand.name}
                   {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
                   {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
+                  {watch.price_check_enabled && (
+                    <span
+                      title="Price checking enabled"
+                      className="ml-2 align-middle font-mono text-[13px] font-semibold text-emerald-600 dark:text-emerald-400"
+                    >
+                      $$
+                    </span>
+                  )}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
                 {showCost && (

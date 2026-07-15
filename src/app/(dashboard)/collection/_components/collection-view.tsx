@@ -25,6 +25,8 @@ import type { Category, WatchWithCover } from "@/lib/types/watch"
 interface CollectionViewProps {
   watches: WatchWithCover[]
   categories: Category[]
+  /** Latest valuation mid (cents) per watch_id, from watch_valuations. */
+  valuationMids: Record<string, number>
 }
 
 const ALL = "all"
@@ -85,6 +87,8 @@ function applyFilters(watches: WatchWithCover[], f: CollectionFilters): WatchWit
     if (f.caseMaterial && w.case_material !== f.caseMaterial) return false
     if (f.comingSoon === "yes" && !w.is_coming_soon) return false
     if (f.comingSoon === "no" && w.is_coming_soon) return false
+    if (f.priceTracking === "tracked" && !w.price_check_enabled) return false
+    if (f.priceTracking === "untracked" && w.price_check_enabled) return false
     if (priceActive) {
       const p = w.purchase_price_cents
       if (p === null) return false
@@ -126,7 +130,7 @@ function sortWatches(watches: WatchWithCover[], key: SortKey, dir: SortDir): Wat
   })
 }
 
-export function CollectionView({ watches, categories }: CollectionViewProps) {
+export function CollectionView({ watches, categories, valuationMids }: CollectionViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
@@ -281,6 +285,20 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
     [displayed]
   )
 
+  // In "Tracked Only" mode, also total the latest market values of the
+  // displayed watches so the header can show current value and gain/loss.
+  const displayedValueCents = useMemo(
+    () =>
+      filters.priceTracking === "tracked"
+        ? displayed.reduce((sum, w) => sum + (valuationMids[w.id] ?? 0), 0)
+        : 0,
+    [displayed, filters.priceTracking, valuationMids]
+  )
+  const gainPct =
+    displayedValueCents > 0 && displayedTotalCents > 0
+      ? ((displayedValueCents - displayedTotalCents) / displayedTotalCents) * 100
+      : null
+
   function handleCategoryChange(val: string | null) {
     if (!val) return
     const url = val === ALL ? "/collection" : `/collection?category=${val}`
@@ -365,6 +383,27 @@ export function CollectionView({ watches, categories }: CollectionViewProps) {
               <span className="font-mono text-brass">
                 {formatCurrency(displayedTotalCents, "USD", true)}
               </span>
+            </>
+          )}
+          {showCost && filters.priceTracking === "tracked" && displayedValueCents > 0 && (
+            <>
+              {" · value "}
+              <span className="font-mono text-emerald-600 dark:text-emerald-400">
+                {formatCurrency(displayedValueCents, "USD", true)}
+              </span>
+              {gainPct !== null && (
+                <span
+                  className={cn(
+                    "ml-1.5 font-mono",
+                    gainPct >= 0
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-rose-600 dark:text-rose-400"
+                  )}
+                >
+                  {gainPct >= 0 ? "+" : ""}
+                  {gainPct.toFixed(1)}%
+                </span>
+              )}
             </>
           )}
         </span>

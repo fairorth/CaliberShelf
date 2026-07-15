@@ -60,6 +60,31 @@ export async function getAllValuations(): Promise<ValuationWithWatch[]> {
   return (data ?? []) as unknown as ValuationWithWatch[]
 }
 
+/**
+ * Latest valuation mid (cents) per watch, as a plain object keyed by watch_id
+ * (serializable to Client Components). Rows arrive newest-first, so the first
+ * row seen per watch wins.
+ */
+export async function getLatestValuationMids(): Promise<Record<string, number>> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("watch_valuations")
+    .select("watch_id, value_mid_cents, valued_at")
+    .order("valued_at", { ascending: false })
+
+  if (error) {
+    console.error("Failed to fetch valuation mids:", error.message)
+    return {}
+  }
+
+  const mids: Record<string, number> = {}
+  for (const row of data ?? []) {
+    if (!(row.watch_id in mids)) mids[row.watch_id] = row.value_mid_cents
+  }
+  return mids
+}
+
 /** Local calendar date ("YYYY-MM-DD") a valuation ran on. */
 export function valuationRunDate(valuedAt: string): string {
   const d = new Date(valuedAt)
