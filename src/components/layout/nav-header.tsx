@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Plus, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/actions/auth-actions"
 import { cn } from "@/lib/utils"
@@ -114,11 +114,21 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
           </Link>
         </div>
 
-        {/* User info + theme toggle + sign out */}
+        {/* Add watch + user info + theme toggle + sign out */}
         <div className="flex items-center gap-3">
           <span className="hidden text-sm text-muted-foreground sm:inline">
             {userEmail}
           </span>
+          {/* Always-visible shortcut to quick-add — no hamburger required. */}
+          <Button
+            size="sm"
+            render={<Link href={addWatchHref} />}
+            title="Add a watch"
+            className="gap-1.5"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Add Watch</span>
+          </Button>
           <button
             type="button"
             aria-label="Toggle light/dark theme"
