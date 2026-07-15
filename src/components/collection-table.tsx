@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useMemo } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -44,7 +44,7 @@ function movementTypeLabel(watch: WatchWithCover): string {
 
 // ── Sorting ────────────────────────────────────────────────────────
 
-type SortKey = "category" | "brand" | "model" | "movementType" | "caliber" | "labels" | "wearCount" | "price"
+type SortKey = "category" | "brand" | "model" | "nickname" | "reference" | "movementType" | "caliber" | "wearCount" | "price"
 type SortDir = "asc" | "desc"
 
 function getSortValue(watch: WatchWithCover, key: SortKey): string {
@@ -55,6 +55,10 @@ function getSortValue(watch: WatchWithCover, key: SortKey): string {
       return watch.brand.name.toLowerCase()
     case "model":
       return watch.model.toLowerCase()
+    case "nickname":
+      return watch.nickname ? watch.nickname.toLowerCase() : "zzz" // push empty to bottom
+    case "reference":
+      return watch.reference_number ? watch.reference_number.toLowerCase() : "zzz"
     case "movementType":
       return watch.movement
         ? (watch.movement.caliber_type ? (caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type) : "—").toLowerCase()
@@ -63,39 +67,85 @@ function getSortValue(watch: WatchWithCover, key: SortKey): string {
       return watch.movement
         ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim().toLowerCase()
         : "zzz"
-    case "labels":
-      return watch.labels?.map((l) => l.name).sort().join(",").toLowerCase() ?? ""
     case "wearCount":
     case "price":
       return "" // these sort numerically in the comparator below
   }
 }
 
+// ── Column widths (resizable, persisted) ───────────────────────────
+
+type ColumnId =
+  | "photo"
+  | "category"
+  | "brand"
+  | "model"
+  | "nickname"
+  | "reference"
+  | "movementType"
+  | "caliber"
+  | "worn"
+  | "price"
+
+const COLUMN_WIDTHS_KEY = "collection-col-widths"
+const MIN_COL_WIDTH = 56
+
+const DEFAULT_WIDTHS: Record<ColumnId, number> = {
+  photo: 64,
+  category: 112,
+  brand: 144,
+  model: 208,
+  nickname: 136,
+  reference: 144,
+  movementType: 152,
+  caliber: 136,
+  worn: 64,
+  price: 104,
+}
+
+/** Drag target on a header's right edge. Stops propagation so a resize
+ *  never triggers the header's sort button. */
+function ResizeHandle({ onPointerDown }: { onPointerDown: (e: React.PointerEvent) => void }) {
+  return (
+    <span
+      role="separator"
+      aria-orientation="vertical"
+      onPointerDown={onPointerDown}
+      onClick={(e) => e.stopPropagation()}
+      className="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-[3px] after:w-px after:bg-border/70 hover:after:bg-brass/70 active:after:bg-brass"
+    />
+  )
+}
+
 function SortableHeader({
   label,
   sortKey,
+  colId,
   currentKey,
   currentDir,
   onSort,
+  onResizeStart,
   className,
   alignRight,
 }: {
   label: string
   sortKey: SortKey
+  colId: ColumnId
   currentKey: SortKey | null
   currentDir: SortDir
   onSort: (key: SortKey) => void
+  onResizeStart: (e: React.PointerEvent, col: ColumnId) => void
   className?: string
   alignRight?: boolean
 }) {
   const isActive = currentKey === sortKey
   return (
-    <TableHead className={className}>
+    <TableHead className={cn("relative", className)}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          "flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80 transition-colors hover:text-foreground",
+          "flex items-center gap-1 truncate text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80 transition-colors hover:text-foreground",
           isActive && "text-foreground",
           alignRight ? "w-full justify-end" : "text-left"
         )}
@@ -105,6 +155,7 @@ function SortableHeader({
           {isActive ? (currentDir === "asc" ? "▲" : "▼") : "⇅"}
         </span>
       </button>
+      <ResizeHandle onPointerDown={(e) => onResizeStart(e, colId)} />
     </TableHead>
   )
 }
@@ -178,6 +229,69 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
+  // Column widths — user-resizable via header drag handles, persisted per device.
+  const [colWidths, setColWidths] = useState<Record<ColumnId, number>>(DEFAULT_WIDTHS)
+  const widthsRef = useRef(colWidths)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(COLUMN_WIDTHS_KEY)
+      if (!saved) return
+      const parsed = JSON.parse(saved) as Partial<Record<ColumnId, number>>
+      const next = { ...DEFAULT_WIDTHS }
+      for (const id of Object.keys(DEFAULT_WIDTHS) as ColumnId[]) {
+        const w = parsed[id]
+        if (typeof w === "number" && Number.isFinite(w)) {
+          next[id] = Math.max(MIN_COL_WIDTH, Math.round(w))
+        }
+      }
+      widthsRef.current = next
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setColWidths(next)
+    } catch {
+      // ignore malformed stored value
+    }
+  }, [])
+
+  function handleResizeStart(e: React.PointerEvent, col: ColumnId) {
+    e.preventDefault()
+    e.stopPropagation()
+    // Start from the rendered width so the first drag pixel tracks the cursor
+    // even when the browser distributed leftover table width to this column.
+    const th = (e.target as HTMLElement).closest("th")
+    const startWidth = th?.getBoundingClientRect().width ?? colWidths[col]
+    const startX = e.clientX
+
+    function onMove(ev: PointerEvent) {
+      const w = Math.max(MIN_COL_WIDTH, Math.round(startWidth + ev.clientX - startX))
+      setColWidths((prev) => {
+        const next = { ...prev, [col]: w }
+        widthsRef.current = next
+        return next
+      })
+    }
+    function onUp() {
+      window.removeEventListener("pointermove", onMove)
+      window.removeEventListener("pointerup", onUp)
+      localStorage.setItem(COLUMN_WIDTHS_KEY, JSON.stringify(widthsRef.current))
+    }
+    window.addEventListener("pointermove", onMove)
+    window.addEventListener("pointerup", onUp)
+  }
+
+  const visibleColumns: ColumnId[] = [
+    "photo",
+    "category",
+    "brand",
+    "model",
+    "nickname",
+    "reference",
+    "movementType",
+    "caliber",
+    "worn",
+    ...(showCost ? (["price"] as ColumnId[]) : []),
+  ]
+
   // Sort watches
   const sorted = useMemo(() => {
     if (!sortKey) return watches
@@ -229,19 +343,28 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
       {/* Desktop table */}
       <div className="hidden sm:block">
         <div className="rounded-lg border">
-          <Table>
+          <Table className="table-fixed">
+            <colgroup>
+              {visibleColumns.map((id) => (
+                <col key={id} style={{ width: colWidths[id] }} />
+              ))}
+            </colgroup>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[72px] text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80">Photo</TableHead>
-                <SortableHeader label="Category" sortKey="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-                <SortableHeader label="Brand" sortKey="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-                <SortableHeader label="Model" sortKey="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-                <SortableHeader label="Movement Type" sortKey="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-                <SortableHeader label="Caliber" sortKey="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-                <SortableHeader label="Labels" sortKey="labels" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-                <SortableHeader label="Worn" sortKey="wearCount" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} className="text-right" alignRight />
+                <TableHead className="relative text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80">
+                  Photo
+                  <ResizeHandle onPointerDown={(e) => handleResizeStart(e, "photo")} />
+                </TableHead>
+                <SortableHeader label="Category" sortKey="category" colId="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
+                <SortableHeader label="Brand" sortKey="brand" colId="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
+                <SortableHeader label="Model" sortKey="model" colId="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
+                <SortableHeader label="Nickname" sortKey="nickname" colId="nickname" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
+                <SortableHeader label="Ref #" sortKey="reference" colId="reference" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
+                <SortableHeader label="Movement Type" sortKey="movementType" colId="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
+                <SortableHeader label="Caliber" sortKey="caliber" colId="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
+                <SortableHeader label="Worn" sortKey="wearCount" colId="worn" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} className="text-right" alignRight />
                 {showCost && (
-                  <SortableHeader label="Price" sortKey="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} className="text-right" alignRight />
+                  <SortableHeader label="Price" sortKey="price" colId="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} className="text-right" alignRight />
                 )}
               </TableRow>
             </TableHeader>
@@ -291,23 +414,24 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
+                    {watch.nickname ? (
+                      <Link href={`/watch/${watch.id}/edit`} className="hover:underline">
+                        {watch.nickname}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
+                  <TableCell className="font-mono text-[12px] text-muted-foreground">
+                    {watch.reference_number || "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {movementTypeLabel(watch)}
                   </TableCell>
                   <TableCell className="font-mono text-[12px] text-muted-foreground">
                     {watch.movement
                       ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim()
                       : "—"}
-                  </TableCell>
-                  <TableCell>
-                    {watch.labels && watch.labels.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {watch.labels.map((label) => (
-                          <LabelBadge key={label.id} label={label} />
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
                   </TableCell>
                   <TableCell className="text-right font-mono text-[13px] tabular-nums text-muted-foreground">
                     {watch.wear_count ?? 0}
