@@ -4,9 +4,13 @@ import { getBrands } from "@/lib/queries/brands"
 import { getMovements } from "@/lib/queries/movements"
 import { getCategories } from "@/lib/queries/categories"
 import { getLabels, getLabelsForWatch } from "@/lib/queries/labels"
+import { getWearCountForWatch } from "@/lib/queries/wear-logs"
+import { getTimegrapherRuns } from "@/lib/queries/timegrapher"
 import { WatchForm } from "@/components/watch-form"
 import { PhotoGallery } from "../_components/photo-gallery"
 import { PhotoUploader } from "../_components/photo-uploader"
+import { TimegrapherPanel } from "../_components/timegrapher-panel"
+import { WearTodayButton } from "../_components/wear-today-button"
 import { DialFramingEditor } from "./_components/dial-framing-editor"
 import { updateWatch } from "@/lib/actions/watch-actions"
 
@@ -30,14 +34,17 @@ export default async function EditWatchPage({
 }) {
   const { id } = await params
 
-  const [watch, brands, movements, categories, labels, watchLabels] = await Promise.all([
-    getWatchById(id),
-    getBrands(),
-    getMovements(),
-    getCategories(),
-    getLabels(),
-    getLabelsForWatch(id),
-  ])
+  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns] =
+    await Promise.all([
+      getWatchById(id),
+      getBrands(),
+      getMovements(),
+      getCategories(),
+      getLabels(),
+      getLabelsForWatch(id),
+      getWearCountForWatch(id),
+      getTimegrapherRuns(id),
+    ])
 
   if (!watch) {
     notFound()
@@ -62,10 +69,13 @@ export default async function EditWatchPage({
 
   return (
     <div className="space-y-6 pb-28">
-      <h1 className="font-display text-2xl font-semibold tracking-tight">
-        Edit {watch.brand.name}{" "}
-        <span className="text-muted-foreground">{watch.model}</span>
-      </h1>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
+          {watch.brand.name}{" "}
+          <span className="text-muted-foreground">{watch.nickname || watch.model}</span>
+        </h1>
+        <WearTodayButton watchId={watch.id} wearInfo={wearInfo} />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[420px_1fr] lg:items-start lg:gap-[26px]">
         {/* Left column: Sticky photo gallery */}
@@ -88,8 +98,8 @@ export default async function EditWatchPage({
           </div>
         </div>
 
-        {/* Right column: Scrollable form */}
-        <div>
+        {/* Right column: Scrollable form + timegrapher */}
+        <div className="space-y-6">
           <WatchForm
             action={boundUpdateWatch}
             watch={watch}
@@ -100,8 +110,9 @@ export default async function EditWatchPage({
             labels={labels}
             defaultLabelIds={watchLabels.map((l) => l.id)}
             stickyBar
-            cancelHref={`/watch/${watch.id}`}
+            cancelHref="/collection"
           />
+          <TimegrapherPanel watchId={watch.id} runs={timegrapherRuns} />
         </div>
       </div>
     </div>

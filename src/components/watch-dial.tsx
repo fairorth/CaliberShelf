@@ -213,7 +213,7 @@ export function WatchDial({ watches, seed, stats }: WatchDialProps) {
               return (
                 <Link
                   key={watch.id}
-                  href={`/watch/${watch.id}`}
+                  href={`/watch/${watch.id}/edit`}
                   aria-label={`${watch.brand.name} ${watch.model}`}
                   className="absolute overflow-hidden rounded-full"
                   style={{
@@ -323,7 +323,7 @@ export function WatchDial({ watches, seed, stats }: WatchDialProps) {
         )}
         {active && (
           <Link
-            href={`/watch/${active.id}`}
+            href={`/watch/${active.id}/edit`}
             className="mt-5 inline-block rounded-[10px] border border-primary px-5 py-2 text-[13px] text-primary transition-colors hover:bg-primary/10"
           >
             View watch →

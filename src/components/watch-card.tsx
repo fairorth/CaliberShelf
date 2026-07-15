@@ -13,7 +13,7 @@ interface WatchCardProps {
 
 export function WatchCard({ watch }: WatchCardProps) {
   return (
-    <Link href={`/watch/${watch.id}`}>
+    <Link href={`/watch/${watch.id}/edit`}>
       <Card className="group overflow-hidden transition-all hover:shadow-md">
         {/* Photo area */}
         <div className="relative aspect-square bg-muted">

@@ -58,7 +58,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
         return (
         <Link
           key={watch.id}
-          href={`/watch/${watch.id}`}
+          href={`/watch/${watch.id}/edit`}
           className="group flex flex-col overflow-hidden rounded-[13px] border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/45 hover:shadow-[0_16px_30px_rgba(0,0,0,0.4)]"
         >
           {/* Header strip — movement type sits above the photo (small, top-left)

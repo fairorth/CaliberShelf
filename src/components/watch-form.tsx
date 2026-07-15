@@ -1,8 +1,19 @@
 "use client"
 
-import { useActionState, useState } from "react"
-import Link from "next/link"
+import { useActionState, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label as FormLabel } from "@/components/ui/label"
@@ -24,6 +35,8 @@ import { BrandCombobox } from "@/components/brand-combobox"
 import { MovementCombobox } from "@/components/movement-combobox"
 import { MovementPreview } from "@/components/movement-preview"
 import { cn } from "@/lib/utils"
+import { deleteWatch } from "@/lib/actions/watch-actions"
+import { toast } from "sonner"
 import type { WatchActionState } from "@/lib/actions/watch-actions"
 import type { Watch, Brand, Movement, Category, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
@@ -64,15 +77,36 @@ export function WatchForm({
   stickyBar = false,
   cancelHref = "/collection",
 }: WatchFormProps) {
+  const router = useRouter()
   const [state, formAction, isPending] = useActionState<WatchActionState, FormData>(
     action,
     {}
   )
+  const [isDeleting, startDeleteTransition] = useTransition()
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
 
   // Dirty tracking for the sticky save bar. setState(true) is a no-op once set,
   // so wiring it to every change handler stays cheap.
   const [isDirty, setIsDirty] = useState(false)
   const markDirty = () => setIsDirty(true)
+
+  // Return navigates immediately when clean; a dirty form asks first.
+  function handleReturn() {
+    if (isDirty) {
+      setShowLeaveConfirm(true)
+    } else {
+      router.push(cancelHref)
+    }
+  }
+
+  function handleDelete() {
+    if (!watch) return
+    startDeleteTransition(async () => {
+      const result = await deleteWatch(watch.id)
+      // On success the action redirects (throws), so we only land here on error.
+      if (result?.error) toast.error(result.error)
+    })
+  }
 
   // Track selected category
   const [selectedCategoryId, setSelectedCategoryId] = useState(watch?.category_id ?? "")
@@ -565,18 +599,72 @@ export function WatchForm({
               {isDirty ? "Unsaved changes" : "All changes saved"}
             </span>
             <div className="ml-auto flex gap-2.5">
-              <Button type="button" variant="outline" render={<Link href={cancelHref} />}>
-                Cancel
+              {watch && (
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={isPending || isDeleting}
+                      />
+                    }
+                  >
+                    {isDeleting ? "Deleting…" : "Delete"}
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this watch?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete &quot;
+                        {[watch.brand?.name, watch.model].filter(Boolean).join(" ")}&quot; and
+                        all its photos. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete}>
+                        Delete Watch
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleReturn}
+                disabled={isPending || isDeleting}
+              >
+                Return
               </Button>
               <Button
                 type="submit"
-                disabled={!isDirty || isPending}
+                disabled={!isDirty || isPending || isDeleting}
                 className="bg-brass text-[#1a1206] hover:bg-brass/90 disabled:opacity-50"
               >
-                {isPending ? "Saving…" : "Save Changes"}
+                {isPending ? "Saving…" : "Save"}
               </Button>
             </div>
           </div>
+
+          {/* Unsaved-changes prompt for Return */}
+          <AlertDialog open={showLeaveConfirm} onOpenChange={setShowLeaveConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You have unsaved changes that will be lost if you leave now.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Stay</AlertDialogCancel>
+                <AlertDialogAction onClick={() => router.push(cancelHref)}>
+                  Discard &amp; Return
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       ) : (
         <div className="flex justify-end gap-3">

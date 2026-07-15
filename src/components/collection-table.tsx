@@ -258,7 +258,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                   )}
                 >
                   <TableCell className="py-2">
-                    <Link href={`/watch/${watch.id}`} className="block">
+                    <Link href={`/watch/${watch.id}/edit`} className="block">
                       <HoverPhoto
                         url={watch.cover_photo_url}
                         alt={`${watch.brand.name} ${watch.model}`}
@@ -279,12 +279,12 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     )}
                   </TableCell>
                   <TableCell>
-                    <Link href={`/watch/${watch.id}`} className="font-display text-[15.5px] font-semibold hover:underline">
+                    <Link href={`/watch/${watch.id}/edit`} className="font-display text-[15.5px] font-semibold hover:underline">
                       {watch.brand.name}
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <Link href={`/watch/${watch.id}`} className="text-muted-foreground hover:underline">
+                    <Link href={`/watch/${watch.id}/edit`} className="text-muted-foreground hover:underline">
                       {watch.model}
                     </Link>
                     {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
@@ -332,7 +332,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
             className="flex items-center gap-3 rounded-lg border p-3 transition-colors"
           >
             <Link
-              href={`/watch/${watch.id}`}
+              href={`/watch/${watch.id}/edit`}
               className="flex min-w-0 flex-1 items-center gap-3"
             >
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-muted">

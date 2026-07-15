@@ -232,7 +232,7 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
         >
           {/* Dial interior — the featured watch photo */}
           <Link
-            href={`/watch/${current.id}`}
+            href={`/watch/${current.id}/edit`}
             aria-label={`${current.brand.name} ${current.model}`}
             className="group absolute overflow-hidden rounded-full"
             style={{
@@ -319,7 +319,7 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
         )}
         <div className="mt-1.5 font-mono text-[12px] text-muted-foreground">{wearLine(current)}</div>
         <Link
-          href={`/watch/${current.id}`}
+          href={`/watch/${current.id}/edit`}
           className="mt-5 inline-block rounded-[10px] border border-primary px-5 py-2 text-[13px] text-primary transition-colors hover:bg-primary/10"
         >
           View watch →

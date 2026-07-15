@@ -45,7 +45,7 @@ export async function createWearLog(
   if (error) return { error: error.message }
 
   revalidatePath("/wear-log")
-  revalidatePath(`/watch/${data.watch_id}`)
+  revalidatePath(`/watch/${data.watch_id}/edit`)
   return { success: true }
 }
 
@@ -105,7 +105,7 @@ export async function quickWear(
   if (error) return { error: error.message }
 
   revalidatePath("/wear-log")
-  revalidatePath(`/watch/${watchId}`)
+  revalidatePath(`/watch/${watchId}/edit`)
   return { success: true }
 }
 

@@ -84,7 +84,7 @@ export function WearStatsView({ stats }: WearStatsViewProps) {
             {stats.neverWorn.map((w) => (
               <Link
                 key={w.id}
-                href={`/watch/${w.id}`}
+                href={`/watch/${w.id}/edit`}
                 className="group flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm transition-colors hover:bg-accent"
               >
                 <div className="relative h-6 w-6 overflow-hidden rounded-full border border-border">
@@ -147,7 +147,7 @@ function WatchRankRow({
 }) {
   return (
     <Link
-      href={`/watch/${watch.id}`}
+      href={`/watch/${watch.id}/edit`}
       className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent"
     >
       <span className="w-5 text-center text-sm font-bold text-muted-foreground">

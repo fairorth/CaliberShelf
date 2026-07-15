@@ -100,7 +100,7 @@ export async function uploadWatchPhoto(
     return { error: `Failed to save photo: ${insertError.message}` }
   }
 
-  revalidatePath(`/watch/${watchId}`)
+  revalidatePath(`/watch/${watchId}/edit`)
   return { success: true }
 }
 
@@ -168,7 +168,7 @@ export async function deleteWatchPhoto(
     }
   }
 
-  revalidatePath(`/watch/${watchId}`)
+  revalidatePath(`/watch/${watchId}/edit`)
   return { success: true }
 }
 
@@ -207,7 +207,7 @@ export async function setCoverPhoto(
     return { error: error.message }
   }
 
-  revalidatePath(`/watch/${watchId}`)
+  revalidatePath(`/watch/${watchId}/edit`)
   revalidatePath("/dashboard")
   return { success: true }
 }

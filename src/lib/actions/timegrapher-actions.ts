@@ -41,7 +41,7 @@ export async function createTimegrapherRun(
 
   if (error) return { error: error.message }
 
-  revalidatePath(`/watch/${data.watch_id}`)
+  revalidatePath(`/watch/${data.watch_id}/edit`)
   return { success: true }
 }
 
@@ -66,6 +66,6 @@ export async function deleteTimegrapherRun(
 
   if (error) return { error: error.message }
 
-  revalidatePath(`/watch/${watchId}`)
+  revalidatePath(`/watch/${watchId}/edit`)
   return { success: true }
 }

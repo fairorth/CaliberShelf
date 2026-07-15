@@ -89,7 +89,7 @@ export async function createWatch(
   }
 
   revalidatePath("/dashboard")
-  redirect(`/watch/${watch.id}`)
+  redirect(`/watch/${watch.id}/edit`)
 }
 
 /**
@@ -157,8 +157,9 @@ export async function updateWatch(
   await setWatchLabels(watchId, data.label_ids)
 
   revalidatePath("/dashboard")
-  revalidatePath(`/watch/${watchId}`)
-  redirect(`/watch/${watchId}`)
+  revalidatePath("/collection")
+  revalidatePath(`/watch/${watchId}/edit`)
+  redirect("/collection")
 }
 
 /**
@@ -188,7 +189,6 @@ export async function updateDialFraming(
   if (error) return { error: error.message }
 
   revalidatePath("/dashboard")
-  revalidatePath(`/watch/${watchId}`)
   revalidatePath(`/watch/${watchId}/edit`)
   return { success: true }
 }
@@ -234,7 +234,8 @@ export async function deleteWatch(watchId: string): Promise<WatchActionState> {
   }
 
   revalidatePath("/dashboard")
-  redirect("/dashboard")
+  revalidatePath("/collection")
+  redirect("/collection")
 }
 
 /**
@@ -319,11 +320,11 @@ export async function createWatchWithPhoto(
   const data = parsed.data
 
   // Post-create destination: the quick-add screen offers "Save & add details"
-  // (continue to the full Edit form) vs "Save & close" (go to the detail page).
+  // (continue to the full Edit form) vs "Save & close" (back to the collection).
   const destination =
     formData.get("redirect_to") === "edit"
       ? `/watch/__ID__/edit`
-      : `/watch/__ID__`
+      : `/collection`
 
   // Insert the watch
   const { data: watch, error } = await supabase

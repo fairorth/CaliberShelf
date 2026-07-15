@@ -123,7 +123,7 @@ export function WearHistory({ watches }: WearHistoryProps) {
           <Card key={log.id} className="flex items-center gap-4 p-3">
             {/* Watch thumbnail */}
             <Link
-              href={`/watch/${log.watch_id}`}
+              href={`/watch/${log.watch_id}/edit`}
               className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-border"
             >
               {log.watch.cover_photo_url ? (
@@ -144,7 +144,7 @@ export function WearHistory({ watches }: WearHistoryProps) {
             {/* Details */}
             <div className="min-w-0 flex-1">
               <Link
-                href={`/watch/${log.watch_id}`}
+                href={`/watch/${log.watch_id}/edit`}
                 className="font-medium hover:underline"
               >
                 {log.watch.brand.name} {log.watch.model}
