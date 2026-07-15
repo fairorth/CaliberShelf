@@ -102,6 +102,7 @@ export interface Watch {
   is_public: boolean
   is_coming_soon: boolean
   is_wishlist: boolean
+  price_check_enabled: boolean
   dial_focal_x: number
   dial_focal_y: number
   dial_zoom: number
@@ -138,6 +139,37 @@ export interface WatchWithCover extends Watch {
   wear_count?: number
   /** ISO date "YYYY-MM-DD" of the most recent wear, or null if never worn. */
   last_worn_date?: string | null
+}
+
+// ── Valuation ───────────────────────────────────────────────────
+
+export interface ValuationDatapoint {
+  price_usd: number
+  source: string
+  type: "sold" | "asking"
+  date: string
+  note: string
+}
+
+// Row produced by the valuation agent (scripts/price-check.mjs)
+export interface WatchValuation {
+  id: string
+  watch_id: string
+  user_id: string
+  valued_at: string
+  value_low_cents: number | null
+  value_mid_cents: number
+  value_high_cents: number | null
+  currency: string
+  confidence: "high" | "medium" | "low"
+  n_datapoints: number | null
+  assumed_variant: string | null
+  datapoints: ValuationDatapoint[] | null
+  sources: string[] | null
+  method_notes: string | null
+  caveats: string | null
+  agent_model: string | null
+  created_at: string
 }
 
 // ── Wear Log ────────────────────────────────────────────────────

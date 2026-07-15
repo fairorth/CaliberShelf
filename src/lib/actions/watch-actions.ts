@@ -75,6 +75,7 @@ export async function createWatch(
       notes: data.notes || null,
       is_coming_soon: data.is_coming_soon,
       is_wishlist: data.is_wishlist,
+      price_check_enabled: data.price_check_enabled,
     })
     .select("id")
     .single()
@@ -145,6 +146,7 @@ export async function updateWatch(
       notes: data.notes || null,
       is_coming_soon: data.is_coming_soon,
       is_wishlist: data.is_wishlist,
+      price_check_enabled: data.price_check_enabled,
     })
     .eq("id", watchId)
     .eq("user_id", user.id) // extra safety on top of RLS

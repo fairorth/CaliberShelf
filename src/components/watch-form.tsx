@@ -108,6 +108,13 @@ export function WatchForm({
     })
   }
 
+  // Price checking is only meaningful when the agent can identify the exact
+  // variant, so the checkbox is gated on having a reference number.
+  const [hasRef, setHasRef] = useState(Boolean(watch?.reference_number?.trim()))
+  const [priceCheckEnabled, setPriceCheckEnabled] = useState(
+    watch?.price_check_enabled ?? false
+  )
+
   // Track selected category
   const [selectedCategoryId, setSelectedCategoryId] = useState(watch?.category_id ?? "")
 
@@ -230,6 +237,7 @@ export function WatchForm({
               name="reference_number"
               placeholder="e.g. 310.30.42.50.01.001"
               defaultValue={watch?.reference_number ?? ""}
+              onChange={(e) => setHasRef(e.target.value.trim() !== "")}
               className={cn(FIELD, "font-mono text-[13px]")}
             />
           </div>
@@ -298,6 +306,33 @@ export function WatchForm({
               <span className="font-medium">Wish list</span>
               <span className="text-xs text-muted-foreground">
                 — not owned; excluded from collection counts and total value
+              </span>
+            </label>
+          </div>
+
+          <div className="sm:col-span-2 lg:col-span-3">
+            <label
+              className={cn(
+                "flex items-center gap-2 text-sm",
+                !hasRef && "cursor-not-allowed opacity-50"
+              )}
+            >
+              <input
+                type="checkbox"
+                name="price_check_enabled"
+                checked={priceCheckEnabled && hasRef}
+                disabled={!hasRef}
+                onChange={(e) => {
+                  setPriceCheckEnabled(e.target.checked)
+                  markDirty()
+                }}
+                className="h-4 w-4 rounded border-border accent-brass"
+              />
+              <span className="font-medium">Perform price checking</span>
+              <span className="text-xs text-muted-foreground">
+                {hasRef
+                  ? "— include in automated market-value updates"
+                  : "— requires a reference number"}
               </span>
             </label>
           </div>

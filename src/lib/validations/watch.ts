@@ -56,6 +56,12 @@ export const watchFormSchema = z.object({
     .string()
     .optional()
     .transform((v) => v === "on"),
+  // Opt-in to the automated market-valuation agent. Requires a reference
+  // number (cross-field rule enforced via .refine below the object).
+  price_check_enabled: z
+    .string()
+    .optional()
+    .transform((v) => v === "on"),
 
   // Optional enum fields (empty string = null in the database)
   case_material: z.union([caseMaterialSchema, z.literal("")]).optional().default(""),
@@ -102,7 +108,13 @@ export const watchFormSchema = z.object({
     .transform((val) => (val === "" ? null : parseFloat(val)))
     .pipe(z.number().min(0).nullable()),
   purchase_currency: z.string().min(3).max(3).default("USD"),
-})
+}).refine(
+  (data) => !data.price_check_enabled || data.reference_number.trim() !== "",
+  {
+    message: "Price checking requires a reference number.",
+    path: ["price_check_enabled"],
+  }
+)
 
 export type WatchFormValues = z.input<typeof watchFormSchema>
 export type WatchFormParsed = z.output<typeof watchFormSchema>

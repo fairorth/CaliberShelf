@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "price-check": "node scripts/price-check.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
     "@base-ui/react": "^1.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@supabase/ssr": "^0.9.0",
