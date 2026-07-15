@@ -108,6 +108,54 @@ Audit trails: per-watch token counts print in every run log
 console.anthropic.com → Usage, and GitHub runner minutes under the run's
 Usage link.
 
+## Customizing the sources (and the prompt)
+
+The watch-market sites the agent consults are configured in **plain English,
+not code** — the `Method:` section of `SYSTEM_PROMPT` in
+[scripts/price-check.mjs](../scripts/price-check.mjs). There are no per-site
+parsers or scrapers: the agent has two generic tools (web search + web fetch)
+and reads whatever pages come back the way a human would. Consequences:
+
+- **Adding a site** = adding its name to a sentence. **Removing one** =
+  deleting the mention — or better, saying *why* ("ignore X — mostly replica
+  listings"), which generalizes to similar sites.
+- The list is **guidance, not a boundary**. The agent routinely uses sources
+  it finds on its own (EveryWatch, Grailzee, WatchRecon all appeared in runs
+  without being named). Site redesigns break nothing.
+- If you ever need hard enforcement rather than guidance, the web search tool
+  accepts `allowed_domains` / `blocked_domains` parameters where the tools are
+  declared in the script — currently unused by design, since the agent's
+  freedom to find unanticipated sources is a feature.
+
+### Prompt-engineering tips for this agent
+
+1. **Teach judgment, not just names.** "Check Chrono24" is weak; "Chrono24
+   asking prices skew 10–20% high — discount and label them 'asking'" is
+   strong. Every source mention ideally carries a how-to-weigh-it clause.
+2. **Give reasons, not bare rules.** "eBay best-offer solds display the LIST
+   price, not the accepted amount — treat as upper bounds" works better than
+   "distrust eBay", because the model can apply the reasoning to new cases.
+3. **State goals and constraints, not step-by-step procedures.** Modern models
+   do worse when over-scripted. Say what a good valuation looks like (recent,
+   sold-biased, variant-exact, outliers excluded) and let the agent decide the
+   search order.
+4. **Prefer positive instructions.** "Prioritize sold prices" beats a list of
+   don'ts. Keep the one hard negative that matters: *never fabricate data
+   points* — honest low confidence is the correct failure mode.
+5. **Change one thing at a time and benchmark.** Re-run a watch you know well
+   (`npm run price-check -- --dry-run --watch <uuid>`) before and after the
+   edit. Watch `n_datapoints` and `confidence` as quality signals, not just
+   the mid value (which varies ±10% run to run anyway).
+6. **Domain-specific guidance goes in the prompt too.** Adding vintage pieces?
+   Tell the agent condition, originality, and service history dominate value.
+   More Japanese independents? Name the domestic marketplaces and the JPY
+   conversion rule (already present).
+7. **⚠️ Don't touch the JSON block casually.** The output-format section of
+   the system prompt is a three-way contract with the Zod schema in the script
+   and the `watch_valuations` columns. Adding or renaming a field means
+   updating all three (prompt → schema → migration + insert). Site and method
+   edits are safe; contract edits are code changes.
+
 ## Database objects
 
 | Object | Migration | Purpose |
