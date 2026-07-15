@@ -23,7 +23,7 @@ import { z } from "zod"
 
 loadEnvConfig(process.cwd())
 
-const MODEL = "claude-opus-4-8"
+const MODEL = "claude-sonnet-5"
 const MAX_TOKENS = 32000
 
 // ── CLI args ─────────────────────────────────────────────────────
@@ -35,6 +35,11 @@ const LIMIT = args.includes("--limit")
 const ONLY_WATCH = args.includes("--watch")
   ? args[args.indexOf("--watch") + 1]
   : null
+// Per-watch cap on web searches and fetches — the main cost lever.
+// 6/6 keeps a typical run under half the tokens of the 12/12 default.
+const MAX_USES = args.includes("--max-uses")
+  ? parseInt(args[args.indexOf("--max-uses") + 1], 10)
+  : 6
 
 // ── Env checks (values are never printed) ────────────────────────
 const missing = [
@@ -120,8 +125,8 @@ Research thoroughly, then reply with the JSON object only.`
 async function researchWatch(watch) {
   const messages = [{ role: "user", content: watchPrompt(watch) }]
   const tools = [
-    { type: "web_search_20260209", name: "web_search", max_uses: 12 },
-    { type: "web_fetch_20260209", name: "web_fetch", max_uses: 12 },
+    { type: "web_search_20260209", name: "web_search", max_uses: MAX_USES },
+    { type: "web_fetch_20260209", name: "web_fetch", max_uses: MAX_USES },
   ]
 
   let response
