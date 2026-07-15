@@ -31,15 +31,11 @@ function priceLabel(watch: WatchWithCover): string {
     : "—"
 }
 
-/** Movement column text: "Mechanical · Automatic" for mechanical calibers, else
- * the plain type label (e.g. "Quartz"). Matches the redesign's Movement column. */
+/** Movement column text: the plain type label — Quartz, Automatic, or Manual. */
 function movementTypeLabel(watch: WatchWithCover): string {
   const ct = watch.movement?.caliber_type
   if (!ct) return "—"
-  const label = caliberTypeLabels[ct] ?? ct
-  return /autom|manual/i.test(ct) || /Automatic|Manual/.test(label)
-    ? `Mechanical · ${label}`
-    : label
+  return caliberTypeLabels[ct] ?? ct
 }
 
 // ── Sorting ────────────────────────────────────────────────────────

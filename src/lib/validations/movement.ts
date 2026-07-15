@@ -6,10 +6,12 @@ export const caliberTypeSchema = z.enum([
   "mechanical_automatic",
 ])
 
+// Display labels kept short (no "Mechanical -" prefix) — shown everywhere:
+// movements table, form dropdown, collection columns, filters, home dial/hero.
 export const caliberTypeLabels: Record<string, string> = {
   quartz: "Quartz",
-  mechanical_manual: "Mechanical - Manual",
-  mechanical_automatic: "Mechanical - Automatic",
+  mechanical_manual: "Manual",
+  mechanical_automatic: "Automatic",
 }
 
 export const movementFormSchema = z.object({
