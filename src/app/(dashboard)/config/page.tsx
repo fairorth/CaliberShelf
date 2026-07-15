@@ -36,6 +36,11 @@ export default async function ConfigPage() {
     watchCountByCategory.set(w.category_id, (watchCountByCategory.get(w.category_id) ?? 0) + 1)
   }
 
+  // Movements referenced by at least one watch (drives the "used only" filter)
+  const usedMovementIds = [
+    ...new Set(watches.map((w) => w.movement_id).filter((id): id is string => id !== null)),
+  ]
+
   return (
     <div className="space-y-6">
       <h1 className="font-display text-lg font-medium tracking-tight">Configuration</h1>
@@ -54,7 +59,7 @@ export default async function ConfigPage() {
         </TabsContent>
 
         <TabsContent value="movements" className="mt-4">
-          <MovementsTab movements={movements} />
+          <MovementsTab movements={movements} usedMovementIds={usedMovementIds} />
         </TabsContent>
 
         <TabsContent value="categories" className="mt-4">

@@ -26,6 +26,8 @@ import type { Movement } from "@/lib/types/watch"
 
 interface MovementsTabProps {
   movements: Movement[]
+  /** IDs of movements referenced by at least one watch in the collection. */
+  usedMovementIds: string[]
 }
 
 // ── Sorting ────────────────────────────────────────────────────────
@@ -37,7 +39,6 @@ type SortKey =
   | "beat"
   | "reserve"
   | "lift"
-  | "added"
 type SortDir = "asc" | "desc"
 
 /**
@@ -61,8 +62,6 @@ function getSortValue(m: Movement, key: SortKey): string {
       return (m.power_reserve ?? "").toLowerCase()
     case "lift":
       return (m.lift_angle ?? "").toLowerCase()
-    case "added":
-      return m.created_at // ISO timestamp sorts chronologically
   }
 }
 
@@ -98,37 +97,35 @@ function SortableHeader({
   )
 }
 
-function formatAdded(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    timeZone: "UTC",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
-}
-
-export function MovementsTab({ movements }: MovementsTabProps) {
+export function MovementsTab({ movements, usedMovementIds }: MovementsTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingMovement, setEditingMovement] = useState<Movement | null>(null)
   const [deletePending, startDeleteTransition] = useTransition()
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>("asc")
+  const [usedOnly, setUsedOnly] = useState(false)
+
+  const usedSet = useMemo(() => new Set(usedMovementIds), [usedMovementIds])
+
+  const filtered = useMemo(
+    () => (usedOnly ? movements.filter((m) => usedSet.has(m.id)) : movements),
+    [movements, usedOnly, usedSet]
+  )
 
   const sorted = useMemo(() => {
-    if (!sortKey) return movements
-    return [...movements].sort((a, b) => {
+    if (!sortKey) return filtered
+    return [...filtered].sort((a, b) => {
       const cmp = getSortValue(a, sortKey).localeCompare(getSortValue(b, sortKey))
       return sortDir === "asc" ? cmp : -cmp
     })
-  }, [movements, sortKey, sortDir])
+  }, [filtered, sortKey, sortDir])
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"))
     } else {
       setSortKey(key)
-      // Default the "Added" column to newest-first; everything else A→Z.
-      setSortDir(key === "added" ? "desc" : "asc")
+      setSortDir("asc")
     }
   }
 
@@ -162,10 +159,23 @@ export function MovementsTab({ movements }: MovementsTabProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {movements.length} {movements.length === 1 ? "caliber" : "calibers"}
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-5">
+          <p className="text-sm text-muted-foreground">
+            {usedOnly
+              ? `${filtered.length} of ${movements.length} calibers`
+              : `${movements.length} ${movements.length === 1 ? "caliber" : "calibers"}`}
+          </p>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={usedOnly}
+              onChange={(e) => setUsedOnly(e.target.checked)}
+              className="h-4 w-4 rounded border-border accent-brass"
+            />
+            <span className="font-medium">Used movements only</span>
+          </label>
+        </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
           setDialogOpen(open)
           if (!open) setEditingMovement(null)
@@ -188,11 +198,13 @@ export function MovementsTab({ movements }: MovementsTabProps) {
         </Dialog>
       </div>
 
-      {movements.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <span className="text-4xl">⏱️</span>
           <p className="mt-3 text-sm text-muted-foreground">
-            No calibers yet. Add one here or type a new name when editing a watch.
+            {usedOnly
+              ? "No calibers are assigned to a watch in your collection yet."
+              : "No calibers yet. Add one here or type a new name when editing a watch."}
           </p>
         </div>
       ) : (
@@ -205,7 +217,6 @@ export function MovementsTab({ movements }: MovementsTabProps) {
               <SortableHeader label="Beat Rate" sortKey="beat" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
               <SortableHeader label="Reserve" sortKey="reserve" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
               <SortableHeader label="Lift Angle" sortKey="lift" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-              <SortableHeader label="Added" sortKey="added" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
               <TableHead className="w-24" />
             </TableRow>
           </TableHeader>
@@ -235,9 +246,6 @@ export function MovementsTab({ movements }: MovementsTabProps) {
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {m.lift_angle ?? "—"}
-                </TableCell>
-                <TableCell className="text-muted-foreground whitespace-nowrap text-xs">
-                  {formatAdded(m.created_at)}
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
