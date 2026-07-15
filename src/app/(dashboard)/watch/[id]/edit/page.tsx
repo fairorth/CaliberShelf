@@ -6,10 +6,12 @@ import { getCategories } from "@/lib/queries/categories"
 import { getLabels, getLabelsForWatch } from "@/lib/queries/labels"
 import { getWearCountForWatch } from "@/lib/queries/wear-logs"
 import { getTimegrapherRuns } from "@/lib/queries/timegrapher"
+import { getValuationsForWatch } from "@/lib/queries/valuations"
 import { WatchForm } from "@/components/watch-form"
 import { PhotoGallery } from "../_components/photo-gallery"
 import { PhotoUploader } from "../_components/photo-uploader"
 import { TimegrapherPanel } from "../_components/timegrapher-panel"
+import { ValuationPanel } from "../_components/valuation-panel"
 import { WearTodayButton } from "../_components/wear-today-button"
 import { DialFramingEditor } from "./_components/dial-framing-editor"
 import { updateWatch } from "@/lib/actions/watch-actions"
@@ -34,7 +36,7 @@ export default async function EditWatchPage({
 }) {
   const { id } = await params
 
-  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns] =
+  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, valuations] =
     await Promise.all([
       getWatchById(id),
       getBrands(),
@@ -44,6 +46,7 @@ export default async function EditWatchPage({
       getLabelsForWatch(id),
       getWearCountForWatch(id),
       getTimegrapherRuns(id),
+      getValuationsForWatch(id),
     ])
 
   if (!watch) {
@@ -111,6 +114,10 @@ export default async function EditWatchPage({
             defaultLabelIds={watchLabels.map((l) => l.id)}
             stickyBar
             cancelHref="/collection"
+          />
+          <ValuationPanel
+            valuations={valuations}
+            purchasePriceCents={watch.purchase_price_cents}
           />
           <TimegrapherPanel watchId={watch.id} runs={timegrapherRuns} />
         </div>

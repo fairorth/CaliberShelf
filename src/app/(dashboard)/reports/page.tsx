@@ -21,6 +21,12 @@ const REPORTS: ReportLink[] = [
     available: true,
   },
   {
+    slug: "valuations",
+    title: "Watch Valuations",
+    description: "Agent-researched market values by run date, with drill-down to evidence.",
+    available: true,
+  },
+  {
     slug: "wear-summary",
     title: "Wear Summary",
     description: "How often and how recently you wear each watch.",
