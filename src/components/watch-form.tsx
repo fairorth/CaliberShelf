@@ -276,6 +276,7 @@ export function WatchForm({
                 type="checkbox"
                 name="is_coming_soon"
                 defaultChecked={watch?.is_coming_soon ?? false}
+                onChange={markDirty}
                 className="h-4 w-4 rounded border-border accent-brass"
               />
               <span className="font-medium">Coming soon</span>
@@ -291,6 +292,7 @@ export function WatchForm({
                 type="checkbox"
                 name="is_wishlist"
                 defaultChecked={watch?.is_wishlist ?? false}
+                onChange={markDirty}
                 className="h-4 w-4 rounded border-border accent-brass"
               />
               <span className="font-medium">Wish list</span>
@@ -355,7 +357,11 @@ export function WatchForm({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <FormLabel htmlFor="case_material">Case Material</FormLabel>
-              <Select name="case_material" defaultValue={watch?.case_material ?? "stainless_steel"}>
+              <Select
+                name="case_material"
+                defaultValue={watch?.case_material ?? "stainless_steel"}
+                onValueChange={markDirty}
+              >
                 <SelectTrigger id="case_material" className={FIELD}>
                   <SelectValue placeholder="Select material" />
                 </SelectTrigger>
@@ -372,7 +378,11 @@ export function WatchForm({
 
             <div className="space-y-2">
               <FormLabel htmlFor="crystal">Crystal</FormLabel>
-              <Select name="crystal" defaultValue={watch?.crystal ?? "sapphire"}>
+              <Select
+                name="crystal"
+                defaultValue={watch?.crystal ?? "sapphire"}
+                onValueChange={markDirty}
+              >
                 <SelectTrigger id="crystal" className={FIELD}>
                   <SelectValue placeholder="Select crystal" />
                 </SelectTrigger>

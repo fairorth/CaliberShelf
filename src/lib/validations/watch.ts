@@ -128,6 +128,10 @@ export const quickAddSchema = z.object({
     .default("")
     .transform((val) => (val === "" ? null : parseFloat(val)))
     .pipe(z.number().min(0).nullable()),
+  is_coming_soon: z
+    .string()
+    .optional()
+    .transform((v) => v === "on"),
   is_wishlist: z
     .string()
     .optional()
