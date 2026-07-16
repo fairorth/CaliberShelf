@@ -6,6 +6,9 @@ estimate with its full evidence trail, and surfaces the results throughout the
 app. It runs automatically once a month via GitHub Actions and can be run
 manually at any time. (Built 2026-07-15.)
 
+> Engineers: [price-check.mjs.md](price-check.mjs.md) is a line-by-line
+> walkthrough of the agent's source code and the patterns it demonstrates.
+
 ## How it works
 
 ```
