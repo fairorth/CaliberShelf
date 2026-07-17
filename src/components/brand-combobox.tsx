@@ -12,7 +12,7 @@ interface BrandComboboxProps {
   brands: Brand[]
   defaultBrandId?: string
   /** Notified when the selected brand changes (e.g. to mark a form dirty). */
-  onChange?: (brandId: string) => void
+  onChange?: (brandId: string, brandName?: string) => void
 }
 
 export function BrandCombobox({ brands, defaultBrandId, onChange }: BrandComboboxProps) {
@@ -36,7 +36,7 @@ export function BrandCombobox({ brands, defaultBrandId, onChange }: BrandCombobo
 
   function handleSelect(brand: Brand) {
     setSelectedId(brand.id)
-    onChange?.(brand.id)
+    onChange?.(brand.id, brand.name)
     setSearch("")
     setOpen(false)
   }
@@ -53,13 +53,14 @@ export function BrandCombobox({ brands, defaultBrandId, onChange }: BrandCombobo
           user_id: "",
           name,
           country_of_origin: null,
+          brand_type: null,
           logo_url: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
         setLocalBrands((prev) => [...prev, newBrand].sort((a, b) => a.name.localeCompare(b.name)))
         setSelectedId(result.id)
-        onChange?.(result.id)
+        onChange?.(result.id, name)
         setSearch("")
         setOpen(false)
       }

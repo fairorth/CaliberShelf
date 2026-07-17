@@ -61,6 +61,16 @@ A personal watch collection tracking app built with Next.js 15 (App Router), Sup
 - Enabling price checking requires a reference_number (Zod refine + DB CHECK)
 - Model/cost decisions live in the script's MODEL and MAX_USES constants
 
+## Spec Autofill Agent
+- "✨ Auto-fill specs" button on the watch form calls `POST /api/spec-fetch`
+  (`src/app/api/spec-fetch/route.ts`): Claude API + web search/fetch server
+  tools + structured output (`zodOutputFormat`), returns spec JSON validated by
+  `src/lib/validations/spec-fetch.ts`
+- Human-in-the-loop: fills only empty fields (edit page never overwrites DB
+  values), highlights applied fields, user reviews then saves; needs
+  ANTHROPIC_API_KEY (server env — local .env.local AND Vercel)
+- MODEL/pricing constants at top of route.ts; cost shown in the result panel
+
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000
 - `npm run build` - Production build

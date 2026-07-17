@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState, useTransition } from "react"
+import type { MouseEvent } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,13 +24,16 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select"
 import {
   caseMaterialLabels,
   crystalLabels,
+  caseShapeLabels,
+  bezelTypeLabels,
+  bezelMaterialLabels,
   KNOWN_COMPLICATIONS,
 } from "@/lib/validations/watch"
+import type { SpecFetchResponse } from "@/lib/validations/spec-fetch"
 import { labelColorMap } from "@/lib/validations/label"
 import { BrandCombobox } from "@/components/brand-combobox"
 import { MovementCombobox } from "@/components/movement-combobox"
@@ -117,6 +121,158 @@ export function WatchForm({
 
   // Track selected category
   const [selectedCategoryId, setSelectedCategoryId] = useState(watch?.category_id ?? "")
+
+  // ── Spec fields (controlled) ─────────────────────────────────
+  // Controlled (not defaultValue) so the auto-fill agent can write into them.
+  const initialSpecs = {
+    case_material: (watch?.case_material ?? "stainless_steel") as string,
+    crystal: (watch?.crystal ?? "sapphire") as string,
+    case_shape: (watch?.case_shape ?? "") as string,
+    bezel_type: (watch?.bezel_type ?? "") as string,
+    bezel_material: (watch?.bezel_material ?? "") as string,
+    case_diameter_mm: watch?.case_diameter_mm?.toString() ?? "",
+    strap_width_mm: watch?.strap_width_mm?.toString() ?? "20",
+    lug_to_lug_mm: watch?.lug_to_lug_mm?.toString() ?? "",
+    case_height_mm: watch?.case_height_mm?.toString() ?? "",
+    weight_g: watch?.weight_g?.toString() ?? "",
+    water_resistance_m: watch?.water_resistance_m?.toString() ?? "100",
+    dial_color: watch?.dial_color ?? "",
+  }
+  type SpecKey = keyof typeof initialSpecs
+  const [specs, setSpecs] = useState(initialSpecs)
+
+  // Fields the agent just filled — highlighted until the user edits them
+  const [autofilled, setAutofilled] = useState<Set<string>>(new Set())
+  const [isFetchingSpecs, setIsFetchingSpecs] = useState(false)
+  const [specFetchResult, setSpecFetchResult] = useState<
+    (SpecFetchResponse & { appliedCount: number; keptCount: number }) | null
+  >(null)
+  const [selectedBrandName, setSelectedBrandName] = useState(watch?.brand?.name ?? "")
+
+  function setSpec(key: SpecKey, value: string) {
+    setIsDirty(true)
+    setAutofilled((prev) => {
+      if (!prev.has(key)) return prev
+      const next = new Set(prev)
+      next.delete(key)
+      return next
+    })
+    setSpecs((prev) => ({ ...prev, [key]: value }))
+  }
+
+  // Brass ring on fields the agent just filled
+  const specHighlight = (key: SpecKey) =>
+    autofilled.has(key) ? "border-brass/70 ring-1 ring-brass/40" : undefined
+
+  function applySpecs(data: SpecFetchResponse) {
+    const s = data.specs
+    const updates: Partial<typeof initialSpecs> = {}
+    const applied = new Set<string>()
+    let kept = 0
+
+    // Fill a field only when it holds no real user data: always fill empties;
+    // on the ADD form also fill untouched defaults (WR 100, strap 20, etc.).
+    // On the edit page, existing DB values are user data — never overwrite.
+    const maybe = (key: SpecKey, value: string | null | undefined) => {
+      if (value == null || value === "") return
+      const current = specs[key]
+      if (current === value) return
+      const fillable = current === "" || (!watch && current === initialSpecs[key])
+      if (!fillable) {
+        kept++
+        return
+      }
+      updates[key] = value
+      applied.add(key)
+    }
+
+    maybe("case_diameter_mm", s.case_diameter_mm?.toString())
+    maybe("strap_width_mm", s.strap_width_mm?.toString())
+    maybe("lug_to_lug_mm", s.lug_to_lug_mm?.toString())
+    maybe("case_height_mm", s.case_height_mm?.toString())
+    maybe("weight_g", s.weight_g?.toString())
+    maybe("water_resistance_m", s.water_resistance_m?.toString())
+    maybe("dial_color", s.dial_color)
+    maybe("case_material", s.case_material)
+    maybe("crystal", s.crystal)
+    maybe("case_shape", s.case_shape)
+    maybe("bezel_type", s.bezel_type)
+    maybe("bezel_material", s.bezel_material)
+
+    if (applied.size > 0) {
+      setSpecs((prev) => ({ ...prev, ...updates }))
+      setAutofilled((prev) => new Set([...prev, ...applied]))
+      setIsDirty(true)
+    }
+
+    // Merge complications: check known ones, append unknown ones to "other"
+    if (s.complications.length > 0) {
+      const knownLower = new Map(KNOWN_COMPLICATIONS.map((c) => [c.toLowerCase(), c]))
+      const unknown: string[] = []
+      const newKnown: string[] = []
+      for (const comp of s.complications) {
+        const canonical = knownLower.get(comp.trim().toLowerCase())
+        if (canonical) {
+          if (!checkedComplications.has(canonical)) newKnown.push(canonical)
+        } else if (
+          !otherComplication.toLowerCase().includes(comp.trim().toLowerCase())
+        ) {
+          unknown.push(comp.trim())
+        }
+      }
+      if (newKnown.length > 0) {
+        setCheckedComplications((prev) => new Set([...prev, ...newKnown]))
+        setIsDirty(true)
+      }
+      if (unknown.length > 0) {
+        setOtherComplication((prev) => [prev, ...unknown].filter(Boolean).join(", "))
+        setIsDirty(true)
+      }
+    }
+
+    setSpecFetchResult({ ...data, appliedCount: applied.size, keptCount: kept })
+    toast.success(
+      `Filled ${applied.size} spec field${applied.size === 1 ? "" : "s"} · $${data.usage.cost_usd.toFixed(2)} API cost`
+    )
+  }
+
+  async function handleAutofillSpecs(e: MouseEvent<HTMLButtonElement>) {
+    const form = e.currentTarget.form
+    if (!form) return
+    const fd = new FormData(form)
+    const modelName = String(fd.get("model") ?? "").trim()
+    const reference = String(fd.get("reference_number") ?? "").trim()
+    const brandName =
+      selectedBrandName ||
+      brands.find((b) => b.id === String(fd.get("brand_id") ?? ""))?.name ||
+      ""
+    if (!brandName || !modelName) {
+      toast.error("Enter a brand and model first — the agent needs them to search.")
+      return
+    }
+    setIsFetchingSpecs(true)
+    try {
+      const res = await fetch("/api/spec-fetch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand: brandName,
+          model: modelName,
+          reference_number: reference,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error ?? "Spec lookup failed.")
+        return
+      }
+      applySpecs(data as SpecFetchResponse)
+    } catch {
+      toast.error("Spec lookup failed — network error.")
+    } finally {
+      setIsFetchingSpecs(false)
+    }
+  }
 
   // Track selected labels
   const [selectedLabelIds, setSelectedLabelIds] = useState<Set<string>>(
@@ -206,7 +362,10 @@ export function WatchForm({
             <BrandCombobox
               brands={brands}
               defaultBrandId={watch?.brand_id}
-              onChange={markDirty}
+              onChange={(_id, name) => {
+                markDirty()
+                if (name) setSelectedBrandName(name)
+              }}
             />
           </div>
           <div className="space-y-2">
@@ -354,12 +513,88 @@ export function WatchForm({
       {/* ── Card 2: Specifications ──────────────────────────────── */}
       <Card className={CARD}>
         <CardHeader className={CARD_HEADER}>
-          <CardTitle className={CARD_TITLE}>
-            <span className={CHIP}>⚙️</span>
-            Specifications
-          </CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle className={CARD_TITLE}>
+              <span className={CHIP}>⚙️</span>
+              Specifications
+            </CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAutofillSpecs}
+              disabled={isFetchingSpecs || isPending || isDeleting}
+              className="shrink-0 border-brass/40 text-brass hover:bg-brass/10 hover:text-brass"
+              title="Search the web for this watch's official specs and fill the empty fields"
+            >
+              {isFetchingSpecs ? "Searching the web…" : "✨ Auto-fill specs"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-5">
+          {/* Agent result panel — review what was found before saving */}
+          {specFetchResult && (
+            <div className="space-y-1.5 rounded-lg border border-brass/30 bg-brass/5 px-4 py-3 text-sm">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-medium text-brass">
+                  Filled {specFetchResult.appliedCount} field
+                  {specFetchResult.appliedCount === 1 ? "" : "s"}
+                  {specFetchResult.keptCount > 0 &&
+                    ` · kept ${specFetchResult.keptCount} existing value${specFetchResult.keptCount === 1 ? "" : "s"}`}{" "}
+                  · confidence: {specFetchResult.specs.confidence}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSpecFetchResult(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                  title="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+              {specFetchResult.specs.suggested_caliber && (
+                <p className="text-muted-foreground">
+                  Suggested caliber:{" "}
+                  <span className="font-mono text-[13px] text-foreground">
+                    {specFetchResult.specs.suggested_caliber}
+                  </span>{" "}
+                  — select it in the Movement box above if it matches.
+                </p>
+              )}
+              {specFetchResult.specs.notes && (
+                <p className="text-muted-foreground">{specFetchResult.specs.notes}</p>
+              )}
+              {specFetchResult.specs.sources.length > 0 && (
+                <p className="truncate text-xs text-muted-foreground">
+                  Sources:{" "}
+                  {specFetchResult.specs.sources.map((url, i) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline hover:text-brass"
+                    >
+                      {i > 0 && ", "}
+                      {(() => {
+                        try {
+                          return new URL(url).hostname
+                        } catch {
+                          return url
+                        }
+                      })()}
+                    </a>
+                  ))}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {specFetchResult.usage.searches} web search
+                {specFetchResult.usage.searches === 1 ? "" : "es"} · $
+                {specFetchResult.usage.cost_usd.toFixed(2)} API cost (
+                {specFetchResult.model}) · review the highlighted fields, then Save.
+              </p>
+            </div>
+          )}
           {/* Movement subsection */}
           <div className="flex items-center gap-2 pt-1">
             <span className="text-xs opacity-60">⏱️</span>
@@ -389,16 +624,29 @@ export function WatchForm({
             <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Case</h4>
             <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
+          {/* Selects submit via hidden inputs (controlled value + name prop
+              double-submits on some Select implementations) */}
+          <input type="hidden" name="case_material" value={specs.case_material} />
+          <input type="hidden" name="crystal" value={specs.crystal} />
+          <input type="hidden" name="case_shape" value={specs.case_shape} />
+          <input type="hidden" name="bezel_type" value={specs.bezel_type} />
+          <input type="hidden" name="bezel_material" value={specs.bezel_material} />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <FormLabel htmlFor="case_material">Case Material</FormLabel>
               <Select
-                name="case_material"
-                defaultValue={watch?.case_material ?? "stainless_steel"}
-                onValueChange={markDirty}
+                value={specs.case_material}
+                onValueChange={(val) => setSpec("case_material", val ?? "")}
               >
-                <SelectTrigger id="case_material" className={FIELD}>
-                  <SelectValue placeholder="Select material" />
+                <SelectTrigger
+                  id="case_material"
+                  className={cn(FIELD, specHighlight("case_material"))}
+                >
+                  <span>
+                    {specs.case_material
+                      ? caseMaterialLabels[specs.case_material]
+                      : "None selected"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">None selected</SelectItem>
@@ -414,16 +662,42 @@ export function WatchForm({
             <div className="space-y-2">
               <FormLabel htmlFor="crystal">Crystal</FormLabel>
               <Select
-                name="crystal"
-                defaultValue={watch?.crystal ?? "sapphire"}
-                onValueChange={markDirty}
+                value={specs.crystal}
+                onValueChange={(val) => setSpec("crystal", val ?? "")}
               >
-                <SelectTrigger id="crystal" className={FIELD}>
-                  <SelectValue placeholder="Select crystal" />
+                <SelectTrigger id="crystal" className={cn(FIELD, specHighlight("crystal"))}>
+                  <span>
+                    {specs.crystal ? crystalLabels[specs.crystal] : "None selected"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">None selected</SelectItem>
                   {Object.entries(crystalLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <FormLabel htmlFor="case_shape">Case Shape</FormLabel>
+              <Select
+                value={specs.case_shape}
+                onValueChange={(val) => setSpec("case_shape", val ?? "")}
+              >
+                <SelectTrigger
+                  id="case_shape"
+                  className={cn(FIELD, specHighlight("case_shape"))}
+                >
+                  <span>
+                    {specs.case_shape ? caseShapeLabels[specs.case_shape] : "None selected"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None selected</SelectItem>
+                  {Object.entries(caseShapeLabels).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
                     </SelectItem>
@@ -441,8 +715,9 @@ export function WatchForm({
                 step="0.1"
                 min="10"
                 max="60"
-                defaultValue={watch?.case_diameter_mm?.toString() ?? ""}
-                className={cn(FIELD, "font-mono")}
+                value={specs.case_diameter_mm}
+                onChange={(e) => setSpec("case_diameter_mm", e.target.value)}
+                className={cn(FIELD, "font-mono", specHighlight("case_diameter_mm"))}
               />
             </div>
 
@@ -455,8 +730,9 @@ export function WatchForm({
                 step="0.5"
                 min="6"
                 max="30"
-                defaultValue={watch?.strap_width_mm?.toString() ?? "20"}
-                className={cn(FIELD, "font-mono")}
+                value={specs.strap_width_mm}
+                onChange={(e) => setSpec("strap_width_mm", e.target.value)}
+                className={cn(FIELD, "font-mono", specHighlight("strap_width_mm"))}
               />
             </div>
 
@@ -469,8 +745,9 @@ export function WatchForm({
                 step="0.1"
                 min="20"
                 max="80"
-                defaultValue={watch?.lug_to_lug_mm?.toString() ?? ""}
-                className={cn(FIELD, "font-mono")}
+                value={specs.lug_to_lug_mm}
+                onChange={(e) => setSpec("lug_to_lug_mm", e.target.value)}
+                className={cn(FIELD, "font-mono", specHighlight("lug_to_lug_mm"))}
               />
             </div>
 
@@ -483,8 +760,24 @@ export function WatchForm({
                 step="0.1"
                 min="4"
                 max="25"
-                defaultValue={watch?.case_height_mm?.toString() ?? ""}
-                className={cn(FIELD, "font-mono")}
+                value={specs.case_height_mm}
+                onChange={(e) => setSpec("case_height_mm", e.target.value)}
+                className={cn(FIELD, "font-mono", specHighlight("case_height_mm"))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <FormLabel htmlFor="weight_g">Weight (g)</FormLabel>
+              <Input
+                id="weight_g"
+                name="weight_g"
+                type="number"
+                step="0.5"
+                min="5"
+                max="1000"
+                value={specs.weight_g}
+                onChange={(e) => setSpec("weight_g", e.target.value)}
+                className={cn(FIELD, "font-mono", specHighlight("weight_g"))}
               />
             </div>
 
@@ -496,9 +789,62 @@ export function WatchForm({
                 type="number"
                 min="0"
                 max="12000"
-                defaultValue={watch?.water_resistance_m?.toString() ?? "100"}
-                className={cn(FIELD, "font-mono")}
+                value={specs.water_resistance_m}
+                onChange={(e) => setSpec("water_resistance_m", e.target.value)}
+                className={cn(FIELD, "font-mono", specHighlight("water_resistance_m"))}
               />
+            </div>
+
+            <div className="space-y-2">
+              <FormLabel htmlFor="bezel_type">Bezel Type</FormLabel>
+              <Select
+                value={specs.bezel_type}
+                onValueChange={(val) => setSpec("bezel_type", val ?? "")}
+              >
+                <SelectTrigger
+                  id="bezel_type"
+                  className={cn(FIELD, specHighlight("bezel_type"))}
+                >
+                  <span>
+                    {specs.bezel_type ? bezelTypeLabels[specs.bezel_type] : "None selected"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None selected</SelectItem>
+                  {Object.entries(bezelTypeLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <FormLabel htmlFor="bezel_material">Bezel Material</FormLabel>
+              <Select
+                value={specs.bezel_material}
+                onValueChange={(val) => setSpec("bezel_material", val ?? "")}
+              >
+                <SelectTrigger
+                  id="bezel_material"
+                  className={cn(FIELD, specHighlight("bezel_material"))}
+                >
+                  <span>
+                    {specs.bezel_material
+                      ? bezelMaterialLabels[specs.bezel_material]
+                      : "None selected"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None selected</SelectItem>
+                  {Object.entries(bezelMaterialLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -507,8 +853,9 @@ export function WatchForm({
                 id="dial_color"
                 name="dial_color"
                 placeholder="e.g. Black"
-                defaultValue={watch?.dial_color ?? ""}
-                className={FIELD}
+                value={specs.dial_color}
+                onChange={(e) => setSpec("dial_color", e.target.value)}
+                className={cn(FIELD, specHighlight("dial_color"))}
               />
             </div>
           </div>

@@ -13,10 +13,37 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { createBrand, deleteBrand, updateBrand } from "@/lib/actions/brand-actions"
 import type { BrandActionState } from "@/lib/actions/brand-actions"
+import { brandTypeLabels } from "@/lib/validations/brand"
 import { toast } from "sonner"
 import type { Brand } from "@/lib/types/watch"
+
+// Badge treatment per brand type — steel blue for micro, brass-ish amber for
+// indie, muted for the majors.
+const TYPE_BADGE: Record<string, string> = {
+  major: "bg-muted text-muted-foreground",
+  micro: "bg-primary/15 text-primary",
+  indie: "bg-brass/15 text-brass",
+}
+
+function BrandTypeBadge({ type }: { type: Brand["brand_type"] }) {
+  if (!type) return <span className="text-muted-foreground">{"—"}</span>
+  return (
+    <span
+      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${TYPE_BADGE[type]}`}
+    >
+      {brandTypeLabels[type]}
+    </span>
+  )
+}
 
 interface BrandsTabProps {
   brands: Brand[]
@@ -38,12 +65,14 @@ function BrandRow({
   const [savePending, startSaveTransition] = useTransition()
   const [editName, setEditName] = useState(brand.name)
   const [editCountry, setEditCountry] = useState(brand.country_of_origin ?? "")
+  const [editType, setEditType] = useState<string>(brand.brand_type ?? "")
 
   function handleSave() {
     startSaveTransition(async () => {
       const result = await updateBrand(brand.id, {
         name: editName,
         country_of_origin: editCountry,
+        brand_type: editType,
       })
       if (result.error) {
         toast.error(result.error)
@@ -57,6 +86,7 @@ function BrandRow({
   function handleCancel() {
     setEditName(brand.name)
     setEditCountry(brand.country_of_origin ?? "")
+    setEditType(brand.brand_type ?? "")
     setEditing(false)
   }
 
@@ -77,6 +107,22 @@ function BrandRow({
             className="h-8"
             placeholder="e.g. Switzerland"
           />
+        </TableCell>
+        <TableCell>
+          {/* Controlled Select: render the label manually in the trigger */}
+          <Select value={editType} onValueChange={(val) => setEditType(val ?? "")}>
+            <SelectTrigger className="h-8 w-32">
+              <span>{editType ? brandTypeLabels[editType] : "—"}</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">—</SelectItem>
+              {Object.entries(brandTypeLabels).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </TableCell>
         <TableCell className="text-center">{count}</TableCell>
         <TableCell>
@@ -110,6 +156,9 @@ function BrandRow({
       <TableCell className="font-medium">{brand.name}</TableCell>
       <TableCell className="text-muted-foreground">
         {brand.country_of_origin ?? "\u2014"}
+      </TableCell>
+      <TableCell>
+        <BrandTypeBadge type={brand.brand_type} />
       </TableCell>
       <TableCell className="text-center">{count}</TableCell>
       <TableCell>
@@ -182,6 +231,22 @@ export function BrandsTab({ brands, watchCountByBrand }: BrandsTabProps) {
                 placeholder="e.g. Switzerland"
               />
             </div>
+            <div className="w-40 space-y-2">
+              <Label htmlFor="brand-type">Type</Label>
+              <Select name="brand_type" defaultValue="">
+                <SelectTrigger id="brand-type">
+                  <SelectValue placeholder="—" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">—</SelectItem>
+                  {Object.entries(brandTypeLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Button type="submit" disabled={isPending}>
               {isPending ? "Adding..." : "Add"}
             </Button>
@@ -199,6 +264,7 @@ export function BrandsTab({ brands, watchCountByBrand }: BrandsTabProps) {
             <TableRow>
               <TableHead>Brand</TableHead>
               <TableHead>Country</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead className="text-center">Watches</TableHead>
               <TableHead className="w-24" />
             </TableRow>

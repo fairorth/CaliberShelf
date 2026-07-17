@@ -22,6 +22,41 @@ export const crystalTypeSchema = z.enum([
   "other",
 ])
 
+export const caseShapeSchema = z.enum([
+  "round",
+  "cushion",
+  "tonneau",
+  "rectangular",
+  "square",
+  "oval",
+  "octagonal",
+  "other",
+])
+
+export const bezelTypeSchema = z.enum([
+  "none",
+  "fixed",
+  "dive",
+  "gmt",
+  "tachymeter",
+  "compass",
+  "countdown",
+  "internal",
+  "other",
+])
+
+export const bezelMaterialSchema = z.enum([
+  "stainless_steel",
+  "titanium",
+  "ceramic",
+  "aluminum",
+  "sapphire",
+  "gold",
+  "bronze",
+  "carbon",
+  "other",
+])
+
 // Main watch form schema — validates user input for create/update
 export const watchFormSchema = z.object({
   // Required FK fields
@@ -66,6 +101,9 @@ export const watchFormSchema = z.object({
   // Optional enum fields (empty string = null in the database)
   case_material: z.union([caseMaterialSchema, z.literal("")]).optional().default(""),
   crystal: z.union([crystalTypeSchema, z.literal("")]).optional().default(""),
+  case_shape: z.union([caseShapeSchema, z.literal("")]).optional().default(""),
+  bezel_type: z.union([bezelTypeSchema, z.literal("")]).optional().default(""),
+  bezel_material: z.union([bezelMaterialSchema, z.literal("")]).optional().default(""),
 
   // Optional numeric fields
   case_diameter_mm: z
@@ -98,6 +136,12 @@ export const watchFormSchema = z.object({
     .default("")
     .transform((val) => (val === "" ? null : parseInt(val, 10)))
     .pipe(z.number().min(0).max(12000).nullable()),
+  weight_g: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val === "" ? null : parseFloat(val)))
+    .pipe(z.number().min(5).max(1000).nullable()),
 
   // Purchase info
   purchase_date: z.string().optional().default(""),
@@ -169,6 +213,41 @@ export const crystalLabels: Record<string, string> = {
   mineral: "Mineral",
   acrylic: "Acrylic",
   hesalite: "Hesalite",
+  other: "Other",
+}
+
+export const caseShapeLabels: Record<string, string> = {
+  round: "Round",
+  cushion: "Cushion",
+  tonneau: "Tonneau",
+  rectangular: "Rectangular",
+  square: "Square",
+  oval: "Oval",
+  octagonal: "Octagonal",
+  other: "Other",
+}
+
+export const bezelTypeLabels: Record<string, string> = {
+  none: "None",
+  fixed: "Fixed",
+  dive: "Dive (count-up)",
+  gmt: "GMT",
+  tachymeter: "Tachymeter",
+  compass: "Compass",
+  countdown: "Countdown",
+  internal: "Internal",
+  other: "Other",
+}
+
+export const bezelMaterialLabels: Record<string, string> = {
+  stainless_steel: "Stainless Steel",
+  titanium: "Titanium",
+  ceramic: "Ceramic",
+  aluminum: "Aluminum",
+  sapphire: "Sapphire",
+  gold: "Gold",
+  bronze: "Bronze",
+  carbon: "Carbon",
   other: "Other",
 }
 

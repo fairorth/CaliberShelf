@@ -21,6 +21,40 @@ export type CrystalType =
   | "hesalite"
   | "other"
 
+export type CaseShape =
+  | "round"
+  | "cushion"
+  | "tonneau"
+  | "rectangular"
+  | "square"
+  | "oval"
+  | "octagonal"
+  | "other"
+
+export type BezelType =
+  | "none"
+  | "fixed"
+  | "dive"
+  | "gmt"
+  | "tachymeter"
+  | "compass"
+  | "countdown"
+  | "internal"
+  | "other"
+
+export type BezelMaterial =
+  | "stainless_steel"
+  | "titanium"
+  | "ceramic"
+  | "aluminum"
+  | "sapphire"
+  | "gold"
+  | "bronze"
+  | "carbon"
+  | "other"
+
+export type BrandType = "major" | "micro" | "indie"
+
 // ── Brand ──────────────────────────────────────────────────────
 
 export interface Brand {
@@ -28,6 +62,7 @@ export interface Brand {
   user_id: string
   name: string
   country_of_origin: string | null
+  brand_type: BrandType | null
   logo_url: string | null
   created_at: string
   updated_at: string
@@ -91,6 +126,10 @@ export interface Watch {
   strap_width_mm: number | null
   lug_to_lug_mm: number | null
   case_height_mm: number | null
+  weight_g: number | null
+  case_shape: CaseShape | null
+  bezel_type: BezelType | null
+  bezel_material: BezelMaterial | null
   crystal: CrystalType | null
   water_resistance_m: number | null
   dial_color: string | null
