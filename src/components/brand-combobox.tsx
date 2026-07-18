@@ -54,6 +54,7 @@ export function BrandCombobox({ brands, defaultBrandId, onChange }: BrandCombobo
           name,
           country_of_origin: null,
           brand_type: null,
+          store_url: null,
           logo_url: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

@@ -63,6 +63,7 @@ export interface Brand {
   name: string
   country_of_origin: string | null
   brand_type: BrandType | null
+  store_url: string | null
   logo_url: string | null
   created_at: string
   updated_at: string
@@ -209,6 +210,37 @@ export interface WatchValuation {
   caveats: string | null
   agent_model: string | null
   created_at: string
+}
+
+// ── Wishlist Deal ───────────────────────────────────────────────
+
+export type DealAvailability =
+  | "available"
+  | "preorder"
+  | "sold_out"
+  | "not_found"
+  | "no_store"
+  | "unknown"
+
+// Row produced by the deal scanner (scripts/deal-check.mjs) — one current
+// row per wish-list watch, upserted on each run.
+export interface WishlistDeal {
+  id: string
+  watch_id: string
+  user_id: string
+  checked_at: string
+  source: string
+  availability: DealAvailability
+  retail_price_cents: number | null
+  currency: string
+  product_url: string | null
+  product_title: string | null
+  best_used_price_cents: number | null
+  best_used_url: string | null
+  best_used_note: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
 }
 
 // ── Wear Log ────────────────────────────────────────────────────

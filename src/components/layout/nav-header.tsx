@@ -15,6 +15,7 @@ const navItems = [
   { href: "/collection", label: "Collection", icon: "📋" },
   { href: "/batch-import", label: "Batch Import", icon: "📦" },
   { href: "/wear-log", label: "Wear Log", icon: "📅" },
+  { href: "/deals", label: "Deals", icon: "💰" },
   { href: "/reports", label: "Reports", icon: "📊" },
   { href: "/config", label: "Config", icon: "⚙️" },
 ]

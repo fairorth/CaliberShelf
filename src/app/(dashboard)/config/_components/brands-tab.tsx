@@ -66,6 +66,7 @@ function BrandRow({
   const [editName, setEditName] = useState(brand.name)
   const [editCountry, setEditCountry] = useState(brand.country_of_origin ?? "")
   const [editType, setEditType] = useState<string>(brand.brand_type ?? "")
+  const [editStoreUrl, setEditStoreUrl] = useState(brand.store_url ?? "")
 
   function handleSave() {
     startSaveTransition(async () => {
@@ -73,6 +74,7 @@ function BrandRow({
         name: editName,
         country_of_origin: editCountry,
         brand_type: editType,
+        store_url: editStoreUrl,
       })
       if (result.error) {
         toast.error(result.error)
@@ -87,6 +89,7 @@ function BrandRow({
     setEditName(brand.name)
     setEditCountry(brand.country_of_origin ?? "")
     setEditType(brand.brand_type ?? "")
+    setEditStoreUrl(brand.store_url ?? "")
     setEditing(false)
   }
 
@@ -124,6 +127,14 @@ function BrandRow({
             </SelectContent>
           </Select>
         </TableCell>
+        <TableCell>
+          <Input
+            value={editStoreUrl}
+            onChange={(e) => setEditStoreUrl(e.target.value)}
+            className="h-8 font-mono text-xs"
+            placeholder="https://brand.com"
+          />
+        </TableCell>
         <TableCell className="text-center">{count}</TableCell>
         <TableCell>
           <div className="flex gap-1">
@@ -159,6 +170,21 @@ function BrandRow({
       </TableCell>
       <TableCell>
         <BrandTypeBadge type={brand.brand_type} />
+      </TableCell>
+      <TableCell>
+        {brand.store_url ? (
+          <a
+            href={brand.store_url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-primary underline-offset-2 hover:underline"
+            title={brand.store_url}
+          >
+            🛒 store
+          </a>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
       </TableCell>
       <TableCell className="text-center">{count}</TableCell>
       <TableCell>
@@ -231,6 +257,15 @@ export function BrandsTab({ brands, watchCountByBrand }: BrandsTabProps) {
                 placeholder="e.g. Switzerland"
               />
             </div>
+            <div className="w-52 space-y-2">
+              <Label htmlFor="brand-store">Store URL</Label>
+              <Input
+                id="brand-store"
+                name="store_url"
+                placeholder="https://brand.com"
+                className="font-mono text-xs"
+              />
+            </div>
             <div className="w-40 space-y-2">
               <Label htmlFor="brand-type">Type</Label>
               <Select name="brand_type" defaultValue="">
@@ -265,6 +300,7 @@ export function BrandsTab({ brands, watchCountByBrand }: BrandsTabProps) {
               <TableHead>Brand</TableHead>
               <TableHead>Country</TableHead>
               <TableHead>Type</TableHead>
+              <TableHead>Store</TableHead>
               <TableHead className="text-center">Watches</TableHead>
               <TableHead className="w-24" />
             </TableRow>

@@ -93,7 +93,12 @@ export async function deleteBrand(brandId: string): Promise<BrandActionState> {
  */
 export async function updateBrand(
   brandId: string,
-  data: { name: string; country_of_origin: string; brand_type: string }
+  data: {
+    name: string
+    country_of_origin: string
+    brand_type: string
+    store_url: string
+  }
 ): Promise<BrandActionState> {
   const supabase = await createClient()
 
@@ -115,6 +120,7 @@ export async function updateBrand(
       name: parsed.data.name,
       country_of_origin: parsed.data.country_of_origin || null,
       brand_type: parsed.data.brand_type || null,
+      store_url: parsed.data.store_url || null,
     })
     .eq("id", brandId)
     .eq("user_id", user.id)
@@ -160,6 +166,7 @@ export async function createBrand(
     name: data.name,
     country_of_origin: data.country_of_origin || null,
     brand_type: data.brand_type || null,
+    store_url: data.store_url || null,
   })
 
   if (error) {

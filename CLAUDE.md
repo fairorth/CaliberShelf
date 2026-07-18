@@ -61,6 +61,15 @@ A personal watch collection tracking app built with Next.js 15 (App Router), Sup
 - Enabling price checking requires a reference_number (Zod refine + DB CHECK)
 - Model/cost decisions live in the script's MODEL and MAX_USES constants
 
+## Deal Scanner (Phase A)
+- `scripts/deal-check.mjs` (`npm run deal-check`) checks wish-list watches
+  against each brand's Shopify `products.json` (via `brands.store_url`) and
+  upserts availability + retail price into `wishlist_deals` (one row per
+  watch). Deterministic — no LLM. Flags: `--dry-run`, `--watch <uuid>`
+- Daily via `.github/workflows/deal-check.yml` (needs only
+  SUPABASE_SERVICE_ROLE_KEY); surfaced on the `/deals` page
+- `best_used_*` columns are reserved for Phase B (gray-market agent)
+
 ## Spec Autofill Agent
 - "✨ Auto-fill specs" button on the watch form calls `POST /api/spec-fetch`
   (`src/app/api/spec-fetch/route.ts`): Claude API + web search/fetch server

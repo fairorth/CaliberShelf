@@ -8,6 +8,12 @@ export const brandFormSchema = z.object({
   country_of_origin: z.string().optional().default(""),
   // Optional enum field (empty string = null in the database)
   brand_type: z.union([brandTypeSchema, z.literal("")]).optional().default(""),
+  // Official web store — the deal scanner polls {store_url}/products.json
+  store_url: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => val.trim().replace(/\/+$/, "")),
 })
 
 export type BrandFormValues = z.input<typeof brandFormSchema>

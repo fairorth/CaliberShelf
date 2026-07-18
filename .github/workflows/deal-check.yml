@@ -1,0 +1,36 @@
+# Daily wish-list deal scan (scripts/deal-check.mjs).
+#
+# Deterministic Shopify availability/price check — no LLM, no API cost.
+# Schedule: daily, 13:00 UTC. Also runnable on demand from the Actions tab.
+#
+# Required repository secrets (already set for price-check.yml):
+#   SUPABASE_SERVICE_ROLE_KEY
+# The Supabase URL is public (it ships in the client bundle), so it is set
+# inline below rather than stored as a secret.
+
+name: Daily deal check
+
+on:
+  schedule:
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+
+jobs:
+  deal-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run deal check
+        run: npm run deal-check
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://ztmmhuaivirxfokmckvx.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

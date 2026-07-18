@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "price-check": "node scripts/price-check.mjs"
+    "price-check": "node scripts/price-check.mjs",
+    "deal-check": "node scripts/deal-check.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
