@@ -28,7 +28,23 @@ const ONLY_WATCH = args.includes("--watch")
   ? args[args.indexOf("--watch") + 1]
   : null
 
-// Politeness: cap pages per store and pause between requests.
+// Reject anything unrecognized — a mistyped flag must never silently
+// become a live run.
+validateArgs(args, { "--dry-run": false, "--watch": true })
+function validateArgs(argv, known) {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i]
+    if (a in known) {
+      if (known[a]) i++
+      continue
+    }
+    console.error(
+      `Unknown argument: "${a}" — did you mean "--${a.replace(/^-+/, "")}"?\n` +
+        `Valid flags: ${Object.keys(known).join(", ")}`
+    )
+    process.exit(1)
+  }
+}
 const MAX_PAGES = 8 // 8 x 250 = 2000 products, plenty for any microbrand
 const FETCH_DELAY_MS = 750
 

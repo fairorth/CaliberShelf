@@ -41,6 +41,29 @@ const MAX_USES = args.includes("--max-uses")
   ? parseInt(args[args.indexOf("--max-uses") + 1], 10)
   : 6
 
+// Reject anything unrecognized — a mistyped flag (e.g. "dry-run" without
+// dashes) must never silently become a live run.
+validateArgs(args, {
+  "--dry-run": false,
+  "--limit": true,
+  "--watch": true,
+  "--max-uses": true,
+})
+function validateArgs(argv, known) {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i]
+    if (a in known) {
+      if (known[a]) i++
+      continue
+    }
+    console.error(
+      `Unknown argument: "${a}" — did you mean "--${a.replace(/^-+/, "")}"?\n` +
+        `Valid flags: ${Object.keys(known).join(", ")}`
+    )
+    process.exit(1)
+  }
+}
+
 // ── Env checks (values are never printed) ────────────────────────
 const missing = [
   "NEXT_PUBLIC_SUPABASE_URL",

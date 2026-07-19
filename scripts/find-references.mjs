@@ -38,6 +38,24 @@ const ONLY_WATCH = args.includes("--watch")
   ? args[args.indexOf("--watch") + 1]
   : null
 
+// Reject anything unrecognized — a mistyped flag (e.g. "dry-run" without
+// dashes) must never silently become a live run.
+validateArgs(args, { "--dry-run": false, "--limit": true, "--watch": true })
+function validateArgs(argv, known) {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i]
+    if (a in known) {
+      if (known[a]) i++ // skip the flag's value
+      continue
+    }
+    console.error(
+      `Unknown argument: "${a}" — did you mean "--${a.replace(/^-+/, "")}"?\n` +
+        `Valid flags: ${Object.keys(known).join(", ")}`
+    )
+    process.exit(1)
+  }
+}
+
 // ── Env checks (values are never printed) ────────────────────────
 const missing = [
   "NEXT_PUBLIC_SUPABASE_URL",
