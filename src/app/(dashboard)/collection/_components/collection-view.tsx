@@ -16,7 +16,6 @@ import {
   CollectionFiltersDialog,
   EMPTY_FILTERS,
   type CollectionFilters,
-  type Ownership,
 } from "./collection-filters"
 import { cn, formatCurrency } from "@/lib/utils"
 import { SHOW_COST_KEY } from "@/lib/preferences"
@@ -67,11 +66,11 @@ function matchesQuery(w: WatchWithCover, query: string): boolean {
   return terms.every((t) => haystack.includes(t))
 }
 
-/** Owned is the default view — wish-list watches only appear when asked for. */
-function matchesOwnership(w: WatchWithCover, ownership: Ownership): boolean {
-  if (ownership === "wishlist") return w.is_wishlist
-  if (ownership === "both") return true
-  return !w.is_wishlist
+/** Every watch is exactly one status: wish-list beats coming-soon beats owned. */
+function matchesStatus(w: WatchWithCover, f: CollectionFilters): boolean {
+  if (w.is_wishlist) return f.showWishlist
+  if (w.is_coming_soon) return f.showComingSoon
+  return f.showOwned
 }
 
 function applyFilters(watches: WatchWithCover[], f: CollectionFilters): WatchWithCover[] {
@@ -80,13 +79,11 @@ function applyFilters(watches: WatchWithCover[], f: CollectionFilters): WatchWit
   const priceActive = minCents !== null || maxCents !== null
 
   return watches.filter((w) => {
-    if (!matchesOwnership(w, f.ownership)) return false
+    if (!matchesStatus(w, f)) return false
     if (f.brandId && w.brand_id !== f.brandId) return false
     if (f.movementId && w.movement_id !== f.movementId) return false
     if (f.caliberType && w.movement?.caliber_type !== f.caliberType) return false
     if (f.caseMaterial && w.case_material !== f.caseMaterial) return false
-    if (f.comingSoon === "yes" && !w.is_coming_soon) return false
-    if (f.comingSoon === "no" && w.is_coming_soon) return false
     if (f.priceTracking === "tracked" && !w.price_check_enabled) return false
     if (f.priceTracking === "untracked" && w.price_check_enabled) return false
     if (priceActive) {
@@ -257,11 +254,11 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
     }
   }, [watches])
 
-  // The "X of Y" total is ownership-scoped so wish-list watches never count
-  // toward the collection size unless the user explicitly asks to see them.
+  // The "X of Y" total is status-scoped so unchecked statuses (e.g. hiding
+  // wish-list watches) don't count toward the collection size.
   const ownershipTotal = useMemo(
-    () => watches.filter((w) => matchesOwnership(w, filters.ownership)).length,
-    [watches, filters.ownership]
+    () => watches.filter((w) => matchesStatus(w, filters)).length,
+    [watches, filters]
   )
 
   const afterCategory = useMemo(

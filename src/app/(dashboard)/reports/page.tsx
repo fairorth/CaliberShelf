@@ -27,6 +27,13 @@ const REPORTS: ReportLink[] = [
     available: true,
   },
   {
+    slug: "attention-needed",
+    title: "Attention Needed",
+    description:
+      "Brands, movements, and watches with missing critical information — click through to fix each one.",
+    available: true,
+  },
+  {
     slug: "wear-summary",
     title: "Wear Summary",
     description: "How often and how recently you wear each watch.",

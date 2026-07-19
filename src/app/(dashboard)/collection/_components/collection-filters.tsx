@@ -18,29 +18,30 @@ import { caliberTypeLabels } from "@/lib/validations/movement"
 
 // ── Filter shape ───────────────────────────────────────────────────
 
-export type Ownership = "owned" | "wishlist" | "both"
-
 export type PriceTracking = "" | "tracked" | "untracked" // "" = all watches
 
+// Every watch is exactly one status: wish-list beats coming-soon beats owned.
 export interface CollectionFilters {
-  ownership: Ownership // "owned" = default (wish-list watches hidden)
+  showOwned: boolean
+  showComingSoon: boolean
+  showWishlist: boolean
   brandId: string
   movementId: string
   caliberType: string
   caseMaterial: string
-  comingSoon: string // "" = any, "yes", "no"
   priceTracking: PriceTracking
   minPrice: string // dollars, as typed
   maxPrice: string
 }
 
 export const EMPTY_FILTERS: CollectionFilters = {
-  ownership: "owned",
+  showOwned: true,
+  showComingSoon: true,
+  showWishlist: true,
   brandId: "",
   movementId: "",
   caliberType: "",
   caseMaterial: "",
-  comingSoon: "",
   priceTracking: "",
   minPrice: "",
   maxPrice: "",
@@ -48,12 +49,11 @@ export const EMPTY_FILTERS: CollectionFilters = {
 
 export function activeFilterCount(f: CollectionFilters): number {
   let n = 0
-  if (f.ownership !== "owned") n++
+  if (!f.showOwned || !f.showComingSoon || !f.showWishlist) n++
   if (f.brandId) n++
   if (f.movementId) n++
   if (f.caliberType) n++
   if (f.caseMaterial) n++
-  if (f.comingSoon) n++
   if (f.priceTracking) n++
   if (f.minPrice || f.maxPrice) n++
   return n
@@ -120,19 +120,28 @@ export function CollectionFiltersDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Ownership */}
+          {/* Status — every watch is exactly one of these three */}
           <div className="space-y-1.5">
-            <FormLabel htmlFor="filter-ownership">Ownership</FormLabel>
-            <select
-              id="filter-ownership"
-              className={SELECT_CLASS}
-              value={filters.ownership}
-              onChange={(e) => set("ownership", e.target.value as Ownership)}
-            >
-              <option value="owned">Owned</option>
-              <option value="wishlist">Wish List</option>
-              <option value="both">Both</option>
-            </select>
+            <FormLabel>Show</FormLabel>
+            <div className="flex flex-wrap gap-4">
+              {(
+                [
+                  ["showOwned", "Owned"],
+                  ["showComingSoon", "Coming Soon"],
+                  ["showWishlist", "Wish List"],
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-border accent-primary"
+                    checked={filters[key]}
+                    onChange={(e) => set(key, e.target.checked)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* Brand */}
@@ -205,21 +214,6 @@ export function CollectionFiltersDialog({
                 ))}
               </select>
             </div>
-          </div>
-
-          {/* Coming soon */}
-          <div className="space-y-1.5">
-            <FormLabel htmlFor="filter-coming-soon">Coming Soon</FormLabel>
-            <select
-              id="filter-coming-soon"
-              className={SELECT_CLASS}
-              value={filters.comingSoon}
-              onChange={(e) => set("comingSoon", e.target.value)}
-            >
-              <option value="">Any</option>
-              <option value="yes">Coming soon (awaiting arrival)</option>
-              <option value="no">In collection (arrived)</option>
-            </select>
           </div>
 
           {/* Price tracking */}

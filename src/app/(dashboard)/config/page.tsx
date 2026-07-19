@@ -15,7 +15,17 @@ export const metadata: Metadata = {
   title: "Config | CaliberShelf",
 }
 
-export default async function ConfigPage() {
+const TAB_VALUES = ["brands", "movements", "categories", "labels", "settings"]
+
+export default async function ConfigPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  // Deep-linkable tabs (e.g. /config?tab=movements from the Attention report)
+  const { tab } = await searchParams
+  const initialTab = tab && TAB_VALUES.includes(tab) ? tab : "brands"
+
   const [brands, movements, categories, labels, watches] = await Promise.all([
     getBrands(),
     getMovements(),
@@ -45,7 +55,7 @@ export default async function ConfigPage() {
     <div className="space-y-6">
       <h1 className="font-display text-lg font-medium tracking-tight">Configuration</h1>
 
-      <Tabs defaultValue="brands">
+      <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value="brands">Brands ({brands.length})</TabsTrigger>
           <TabsTrigger value="movements">Movements ({movements.length})</TabsTrigger>
