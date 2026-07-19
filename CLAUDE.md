@@ -69,6 +69,10 @@ A personal watch collection tracking app built with Next.js 15 (App Router), Sup
 - Daily via `.github/workflows/deal-check.yml` (needs only
   SUPABASE_SERVICE_ROLE_KEY); surfaced on the `/deals` page
 - `best_used_*` columns are reserved for Phase B (gray-market agent)
+- `scripts/find-store-urls.mjs` (`npm run find-store-urls`) is the one-sweep
+  enrichment agent: web-searches each brand's official store URL + classifies
+  brand_type, verifies Shopify via products.json, fills only NULL columns
+  (never overwrites manual edits). Flags: `--dry-run`, `--limit N`, `--brand`
 
 ## Spec Autofill Agent
 - "✨ Auto-fill specs" button on the watch form calls `POST /api/spec-fetch`
