@@ -82,6 +82,12 @@ export const watchFormSchema = z.object({
   complication: z.string().optional().default(""),
   notes: z.string().optional().default(""),
 
+  // Agent-supplied reference awaiting human verification (hidden input "on"/"")
+  reference_unverified: z
+    .string()
+    .optional()
+    .transform((v) => v === "on"),
+
   // Status — checkbox sends "on" when checked, nothing when unchecked
   is_coming_soon: z
     .string()

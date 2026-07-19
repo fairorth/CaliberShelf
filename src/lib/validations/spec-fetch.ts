@@ -18,6 +18,9 @@ export const specFetchRequestSchema = z.object({
 // watch-form schemas so the agent can only return values the form accepts.
 // null = "could not determine" — never guessed.
 export const specFetchResultSchema = z.object({
+  // Manufacturer reference for the exact variant — null unless confident.
+  // Applied to the form flagged "needs verification", never trusted silently.
+  reference_number: z.string().nullable(),
   case_diameter_mm: z.number().nullable(),
   lug_to_lug_mm: z.number().nullable(),
   strap_width_mm: z.number().nullable(),

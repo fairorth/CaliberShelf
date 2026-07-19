@@ -89,6 +89,7 @@ export async function getAttentionReport(): Promise<AttentionReport> {
   for (const w of allWatches) {
     const missing: string[] = []
     if (!w.reference_number) missing.push("Reference #")
+    else if (w.reference_unverified) missing.push("Verify reference")
     if (!w.movement_id) missing.push("Caliber")
     if (w.case_diameter_mm == null) missing.push("Case diameter")
     if (w.case_height_mm == null) missing.push("Case height")

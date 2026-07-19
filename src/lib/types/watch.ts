@@ -118,6 +118,8 @@ export interface Watch {
   brand_id: string
   model: string
   reference_number: string | null
+  /** true = reference was agent-supplied and not yet human-verified */
+  reference_unverified: boolean
   serial_number: string | null
   nickname: string | null
   movement_id: string | null

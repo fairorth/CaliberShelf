@@ -83,6 +83,13 @@ A personal watch collection tracking app built with Next.js 15 (App Router), Sup
   values), highlights applied fields, user reviews then saves; needs
   ANTHROPIC_API_KEY (server env — local .env.local AND Vercel)
 - MODEL/pricing constants at top of route.ts; cost shown in the result panel
+- Also proposes a reference_number: applied only to an empty field and flagged
+  `watches.reference_unverified` (00026) — amber badge + "Mark verified" on
+  the form; human edit clears the flag; "Verify reference" chip in the
+  Attention Needed report
+- `scripts/find-references.mjs` (`npm run find-references`) batch-sweeps
+  watches missing a reference (writes ref + unverified flag; `--dry-run`,
+  `--limit`, `--watch`)
 
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000

@@ -41,6 +41,11 @@ Rules:
 - "case_height_mm" means the case thickness.
 - "suggested_caliber" is the movement name as the manufacturer states it,
   e.g. "Miyota 9039" or "Sellita SW200-1".
+- "reference_number": the manufacturer's reference for the EXACT variant
+  (dial color, metal, bracelet). If the user already supplied one, echo it
+  back unchanged. If multiple variants share the model name and you cannot
+  pin the exact one, return null and explain in "notes" — a wrong reference
+  is worse than none.
 - "complications" uses short names like "Date", "Day", "Chronograph",
   "Moon Phase", "Power Reserve", "GMT".
 - "sources" lists the URLs you actually extracted specs from.

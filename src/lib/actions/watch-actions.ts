@@ -54,6 +54,9 @@ export async function createWatch(
       brand_id: data.brand_id,
       model: data.model,
       reference_number: data.reference_number || null,
+      reference_unverified: data.reference_number
+        ? data.reference_unverified
+        : false,
       serial_number: data.serial_number || null,
       nickname: data.nickname || null,
       movement_id: data.movement_id || null,
@@ -129,6 +132,10 @@ export async function updateWatch(
       brand_id: data.brand_id,
       model: data.model,
       reference_number: data.reference_number || null,
+      // No reference = nothing to verify
+      reference_unverified: data.reference_number
+        ? data.reference_unverified
+        : false,
       serial_number: data.serial_number || null,
       nickname: data.nickname || null,
       movement_id: data.movement_id || null,

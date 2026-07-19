@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "price-check": "node scripts/price-check.mjs",
     "deal-check": "node scripts/deal-check.mjs",
-    "find-store-urls": "node scripts/find-store-urls.mjs"
+    "find-store-urls": "node scripts/find-store-urls.mjs",
+    "find-references": "node scripts/find-references.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",

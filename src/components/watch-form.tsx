@@ -112,6 +112,14 @@ export function WatchForm({
     })
   }
 
+  // Reference number is controlled so the autofill agent can propose one.
+  // Agent-supplied refs carry reference_unverified until a human confirms.
+  const [refNumber, setRefNumber] = useState(watch?.reference_number ?? "")
+  const [refUnverified, setRefUnverified] = useState(
+    watch?.reference_unverified ?? false
+  )
+  const [refAutofilled, setRefAutofilled] = useState(false)
+
   // Price checking is only meaningful when the agent can identify the exact
   // variant, so the checkbox is gated on having a reference number.
   const [hasRef, setHasRef] = useState(Boolean(watch?.reference_number?.trim()))
@@ -199,7 +207,18 @@ export function WatchForm({
     maybe("bezel_type", s.bezel_type)
     maybe("bezel_material", s.bezel_material)
 
-    if (applied.size > 0) {
+    // Agent-proposed reference: only fills an empty field, always flagged
+    // unverified — a wrong reference poisons price-check and deal matching.
+    let refApplied = false
+    if (s.reference_number && refNumber.trim() === "") {
+      setRefNumber(s.reference_number)
+      setHasRef(true)
+      setRefUnverified(true)
+      setRefAutofilled(true)
+      refApplied = true
+    }
+
+    if (applied.size > 0 || refApplied) {
       setSpecs((prev) => ({ ...prev, ...updates }))
       setAutofilled((prev) => new Set([...prev, ...applied]))
       setIsDirty(true)
@@ -230,9 +249,11 @@ export function WatchForm({
       }
     }
 
-    setSpecFetchResult({ ...data, appliedCount: applied.size, keptCount: kept })
+    const appliedCount = applied.size + (refApplied ? 1 : 0)
+    setSpecFetchResult({ ...data, appliedCount, keptCount: kept })
     toast.success(
-      `Filled ${applied.size} spec field${applied.size === 1 ? "" : "s"} · $${data.usage.cost_usd.toFixed(2)} API cost`
+      `Filled ${appliedCount} field${appliedCount === 1 ? "" : "s"}` +
+        `${refApplied ? " (reference needs verification)" : ""} · $${data.usage.cost_usd.toFixed(2)} API cost`
     )
   }
 
@@ -390,14 +411,49 @@ export function WatchForm({
             />
           </div>
           <div className="space-y-2">
-            <FormLabel htmlFor="reference_number">Reference Number</FormLabel>
+            <div className="flex items-center gap-2">
+              <FormLabel htmlFor="reference_number">Reference Number</FormLabel>
+              {refUnverified && (
+                <>
+                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-400">
+                    ⚠ needs verification
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRefUnverified(false)
+                      markDirty()
+                    }}
+                    className="text-[11px] font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    Mark verified
+                  </button>
+                </>
+              )}
+            </div>
+            <input
+              type="hidden"
+              name="reference_unverified"
+              value={refUnverified ? "on" : ""}
+            />
             <Input
               id="reference_number"
               name="reference_number"
               placeholder="e.g. 310.30.42.50.01.001"
-              defaultValue={watch?.reference_number ?? ""}
-              onChange={(e) => setHasRef(e.target.value.trim() !== "")}
-              className={cn(FIELD, "font-mono text-[13px]")}
+              value={refNumber}
+              onChange={(e) => {
+                setRefNumber(e.target.value)
+                setHasRef(e.target.value.trim() !== "")
+                // A human editing the reference counts as verification
+                setRefUnverified(false)
+                setRefAutofilled(false)
+              }}
+              className={cn(
+                FIELD,
+                "font-mono text-[13px]",
+                (refAutofilled || refUnverified) &&
+                  "border-amber-500/60 ring-1 ring-amber-500/30"
+              )}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
