@@ -51,6 +51,13 @@ A personal watch collection tracking app built with Next.js 15 (App Router), Sup
 - `react-hooks/set-state-in-effect` lint rule fires only on the **first** setState in an effect. One `eslint-disable-next-line` above the first call covers all subsequent ones — directives on later calls trigger "unused" warnings.
 - localStorage hydration: read in `useEffect` (server can't access it). The first setState triggers the lint rule above; this is a legitimate exception worth disabling.
 
+## Agents — see docs/agents.md
+Full fleet reference (what each agent does, how it's initiated, observed
+costs, cost levers): `docs/agents.md`. Observed costs: valuation ~$1-1.5/watch
+· spec autofill ~$0.10-0.25/click · store-URL sweep $0.14/brand ·
+reference sweep $0.44/watch · deal-check $0. ALWAYS `--dry-run --limit N`
+before a paid sweep; script cost printouts use list pricing (conservative).
+
 ## Price-Check Valuation Agent
 - `scripts/price-check.mjs` (`npm run price-check`) values watches with
   `price_check_enabled = true` via the Claude API (web search/fetch server
