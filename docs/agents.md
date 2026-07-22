@@ -19,7 +19,7 @@ follow), see [price-check.mjs.md](price-check.mjs.md).
 | Agent | Kind | Trigger | Model | Observed cost | Recurring? |
 |---|---|---|---|---|---|
 | Valuation (`price-check.mjs`) | LLM + web search/fetch | Monthly cron (1st, 14:00 UTC) + manual | Sonnet 5, 6+6 uses | ~$1–1.5/watch (~340k tokens, ~9 min each) | Yes — monthly, flagged watches only |
-| Spec autofill (`/api/spec-fetch`) | LLM + web search/fetch | ✨ button on watch form | **Opus 4.8**, 4+4 uses | ~$0.10–0.25/click (shown in UI) | Per click |
+| Spec autofill (`/api/spec-fetch`) | LLM + web search/fetch | ✨ button on watch form | Sonnet 5, 4+4 uses | ~$0.05–0.15/click (shown in UI) | Per click |
 | Store-URL / brand-type sweep (`find-store-urls.mjs`) | LLM + web search | Manual script | Sonnet 5, 3 uses | $0.14/brand ($10.22 for all 73) | One-time; re-runs touch only NULL columns |
 | Reference sweep (`find-references.mjs`) | LLM + web search | Manual script | Sonnet 5, 4 uses | **$0.44/watch** ($2.20 for 5) | One-time-ish; ~77 watches remain ≈ $30–35 |
 | Deal check (`deal-check.mjs`) | Deterministic (no LLM) | Daily cron (13:00 UTC) + manual | — | **$0** | Yes — daily, free |
@@ -60,10 +60,11 @@ verified" to clear; a manual edit also clears it).
 
 - **Initiate:** ✨ Auto-fill specs button, watch edit or add form. Needs
   `ANTHROPIC_API_KEY` in the server env (local `.env.local` + Vercel).
-- **Cost:** ~$0.10–0.25 per click on Opus 4.8 (exact figure shown after each
-  run). `MODEL` constant at the top of
-  `src/app/api/spec-fetch/route.ts` — switching to `claude-sonnet-5` cuts
-  cost roughly 3× at slightly lower variant-disambiguation quality.
+- **Cost:** ~$0.05–0.15 per click on Sonnet 5 (exact figure shown after each
+  run). `MODEL` constant at the top of `src/app/api/spec-fetch/route.ts` —
+  switched from Opus 4.8 on 2026-07-21 (Sonnet is ~40% cheaper at list,
+  ~60% under intro pricing); flip back to `claude-opus-4-8` if exact-variant
+  disambiguation noticeably suffers.
 - **Warnings:** never overwrites your data; on the edit page existing DB
   values are untouched even if the agent disagrees with them.
 
@@ -92,7 +93,11 @@ human-verified (watch form badge or the "Verify reference" chip in the
 Attention Needed report) before downstream agents should trust it.
 
 - **Initiate:** `npm run find-references -- [--dry-run] [--limit N]
-  [--watch <uuid>]`. **Always dry-run a small `--limit` batch first.**
+  [--watch <uuid>] [--majors-only] [--value-limit N]`. **Always dry-run a
+  small `--limit` batch first.** Targets are processed highest-value first;
+  `--majors-only` restricts to `brand_type = major`; `--value-limit 3000`
+  restricts to watches whose purchase/estimated price is ≥ $3,000 (watches
+  with no price recorded are skipped when this flag is set).
 - **Cost:** **$0.44/watch observed** — the most expensive per-item agent
   (variant-pinning burns all 4 searches). ~77 watches still lack refs →
   a blind full sweep ≈ **$30–35 list price**. Prefer batches of 10–20,
@@ -131,7 +136,7 @@ cost).
 | **Scope the sweeps** (batches, majors-first, skip no-ref microbrands) | Biggest lever, often 50%+ of a sweep | None on quality — just narrower coverage per run |
 | **Lower `MAX_USES`** (e.g. find-references 4→2) | ~Linear: ≈½ the cost | More nulls / lower confidence on ambiguous variants; easy items unaffected. Two-pass pattern works well: cheap pass first, re-run only the failures with a higher cap |
 | **Batch API** for big sweeps | Flat **50%** off tokens | Results are asynchronous (usually <1h, up to 24h): no live progress, script becomes submit-then-collect. Best for one-time sweeps, wrong for the interactive button |
-| **Spec autofill Opus → Sonnet** | ~3× cheaper per click | Slightly weaker exact-variant disambiguation; fine for straightforward product pages. Keep Opus if you value quality while you're watching |
+| **Spec autofill on Sonnet** (done 2026-07-21) | ~40–60% cheaper per click than Opus | Slightly weaker exact-variant disambiguation; revert the `MODEL` constant if quality suffers |
 | **Reduce valuation cadence/coverage** | Proportional | Fewer datapoints in the value-trend history you're building |
 | Prompt caching | — | Not applicable here: each item is a separate small-prefix request below the cacheable minimum |
 | Haiku tier | — | Not recommended: research quality drops sharply and the newest web-tool variants aren't supported |

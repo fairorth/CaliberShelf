@@ -9,6 +9,9 @@
 //   node scripts/find-references.mjs --dry-run   # research, print, no writes
 //   node scripts/find-references.mjs --limit 5   # only the first N watches
 //   node scripts/find-references.mjs --watch <uuid>
+//   node scripts/find-references.mjs --majors-only     # brand_type = major
+//   node scripts/find-references.mjs --value-limit N   # purchase/estimated
+//     price >= $N (watches without a price are skipped when set)
 //
 // Required in .env.local (never committed):
 //   NEXT_PUBLIC_SUPABASE_URL
@@ -37,10 +40,21 @@ const LIMIT = args.includes("--limit")
 const ONLY_WATCH = args.includes("--watch")
   ? args[args.indexOf("--watch") + 1]
   : null
+const MAJORS_ONLY = args.includes("--majors-only")
+// Prioritize high-value watches: only sweep those at/above $N
+const VALUE_LIMIT = args.includes("--value-limit")
+  ? parseFloat(args[args.indexOf("--value-limit") + 1])
+  : null
 
 // Reject anything unrecognized — a mistyped flag (e.g. "dry-run" without
 // dashes) must never silently become a live run.
-validateArgs(args, { "--dry-run": false, "--limit": true, "--watch": true })
+validateArgs(args, {
+  "--dry-run": false,
+  "--limit": true,
+  "--watch": true,
+  "--majors-only": false,
+  "--value-limit": true,
+})
 function validateArgs(argv, known) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
@@ -153,7 +167,7 @@ async function main() {
   let query = supabase
     .from("watches")
     .select(
-      "id, model, nickname, dial_color, case_diameter_mm, case_material, reference_number, is_wishlist, brands(name), movements(caliber_name)"
+      "id, model, nickname, dial_color, case_diameter_mm, case_material, reference_number, purchase_price_cents, is_wishlist, brands(name, brand_type), movements(caliber_name)"
     )
     .is("reference_number", null)
     .order("model")
@@ -165,9 +179,25 @@ async function main() {
     process.exit(1)
   }
 
-  const targets = (watches ?? []).slice(0, LIMIT)
+  // Highest-value watches first — their references matter most downstream.
+  const missingRefs = watches ?? []
+  const targets = missingRefs
+    .filter((w) => !MAJORS_ONLY || w.brands?.brand_type === "major")
+    .filter(
+      (w) =>
+        VALUE_LIMIT == null ||
+        (w.purchase_price_cents ?? 0) >= VALUE_LIMIT * 100
+    )
+    .sort(
+      (a, b) => (b.purchase_price_cents ?? 0) - (a.purchase_price_cents ?? 0)
+    )
+    .slice(0, LIMIT)
   if (targets.length === 0) {
-    console.log("No watches missing a reference number. Nothing to do.")
+    console.log(
+      missingRefs.length === 0
+        ? "No watches missing a reference number. Nothing to do."
+        : `${missingRefs.length} watch(es) missing a reference, but none match the filters (--majors-only / --value-limit). Nothing to do.`
+    )
     return
   }
   console.log(

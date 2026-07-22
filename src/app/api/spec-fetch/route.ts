@@ -13,9 +13,10 @@ import type { SpecFetchResponse } from "@/lib/validations/spec-fetch"
 export const maxDuration = 180
 
 // Model + cost knobs live here (same convention as scripts/price-check.mjs).
-// Opus for extraction quality; switch to claude-sonnet-5 to cut cost ~3x.
-const MODEL = "claude-opus-4-8"
-const PRICE_PER_MTOK = { input: 5, output: 25 } // USD per million tokens
+// Sonnet per user cost decision 2026-07-21 (~40-60% cheaper than Opus);
+// flip back to claude-opus-4-8 (5/25) if variant disambiguation suffers.
+const MODEL = "claude-sonnet-5"
+const PRICE_PER_MTOK = { input: 3, output: 15 } // USD per million tokens
 const PRICE_PER_SEARCH = 0.01 // web search server tool: $10 per 1,000 searches
 const MAX_USES = 4 // per tool — bounds both latency and cost
 
