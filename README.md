@@ -8,6 +8,8 @@ Production: https://caliber-shelf.vercel.app (auto-deploys from `master`).
 
 ## Documentation
 
+- [The Agent Fleet](docs/agents.md) — every AI agent and automated script:
+  what it does, how it's initiated, observed costs, and cost levers.
 - [Price Check — the Market Valuation Agent](docs/price-check.md) — how the
   AI valuation system works: opting watches in, running it (CLI + GitHub
   Actions), the monthly schedule, cost management, and troubleshooting.
@@ -30,5 +32,9 @@ npm run dev          # dev server
 npm run build        # production build
 npm run lint         # ESLint
 npm run typecheck    # tsc --noEmit
-npm run price-check  # AI market-valuation run (see docs/price-check.md)
+npm run price-check       # AI market-valuation run (see docs/price-check.md)
+npm run deal-check        # wish-list availability scan (free, no LLM)
+npm run find-store-urls   # brand store-URL/type enrichment agent
+npm run find-references   # reference-number sweep agent (--majors-only,
+                          #   --value-limit N to scope; see docs/agents.md)
 ```

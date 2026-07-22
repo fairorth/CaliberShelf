@@ -96,8 +96,9 @@ script cost printouts use list pricing (conservative).
   the form; human edit clears the flag; "Verify reference" chip in the
   Attention Needed report
 - `scripts/find-references.mjs` (`npm run find-references`) batch-sweeps
-  watches missing a reference (writes ref + unverified flag; `--dry-run`,
-  `--limit`, `--watch`)
+  watches missing a reference, highest-value first (writes ref + unverified
+  flag; `--dry-run`, `--limit N`, `--watch <uuid>`, `--majors-only`,
+  `--value-limit N` = only watches priced ≥ $N)
 
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000
