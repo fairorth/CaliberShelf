@@ -51,13 +51,13 @@ mirror — they are **not** foreign-keyed to the user's `brands`/`watches`; the
 
 | Table | Ownership | Written by | Purpose / key columns |
 |---|---|---|---|
-| `profiles` | owner | app (auth) | user profile; `is_public` for future sharing |
+| `profiles` | owner | app (auth) | user profile; `is_public` for future sharing; `tier_config` JSONB (00030) holds the user's price-tier labels and bounds |
 | `brands` | owner | app + `find-store-urls` | `name`, `brand_type`, `store_url` (feeds deal-check), `logo_url` |
 | `movements` | owner | app | caliber catalog; `caliber_name`, `caliber_type`, `beat_rate`, `lift_angle` |
 | `categories` | owner | app | display grouping (renamed from display_cases); `name`, `color` |
 | `labels` | owner | app | free tags; `name`, `color` |
 | `watch_labels` | via watch | app | junction watch↔label (composite PK) |
-| `watches` | owner | app + `find-references` (ref) | the core record; specs, `is_wishlist`, `is_coming_soon`, `price_check_enabled`, `reference_unverified` |
+| `watches` | owner | app + `find-references` (ref) | the core record; specs, `rotating_bezel` (00029), `box` (00031, free-text storage location), `is_wishlist`, `is_coming_soon`, `price_check_enabled`, `reference_unverified` |
 | `watch_photos` | owner | app | storage paths + `is_cover`, `thumb_path` |
 | `wear_logs` | owner | app | one row per wear-day; `worn_date` |
 | `timegrapher_runs` | owner | app | accuracy measurements; rate/amplitude/beat error |
@@ -68,6 +68,31 @@ mirror — they are **not** foreign-keyed to the user's `brands`/`watches`; the
 | `chronoscout_sync_state` | global | `chronoscout-sync` | single row; last sync times, counts, `license` |
 | `agent_runs` | operational | all agents via `scripts/lib/agent-run.mjs` (+ spec-fetch route) | one row per agent invocation; duration, cost (micros), item counts, tokens |
 | `agent_run_items` | operational | agents (audit trail) | per-entity detail for a run; `action`, `field`, `detail`, `confidence`, `sources` |
+
+## The three classification axes
+
+Deliberately kept separate — a watch's style, its mechanics, and its price are
+independent facts, and collapsing them produces a taxonomy that can't answer
+useful questions.
+
+- **Category** — the design archetype, exactly one per watch. These are *rows*
+  in the user-managed `categories` table, not an enum, so they can be renamed
+  and re-bucketed without a migration. Currently Dress, Sport, Chronograph,
+  Daily (pilot/field/GADA collapsed), and Horology (a watchmaking showpiece —
+  intent, not price).
+- **Complications** — what the movement actually does, zero or more per watch,
+  stored comma-joined in `watches.complication` and offered from
+  `KNOWN_COMPLICATIONS` in `src/lib/validations/watch.ts`: Date, DTZ, Power
+  Reserve, Annual Calendar, Perpetual Calendar, Moon Phase, and Fancy (a
+  catch-all whose specifics — tourbillon, jump hour — go in the notes). A
+  finishing style such as skeletonization is not a complication; neither is a
+  design genre such as Chronograph, which earns its place as a category.
+- **Tier** — the price segment, never stored on the watch. It is derived from
+  `purchase_price_cents` against the user's own bands in `profiles.tier_config`
+  (an ordered JSONB array of `{label, max}`, `max` exclusive, last row `null`
+  for the open top). `src/lib/tiers.ts` holds the pure conversion helpers and
+  the defaults; `Config → Tiers` edits them; reports resolve bands at request
+  time so renaming a tier reflows every chart immediately.
 
 ## Which agent writes what
 

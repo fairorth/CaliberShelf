@@ -7,6 +7,11 @@ market-valuation, spec autofill, deal scanning, and a mirrored ChronoScout
 catalog for spec lookups).
 
 Production: https://caliber-shelf.vercel.app (auto-deploys from `master`).
+An in-app **About** page (`/about`) gives the short, shareable tour.
+
+Every code change bumps `package.json` "version" — it renders next to the
+wordmark in the nav bar, so an unbumped version silently misreports what's
+deployed.
 
 ## Documentation
 
@@ -18,8 +23,9 @@ Production: https://caliber-shelf.vercel.app (auto-deploys from `master`).
 - [Price Check — the Market Valuation Agent](docs/price-check.md) — how the
   AI valuation system works: opting watches in, running it (CLI + GitHub
   Actions), the monthly schedule, cost management, and troubleshooting.
-- [Data Model](docs/data-model.md) — tables, ownership/RLS patterns, and which
-  agent writes what (with an ER diagram).
+- [Data Model](docs/data-model.md) — tables, ownership/RLS patterns, the three
+  classification axes (category / complications / tier), and which agent writes
+  what (with an ER diagram).
 - [CLAUDE.md](CLAUDE.md) — architecture, conventions, and commands.
 
 ## Getting Started

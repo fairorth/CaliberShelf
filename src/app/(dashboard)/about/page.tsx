@@ -108,12 +108,22 @@ const SECTIONS: Section[] = [
       {
         icon: "🧭",
         title: "Three Clean Axes",
-        text: "Watches are sorted by design archetype (dress, diver, pilot, chronograph…), their complications, and a price tier derived automatically — no muddling price with style.",
+        text: "Watches are sorted by design archetype (Dress, Sport, Chronograph, Daily, Horology — categories you control), their complications, and a price tier derived automatically from what you paid. No muddling price with style.",
+      },
+      {
+        icon: "🎚️",
+        title: "Tiers On Your Terms",
+        text: "Price tiers are derived from purchase price, but the bands are yours — set them under Config → Tiers and every report follows suit.",
+      },
+      {
+        icon: "▣",
+        title: "Know Where It Lives",
+        text: "Record which case or box in the safe holds each watch. Sort the collection by box to see what's filed and what isn't.",
       },
       {
         icon: "📋",
         title: "Flexible Views",
-        text: "Search, filter, and sort across brand, movement, category, label, price, and tier — in table or gallery view.",
+        text: "Search, filter, and sort across brand, movement, category, label, complication, box, price, and tier — in table or gallery view.",
       },
       {
         icon: "⭐",

@@ -101,6 +101,32 @@ valuation runs.
 - `npx supabase db push` - Push migrations to hosted Supabase
 - `npx shadcn@latest add <component>` - Add a shadcn/ui component
 
+## Taxonomy, Tiers & Config
+Three separate axes — never muddle them (full rationale in docs/data-model.md):
+- **Category** = design archetype, single-select, user-managed rows in
+  `categories` (NOT an enum). Currently: Dress, Sport, Chronograph, Daily,
+  Horology.
+- **Complications** = what the movement does, multi-select, stored
+  comma-joined in `watches.complication`. `KNOWN_COMPLICATIONS` in
+  `src/lib/validations/watch.ts`: Date, DTZ, Power Reserve, Annual Calendar,
+  Perpetual Calendar, Moon Phase, Fancy (exotica goes in notes).
+- **Tier** = price segment, DERIVED from purchase price and **user-configurable**
+  (migration 00030). Per-user `profiles.tier_config` JSONB, ordered
+  `[{label, max}]` where `max` is the EXCLUSIVE upper dollar bound and the last
+  row's `max` is `null` (open top). `src/lib/tiers.ts` owns the pure helpers
+  (`configToBands`, `tierBandForCents`, `normalizeTierConfig`);
+  `src/lib/queries/tier-config.ts` reads, `src/lib/actions/tier-actions.ts`
+  writes, `Config → Tiers` edits. Reports must read the user's bands live —
+  never hardcode price buckets.
+
+## Versioning — every change
+Bump `package.json` "version" (usually the patch segment) as part of EVERY code
+change. `next.config.ts` injects it as `NEXT_PUBLIC_APP_VERSION`,
+`src/lib/version.ts` exposes `APP_VERSION`, and it renders next to the wordmark
+in the nav bar and on `/about`. Edit the field directly rather than running
+`npm version` (which also commits and tags). The dev server inlines the value at
+boot, so a restart is needed before the badge changes.
+
 ## Important Rules
 - ALWAYS validate form data with Zod on BOTH client and server
 - NEVER store secrets in code; use .env.local (which is gitignored)
