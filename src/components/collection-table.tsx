@@ -40,7 +40,7 @@ function movementTypeLabel(watch: WatchWithCover): string {
 
 // ── Sorting ────────────────────────────────────────────────────────
 
-type SortKey = "category" | "brand" | "model" | "nickname" | "reference" | "movementType" | "caliber" | "wearCount" | "price"
+type SortKey = "category" | "brand" | "model" | "nickname" | "reference" | "movementType" | "caliber" | "box" | "wearCount" | "price"
 type SortDir = "asc" | "desc"
 
 function getSortValue(watch: WatchWithCover, key: SortKey): string {
@@ -59,6 +59,8 @@ function getSortValue(watch: WatchWithCover, key: SortKey): string {
       return watch.movement
         ? (watch.movement.caliber_type ? (caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type) : "—").toLowerCase()
         : "zzz" // push empty to bottom
+    case "box":
+      return watch.box ? watch.box.toLowerCase() : "zzz" // unassigned to the bottom
     case "caliber":
       return watch.movement
         ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim().toLowerCase()
@@ -80,6 +82,7 @@ type ColumnId =
   | "reference"
   | "movementType"
   | "caliber"
+  | "box"
   | "worn"
   | "price"
 
@@ -95,6 +98,7 @@ const DEFAULT_WIDTHS: Record<ColumnId, number> = {
   reference: 144,
   movementType: 152,
   caliber: 136,
+  box: 120,
   worn: 64,
   price: 104,
 }
@@ -284,6 +288,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
     "reference",
     "movementType",
     "caliber",
+    "box",
     "worn",
     ...(showCost ? (["price"] as ColumnId[]) : []),
   ]
@@ -358,6 +363,7 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                 <SortableHeader label="Ref #" sortKey="reference" colId="reference" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
                 <SortableHeader label="Movement Type" sortKey="movementType" colId="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
                 <SortableHeader label="Caliber" sortKey="caliber" colId="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
+                <SortableHeader label="Box" sortKey="box" colId="box" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
                 <SortableHeader label="Worn" sortKey="wearCount" colId="worn" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} className="text-right" alignRight />
                 {showCost && (
                   <SortableHeader label="Price" sortKey="price" colId="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} className="text-right" alignRight />
@@ -437,6 +443,9 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                       ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim()
                       : "—"}
                   </TableCell>
+                  <TableCell className="truncate text-[13px] text-muted-foreground">
+                    {watch.box || "\u2014"}
+                  </TableCell>
                   <TableCell className="text-right font-mono text-[13px] tabular-nums text-muted-foreground">
                     {watch.wear_count ?? 0}
                   </TableCell>
@@ -497,6 +506,9 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                   )}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
+                {watch.box && (
+                  <p className="truncate text-xs text-muted-foreground">▣ {watch.box}</p>
+                )}
                 {showCost && (
                   <p className="text-sm font-medium tabular-nums">{priceLabel(watch)}</p>
                 )}

@@ -55,6 +55,13 @@ export function WatchCard({ watch }: WatchCardProps) {
             )}
           </div>
 
+          {/* Storage box */}
+          {watch.box && (
+            <p className="truncate font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+              ▣ {watch.box}
+            </p>
+          )}
+
           {/* Purchase price */}
           {watch.purchase_price_cents !== null && (
             <p className={cn("text-sm font-medium")}>

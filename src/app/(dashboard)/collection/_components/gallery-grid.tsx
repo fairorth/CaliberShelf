@@ -115,6 +115,14 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
               {watch.brand.name}
             </p>
             <p className="truncate text-[13px] text-muted-foreground">{watch.model}</p>
+            {watch.box && (
+              <p
+                title={`Stored in ${watch.box}`}
+                className="mt-1 truncate font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground/70"
+              >
+                ▣ {watch.box}
+              </p>
+            )}
             {showFooter && (
               <div className="mt-2.5 flex items-start justify-between gap-2.5 border-t border-border pt-2.5">
                 {/* Caliber name wraps up to 3 lines (then ellipsis) so long

@@ -55,12 +55,12 @@ const SORT_LABELS: Record<SortKey, string> = {
 
 // ── Pure filter/sort helpers ───────────────────────────────────────
 
-/** Free-text match across brand, model, nickname, and reference number.
+/** Free-text match across brand, model, nickname, reference number, and box.
  *  Whitespace-separated terms are AND-ed (all must appear). */
 function matchesQuery(w: WatchWithCover, query: string): boolean {
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
   if (terms.length === 0) return true
-  const haystack = [w.brand.name, w.model, w.nickname ?? "", w.reference_number ?? ""]
+  const haystack = [w.brand.name, w.model, w.nickname ?? "", w.reference_number ?? "", w.box ?? ""]
     .join(" ")
     .toLowerCase()
   return terms.every((t) => haystack.includes(t))
