@@ -3,8 +3,6 @@ import {
   caseMaterialSchema,
   crystalTypeSchema,
   caseShapeSchema,
-  bezelTypeSchema,
-  bezelMaterialSchema,
 } from "@/lib/validations/watch"
 
 // Request body for POST /api/spec-fetch
@@ -30,8 +28,6 @@ export const specFetchResultSchema = z.object({
   case_material: caseMaterialSchema.nullable(),
   crystal: crystalTypeSchema.nullable(),
   case_shape: caseShapeSchema.nullable(),
-  bezel_type: bezelTypeSchema.nullable(),
-  bezel_material: bezelMaterialSchema.nullable(),
   dial_color: z.string().nullable(),
   complications: z.array(z.string()),
   suggested_caliber: z.string().nullable(),

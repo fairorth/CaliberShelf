@@ -21,6 +21,19 @@ const REPORTS: ReportLink[] = [
     available: true,
   },
   {
+    slug: "collection-map",
+    title: "Collection Map",
+    description:
+      "Where your collection is dense and where the gaps are — size × dial color, distributions, and a diameter/thickness scatter.",
+    available: true,
+  },
+  {
+    slug: "by-category",
+    title: "Watches by Category",
+    description: "Every category with its watches and a price subtotal, plus the collection total.",
+    available: true,
+  },
+  {
     slug: "valuations",
     title: "Watch Valuations",
     description: "Agent-researched market values by run date, with drill-down to evidence.",
@@ -31,6 +44,13 @@ const REPORTS: ReportLink[] = [
     title: "Attention Needed",
     description:
       "Brands, movements, and watches with missing critical information — click through to fix each one.",
+    available: true,
+  },
+  {
+    slug: "agents",
+    title: "Agent Execution Review",
+    description:
+      "Every automated agent run — duration, cost, and items changed, with drill-down to full audit trails.",
     available: true,
   },
   {

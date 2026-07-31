@@ -23,6 +23,7 @@ const { loadEnvConfig } = nextEnv
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
 import { z } from "zod"
+import { startRun, finishRun, usdToMicros } from "./lib/agent-run.mjs"
 
 loadEnvConfig(process.cwd())
 
@@ -194,6 +195,16 @@ async function main() {
       `${DRY_RUN ? " (dry run)" : ""}\n`
   )
 
+  const run = await startRun(supabase, {
+    agent: "find-store-urls",
+    trigger: process.env.AGENT_RUN_TRIGGER,
+    model: MODEL,
+    dryRun: DRY_RUN,
+  })
+  const runItems = []
+  let updatedCount = 0
+  let failedCount = 0
+
   const review = []
   for (const brand of targets) {
     let result
@@ -201,11 +212,26 @@ async function main() {
       result = await researchBrand(brand)
     } catch (err) {
       console.error(`  ! ${brand.name}: agent error — ${err.message}`)
+      failedCount++
+      runItems.push({
+        entityType: "brand",
+        entityId: brand.id,
+        label: brand.name,
+        action: "failed",
+        detail: `agent error — ${err.message}`,
+      })
       continue
     }
     if (!result) {
       console.log(`  ?? ${brand.name}: no parseable result`)
       review.push({ name: brand.name, reason: "no result" })
+      runItems.push({
+        entityType: "brand",
+        entityId: brand.id,
+        label: brand.name,
+        action: "no-result",
+        detail: "no parseable result",
+      })
       continue
     }
 
@@ -232,18 +258,28 @@ async function main() {
         `[${shopifyNote.padEnd(11)}] type=${result.brand_type ?? "?"} (${result.confidence})`
     )
 
-    if (!DRY_RUN) {
-      const update = {}
-      if (url && !brand.store_url) update.store_url = url
-      if (result.brand_type && !brand.brand_type) update.brand_type = result.brand_type
-      if (Object.keys(update).length > 0) {
-        const { error: upError } = await supabase
-          .from("brands")
-          .update(update)
-          .eq("id", brand.id)
-        if (upError) console.error(`  ! update failed for ${brand.name}: ${upError.message}`)
-      }
+    const update = {}
+    if (url && !brand.store_url) update.store_url = url
+    if (result.brand_type && !brand.brand_type) update.brand_type = result.brand_type
+    const willUpdate = Object.keys(update).length > 0
+    if (!DRY_RUN && willUpdate) {
+      const { error: upError } = await supabase
+        .from("brands")
+        .update(update)
+        .eq("id", brand.id)
+      if (upError) console.error(`  ! update failed for ${brand.name}: ${upError.message}`)
     }
+    if (willUpdate) updatedCount++
+    runItems.push({
+      entityType: "brand",
+      entityId: brand.id,
+      label: brand.name,
+      action: willUpdate ? "updated" : "skipped",
+      detail:
+        `${url ?? "no store"}${shopifyNote ? ` [${shopifyNote}]` : ""}` +
+        ` · type=${result.brand_type ?? "?"} (${result.confidence})`,
+      confidence: result.confidence,
+    })
   }
 
   const cost =
@@ -258,6 +294,20 @@ async function main() {
     console.log(`\nNeeds your review in Config → Brands (${review.length}):`)
     for (const r of review) console.log(`  - ${r.name}: ${r.reason}`)
   }
+
+  await finishRun(run, {
+    status: failedCount > 0 ? "partial" : "success",
+    itemsProcessed: targets.length,
+    itemsUpdated: DRY_RUN ? 0 : updatedCount,
+    itemsSkipped: targets.length - updatedCount - failedCount,
+    itemsFailed: failedCount,
+    inputTokens: usageTotal.input,
+    outputTokens: usageTotal.output,
+    webSearches: usageTotal.searches,
+    costUsdMicros: usdToMicros(cost),
+    notes: `${updatedCount} brand(s) enriched of ${targets.length} swept`,
+    items: runItems,
+  })
 }
 
 main().catch((err) => {

@@ -5,17 +5,19 @@ import { getMovements } from "@/lib/queries/movements"
 import { getCategories } from "@/lib/queries/categories"
 import { getLabels } from "@/lib/queries/labels"
 import { getWatches } from "@/lib/queries/watches"
+import { getTierConfig } from "@/lib/queries/tier-config"
 import { BrandsTab } from "./_components/brands-tab"
 import { MovementsTab } from "./_components/movements-tab"
 import { CategoriesTab } from "./_components/categories-tab"
 import { LabelsTab } from "./_components/labels-tab"
+import { TiersTab } from "./_components/tiers-tab"
 import { SettingsTab } from "./_components/settings-tab"
 
 export const metadata: Metadata = {
   title: "Config | CaliberShelf",
 }
 
-const TAB_VALUES = ["brands", "movements", "categories", "labels", "settings"]
+const TAB_VALUES = ["brands", "movements", "categories", "labels", "tiers", "settings"]
 
 export default async function ConfigPage({
   searchParams,
@@ -26,12 +28,13 @@ export default async function ConfigPage({
   const { tab } = await searchParams
   const initialTab = tab && TAB_VALUES.includes(tab) ? tab : "brands"
 
-  const [brands, movements, categories, labels, watches] = await Promise.all([
+  const [brands, movements, categories, labels, watches, tierConfig] = await Promise.all([
     getBrands(),
     getMovements(),
     getCategories(),
     getLabels(),
     getWatches(),
+    getTierConfig(),
   ])
 
   // Count watches per brand
@@ -61,6 +64,7 @@ export default async function ConfigPage({
           <TabsTrigger value="movements">Movements ({movements.length})</TabsTrigger>
           <TabsTrigger value="categories">Categories ({categories.length})</TabsTrigger>
           <TabsTrigger value="labels">Labels ({labels.length})</TabsTrigger>
+          <TabsTrigger value="tiers">Tiers ({tierConfig.length})</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -78,6 +82,10 @@ export default async function ConfigPage({
 
         <TabsContent value="labels" className="mt-4">
           <LabelsTab labels={labels} />
+        </TabsContent>
+
+        <TabsContent value="tiers" className="mt-4">
+          <TiersTab initialConfig={tierConfig} />
         </TabsContent>
 
         <TabsContent value="settings" className="mt-4">

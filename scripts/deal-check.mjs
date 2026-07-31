@@ -18,6 +18,7 @@
 import nextEnv from "@next/env"
 const { loadEnvConfig } = nextEnv
 import { createClient } from "@supabase/supabase-js"
+import { startRun, finishRun } from "./lib/agent-run.mjs"
 
 loadEnvConfig(process.cwd())
 
@@ -195,6 +196,14 @@ async function main() {
   }
   console.log(`Checking ${watches.length} wish-list watch(es)...\n`)
 
+  const run = await startRun(supabase, {
+    agent: "deal-check",
+    trigger: process.env.AGENT_RUN_TRIGGER,
+    dryRun: DRY_RUN,
+  })
+  const runItems = []
+  let updated = 0
+
   const summary = { available: 0, sold_out: 0, not_found: 0, no_store: 0 }
 
   for (const watch of watches) {
@@ -242,23 +251,48 @@ async function main() {
       `  ${row.availability.toUpperCase().padEnd(10)} ${label}${price}${row.notes ? ` — ${row.notes}` : ""}`
     )
 
+    let itemAction = "updated"
     if (!DRY_RUN) {
       const { error: upsertError } = await supabase
         .from("wishlist_deals")
         .upsert(row, { onConflict: "watch_id" })
       if (upsertError) {
         console.error(`  ! upsert failed for ${label}: ${upsertError.message}`)
+        itemAction = "failed"
+      } else {
+        updated++
       }
+    } else {
+      updated++
     }
+    runItems.push({
+      entityType: "watch",
+      entityId: watch.id,
+      label,
+      action: itemAction,
+      field: "availability",
+      detail:
+        `${row.availability}` +
+        `${row.retail_price_cents != null ? ` · $${(row.retail_price_cents / 100).toFixed(0)}` : ""}` +
+        `${row.notes ? ` — ${row.notes}` : ""}`,
+    })
   }
 
+  const summaryNote = Object.entries(summary)
+    .filter(([, n]) => n > 0)
+    .map(([k, n]) => `${n} ${k}`)
+    .join(", ")
   console.log(
-    `\nDone${DRY_RUN ? " (dry run — nothing written)" : ""}: ` +
-      Object.entries(summary)
-        .filter(([, n]) => n > 0)
-        .map(([k, n]) => `${n} ${k}`)
-        .join(", ")
+    `\nDone${DRY_RUN ? " (dry run — nothing written)" : ""}: ${summaryNote}`
   )
+
+  await finishRun(run, {
+    status: "success",
+    itemsProcessed: watches.length,
+    itemsUpdated: updated,
+    notes: summaryNote,
+    items: runItems,
+  })
 }
 
 main().catch((err) => {

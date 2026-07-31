@@ -23,6 +23,7 @@ const { loadEnvConfig } = nextEnv
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
 import { z } from "zod"
+import { startRun, finishRun, usdToMicros } from "./lib/agent-run.mjs"
 
 loadEnvConfig(process.cwd())
 
@@ -205,8 +206,17 @@ async function main() {
       `${DRY_RUN ? " (dry run)" : ""}\n`
   )
 
+  const run = await startRun(supabase, {
+    agent: "find-references",
+    trigger: process.env.AGENT_RUN_TRIGGER,
+    model: MODEL,
+    dryRun: DRY_RUN,
+  })
+  const runItems = []
+
   const review = []
   let found = 0
+  let failed = 0
   for (const w of targets) {
     const label = `${w.brands?.name ?? "?"} ${w.model}`
     let result
@@ -214,11 +224,28 @@ async function main() {
       result = await researchWatch(w)
     } catch (err) {
       console.error(`  ! ${label}: agent error — ${err.message}`)
+      failed++
+      runItems.push({
+        entityType: "watch",
+        entityId: w.id,
+        label,
+        action: "failed",
+        field: "reference_number",
+        detail: `agent error — ${err.message}`,
+      })
       continue
     }
     if (!result) {
       console.log(`  ?? ${label}: no parseable result`)
       review.push({ name: label, reason: "no result" })
+      runItems.push({
+        entityType: "watch",
+        entityId: w.id,
+        label,
+        action: "no-result",
+        field: "reference_number",
+        detail: "no parseable result",
+      })
       continue
     }
 
@@ -240,9 +267,27 @@ async function main() {
           .eq("id", w.id)
         if (upError) console.error(`  ! update failed for ${label}: ${upError.message}`)
       }
+      runItems.push({
+        entityType: "watch",
+        entityId: w.id,
+        label,
+        action: result.confidence === "high" ? "updated" : "flagged",
+        field: "reference_number",
+        detail: `${result.reference_number} (${result.confidence}, unverified)`,
+        confidence: result.confidence,
+      })
     } else {
       console.log(`  ${"—".padEnd(22)} ${label} — ${result.notes}`)
       review.push({ name: label, reason: result.notes })
+      runItems.push({
+        entityType: "watch",
+        entityId: w.id,
+        label,
+        action: "no-result",
+        field: "reference_number",
+        detail: result.notes,
+        confidence: result.confidence,
+      })
     }
   }
 
@@ -260,6 +305,20 @@ async function main() {
     console.log(`\nNeeds closer review (${review.length}):`)
     for (const r of review) console.log(`  - ${r.name}: ${r.reason}`)
   }
+
+  await finishRun(run, {
+    status: failed > 0 ? "partial" : "success",
+    itemsProcessed: targets.length,
+    itemsUpdated: DRY_RUN ? 0 : found,
+    itemsSkipped: targets.length - found - failed,
+    itemsFailed: failed,
+    inputTokens: usageTotal.input,
+    outputTokens: usageTotal.output,
+    webSearches: usageTotal.searches,
+    costUsdMicros: usdToMicros(cost),
+    notes: `${found}/${targets.length} references found (flagged unverified)`,
+    items: runItems,
+  })
 }
 
 main().catch((err) => {

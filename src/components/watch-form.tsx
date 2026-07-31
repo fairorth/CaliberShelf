@@ -29,8 +29,6 @@ import {
   caseMaterialLabels,
   crystalLabels,
   caseShapeLabels,
-  bezelTypeLabels,
-  bezelMaterialLabels,
   KNOWN_COMPLICATIONS,
 } from "@/lib/validations/watch"
 import type { SpecFetchResponse } from "@/lib/validations/spec-fetch"
@@ -38,6 +36,8 @@ import { labelColorMap } from "@/lib/validations/label"
 import { BrandCombobox } from "@/components/brand-combobox"
 import { MovementCombobox } from "@/components/movement-combobox"
 import { MovementPreview } from "@/components/movement-preview"
+import { CatalogCombobox } from "@/components/catalog-combobox"
+import type { CatalogWatch } from "@/lib/actions/chronoscout-actions"
 import { cn } from "@/lib/utils"
 import { deleteWatch } from "@/lib/actions/watch-actions"
 import { toast } from "sonner"
@@ -136,8 +136,6 @@ export function WatchForm({
     case_material: (watch?.case_material ?? "stainless_steel") as string,
     crystal: (watch?.crystal ?? "sapphire") as string,
     case_shape: (watch?.case_shape ?? "") as string,
-    bezel_type: (watch?.bezel_type ?? "") as string,
-    bezel_material: (watch?.bezel_material ?? "") as string,
     case_diameter_mm: watch?.case_diameter_mm?.toString() ?? "",
     strap_width_mm: watch?.strap_width_mm?.toString() ?? "20",
     lug_to_lug_mm: watch?.lug_to_lug_mm?.toString() ?? "",
@@ -154,6 +152,10 @@ export function WatchForm({
   const [isFetchingSpecs, setIsFetchingSpecs] = useState(false)
   const [specFetchResult, setSpecFetchResult] = useState<
     (SpecFetchResponse & { appliedCount: number; keptCount: number }) | null
+  >(null)
+  // Result note after a ChronoScout catalog prefill (dimensions only, free).
+  const [catalogResult, setCatalogResult] = useState<
+    { name: string; appliedCount: number; keptCount: number } | null
   >(null)
   const [selectedBrandName, setSelectedBrandName] = useState(watch?.brand?.name ?? "")
 
@@ -204,8 +206,6 @@ export function WatchForm({
     maybe("case_material", s.case_material)
     maybe("crystal", s.crystal)
     maybe("case_shape", s.case_shape)
-    maybe("bezel_type", s.bezel_type)
-    maybe("bezel_material", s.bezel_material)
 
     // Agent-proposed reference: only fills an empty field, always flagged
     // unverified — a wrong reference poisons price-check and deal matching.
@@ -254,6 +254,48 @@ export function WatchForm({
     toast.success(
       `Filled ${appliedCount} field${appliedCount === 1 ? "" : "s"}` +
         `${refApplied ? " (reference needs verification)" : ""} · $${data.usage.cost_usd.toFixed(2)} API cost`
+    )
+  }
+
+  // Apply a picked catalog match's dimensions. ChronoScout carries only the
+  // five measurements below; everything else is left to ✨ or manual entry.
+  // Reuses the same fill-empty + highlight rule as applySpecs: never overwrite
+  // real data (on the add form, untouched defaults are still fillable).
+  function applyCatalogDimensions(row: CatalogWatch) {
+    const updates: Partial<typeof initialSpecs> = {}
+    const applied = new Set<string>()
+    let kept = 0
+
+    const maybeDim = (key: SpecKey, value: number | null) => {
+      if (value == null) return
+      const v = String(value)
+      const current = specs[key]
+      if (current === v) return
+      const fillable = current === "" || (!watch && current === initialSpecs[key])
+      if (!fillable) {
+        kept++
+        return
+      }
+      updates[key] = v
+      applied.add(key)
+    }
+
+    maybeDim("case_diameter_mm", row.diameter_mm)
+    maybeDim("strap_width_mm", row.between_lugs_mm) // between-lugs = lug width
+    maybeDim("lug_to_lug_mm", row.lug_to_lug_mm)
+    maybeDim("case_height_mm", row.thickness_mm)
+    maybeDim("weight_g", row.weight_g)
+
+    if (applied.size > 0) {
+      setSpecs((prev) => ({ ...prev, ...updates }))
+      setAutofilled((prev) => new Set([...prev, ...applied]))
+      setIsDirty(true)
+    }
+    setCatalogResult({ name: row.name, appliedCount: applied.size, keptCount: kept })
+    toast.success(
+      applied.size > 0
+        ? `Filled ${applied.size} dimension${applied.size === 1 ? "" : "s"} from the catalog`
+        : "Catalog match had no new dimensions to fill"
     )
   }
 
@@ -493,6 +535,18 @@ export function WatchForm({
             />
           </div>
 
+          <div className="space-y-2">
+            <FormLabel htmlFor="box">Box</FormLabel>
+            <Input
+              id="box"
+              name="box"
+              placeholder="e.g. Safe box 3"
+              defaultValue={watch?.box ?? ""}
+              onChange={markDirty}
+              className={FIELD}
+            />
+          </div>
+
           <div className="sm:col-span-2 lg:col-span-3">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -574,20 +628,52 @@ export function WatchForm({
               <span className={CHIP}>⚙️</span>
               Specifications
             </CardTitle>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAutofillSpecs}
-              disabled={isFetchingSpecs || isPending || isDeleting}
-              className="shrink-0 border-brass/40 text-brass hover:bg-brass/10 hover:text-brass"
-              title="Search the web for this watch's official specs and fill the empty fields"
-            >
-              {isFetchingSpecs ? "Searching the web…" : "✨ Auto-fill specs"}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <CatalogCombobox
+                defaultQuery={[selectedBrandName, watch?.model].filter(Boolean).join(" ")}
+                onApply={applyCatalogDimensions}
+                disabled={isFetchingSpecs || isPending || isDeleting}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAutofillSpecs}
+                disabled={isFetchingSpecs || isPending || isDeleting}
+                className="shrink-0 border-brass/40 text-brass hover:bg-brass/10 hover:text-brass"
+                title="Search the web for this watch's official specs and fill the empty fields"
+              >
+                {isFetchingSpecs ? "Searching the web…" : "✨ Auto-fill specs"}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
+          {/* Catalog prefill note — dimensions filled from ChronoScout (free) */}
+          {catalogResult && (
+            <div className="space-y-1 rounded-lg border border-brass/30 bg-brass/5 px-4 py-3 text-sm">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-medium text-brass">
+                  {catalogResult.appliedCount > 0
+                    ? `Filled ${catalogResult.appliedCount} dimension${catalogResult.appliedCount === 1 ? "" : "s"} from the catalog`
+                    : "Catalog match had no new dimensions to fill"}
+                  {catalogResult.keptCount > 0 &&
+                    ` · kept ${catalogResult.keptCount} existing value${catalogResult.keptCount === 1 ? "" : "s"}`}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCatalogResult(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                  title="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="truncate text-xs text-muted-foreground">
+                {catalogResult.name} · review the highlighted fields · use ✨ for the rest · Data provided by Chronoscout
+              </p>
+            </div>
+          )}
           {/* Agent result panel — review what was found before saving */}
           {specFetchResult && (
             <div className="space-y-1.5 rounded-lg border border-brass/30 bg-brass/5 px-4 py-3 text-sm">
@@ -685,8 +771,6 @@ export function WatchForm({
           <input type="hidden" name="case_material" value={specs.case_material} />
           <input type="hidden" name="crystal" value={specs.crystal} />
           <input type="hidden" name="case_shape" value={specs.case_shape} />
-          <input type="hidden" name="bezel_type" value={specs.bezel_type} />
-          <input type="hidden" name="bezel_material" value={specs.bezel_material} />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <FormLabel htmlFor="case_material">Case Material</FormLabel>
@@ -852,55 +936,17 @@ export function WatchForm({
             </div>
 
             <div className="space-y-2">
-              <FormLabel htmlFor="bezel_type">Bezel Type</FormLabel>
-              <Select
-                value={specs.bezel_type}
-                onValueChange={(val) => setSpec("bezel_type", val ?? "")}
-              >
-                <SelectTrigger
-                  id="bezel_type"
-                  className={cn(FIELD, specHighlight("bezel_type"))}
-                >
-                  <span>
-                    {specs.bezel_type ? bezelTypeLabels[specs.bezel_type] : "None selected"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">None selected</SelectItem>
-                  {Object.entries(bezelTypeLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <FormLabel htmlFor="bezel_material">Bezel Material</FormLabel>
-              <Select
-                value={specs.bezel_material}
-                onValueChange={(val) => setSpec("bezel_material", val ?? "")}
-              >
-                <SelectTrigger
-                  id="bezel_material"
-                  className={cn(FIELD, specHighlight("bezel_material"))}
-                >
-                  <span>
-                    {specs.bezel_material
-                      ? bezelMaterialLabels[specs.bezel_material]
-                      : "None selected"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">None selected</SelectItem>
-                  {Object.entries(bezelMaterialLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormLabel>Bezel</FormLabel>
+              <label className="flex h-9 items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="rotating_bezel"
+                  defaultChecked={watch?.rotating_bezel ?? false}
+                  onChange={markDirty}
+                  className="h-4 w-4 rounded border-border accent-brass"
+                />
+                Rotating bezel
+              </label>
             </div>
 
             <div className="space-y-2">

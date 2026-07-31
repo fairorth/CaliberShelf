@@ -31,28 +31,6 @@ export type CaseShape =
   | "octagonal"
   | "other"
 
-export type BezelType =
-  | "none"
-  | "fixed"
-  | "dive"
-  | "gmt"
-  | "tachymeter"
-  | "compass"
-  | "countdown"
-  | "internal"
-  | "other"
-
-export type BezelMaterial =
-  | "stainless_steel"
-  | "titanium"
-  | "ceramic"
-  | "aluminum"
-  | "sapphire"
-  | "gold"
-  | "bronze"
-  | "carbon"
-  | "other"
-
 export type BrandType = "major" | "micro" | "indie"
 
 // ── Brand ──────────────────────────────────────────────────────
@@ -131,8 +109,7 @@ export interface Watch {
   case_height_mm: number | null
   weight_g: number | null
   case_shape: CaseShape | null
-  bezel_type: BezelType | null
-  bezel_material: BezelMaterial | null
+  rotating_bezel: boolean
   crystal: CrystalType | null
   water_resistance_m: number | null
   dial_color: string | null
@@ -140,6 +117,8 @@ export interface Watch {
   purchase_date: string | null
   purchase_price_cents: number | null
   purchase_currency: string
+  /** free-text storage location — which watch case/box holds this watch */
+  box: string | null
   notes: string | null
   is_public: boolean
   is_coming_soon: boolean
@@ -285,4 +264,55 @@ export interface WearStats {
   neverWorn: WatchWithCover[]
   currentStreak: number
   longestStreak: number
+}
+
+// ── Agent execution audit (migration 00028) ─────────────────────
+
+export type AgentRunStatus = "running" | "success" | "partial" | "failed"
+export type AgentRunItemAction =
+  | "updated"
+  | "skipped"
+  | "failed"
+  | "flagged"
+  | "no-result"
+
+// One agent invocation. Money is integer microdollars (usd * 1_000_000).
+export interface AgentRun {
+  id: string
+  user_id: string | null
+  agent: string
+  trigger: string
+  status: AgentRunStatus
+  started_at: string
+  finished_at: string | null
+  duration_ms: number | null
+  model: string | null
+  dry_run: boolean
+  items_processed: number
+  items_updated: number
+  items_skipped: number
+  items_failed: number
+  input_tokens: number
+  output_tokens: number
+  web_searches: number
+  cost_usd_micros: number
+  notes: string | null
+  created_at: string
+}
+
+// One entity an agent touched during a run (the drill-down audit trail).
+export interface AgentRunItem {
+  id: string
+  run_id: string
+  user_id: string | null
+  entity_type: string | null
+  entity_id: string | null
+  label: string
+  action: AgentRunItemAction
+  field: string | null
+  detail: string | null
+  confidence: string | null
+  cost_usd_micros: number | null
+  sources: string[] | null
+  created_at: string
 }

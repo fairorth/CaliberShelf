@@ -46,6 +46,7 @@ jobs:
           if [ -n "${{ inputs.max_uses }}" ]; then ARGS="$ARGS --max-uses ${{ inputs.max_uses }}"; fi
           npm run price-check -- $ARGS
         env:
+          AGENT_RUN_TRIGGER: cron
           NEXT_PUBLIC_SUPABASE_URL: https://ztmmhuaivirxfokmckvx.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

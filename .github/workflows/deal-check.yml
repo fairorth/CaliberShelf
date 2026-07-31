@@ -32,5 +32,6 @@ jobs:
       - name: Run deal check
         run: npm run deal-check
         env:
+          AGENT_RUN_TRIGGER: cron
           NEXT_PUBLIC_SUPABASE_URL: https://ztmmhuaivirxfokmckvx.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

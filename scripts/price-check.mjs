@@ -20,11 +20,15 @@ const { loadEnvConfig } = nextEnv
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
 import { z } from "zod"
+import { startRun, finishRun, usdToMicros } from "./lib/agent-run.mjs"
 
 loadEnvConfig(process.cwd())
 
 const MODEL = "claude-sonnet-5"
 const MAX_TOKENS = 32000
+// For run cost accounting (list pricing; web-search server tool billed per use).
+const PRICE_PER_MTOK = { input: 3, output: 15 }
+const PRICE_PER_SEARCH = 0.01
 
 // ── CLI args ─────────────────────────────────────────────────────
 const args = process.argv.slice(2)
@@ -154,7 +158,7 @@ async function researchWatch(watch) {
 
   let response
   let continuations = 0
-  const usage = { input: 0, output: 0 }
+  const usage = { input: 0, output: 0, searches: 0 }
 
   // Server tools run in a server-side loop; resume on pause_turn.
   for (;;) {
@@ -169,6 +173,7 @@ async function researchWatch(watch) {
     response = await stream.finalMessage()
     usage.input += response.usage.input_tokens
     usage.output += response.usage.output_tokens
+    usage.searches += response.usage.server_tool_use?.web_search_requests ?? 0
 
     if (response.stop_reason !== "pause_turn") break
     if (++continuations > 5) {
@@ -232,6 +237,15 @@ async function main() {
     `${DRY_RUN ? "[DRY RUN] " : ""}Valuing ${queue.length} watch(es) with ${MODEL}...\n`
   )
 
+  const run = await startRun(supabase, {
+    agent: "price-check",
+    trigger: process.env.AGENT_RUN_TRIGGER,
+    model: MODEL,
+    dryRun: DRY_RUN,
+  })
+  const runItems = []
+  const totals = { input: 0, output: 0, searches: 0 }
+
   let ok = 0
   let failed = 0
   for (const watch of queue) {
@@ -239,6 +253,9 @@ async function main() {
     process.stdout.write(`→ ${label} ... `)
     try {
       const { valuation: v, usage } = await researchWatch(watch)
+      totals.input += usage.input
+      totals.output += usage.output
+      totals.searches += usage.searches
 
       if (!DRY_RUN) {
         const { error: insertError } = await supabase
@@ -266,16 +283,52 @@ async function main() {
       console.log(
         `$${v.market_value_mid_usd.toLocaleString()} (range $${v.market_value_low_usd.toLocaleString()}–$${v.market_value_high_usd.toLocaleString()}, ${v.confidence} confidence, ${v.n_datapoints} datapoints) [${usage.input + usage.output} tokens]`
       )
+      runItems.push({
+        entityType: "watch",
+        entityId: watch.id,
+        label,
+        action: "updated",
+        field: "valuation",
+        detail: `$${v.market_value_mid_usd.toLocaleString()} (${v.confidence}, ${v.n_datapoints} datapoints)`,
+        confidence: v.confidence,
+        sources: v.sources,
+      })
       if (DRY_RUN) console.log(JSON.stringify(v, null, 2))
     } catch (err) {
       failed++
       console.log(`FAILED: ${err.message}`)
+      runItems.push({
+        entityType: "watch",
+        entityId: watch.id,
+        label,
+        action: "failed",
+        field: "valuation",
+        detail: err.message,
+      })
     }
   }
 
   console.log(
     `\nDone. ${ok} valued, ${failed} failed${DRY_RUN ? " (dry run — nothing written)" : ""}.`
   )
+
+  const cost =
+    (totals.input * PRICE_PER_MTOK.input) / 1e6 +
+    (totals.output * PRICE_PER_MTOK.output) / 1e6 +
+    totals.searches * PRICE_PER_SEARCH
+  await finishRun(run, {
+    status: failed > 0 ? (ok > 0 ? "partial" : "failed") : "success",
+    itemsProcessed: queue.length,
+    itemsUpdated: DRY_RUN ? 0 : ok,
+    itemsFailed: failed,
+    inputTokens: totals.input,
+    outputTokens: totals.output,
+    webSearches: totals.searches,
+    costUsdMicros: usdToMicros(cost),
+    notes: `${ok} valued, ${failed} failed`,
+    items: runItems,
+  })
+
   if (failed > 0) process.exitCode = 1
 }
 

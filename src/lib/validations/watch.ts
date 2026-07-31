@@ -33,30 +33,6 @@ export const caseShapeSchema = z.enum([
   "other",
 ])
 
-export const bezelTypeSchema = z.enum([
-  "none",
-  "fixed",
-  "dive",
-  "gmt",
-  "tachymeter",
-  "compass",
-  "countdown",
-  "internal",
-  "other",
-])
-
-export const bezelMaterialSchema = z.enum([
-  "stainless_steel",
-  "titanium",
-  "ceramic",
-  "aluminum",
-  "sapphire",
-  "gold",
-  "bronze",
-  "carbon",
-  "other",
-])
-
 // Main watch form schema — validates user input for create/update
 export const watchFormSchema = z.object({
   // Required FK fields
@@ -81,6 +57,8 @@ export const watchFormSchema = z.object({
   dial_color: z.string().optional().default(""),
   complication: z.string().optional().default(""),
   notes: z.string().optional().default(""),
+  // Storage location — which watch case/box holds it
+  box: z.string().optional().default(""),
 
   // Agent-supplied reference awaiting human verification (hidden input "on"/"")
   reference_unverified: z
@@ -108,8 +86,12 @@ export const watchFormSchema = z.object({
   case_material: z.union([caseMaterialSchema, z.literal("")]).optional().default(""),
   crystal: z.union([crystalTypeSchema, z.literal("")]).optional().default(""),
   case_shape: z.union([caseShapeSchema, z.literal("")]).optional().default(""),
-  bezel_type: z.union([bezelTypeSchema, z.literal("")]).optional().default(""),
-  bezel_material: z.union([bezelMaterialSchema, z.literal("")]).optional().default(""),
+
+  // Rotating bezel — replaces the old bezel type/material fields
+  rotating_bezel: z
+    .string()
+    .optional()
+    .transform((v) => v === "on"),
 
   // Optional numeric fields
   case_diameter_mm: z
@@ -233,34 +215,12 @@ export const caseShapeLabels: Record<string, string> = {
   other: "Other",
 }
 
-export const bezelTypeLabels: Record<string, string> = {
-  none: "None",
-  fixed: "Fixed",
-  dive: "Dive (count-up)",
-  gmt: "GMT",
-  tachymeter: "Tachymeter",
-  compass: "Compass",
-  countdown: "Countdown",
-  internal: "Internal",
-  other: "Other",
-}
-
-export const bezelMaterialLabels: Record<string, string> = {
-  stainless_steel: "Stainless Steel",
-  titanium: "Titanium",
-  ceramic: "Ceramic",
-  aluminum: "Aluminum",
-  sapphire: "Sapphire",
-  gold: "Gold",
-  bronze: "Bronze",
-  carbon: "Carbon",
-  other: "Other",
-}
-
 export const KNOWN_COMPLICATIONS = [
   "Date",
-  "Day",
-  "Chronograph",
-  "Moon Phase",
+  "DTZ",
   "Power Reserve",
+  "Annual Calendar",
+  "Perpetual Calendar",
+  "Moon Phase",
+  "Fancy",
 ] as const

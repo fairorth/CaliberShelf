@@ -1,6 +1,6 @@
 {
   "name": "caliber-shelf",
-  "version": "1.2.39",
+  "version": "1.2.50",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -11,7 +11,9 @@
     "price-check": "node scripts/price-check.mjs",
     "deal-check": "node scripts/deal-check.mjs",
     "find-store-urls": "node scripts/find-store-urls.mjs",
-    "find-references": "node scripts/find-references.mjs"
+    "find-references": "node scripts/find-references.mjs",
+    "chronoscout-sync": "node scripts/chronoscout-sync.mjs",
+    "backfill-agent-runs": "node scripts/backfill-agent-runs.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",

@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input"
 import { Label as FormLabel } from "@/components/ui/label"
 import { caseMaterialLabels } from "@/lib/validations/watch"
 import { caliberTypeLabels } from "@/lib/validations/movement"
+import { labelColorMap, type LabelColor } from "@/lib/validations/label"
+import { cn } from "@/lib/utils"
 
 // ── Filter shape ───────────────────────────────────────────────────
 
@@ -32,6 +34,10 @@ export interface CollectionFilters {
   priceTracking: PriceTracking
   minPrice: string // dollars, as typed
   maxPrice: string
+  // Selected label ids. A watch matches if it carries ANY of them (OR).
+  labelIds: string[]
+  // Selected category ids (OR). Empty = all categories.
+  categoryIds: string[]
 }
 
 export const EMPTY_FILTERS: CollectionFilters = {
@@ -45,6 +51,8 @@ export const EMPTY_FILTERS: CollectionFilters = {
   priceTracking: "",
   minPrice: "",
   maxPrice: "",
+  labelIds: [],
+  categoryIds: [],
 }
 
 export function activeFilterCount(f: CollectionFilters): number {
@@ -56,6 +64,8 @@ export function activeFilterCount(f: CollectionFilters): number {
   if (f.caseMaterial) n++
   if (f.priceTracking) n++
   if (f.minPrice || f.maxPrice) n++
+  if (f.labelIds.length > 0) n++
+  if (f.categoryIds.length > 0) n++
   return n
 }
 
@@ -69,6 +79,15 @@ export interface MovementOption {
   id: string
   label: string
 }
+export interface LabelOption {
+  id: string
+  name: string
+  color: string
+}
+export interface CategoryOption {
+  id: string
+  name: string
+}
 
 interface CollectionFiltersDialogProps {
   filters: CollectionFilters
@@ -77,6 +96,8 @@ interface CollectionFiltersDialogProps {
   movements: MovementOption[]
   caliberTypes: string[]
   caseMaterials: string[]
+  labels: LabelOption[]
+  categories: CategoryOption[]
   matchCount: number
 }
 
@@ -90,12 +111,28 @@ export function CollectionFiltersDialog({
   movements,
   caliberTypes,
   caseMaterials,
+  labels,
+  categories,
   matchCount,
 }: CollectionFiltersDialogProps) {
   const count = activeFilterCount(filters)
 
   function set<K extends keyof CollectionFilters>(key: K, value: CollectionFilters[K]) {
     onChange({ ...filters, [key]: value })
+  }
+
+  function toggleLabel(id: string) {
+    const next = filters.labelIds.includes(id)
+      ? filters.labelIds.filter((x) => x !== id)
+      : [...filters.labelIds, id]
+    set("labelIds", next)
+  }
+
+  function toggleCategory(id: string) {
+    const next = filters.categoryIds.includes(id)
+      ? filters.categoryIds.filter((x) => x !== id)
+      : [...filters.categoryIds, id]
+    set("categoryIds", next)
   }
 
   return (
@@ -143,6 +180,85 @@ export function CollectionFiltersDialog({
               ))}
             </div>
           </div>
+
+          {/* Category — multi-select (OR); empty = all categories */}
+          {categories.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <FormLabel>Category</FormLabel>
+                {filters.categoryIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => set("categoryIds", [])}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {categories.map((c) => {
+                  const selected = filters.categoryIds.includes(c.id)
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => toggleCategory(c.id)}
+                      aria-pressed={selected}
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
+                        selected
+                          ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {c.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Labels — multi-select; a watch matches if it has ANY selected label */}
+          {labels.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <FormLabel>Labels</FormLabel>
+                {filters.labelIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => set("labelIds", [])}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {labels.map((l) => {
+                  const colors = labelColorMap[l.color as LabelColor] ?? labelColorMap.blue
+                  const selected = filters.labelIds.includes(l.id)
+                  return (
+                    <button
+                      key={l.id}
+                      type="button"
+                      onClick={() => toggleLabel(l.id)}
+                      aria-pressed={selected}
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
+                        selected
+                          ? `${colors.bg} ${colors.text} ring-1 ring-current`
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {l.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Brand */}
           <div className="space-y-1.5">

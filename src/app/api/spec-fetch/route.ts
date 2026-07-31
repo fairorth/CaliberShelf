@@ -53,6 +53,7 @@ Rules:
 - Keep "notes" to one or two short sentences (variant caveats, ambiguities).`
 
 export async function POST(request: Request) {
+  const startedAt = Date.now()
   // Only signed-in users may spend API tokens
   const supabase = await createClient()
   const {
@@ -131,6 +132,31 @@ export async function POST(request: Request) {
       },
       model: MODEL,
     }
+
+    // Best-effort agent-run log — captures the interactive ✨ cost that would
+    // otherwise be lost. Never blocks the response (see migration 00028).
+    try {
+      await supabase.from("agent_runs").insert({
+        user_id: user.id,
+        agent: "spec-fetch",
+        trigger: "ui-click",
+        status: "success",
+        started_at: new Date(startedAt).toISOString(),
+        finished_at: new Date().toISOString(),
+        duration_ms: Date.now() - startedAt,
+        model: MODEL,
+        items_processed: 1,
+        items_updated: 1,
+        input_tokens: inputTokens,
+        output_tokens: response.usage.output_tokens,
+        web_searches: searches,
+        cost_usd_micros: Math.round(costUsd * 1_000_000),
+        notes: `${brand} ${model}`.trim(),
+      })
+    } catch {
+      // logging is optional; ignore failures (e.g. table not yet migrated)
+    }
+
     return NextResponse.json(payload)
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError) {

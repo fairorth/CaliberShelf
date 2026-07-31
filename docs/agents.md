@@ -23,10 +23,28 @@ follow), see [price-check.mjs.md](price-check.mjs.md).
 | Store-URL / brand-type sweep (`find-store-urls.mjs`) | LLM + web search | Manual script | Sonnet 5, 3 uses | $0.14/brand ($10.22 for all 73) | One-time; re-runs touch only NULL columns |
 | Reference sweep (`find-references.mjs`) | LLM + web search | Manual script | Sonnet 5, 4 uses | **$0.44/watch** ($2.20 for 5) | One-time-ish; ~77 watches remain ≈ $30–35 |
 | Deal check (`deal-check.mjs`) | Deterministic (no LLM) | Daily cron (13:00 UTC) + manual | — | **$0** | Yes — daily, free |
+| ChronoScout sync (`chronoscout-sync.mjs`) | Deterministic API mirror (no LLM) | Weekly cron (Sun, 12:00 UTC) + manual | — | **$0** | Yes — weekly, free |
 
 The dominant cost driver everywhere is **web searches**: each search feeds
 ~16k tokens of results into the model, so cost scales almost linearly with
 the per-item search cap (`MAX_USES`), not with the number of output fields.
+
+## Run logging & the Agent Execution Review report
+
+Every agent above records each invocation to the `agent_runs` table (migration
+00028) — duration, cost (integer microdollars), item counts, tokens/searches,
+and a per-item audit trail in `agent_run_items`. Scripts log via the shared
+`scripts/lib/agent-run.mjs` helper; the spec-fetch route inserts directly. This
+is **best-effort**: logging is fully wrapped so a logging failure (e.g. the
+table not yet migrated) never breaks an agent's real work. Set
+`AGENT_RUN_TRIGGER=cron` in CI so scheduled runs are labelled, or
+`AGENT_RUN_DISABLED=1` to skip logging.
+
+The data surfaces in the **Agent Execution Review** report (`/reports/agents`):
+a spend/runs/items KPI row, a per-agent rollup, run history, and a drill-down to
+each run's audit trail. `npm run backfill-agent-runs` seeds it from historical
+`watch_valuations` runs and the latest ChronoScout sync. Costs are microdollars
+because per-item agent costs are fractions of a cent.
 
 ---
 
@@ -120,14 +138,52 @@ cost).
 - **Initiate:** daily GitHub Actions cron (`deal-check.yml`, 13:00 UTC),
   manual dispatch, or `npm run deal-check -- [--dry-run] [--watch <uuid>]`.
 - **Cost:** $0 — this is the proof that not every automation needs a model.
-  Restock urgency is ChronoScout's job (email/SMS alerts); this page is the
-  decision dashboard.
+  This page is the decision dashboard; live restock urgency (email/SMS) is
+  ChronoScout's *consumer* product, not something its API exposes.
 - **Phase B (planned):** gray-market agent for majors (Chrono24/eBay/
   WatchRecon) filling the reserved `best_used_*` columns — will be an LLM
-  agent with real per-run cost; not yet built. ChronoScout API integration
-  pending (request submitted; awaiting reply).
+  agent with real per-run cost; not yet built. **Note:** the ChronoScout
+  public API (now integrated — see §6) is a *spec catalog only* (no pricing,
+  availability, or reference numbers), so it does **not** fill `best_used_*`
+  or power restock alerts. Phase B still needs the gray-market LLM agent.
 
 ---
+
+## 6. ChronoScout catalog sync — `npm run chronoscout-sync` (free)
+
+Deterministic, no LLM: mirrors ChronoScout's read-only public catalog API
+(v1.0) into the local `chronoscout_brands` / `chronoscout_watches` tables so
+the app can offer canonical brand/model/spec lookups without calling the API
+at runtime. The API is a **spec catalog** — brands (slug, domain, logo,
+case-size/movement/style specs, `price_range_usd`) and watch models
+(dimensions: diameter, between-lugs, lug-to-lug, thickness, weight). It has
+**no pricing per watch, no availability, no reference numbers, no alerts**.
+
+- **Initiate:** weekly GitHub Actions cron (`chronoscout-sync.yml`, Sun 12:00
+  UTC), manual dispatch (with an optional full-repull toggle), or
+  `npm run chronoscout-sync -- [--dry-run] [--full] [--brands-only]
+  [--watches-only] [--limit N]`.
+- **Cost:** $0 — a full pull is ~11 requests (332 brands on 1 page, ~10 pages
+  of ~9.3k watches at 1000/page). Rate limit is 60 burst / ~1 req/sec; the
+  script throttles to ~1.1s between requests and honors `429`/`Retry-After`.
+- **Incremental:** brands carry `modified_at`; watches do not, so after the
+  first full pull the script passes `modified_since` (last run's server
+  `generated_at`, minus a 6h slack) to both endpoints and trusts the
+  server-side filter. State lives in `chronoscout_sync_state` (one row).
+- **Auth & licensing:** `CHRONOSCOUT_API_KEY` (Bearer). Responses carry a
+  `meta.license` block — this key returns signed `api-terms-of-access` v1.0
+  (recorded each run in `chronoscout_sync_state.license`). Terms: display the
+  data only within the app, attribution ("Data provided by Chronoscout")
+  where practicable, and purge the mirror on access revocation (a single
+  `TRUNCATE`). Keep the mirror tables authenticated-read only (no anon).
+- **Surfaces:** "🔍 Find in catalog" picker in the watch form's Specifications
+  card (`catalog-combobox.tsx` → `searchCatalogWatches` server action) — search
+  the mirror, pick a model, and it prefills the five ChronoScout dimensions
+  (diameter, lug width, lug-to-lug, thickness, weight) into empty fields only,
+  reusing the ✨ fill-empty + highlight path. Free/deterministic; ✨ remains the
+  fallback for everything ChronoScout lacks (movement, material, reference).
+  Shows "Data provided by Chronoscout" attribution. **Planned next:** brand
+  enrichment (domain → `store_url` candidate, logo, price band).
 
 ## Lowering costs: options and trade-offs
 

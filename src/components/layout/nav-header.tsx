@@ -18,6 +18,7 @@ const navItems = [
   { href: "/deals", label: "Deals", icon: "💰" },
   { href: "/reports", label: "Reports", icon: "📊" },
   { href: "/config", label: "Config", icon: "⚙️" },
+  { href: "/about", label: "About", icon: "ℹ️" },
 ]
 
 interface NavHeaderProps {

@@ -1,0 +1,50 @@
+# Weekly ChronoScout catalog mirror sync (scripts/chronoscout-sync.mjs).
+#
+# Deterministic — pulls ChronoScout's read-only spec catalog and upserts into
+# the chronoscout_* mirror tables. No LLM. A full pull is ~11 requests; weekly
+# is plenty for a static catalog. Also runnable on demand from the Actions tab
+# (with an optional "full re-pull" toggle).
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   SUPABASE_SERVICE_ROLE_KEY   Supabase dashboard -> Settings -> API (already set)
+#   CHRONOSCOUT_API_KEY         your ChronoScout API access grant
+# The Supabase URL is public (it ships in the client bundle), so it is set
+# inline below rather than stored as a secret.
+
+name: Weekly ChronoScout sync
+
+on:
+  schedule:
+    - cron: "0 12 * * 0" # Sundays, 12:00 UTC
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Force a full re-pull (ignore incremental state)"
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  chronoscout-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run ChronoScout sync
+        run: |
+          ARGS=""
+          if [ "${{ inputs.full }}" = "true" ]; then ARGS="$ARGS --full"; fi
+          npm run chronoscout-sync -- $ARGS
+        env:
+          AGENT_RUN_TRIGGER: cron
+          NEXT_PUBLIC_SUPABASE_URL: https://ztmmhuaivirxfokmckvx.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CHRONOSCOUT_API_KEY: ${{ secrets.CHRONOSCOUT_API_KEY }}

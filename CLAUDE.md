@@ -1,9 +1,9 @@
 # CaliberShelf
 
-A personal watch collection tracking app built with Next.js 15 (App Router), Supabase, Tailwind CSS, and shadcn/ui.
+A personal watch collection tracking app built with Next.js 16 (App Router), Supabase, Tailwind CSS, and shadcn/ui.
 
 ## Tech Stack
-- Next.js 15 with App Router and TypeScript (strict mode)
+- Next.js 16 with App Router and TypeScript (strict mode)
 - Supabase (Postgres, Auth with @supabase/ssr, Storage for photos)
 - Tailwind CSS v4 + shadcn/ui component library
 - React Hook Form + Zod for form validation
@@ -56,49 +56,42 @@ Full fleet reference (what each agent does, how it's initiated, observed
 costs, cost levers): `docs/agents.md`. Observed costs: valuation ~$1-1.5/watch
 · spec autofill (Sonnet since 2026-07-21) ~$0.05-0.15/click · store-URL sweep
 $0.14/brand · reference sweep $0.44/watch (`--majors-only`, `--value-limit N`
-to scope) · deal-check $0. ALWAYS `--dry-run --limit N` before a paid sweep;
-script cost printouts use list pricing (conservative).
+to scope) · deal-check $0 · chronoscout-sync $0. ALWAYS `--dry-run --limit N`
+before a paid sweep; script cost printouts use list pricing (conservative).
 
-## Price-Check Valuation Agent
-- `scripts/price-check.mjs` (`npm run price-check`) values watches with
-  `price_check_enabled = true` via the Claude API (web search/fetch server
-  tools) and inserts into `watch_valuations`. Full docs: `docs/price-check.md`
-- Flags: `--dry-run`, `--limit N`, `--watch <uuid>`, `--max-uses N` (default 6)
-- Scheduled monthly by `.github/workflows/price-check.yml` (also manual
-  dispatch); needs SUPABASE_SERVICE_ROLE_KEY + ANTHROPIC_API_KEY repo secrets
-- Enabling price checking requires a reference_number (Zod refine + DB CHECK)
-- Model/cost decisions live in the script's MODEL and MAX_USES constants
+## Agent scripts — quick pointers (full detail in docs/agents.md)
+Shared skeleton every batch script follows: env check (never prints values),
+`validateArgs` (unknown flags hard-fail), `--dry-run`, MODEL/MAX_USES cost
+constants, end-of-run cost printout, and run logging via
+`scripts/lib/agent-run.mjs`. Model/pricing constants live at the top of each
+script (or `route.ts` for spec-fetch).
+- **price-check** (`scripts/price-check.mjs`) → `watch_valuations`; needs a
+  reference_number to enable (Zod refine + DB CHECK); monthly `price-check.yml`.
+  Operator guide: `docs/price-check.md`.
+- **deal-check** (`scripts/deal-check.mjs`) → `wishlist_deals` from each brand's
+  Shopify `products.json`; deterministic; daily `deal-check.yml`. `best_used_*`
+  reserved for Phase B.
+- **find-references** (`scripts/find-references.mjs`) → `watches.reference_number`
+  + `reference_unverified` (00026); `--majors-only`, `--value-limit N`.
+- **find-store-urls** (`scripts/find-store-urls.mjs`) → `brands.store_url` /
+  `brand_type`, NULL-only.
+- **chronoscout-sync** (`scripts/chronoscout-sync.mjs`) → `chronoscout_*` mirror
+  (00027); catalog-only API (no prices/refs/alerts) — does NOT power Phase B;
+  weekly `chronoscout-sync.yml`. Licensing: display in-app only, attribute
+  Chronoscout, purge the mirror on revocation. `CHRONOSCOUT_API_KEY` server-only.
+- **spec-fetch** (`src/app/api/spec-fetch/route.ts`, the ✨ button) → returns
+  spec JSON (`src/lib/validations/spec-fetch.ts`); fills empty form fields only,
+  proposes an unverified reference.
+- **catalog picker** (`src/components/catalog-combobox.tsx` +
+  `searchCatalogWatches`) fills 5 dimensions from the mirror; free.
 
-## Deal Scanner (Phase A)
-- `scripts/deal-check.mjs` (`npm run deal-check`) checks wish-list watches
-  against each brand's Shopify `products.json` (via `brands.store_url`) and
-  upserts availability + retail price into `wishlist_deals` (one row per
-  watch). Deterministic — no LLM. Flags: `--dry-run`, `--watch <uuid>`
-- Daily via `.github/workflows/deal-check.yml` (needs only
-  SUPABASE_SERVICE_ROLE_KEY); surfaced on the `/deals` page
-- `best_used_*` columns are reserved for Phase B (gray-market agent)
-- `scripts/find-store-urls.mjs` (`npm run find-store-urls`) is the one-sweep
-  enrichment agent: web-searches each brand's official store URL + classifies
-  brand_type, verifies Shopify via products.json, fills only NULL columns
-  (never overwrites manual edits). Flags: `--dry-run`, `--limit N`, `--brand`
-
-## Spec Autofill Agent
-- "✨ Auto-fill specs" button on the watch form calls `POST /api/spec-fetch`
-  (`src/app/api/spec-fetch/route.ts`): Claude API + web search/fetch server
-  tools + structured output (`zodOutputFormat`), returns spec JSON validated by
-  `src/lib/validations/spec-fetch.ts`
-- Human-in-the-loop: fills only empty fields (edit page never overwrites DB
-  values), highlights applied fields, user reviews then saves; needs
-  ANTHROPIC_API_KEY (server env — local .env.local AND Vercel)
-- MODEL/pricing constants at top of route.ts; cost shown in the result panel
-- Also proposes a reference_number: applied only to an empty field and flagged
-  `watches.reference_unverified` (00026) — amber badge + "Mark verified" on
-  the form; human edit clears the flag; "Verify reference" chip in the
-  Attention Needed report
-- `scripts/find-references.mjs` (`npm run find-references`) batch-sweeps
-  watches missing a reference, highest-value first (writes ref + unverified
-  flag; `--dry-run`, `--limit N`, `--watch <uuid>`, `--majors-only`,
-  `--value-limit N` = only watches priced ≥ $N)
+## Agent run logging (agent_runs — migration 00028)
+Every agent records a run — duration, cost (integer microdollars), item counts,
+tokens, and a per-item audit trail — via `scripts/lib/agent-run.mjs` (scripts)
+or a direct insert (spec-fetch route). Surfaced in the **Agent Execution
+Review** report (`/reports/agents`). Logging is best-effort and must NEVER break
+an agent (all writes are wrapped). `npm run backfill-agent-runs` imports past
+valuation runs.
 
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000
