@@ -16,19 +16,21 @@ not yet arrived) or **Wish list** (wanted, not owned — kept out of your counts
 and totals). Log what you wear, record timegrapher runs, and organize with
 categories and colored labels.
 
-**Where each watch lives.** Every watch has a **Box** field — free text, on the
-Edit page under Ownership — for the case or box in the safe that holds it
-("Safe box 3", "travel roll", whatever you call them). It shows on the table,
-the gallery tiles, and the dashboard cards, and it's searchable. Sort the table
-by **Box** and anything unassigned drops to the bottom, so the column doubles as
-a "what haven't I filed yet" list.
+**Where each watch lives.** Every watch has a **Box** field on the Edit page
+under Ownership — for the case or box in the safe that holds it. Boxes are
+numbered (Box1, Box2, …) and picked from a dropdown; set how many you have under
+**Config → Boxes**. It shows on the table, the gallery tiles, and the dashboard
+cards, is searchable, and is a filter on the Collection page (Filters → Box).
+Sort the table by **Box** and anything unassigned drops to the bottom, so the
+column doubles as a "what haven't I filed yet" list.
 
 **Categories and tiers.** Categories are the design archetype — Dress, Sport,
 Chronograph, Daily, and Horology out of the box — and they're rows you own, not
 a fixed list, so add or rename them as your collection changes. Tiers are
 different: they're derived from what you paid, and you set the price bands
 yourself under **Config → Tiers**. Change a band and every report re-reads it
-live. Complications (Date, DTZ, Power Reserve, Annual Calendar, Perpetual
+live. (The number of storage boxes is configurable the same way, under
+**Config → Boxes**.) Complications (Date, DTZ, Power Reserve, Annual Calendar, Perpetual
 Calendar, Moon Phase, Fancy) are the third axis, and a watch can carry several.
 
 ## The automated agents
@@ -84,6 +86,12 @@ Find these under **Reports**:
   is where you see what the automation has been doing and what it's costing.
 
 ## Good to know
+
+When you log a **timegrapher** run on a watch's Edit page, the Add Run form
+shows that watch's movement **lift angle** (pulled from the linked movement) so
+you can dial in your timegrapher before you measure. If the movement has no lift
+angle on record — or none is linked — it points you to Config → Movements. Set
+lift angles once per caliber there and they follow every watch that uses it.
 
 The AI agents are designed to be safe: they fill only empty fields, never
 overwrite your entries, flag low-confidence results for review, and any

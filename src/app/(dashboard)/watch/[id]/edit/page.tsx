@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { getWatchById } from "@/lib/queries/watches"
 import { getBrands } from "@/lib/queries/brands"
 import { getMovements } from "@/lib/queries/movements"
+import { getBoxCount } from "@/lib/queries/box-config"
 import { getCategories } from "@/lib/queries/categories"
 import { getLabels, getLabelsForWatch } from "@/lib/queries/labels"
 import { getWearCountForWatch } from "@/lib/queries/wear-logs"
@@ -36,7 +37,7 @@ export default async function EditWatchPage({
 }) {
   const { id } = await params
 
-  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, valuations] =
+  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, valuations, boxCount] =
     await Promise.all([
       getWatchById(id),
       getBrands(),
@@ -47,6 +48,7 @@ export default async function EditWatchPage({
       getWearCountForWatch(id),
       getTimegrapherRuns(id),
       getValuationsForWatch(id),
+      getBoxCount(),
     ])
 
   if (!watch) {
@@ -111,6 +113,7 @@ export default async function EditWatchPage({
             movements={movements}
             categories={categories}
             labels={labels}
+            boxCount={boxCount}
             defaultLabelIds={watchLabels.map((l) => l.id)}
             stickyBar
             cancelHref="/collection"
@@ -119,7 +122,12 @@ export default async function EditWatchPage({
             valuations={valuations}
             purchasePriceCents={watch.purchase_price_cents}
           />
-          <TimegrapherPanel watchId={watch.id} runs={timegrapherRuns} />
+          <TimegrapherPanel
+            watchId={watch.id}
+            runs={timegrapherRuns}
+            liftAngle={watch.movement?.lift_angle ?? null}
+            caliberName={watch.movement?.caliber_name ?? null}
+          />
         </div>
       </div>
     </div>

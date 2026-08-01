@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +18,10 @@ import type { TimegrapherRun } from "@/lib/types/watch"
 interface TimegrapherPanelProps {
   watchId: string
   runs: TimegrapherRun[]
+  /** Lift angle of the watch's linked movement, if one is set and has it. */
+  liftAngle?: string | null
+  /** Caliber name of the linked movement, for context in the hint. */
+  caliberName?: string | null
 }
 
 function formatRate(rate: number | null): string {
@@ -41,7 +46,18 @@ function formatRunDate(date: string): string {
   })
 }
 
-export function TimegrapherPanel({ watchId, runs }: TimegrapherPanelProps) {
+/** Append a degree sign to a bare numeric lift angle (values are stored plain). */
+function formatLiftAngle(v: string): string {
+  const t = v.trim()
+  return /\d$/.test(t) ? `${t}°` : t
+}
+
+export function TimegrapherPanel({
+  watchId,
+  runs,
+  liftAngle = null,
+  caliberName = null,
+}: TimegrapherPanelProps) {
   const [state, formAction, isPending] = useActionState<TimegrapherActionState, FormData>(
     createTimegrapherRun,
     {}
@@ -102,6 +118,39 @@ export function TimegrapherPanel({ watchId, runs }: TimegrapherPanelProps) {
             className="space-y-4 rounded-md border border-border/60 bg-muted/30 p-4"
           >
             <input type="hidden" name="watch_id" value={watchId} />
+
+            {/* Movement lift angle — so you can set the timegrapher to match */}
+            <div className="rounded-md border border-emerald-500/25 bg-emerald-50/60 px-3 py-2 text-xs dark:bg-emerald-950/20">
+              {liftAngle ? (
+                <span>
+                  <span className="text-muted-foreground">Lift angle</span>{" "}
+                  <span className="font-mono font-semibold text-foreground">
+                    {formatLiftAngle(liftAngle)}
+                  </span>
+                  {caliberName && (
+                    <span className="text-muted-foreground"> · {caliberName}</span>
+                  )}
+                  <span className="text-muted-foreground">
+                    {" "}— set your timegrapher to match.
+                  </span>
+                </span>
+              ) : caliberName ? (
+                <span className="text-muted-foreground">
+                  No lift angle on record for {caliberName}. Add it under{" "}
+                  <Link
+                    href="/config?tab=movements"
+                    className="underline hover:text-foreground"
+                  >
+                    Config → Movements
+                  </Link>
+                  .
+                </span>
+              ) : (
+                <span className="text-muted-foreground">
+                  No movement linked to this watch — assign one to see its lift angle.
+                </span>
+              )}
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <FormLabel htmlFor="tg_run_date">Date</FormLabel>

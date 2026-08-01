@@ -44,6 +44,7 @@ import { toast } from "sonner"
 import type { WatchActionState } from "@/lib/actions/watch-actions"
 import type { Watch, Brand, Movement, Category, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
+import { boxOptions, DEFAULT_BOX_COUNT } from "@/lib/boxes"
 
 interface WatchFormProps {
   action: (prevState: WatchActionState, formData: FormData) => Promise<WatchActionState>
@@ -53,6 +54,8 @@ interface WatchFormProps {
   movements: Movement[]
   categories: Category[]
   labels: Label[]
+  /** How many numbered boxes to offer in the Box dropdown (Config → Boxes). */
+  boxCount?: number
   defaultLabelIds?: string[]
   /** Render the fixed dirty-state save bar instead of an inline submit button. */
   stickyBar?: boolean
@@ -77,6 +80,7 @@ export function WatchForm({
   movements,
   categories,
   labels,
+  boxCount = DEFAULT_BOX_COUNT,
   defaultLabelIds = [],
   stickyBar = false,
   cancelHref = "/collection",
@@ -93,6 +97,13 @@ export function WatchForm({
   // so wiring it to every change handler stays cheap.
   const [isDirty, setIsDirty] = useState(false)
   const markDirty = () => setIsDirty(true)
+
+  // Box is a dropdown of numbered boxes (Box1..BoxN). Preserve any legacy or
+  // custom free-text value already on the watch so nothing is silently dropped.
+  const [box, setBox] = useState(watch?.box ?? "")
+  const boxChoices = boxOptions(boxCount)
+  const boxSelectOptions =
+    box && !boxChoices.includes(box) ? [box, ...boxChoices] : boxChoices
 
   // Return navigates immediately when clean; a dirty form asks first.
   function handleReturn() {
@@ -537,14 +548,26 @@ export function WatchForm({
 
           <div className="space-y-2">
             <FormLabel htmlFor="box">Box</FormLabel>
-            <Input
-              id="box"
-              name="box"
-              placeholder="e.g. Safe box 3"
-              defaultValue={watch?.box ?? ""}
-              onChange={markDirty}
-              className={FIELD}
-            />
+            <input type="hidden" name="box" value={box} />
+            <Select
+              value={box}
+              onValueChange={(val) => {
+                markDirty()
+                setBox(val ?? "")
+              }}
+            >
+              <SelectTrigger id="box" className={FIELD}>
+                <span>{box || "No box"}</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No box</SelectItem>
+                {boxSelectOptions.map((b) => (
+                  <SelectItem key={b} value={b}>
+                    {b}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="sm:col-span-2 lg:col-span-3">

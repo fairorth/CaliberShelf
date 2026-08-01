@@ -5,6 +5,7 @@ import { getBrands } from "@/lib/queries/brands"
 import { getMovements } from "@/lib/queries/movements"
 import { getCategories } from "@/lib/queries/categories"
 import { getLabels } from "@/lib/queries/labels"
+import { getBoxCount } from "@/lib/queries/box-config"
 import { Button } from "@/components/ui/button"
 
 export const metadata = {
@@ -12,11 +13,12 @@ export const metadata = {
 }
 
 export default async function NewWatchPage() {
-  const [brands, movements, categories, labels] = await Promise.all([
+  const [brands, movements, categories, labels, boxCount] = await Promise.all([
     getBrands(),
     getMovements(),
     getCategories(),
     getLabels(),
+    getBoxCount(),
   ])
 
   return (
@@ -35,6 +37,7 @@ export default async function NewWatchPage() {
         movements={movements}
         categories={categories}
         labels={labels}
+        boxCount={boxCount}
       />
     </div>
   )

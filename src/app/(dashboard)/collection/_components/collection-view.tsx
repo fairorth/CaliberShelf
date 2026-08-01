@@ -84,6 +84,7 @@ function applyFilters(watches: WatchWithCover[], f: CollectionFilters): WatchWit
     if (f.movementId && w.movement_id !== f.movementId) return false
     if (f.caliberType && w.movement?.caliber_type !== f.caliberType) return false
     if (f.caseMaterial && w.case_material !== f.caseMaterial) return false
+    if (f.box && (w.box ?? "") !== f.box) return false
     if (f.labelIds.length > 0) {
       // OR semantics: keep the watch if it carries any selected label.
       const labels = w.labels ?? []
@@ -234,11 +235,12 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
       : ALL
 
   // Filter options derived from the actual collection.
-  const { brandOptions, movementOptions, caliberTypes, caseMaterials, labelOptions } = useMemo(() => {
+  const { brandOptions, movementOptions, caliberTypes, caseMaterials, boxOptions, labelOptions } = useMemo(() => {
     const brandMap = new Map<string, string>()
     const movementMap = new Map<string, string>()
     const caliberSet = new Set<string>()
     const materialSet = new Set<string>()
+    const boxSet = new Set<string>()
     const labelMap = new Map<string, { name: string; color: string }>()
     for (const w of watches) {
       brandMap.set(w.brand_id, w.brand.name)
@@ -248,6 +250,7 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
         if (w.movement.caliber_type) caliberSet.add(w.movement.caliber_type)
       }
       if (w.case_material) materialSet.add(w.case_material)
+      if (w.box) boxSet.add(w.box)
       for (const l of w.labels ?? []) labelMap.set(l.id, { name: l.name, color: l.color })
     }
     return {
@@ -259,6 +262,7 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
         .sort((a, b) => a.label.localeCompare(b.label)),
       caliberTypes: [...caliberSet].sort(),
       caseMaterials: [...materialSet].sort(),
+      boxOptions: [...boxSet].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
       labelOptions: [...labelMap.entries()]
         .map(([id, { name, color }]) => ({ id, name, color }))
         .sort((a, b) => a.name.localeCompare(b.name)),
@@ -354,6 +358,7 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
           movements={movementOptions}
           caliberTypes={caliberTypes}
           caseMaterials={caseMaterials}
+          boxes={boxOptions}
           labels={labelOptions}
           categories={categories.map((c) => ({ id: c.id, name: c.name }))}
           matchCount={afterFilters.length}

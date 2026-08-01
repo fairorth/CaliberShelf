@@ -51,7 +51,7 @@ mirror — they are **not** foreign-keyed to the user's `brands`/`watches`; the
 
 | Table | Ownership | Written by | Purpose / key columns |
 |---|---|---|---|
-| `profiles` | owner | app (auth) | user profile; `is_public` for future sharing; `tier_config` JSONB (00030) holds the user's price-tier labels and bounds |
+| `profiles` | owner | app (auth) | user profile; `is_public` for future sharing; `tier_config` JSONB (00030) holds the user's price-tier labels and bounds; `box_config` JSONB (00032) holds `{ count }` for the numbered storage boxes |
 | `brands` | owner | app + `find-store-urls` | `name`, `brand_type`, `store_url` (feeds deal-check), `logo_url` |
 | `movements` | owner | app | caliber catalog; `caliber_name`, `caliber_type`, `beat_rate`, `lift_angle` |
 | `categories` | owner | app | display grouping (renamed from display_cases); `name`, `color` |

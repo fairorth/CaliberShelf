@@ -6,18 +6,20 @@ import { getCategories } from "@/lib/queries/categories"
 import { getLabels } from "@/lib/queries/labels"
 import { getWatches } from "@/lib/queries/watches"
 import { getTierConfig } from "@/lib/queries/tier-config"
+import { getBoxCount } from "@/lib/queries/box-config"
 import { BrandsTab } from "./_components/brands-tab"
 import { MovementsTab } from "./_components/movements-tab"
 import { CategoriesTab } from "./_components/categories-tab"
 import { LabelsTab } from "./_components/labels-tab"
 import { TiersTab } from "./_components/tiers-tab"
+import { BoxesTab } from "./_components/boxes-tab"
 import { SettingsTab } from "./_components/settings-tab"
 
 export const metadata: Metadata = {
   title: "Config | CaliberShelf",
 }
 
-const TAB_VALUES = ["brands", "movements", "categories", "labels", "tiers", "settings"]
+const TAB_VALUES = ["brands", "movements", "categories", "labels", "tiers", "boxes", "settings"]
 
 export default async function ConfigPage({
   searchParams,
@@ -28,13 +30,14 @@ export default async function ConfigPage({
   const { tab } = await searchParams
   const initialTab = tab && TAB_VALUES.includes(tab) ? tab : "brands"
 
-  const [brands, movements, categories, labels, watches, tierConfig] = await Promise.all([
+  const [brands, movements, categories, labels, watches, tierConfig, boxCount] = await Promise.all([
     getBrands(),
     getMovements(),
     getCategories(),
     getLabels(),
     getWatches(),
     getTierConfig(),
+    getBoxCount(),
   ])
 
   // Count watches per brand
@@ -65,6 +68,7 @@ export default async function ConfigPage({
           <TabsTrigger value="categories">Categories ({categories.length})</TabsTrigger>
           <TabsTrigger value="labels">Labels ({labels.length})</TabsTrigger>
           <TabsTrigger value="tiers">Tiers ({tierConfig.length})</TabsTrigger>
+          <TabsTrigger value="boxes">Boxes ({boxCount})</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -86,6 +90,10 @@ export default async function ConfigPage({
 
         <TabsContent value="tiers" className="mt-4">
           <TiersTab initialConfig={tierConfig} />
+        </TabsContent>
+
+        <TabsContent value="boxes" className="mt-4">
+          <BoxesTab initialCount={boxCount} />
         </TabsContent>
 
         <TabsContent value="settings" className="mt-4">

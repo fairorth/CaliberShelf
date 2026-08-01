@@ -31,6 +31,7 @@ export interface CollectionFilters {
   movementId: string
   caliberType: string
   caseMaterial: string
+  box: string
   priceTracking: PriceTracking
   minPrice: string // dollars, as typed
   maxPrice: string
@@ -48,6 +49,7 @@ export const EMPTY_FILTERS: CollectionFilters = {
   movementId: "",
   caliberType: "",
   caseMaterial: "",
+  box: "",
   priceTracking: "",
   minPrice: "",
   maxPrice: "",
@@ -62,6 +64,7 @@ export function activeFilterCount(f: CollectionFilters): number {
   if (f.movementId) n++
   if (f.caliberType) n++
   if (f.caseMaterial) n++
+  if (f.box) n++
   if (f.priceTracking) n++
   if (f.minPrice || f.maxPrice) n++
   if (f.labelIds.length > 0) n++
@@ -96,6 +99,7 @@ interface CollectionFiltersDialogProps {
   movements: MovementOption[]
   caliberTypes: string[]
   caseMaterials: string[]
+  boxes: string[]
   labels: LabelOption[]
   categories: CategoryOption[]
   matchCount: number
@@ -111,6 +115,7 @@ export function CollectionFiltersDialog({
   movements,
   caliberTypes,
   caseMaterials,
+  boxes,
   labels,
   categories,
   matchCount,
@@ -295,6 +300,26 @@ export function CollectionFiltersDialog({
               ))}
             </select>
           </div>
+
+          {/* Box (storage location) */}
+          {boxes.length > 0 && (
+            <div className="space-y-1.5">
+              <FormLabel htmlFor="filter-box">Box</FormLabel>
+              <select
+                id="filter-box"
+                className={SELECT_CLASS}
+                value={filters.box}
+                onChange={(e) => set("box", e.target.value)}
+              >
+                <option value="">Any box</option>
+                {boxes.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Movement type + Case material */}
           <div className="grid grid-cols-2 gap-3">
