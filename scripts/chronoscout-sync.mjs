@@ -146,6 +146,23 @@ async function apiGet(path, params = {}) {
       continue
     }
     if (res.status === 401 || res.status === 403) {
+      const errBody = await res.text().catch(() => "")
+      const server = res.headers.get("server") || "?"
+      const cfRay = res.headers.get("cf-ray") || ""
+      const looksCloudflare =
+        /cloudflare/i.test(server) ||
+        !!cfRay ||
+        /attention required|you have been blocked|cf-error|__cf_/i.test(errBody)
+      console.error(
+        `  ${res.status} from ${path} — server=${server}${cfRay ? ` cf-ray=${cfRay}` : ""}`
+      )
+      console.error(`  body (first 300 chars): ${errBody.slice(0, 300).replace(/\s+/g, " ").trim()}`)
+      if (res.status === 403 && looksCloudflare) {
+        throw new Error(
+          `HTTP 403 blocked by Cloudflare (WAF/IP), not an auth failure — ` +
+            `this runner's IP is likely blocked. Key fingerprint already verified.`
+        )
+      }
       throw new Error(`HTTP ${res.status} — check CHRONOSCOUT_API_KEY / access grant`)
     }
     if (!res.ok) {
