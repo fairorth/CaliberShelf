@@ -4,6 +4,7 @@ import { APP_VERSION } from "@/lib/version"
 import { getWatches } from "@/lib/queries/watches"
 import { createClient } from "@/lib/supabase/server"
 import { formatCurrency } from "@/lib/utils"
+import { AboutStats } from "./_components/about-stats"
 
 export const metadata: Metadata = {
   title: "About CaliberShelf",
@@ -178,12 +179,8 @@ export default async function AboutPage() {
     // stats are a flourish — never let a missing sync break the page
   }
 
-  const stats: { label: string; value: string }[] = [
-    { label: "Watches tracked", value: owned.length.toLocaleString() },
-  ]
-  if (value > 0) stats.push({ label: "Collection value", value: formatCurrency(value, "USD", true) })
-  if (catalog > 0) stats.push({ label: "Catalog models", value: catalog.toLocaleString() })
-  stats.push({ label: "Automation agents", value: "6" })
+  // Watches tracked counts the whole collection — owned, coming soon, AND wish list.
+  const collectionValue = value > 0 ? formatCurrency(value, "USD", true) : null
 
   return (
     <div className="mx-auto max-w-5xl space-y-10 pb-16">
@@ -207,19 +204,12 @@ export default async function AboutPage() {
       </section>
 
       {/* By the numbers */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            className="rounded-2xl border border-border bg-card px-4 py-5 text-center"
-          >
-            <div className="font-display text-2xl font-semibold tabular-nums text-brass sm:text-3xl">
-              {s.value}
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
-          </div>
-        ))}
-      </section>
+      <AboutStats
+        watchesTracked={watches.length}
+        collectionValue={collectionValue}
+        catalogModels={catalog}
+        agentCount={6}
+      />
 
       {/* Feature sections */}
       {SECTIONS.map((section) => (
