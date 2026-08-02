@@ -1,4 +1,4 @@
-# Weekly ChronoScout catalog mirror sync (scripts/chronoscout-sync.mjs).
+# ChronoScout catalog mirror sync (scripts/chronoscout-sync.mjs) — RUN LOCALLY.
 #
 # Deterministic — pulls ChronoScout's read-only spec catalog and upserts into
 # the chronoscout_* mirror tables. No LLM. A full pull is ~11 requests; weekly
@@ -11,11 +11,15 @@
 # The Supabase URL is public (it ships in the client bundle), so it is set
 # inline below rather than stored as a secret.
 
-name: Weekly ChronoScout sync
+name: ChronoScout sync (manual — run locally)
 
+# IMPORTANT: ChronoScout is behind Cloudflare, which serves GitHub Actions
+# runner IPs a "Just a moment..." bot challenge (HTTP 403), so this workflow
+# CANNOT succeed on GitHub-hosted runners. Run the sync locally instead:
+#   npm run chronoscout-sync         (or double-click scripts\chronoscout-sync.cmd)
+# The schedule was removed so it no longer emails weekly failures; manual
+# dispatch is kept only for a possible future self-hosted runner.
 on:
-  schedule:
-    - cron: "0 12 * * 0" # Sundays, 12:00 UTC
   workflow_dispatch:
     inputs:
       full:

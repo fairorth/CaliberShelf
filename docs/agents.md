@@ -23,7 +23,7 @@ follow), see [price-check.mjs.md](price-check.mjs.md).
 | Store-URL / brand-type sweep (`find-store-urls.mjs`) | LLM + web search | Manual script | Sonnet 5, 3 uses | $0.14/brand ($10.22 for all 73) | One-time; re-runs touch only NULL columns |
 | Reference sweep (`find-references.mjs`) | LLM + web search | Manual script | Sonnet 5, 4 uses | **$0.44/watch** ($2.20 for 5) | One-time-ish; ~77 watches remain ≈ $30–35 |
 | Deal check (`deal-check.mjs`) | Deterministic (no LLM) | Daily cron (13:00 UTC) + manual | — | **$0** | Yes — daily, free |
-| ChronoScout sync (`chronoscout-sync.mjs`) | Deterministic API mirror (no LLM) | Weekly cron (Sun, 12:00 UTC) + manual | — | **$0** | Yes — weekly, free |
+| ChronoScout sync (`chronoscout-sync.mjs`) | Deterministic API mirror (no LLM) | Manual, run locally (`npm run chronoscout-sync`) | — | **$0** | Manual/local — GitHub Actions blocked by Cloudflare |
 
 The dominant cost driver everywhere is **web searches**: each search feeds
 ~16k tokens of results into the model, so cost scales almost linearly with
@@ -159,10 +159,12 @@ case-size/movement/style specs, `price_range_usd`) and watch models
 (dimensions: diameter, between-lugs, lug-to-lug, thickness, weight). It has
 **no pricing per watch, no availability, no reference numbers, no alerts**.
 
-- **Initiate:** weekly GitHub Actions cron (`chronoscout-sync.yml`, Sun 12:00
-  UTC), manual dispatch (with an optional full-repull toggle), or
-  `npm run chronoscout-sync -- [--dry-run] [--full] [--brands-only]
-  [--watches-only] [--limit N]`.
+- **Initiate:** run LOCALLY — `npm run chronoscout-sync -- [--dry-run] [--full]
+  [--brands-only] [--watches-only] [--limit N]`, or double-click
+  `scripts\chronoscout-sync.cmd`. NOT via GitHub Actions: ChronoScout is behind
+  Cloudflare, which blocks Actions runner IPs with a "Just a moment..." challenge
+  (HTTP 403). The `chronoscout-sync.yml` schedule was removed for this reason;
+  the local machine's IP is not blocked.
 - **Cost:** $0 — a full pull is ~11 requests (332 brands on 1 page, ~10 pages
   of ~9.3k watches at 1000/page). Rate limit is 60 burst / ~1 req/sec; the
   script throttles to ~1.1s between requests and honors `429`/`Retry-After`.
