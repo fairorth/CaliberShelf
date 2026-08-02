@@ -30,6 +30,7 @@
 import nextEnv from "@next/env"
 const { loadEnvConfig } = nextEnv
 import { createClient } from "@supabase/supabase-js"
+import crypto from "node:crypto"
 import { startRun, finishRun } from "./lib/agent-run.mjs"
 
 loadEnvConfig(process.cwd())
@@ -90,7 +91,22 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY,
   { auth: { persistSession: false } }
 )
-const API_KEY = process.env.CHRONOSCOUT_API_KEY
+// Trim defensively — a stray space or newline pasted into a CI secret is a
+// common cause of a 403. The local .env loader strips these, so a bad paste
+// only bites in GitHub Actions (local 200, CI 403).
+const API_KEY = (process.env.CHRONOSCOUT_API_KEY ?? "").trim()
+
+// Preflight: log a NON-reversible fingerprint of the key (never the key itself)
+// so a failing run's log reveals whether CI received the expected value.
+{
+  const rawKey = process.env.CHRONOSCOUT_API_KEY ?? ""
+  const fp = crypto.createHash("sha256").update(API_KEY).digest("hex").slice(0, 8)
+  const trimNote =
+    rawKey.length !== API_KEY.length
+      ? ` (trimmed ${rawKey.length - API_KEY.length} surrounding whitespace/newline char(s))`
+      : ""
+  console.log(`  key check: length=${API_KEY.length}${trimNote}, fingerprint=${fp}`)
+}
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
