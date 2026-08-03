@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { AttentionItem, AttentionReport } from "@/lib/queries/attention"
+import { ATTENTION_INCLUDE_WISHLIST_KEY } from "@/lib/preferences"
 
 function StatusBadge({ status }: { status: AttentionItem["status"] }) {
   if (status === "wishlist") {
@@ -89,8 +90,20 @@ function AttentionSection({
 export function AttentionReportView({ report }: { report: AttentionReport }) {
   // Wish-list watches are aspirational, so let the user hide them from the
   // worklist. Default ON to preserve the report's prior behavior. Only watches
-  // carry a wish-list status; movements/brands are unaffected.
+  // carry a wish-list status; movements/brands are unaffected. The choice is
+  // sticky (per-device localStorage) so it survives navigating in and out.
   const [includeWishlist, setIncludeWishlist] = useState(true)
+
+  useEffect(() => {
+    const saved = localStorage.getItem(ATTENTION_INCLUDE_WISHLIST_KEY)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to a client-only preference
+    if (saved !== null) setIncludeWishlist(saved === "1")
+  }, [])
+
+  function toggleWishlist(next: boolean) {
+    setIncludeWishlist(next)
+    localStorage.setItem(ATTENTION_INCLUDE_WISHLIST_KEY, next ? "1" : "0")
+  }
 
   const wishlistCount = report.watches.filter((w) => w.status === "wishlist").length
   const watches = includeWishlist
@@ -115,7 +128,7 @@ export function AttentionReportView({ report }: { report: AttentionReport }) {
           <input
             type="checkbox"
             checked={includeWishlist}
-            onChange={(e) => setIncludeWishlist(e.target.checked)}
+            onChange={(e) => toggleWishlist(e.target.checked)}
             className="h-4 w-4 rounded border-border accent-primary"
           />
           Include wish-list watches

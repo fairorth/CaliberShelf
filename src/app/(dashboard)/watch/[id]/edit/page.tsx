@@ -32,10 +32,16 @@ export async function generateMetadata({
 
 export default async function EditWatchPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ from?: string }>
 }) {
   const { id } = await params
+  const { from } = await searchParams
+  // Where "Save"/"Cancel" return to. Known entry points map to safe internal
+  // paths; everything else falls back to the collection.
+  const returnTo = from === "attention" ? "/reports/attention-needed" : "/collection"
 
   const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, valuations, boxCount] =
     await Promise.all([
@@ -56,7 +62,7 @@ export default async function EditWatchPage({
   }
 
   // Bind the watchId to the update action
-  const boundUpdateWatch = updateWatch.bind(null, watch.id)
+  const boundUpdateWatch = updateWatch.bind(null, watch.id, returnTo)
 
   // Convert Maps to plain objects for client component serialization
   const photoUrls: Record<string, string> = {}
@@ -116,7 +122,7 @@ export default async function EditWatchPage({
             boxCount={boxCount}
             defaultLabelIds={watchLabels.map((l) => l.id)}
             stickyBar
-            cancelHref="/collection"
+            cancelHref={returnTo}
           />
           <ValuationPanel
             valuations={valuations}

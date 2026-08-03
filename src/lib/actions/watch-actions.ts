@@ -105,6 +105,7 @@ export async function createWatch(
  */
 export async function updateWatch(
   watchId: string,
+  returnTo: string,
   _prevState: WatchActionState,
   formData: FormData
 ): Promise<WatchActionState> {
@@ -176,7 +177,13 @@ export async function updateWatch(
   revalidatePath("/dashboard")
   revalidatePath("/collection")
   revalidatePath(`/watch/${watchId}/edit`)
-  redirect("/collection")
+  // Return to wherever the user came from (e.g. the Attention Needed report).
+  // Only allow internal paths — never an off-site (open-redirect) target.
+  const dest =
+    returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
+      ? returnTo
+      : "/collection"
+  redirect(dest)
 }
 
 /**

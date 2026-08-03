@@ -3,6 +3,9 @@
 /** When set to "1", the Collection views show each watch's purchase price. */
 export const SHOW_COST_KEY = "collection-show-cost"
 
+/** Attention Needed: whether wish-list watches are included. Default true. */
+export const ATTENTION_INCLUDE_WISHLIST_KEY = "attention-include-wishlist"
+
 /** Home hero: how many seconds each featured watch stays up before swapping. */
 export const HERO_DWELL_KEY = "home-hero-dwell-seconds"
 export const DEFAULT_HERO_DWELL_SECONDS = 30

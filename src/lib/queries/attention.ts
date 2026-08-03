@@ -100,7 +100,7 @@ export async function getAttentionReport(): Promise<AttentionReport> {
         name: `${w.brands?.name ?? ""} ${w.model}`.trim(),
         detail: w.nickname,
         missing,
-        href: `/watch/${w.id}/edit`,
+        href: `/watch/${w.id}/edit?from=attention`,
         status: w.is_wishlist ? "wishlist" : w.is_coming_soon ? "coming_soon" : null,
       })
     }
