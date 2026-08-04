@@ -217,6 +217,7 @@ export const caseShapeLabels: Record<string, string> = {
 
 export const KNOWN_COMPLICATIONS = [
   "Date",
+  "Day",
   "DTZ",
   "Power Reserve",
   "Annual Calendar",

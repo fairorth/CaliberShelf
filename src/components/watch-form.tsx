@@ -235,27 +235,16 @@ export function WatchForm({
       setIsDirty(true)
     }
 
-    // Merge complications: check known ones, append unknown ones to "other"
+    // Merge complications: check any that match our fixed set; ignore the rest.
     if (s.complications.length > 0) {
       const knownLower = new Map(KNOWN_COMPLICATIONS.map((c) => [c.toLowerCase(), c]))
-      const unknown: string[] = []
       const newKnown: string[] = []
       for (const comp of s.complications) {
         const canonical = knownLower.get(comp.trim().toLowerCase())
-        if (canonical) {
-          if (!checkedComplications.has(canonical)) newKnown.push(canonical)
-        } else if (
-          !otherComplication.toLowerCase().includes(comp.trim().toLowerCase())
-        ) {
-          unknown.push(comp.trim())
-        }
+        if (canonical && !checkedComplications.has(canonical)) newKnown.push(canonical)
       }
       if (newKnown.length > 0) {
         setCheckedComplications((prev) => new Set([...prev, ...newKnown]))
-        setIsDirty(true)
-      }
-      if (unknown.length > 0) {
-        setOtherComplication((prev) => [prev, ...unknown].filter(Boolean).join(", "))
         setIsDirty(true)
       }
     }
@@ -370,19 +359,9 @@ export function WatchForm({
     return checked
   })
 
-  const [otherComplication, setOtherComplication] = useState(() => {
-    const parts = (watch?.complication ?? "").split(",").map((s) => s.trim()).filter(Boolean)
-    const knownLower = new Set(KNOWN_COMPLICATIONS.map((c) => c.toLowerCase()))
-    return parts.filter((p) => !knownLower.has(p.toLowerCase())).join(", ")
-  })
-
-  // Assemble complication value for hidden input
-  const otherParts = otherComplication
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .filter((p) => !new Set(KNOWN_COMPLICATIONS.map((c) => c.toLowerCase())).has(p.toLowerCase()))
-  const complicationValue = [...Array.from(checkedComplications), ...otherParts].join(", ")
+  // Assemble complication value for the hidden input — only the fixed supported
+  // set (KNOWN_COMPLICATIONS); free-text "other" complications are not allowed.
+  const complicationValue = Array.from(checkedComplications).join(", ")
 
   function toggleLabel(labelId: string) {
     markDirty()
@@ -1016,12 +995,6 @@ export function WatchForm({
                 </label>
               ))}
             </div>
-            <Input
-              placeholder="Other complications (comma-separated)"
-              value={otherComplication}
-              onChange={(e) => setOtherComplication(e.target.value)}
-              className={FIELD}
-            />
           </div>
         </CardContent>
       </Card>

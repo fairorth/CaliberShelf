@@ -82,11 +82,12 @@ useful questions.
   intent, not price).
 - **Complications** — what the movement actually does, zero or more per watch,
   stored comma-joined in `watches.complication` and offered from
-  `KNOWN_COMPLICATIONS` in `src/lib/validations/watch.ts`: Date, DTZ, Power
-  Reserve, Annual Calendar, Perpetual Calendar, Moon Phase, and Fancy (a
-  catch-all whose specifics — tourbillon, jump hour — go in the notes). A
-  finishing style such as skeletonization is not a complication; neither is a
-  design genre such as Chronograph, which earns its place as a category.
+  `KNOWN_COMPLICATIONS` in `src/lib/validations/watch.ts`: Date, Day, DTZ,
+  Power Reserve, Annual Calendar, Perpetual Calendar, Moon Phase, and Fancy
+  (the catch-all for anything exotic, e.g. a tourbillon). These are the ONLY
+  complications that can be set — there is no free-text entry. A finishing style
+  such as skeletonization is not a complication; neither is a design genre such
+  as Chronograph, which earns its place as a category.
 - **Tier** — the price segment, never stored on the watch. It is derived from
   `purchase_price_cents` against the user's own bands in `profiles.tier_config`
   (an ordered JSONB array of `{label, max}`, `max` exclusive, last row `null`

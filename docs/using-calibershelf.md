@@ -30,11 +30,12 @@ a fixed list, so add or rename them as your collection changes. Tiers are
 different: they're derived from what you paid, and you set the price bands
 yourself under **Config → Tiers**. Change a band and every report re-reads it
 live. (The number of storage boxes is configurable the same way, under
-**Config → Boxes**.) Complications (Date, DTZ, Power Reserve, Annual Calendar, Perpetual
+**Config → Boxes**.) Complications (Date, Day, DTZ, Power Reserve, Annual Calendar, Perpetual
 Calendar, Moon Phase, Fancy) are the third axis, and a watch can carry several.
 **Fancy** is the deliberate catch-all for exotic complications — a tourbillon, a
-jumping hour — that don't warrant their own row. You can filter your collection
-by any of these seven under **Collection → Filters**.
+jumping hour — that don't warrant their own row. You pick them from this fixed
+set (there's no free-text entry), and you can filter your collection by any of
+them under **Collection → Filters**.
 
 ## The automated agents
 
