@@ -241,13 +241,12 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
       : ALL
 
   // Filter options derived from the actual collection.
-  const { brandOptions, movementOptions, caliberTypes, caseMaterials, boxOptions, complicationOptions, labelOptions } = useMemo(() => {
+  const { brandOptions, movementOptions, caliberTypes, caseMaterials, boxOptions, labelOptions } = useMemo(() => {
     const brandMap = new Map<string, string>()
     const movementMap = new Map<string, string>()
     const caliberSet = new Set<string>()
     const materialSet = new Set<string>()
     const boxSet = new Set<string>()
-    const complicationSet = new Set<string>()
     const labelMap = new Map<string, { name: string; color: string }>()
     for (const w of watches) {
       brandMap.set(w.brand_id, w.brand.name)
@@ -258,11 +257,6 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
       }
       if (w.case_material) materialSet.add(w.case_material)
       if (w.box) boxSet.add(w.box)
-      if (w.complication) {
-        for (const c of w.complication.split(",").map((x) => x.trim()).filter(Boolean)) {
-          complicationSet.add(c)
-        }
-      }
       for (const l of w.labels ?? []) labelMap.set(l.id, { name: l.name, color: l.color })
     }
     return {
@@ -275,17 +269,15 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
       caliberTypes: [...caliberSet].sort(),
       caseMaterials: [...materialSet].sort(),
       boxOptions: [...boxSet].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
-      complicationOptions: [
-        ...(KNOWN_COMPLICATIONS as readonly string[]).filter((k) => complicationSet.has(k)),
-        ...[...complicationSet]
-          .filter((c) => !(KNOWN_COMPLICATIONS as readonly string[]).includes(c))
-          .sort((a, b) => a.localeCompare(b)),
-      ],
       labelOptions: [...labelMap.entries()]
         .map(([id, { name, color }]) => ({ id, name, color }))
         .sort((a, b) => a.name.localeCompare(b.name)),
     }
   }, [watches])
+
+  // Complication filter offers exactly the supported set (the same
+  // KNOWN_COMPLICATIONS the watch form uses), never free-text "other" values.
+  const complicationOptions = [...KNOWN_COMPLICATIONS]
 
   // The "X of Y" total is status-scoped so unchecked statuses (e.g. hiding
   // wish-list watches) don't count toward the collection size.
