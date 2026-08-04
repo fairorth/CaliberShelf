@@ -2,10 +2,12 @@ import type { Metadata } from "next"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getWearLogsForMonth } from "@/lib/queries/wear-logs"
 import { getWatches } from "@/lib/queries/watches"
+import { getCurrentDisplayBox } from "@/lib/queries/display-box"
 import { getWearStats } from "@/lib/queries/wear-logs"
 import { WearCalendar } from "./_components/wear-calendar"
 import { WearHistory } from "./_components/wear-history"
 import { WearStatsView } from "./_components/wear-stats"
+import { DisplayBoxPanel } from "./_components/display-box-panel"
 
 export const metadata: Metadata = {
   title: "Wear Log | CaliberShelf",
@@ -16,9 +18,10 @@ export default async function WearLogPage() {
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth() + 1 // 1-indexed
 
-  const [monthLogs, watches] = await Promise.all([
+  const [monthLogs, watches, displayBox] = await Promise.all([
     getWearLogsForMonth(currentYear, currentMonth),
     getWatches(),
+    getCurrentDisplayBox(),
   ])
 
   const stats = await getWearStats(watches)
@@ -26,6 +29,8 @@ export default async function WearLogPage() {
   return (
     <div className="space-y-6">
       <h1 className="font-display text-lg font-medium tracking-tight">Wear Log</h1>
+
+      <DisplayBoxPanel box={displayBox} />
 
       <Tabs defaultValue="calendar">
         <TabsList>
