@@ -35,7 +35,7 @@ export function HomeStage({ watches, seed, stats, displayBox }: HomeStageProps) 
 
   return (
     <div className="flex w-full flex-col items-center gap-6">
-      <div className="inline-flex overflow-hidden rounded-full border border-border">
+      <div className="relative z-10 inline-flex overflow-hidden rounded-full border border-border">
         <button
           type="button"
           onClick={() => choose(false)}
@@ -69,7 +69,10 @@ export function HomeStage({ watches, seed, stats, displayBox }: HomeStageProps) 
           </div>
         )
       ) : (
-        <WatchHero watches={watches} seed={seed} stats={stats} />
+        // Extra top padding clears the watch's top lug, which overhangs the case.
+        <div className="pt-10 sm:pt-14">
+          <WatchHero watches={watches} seed={seed} stats={stats} />
+        </div>
       )}
     </div>
   )

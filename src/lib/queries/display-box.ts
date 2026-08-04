@@ -44,14 +44,22 @@ export async function getCurrentDisplayBox(): Promise<CurrentDisplayBox | null> 
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: box } = await supabase
+  const { data: boxRow } = await supabase
     .from("display_boxes")
-    .select("id, method, rationale, created_at, wearing_watch_id")
+    .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle()
-  if (!box) return null
+  if (!boxRow) return null
+  // Read defensively — wearing_watch_id may not exist until migration 00034.
+  const box = boxRow as {
+    id: string
+    method: string
+    rationale: string | null
+    created_at: string
+    wearing_watch_id?: string | null
+  }
 
   const { data: items } = await supabase
     .from("display_box_watches")
