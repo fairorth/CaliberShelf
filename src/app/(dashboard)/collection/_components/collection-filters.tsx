@@ -39,6 +39,8 @@ export interface CollectionFilters {
   labelIds: string[]
   // Selected category ids (OR). Empty = all categories.
   categoryIds: string[]
+  // Selected complication names (OR). A watch matches if it has ANY.
+  complications: string[]
 }
 
 export const EMPTY_FILTERS: CollectionFilters = {
@@ -55,6 +57,7 @@ export const EMPTY_FILTERS: CollectionFilters = {
   maxPrice: "",
   labelIds: [],
   categoryIds: [],
+  complications: [],
 }
 
 export function activeFilterCount(f: CollectionFilters): number {
@@ -69,6 +72,7 @@ export function activeFilterCount(f: CollectionFilters): number {
   if (f.minPrice || f.maxPrice) n++
   if (f.labelIds.length > 0) n++
   if (f.categoryIds.length > 0) n++
+  if (f.complications.length > 0) n++
   return n
 }
 
@@ -102,6 +106,7 @@ interface CollectionFiltersDialogProps {
   boxes: string[]
   labels: LabelOption[]
   categories: CategoryOption[]
+  complications: string[]
   matchCount: number
 }
 
@@ -118,6 +123,7 @@ export function CollectionFiltersDialog({
   boxes,
   labels,
   categories,
+  complications,
   matchCount,
 }: CollectionFiltersDialogProps) {
   const count = activeFilterCount(filters)
@@ -138,6 +144,13 @@ export function CollectionFiltersDialog({
       ? filters.categoryIds.filter((x) => x !== id)
       : [...filters.categoryIds, id]
     set("categoryIds", next)
+  }
+
+  function toggleComplication(name: string) {
+    const next = filters.complications.includes(name)
+      ? filters.complications.filter((x) => x !== name)
+      : [...filters.complications, name]
+    set("complications", next)
   }
 
   return (
@@ -218,6 +231,45 @@ export function CollectionFiltersDialog({
                       )}
                     >
                       {c.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Complication — multi-select (OR); a watch matches if it has ANY */}
+          {complications.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <FormLabel>Complication</FormLabel>
+                {filters.complications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => set("complications", [])}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {complications.map((c) => {
+                  const selected = filters.complications.includes(c)
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => toggleComplication(c)}
+                      aria-pressed={selected}
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
+                        selected
+                          ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {c}
                     </button>
                   )
                 })}

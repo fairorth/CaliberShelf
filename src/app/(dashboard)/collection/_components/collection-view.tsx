@@ -19,6 +19,7 @@ import {
 } from "./collection-filters"
 import { cn, formatCurrency } from "@/lib/utils"
 import { SHOW_COST_KEY } from "@/lib/preferences"
+import { KNOWN_COMPLICATIONS } from "@/lib/validations/watch"
 import type { Category, WatchWithCover } from "@/lib/types/watch"
 
 interface CollectionViewProps {
@@ -85,6 +86,11 @@ function applyFilters(watches: WatchWithCover[], f: CollectionFilters): WatchWit
     if (f.caliberType && w.movement?.caliber_type !== f.caliberType) return false
     if (f.caseMaterial && w.case_material !== f.caseMaterial) return false
     if (f.box && (w.box ?? "") !== f.box) return false
+    if (f.complications.length > 0) {
+      // A watch matches if it carries ANY selected complication.
+      const comps = (w.complication ?? "").split(",").map((c) => c.trim()).filter(Boolean)
+      if (!f.complications.some((c) => comps.includes(c))) return false
+    }
     if (f.labelIds.length > 0) {
       // OR semantics: keep the watch if it carries any selected label.
       const labels = w.labels ?? []
@@ -235,12 +241,13 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
       : ALL
 
   // Filter options derived from the actual collection.
-  const { brandOptions, movementOptions, caliberTypes, caseMaterials, boxOptions, labelOptions } = useMemo(() => {
+  const { brandOptions, movementOptions, caliberTypes, caseMaterials, boxOptions, complicationOptions, labelOptions } = useMemo(() => {
     const brandMap = new Map<string, string>()
     const movementMap = new Map<string, string>()
     const caliberSet = new Set<string>()
     const materialSet = new Set<string>()
     const boxSet = new Set<string>()
+    const complicationSet = new Set<string>()
     const labelMap = new Map<string, { name: string; color: string }>()
     for (const w of watches) {
       brandMap.set(w.brand_id, w.brand.name)
@@ -251,6 +258,11 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
       }
       if (w.case_material) materialSet.add(w.case_material)
       if (w.box) boxSet.add(w.box)
+      if (w.complication) {
+        for (const c of w.complication.split(",").map((x) => x.trim()).filter(Boolean)) {
+          complicationSet.add(c)
+        }
+      }
       for (const l of w.labels ?? []) labelMap.set(l.id, { name: l.name, color: l.color })
     }
     return {
@@ -263,6 +275,12 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
       caliberTypes: [...caliberSet].sort(),
       caseMaterials: [...materialSet].sort(),
       boxOptions: [...boxSet].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
+      complicationOptions: [
+        ...(KNOWN_COMPLICATIONS as readonly string[]).filter((k) => complicationSet.has(k)),
+        ...[...complicationSet]
+          .filter((c) => !(KNOWN_COMPLICATIONS as readonly string[]).includes(c))
+          .sort((a, b) => a.localeCompare(b)),
+      ],
       labelOptions: [...labelMap.entries()]
         .map(([id, { name, color }]) => ({ id, name, color }))
         .sort((a, b) => a.name.localeCompare(b.name)),
@@ -359,6 +377,7 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
           caliberTypes={caliberTypes}
           caseMaterials={caseMaterials}
           boxes={boxOptions}
+          complications={complicationOptions}
           labels={labelOptions}
           categories={categories.map((c) => ({ id: c.id, name: c.name }))}
           matchCount={afterFilters.length}
