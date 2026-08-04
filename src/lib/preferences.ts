@@ -6,6 +6,9 @@ export const SHOW_COST_KEY = "collection-show-cost"
 /** Attention Needed: whether wish-list watches are included. Default true. */
 export const ATTENTION_INCLUDE_WISHLIST_KEY = "attention-include-wishlist"
 
+/** Home: show the Display Box instead of the rotating Living Dial. */
+export const DISPLAY_BOX_HOME_KEY = "home-show-display-box"
+
 /** Home hero: how many seconds each featured watch stays up before swapping. */
 export const HERO_DWELL_KEY = "home-hero-dwell-seconds"
 export const DEFAULT_HERO_DWELL_SECONDS = 30

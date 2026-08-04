@@ -1,16 +1,18 @@
 import type { Metadata } from "next"
 import { getWatches } from "@/lib/queries/watches"
 import { getWornThisWeekCount } from "@/lib/queries/wear-logs"
-import { WatchHero } from "@/components/watch-hero"
+import { getCurrentDisplayBox } from "@/lib/queries/display-box"
+import { HomeStage } from "@/components/home-stage"
 
 export const metadata: Metadata = {
   title: "Gallery | CaliberShelf",
 }
 
 export default async function GalleryPage() {
-  const [watches, wornThisWeek] = await Promise.all([
+  const [watches, wornThisWeek, displayBox] = await Promise.all([
     getWatches(),
     getWornThisWeekCount(),
+    getCurrentDisplayBox(),
   ])
   // Wish-list watches aren't owned — keep them off the hero and out of the stats.
   const owned = watches.filter((w) => !w.is_wishlist)
@@ -32,7 +34,7 @@ export default async function GalleryPage() {
 
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col items-center justify-center py-8">
-      <WatchHero watches={heroWatches} seed={seed} stats={stats} />
+      <HomeStage watches={heroWatches} seed={seed} stats={stats} displayBox={displayBox} />
     </div>
   )
 }

@@ -91,3 +91,52 @@ export async function createDisplayBox(): Promise<DisplayBoxActionState> {
   revalidatePath("/dashboard")
   return { success: true }
 }
+
+/**
+ * Mark a watch as the one currently being worn from the current display box
+ * (single-select: this clears any previously-worn watch). Also logs today's
+ * wear, deduped so re-selecting the same day doesn't double-count.
+ */
+export async function setWearingWatch(watchId: string): Promise<DisplayBoxActionState> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: "You must be signed in." }
+
+  const { data: box } = await supabase
+    .from("display_boxes")
+    .select("id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (!box) return { error: "No display box yet." }
+
+  const { error: upErr } = await supabase
+    .from("display_boxes")
+    .update({ wearing_watch_id: watchId })
+    .eq("id", box.id)
+    .eq("user_id", user.id)
+  if (upErr) return { error: upErr.message }
+
+  // Log today's wear, but only once per watch per day.
+  const today = new Date().toISOString().slice(0, 10)
+  const { data: existing } = await supabase
+    .from("wear_logs")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("watch_id", watchId)
+    .eq("worn_date", today)
+    .limit(1)
+  if (!existing || existing.length === 0) {
+    const { error: insErr } = await supabase
+      .from("wear_logs")
+      .insert({ user_id: user.id, watch_id: watchId, worn_date: today })
+    if (insErr) return { error: insErr.message }
+  }
+
+  revalidatePath("/dashboard")
+  revalidatePath("/wear-log")
+  return { success: true }
+}
