@@ -18,9 +18,11 @@ export default async function AttentionNeededPage() {
 
       <p className="max-w-2xl text-xs text-muted-foreground">
         Watches list missing reference number, caliber, case diameter, case
-        height, or strap width — the ✨ Auto-fill specs button on each watch can
-        find most of these. Movements (in-use only) need lift angle for the
-        timegrapher. Brands need a store URL for the deal scanner.
+        height, strap width, or a storage box — the ✨ Auto-fill specs button on
+        each watch finds most of the specs; the box you set yourself. Only
+        owned watches are flagged for a missing box. Movements (in-use only) need
+        lift angle for the timegrapher. Brands need a store URL for the deal
+        scanner.
       </p>
     </div>
   )

@@ -94,6 +94,8 @@ export async function getAttentionReport(): Promise<AttentionReport> {
     if (w.case_diameter_mm == null) missing.push("Case diameter")
     if (w.case_height_mm == null) missing.push("Case height")
     if (w.strap_width_mm == null) missing.push("Strap width")
+    // Box is a physical storage slot — only meaningful for watches in hand.
+    if (!w.is_wishlist && !w.is_coming_soon && !w.box) missing.push("Box")
     if (missing.length > 0) {
       watchItems.push({
         id: w.id,
