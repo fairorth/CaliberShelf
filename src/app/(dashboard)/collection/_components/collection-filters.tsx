@@ -11,7 +11,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label as FormLabel } from "@/components/ui/label"
 import { caseMaterialLabels } from "@/lib/validations/watch"
 import { caliberTypeLabels } from "@/lib/validations/movement"
@@ -33,8 +32,8 @@ export interface CollectionFilters {
   caseMaterial: string
   box: string
   priceTracking: PriceTracking
-  minPrice: string // dollars, as typed
-  maxPrice: string
+  // Selected price-tier keys (OR): "t{n}" per tier, "unpriced" for no price.
+  tierKeys: string[]
   // Selected label ids. A watch matches if it carries ANY of them (OR).
   labelIds: string[]
   // Selected category ids (OR). Empty = all categories.
@@ -53,8 +52,7 @@ export const EMPTY_FILTERS: CollectionFilters = {
   caseMaterial: "",
   box: "",
   priceTracking: "",
-  minPrice: "",
-  maxPrice: "",
+  tierKeys: [],
   labelIds: [],
   categoryIds: [],
   complications: [],
@@ -69,7 +67,7 @@ export function activeFilterCount(f: CollectionFilters): number {
   if (f.caseMaterial) n++
   if (f.box) n++
   if (f.priceTracking) n++
-  if (f.minPrice || f.maxPrice) n++
+  if (f.tierKeys.length > 0) n++
   if (f.labelIds.length > 0) n++
   if (f.categoryIds.length > 0) n++
   if (f.complications.length > 0) n++
@@ -95,6 +93,11 @@ export interface CategoryOption {
   id: string
   name: string
 }
+export interface TierFilterOption {
+  key: string
+  label: string
+  short: string
+}
 
 interface CollectionFiltersDialogProps {
   filters: CollectionFilters
@@ -107,6 +110,7 @@ interface CollectionFiltersDialogProps {
   labels: LabelOption[]
   categories: CategoryOption[]
   complications: string[]
+  tiers: TierFilterOption[]
   matchCount: number
 }
 
@@ -124,6 +128,7 @@ export function CollectionFiltersDialog({
   labels,
   categories,
   complications,
+  tiers,
   matchCount,
 }: CollectionFiltersDialogProps) {
   const count = activeFilterCount(filters)
@@ -151,6 +156,13 @@ export function CollectionFiltersDialog({
       ? filters.complications.filter((x) => x !== name)
       : [...filters.complications, name]
     set("complications", next)
+  }
+
+  function toggleTier(key: string) {
+    const next = filters.tierKeys.includes(key)
+      ? filters.tierKeys.filter((x) => x !== key)
+      : [...filters.tierKeys, key]
+    set("tierKeys", next)
   }
 
   return (
@@ -424,31 +436,45 @@ export function CollectionFiltersDialog({
             </select>
           </div>
 
-          {/* Price range */}
-          <div className="space-y-1.5">
-            <FormLabel>Price range ($)</FormLabel>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                inputMode="numeric"
-                min="0"
-                placeholder="Min"
-                value={filters.minPrice}
-                onChange={(e) => set("minPrice", e.target.value)}
-                aria-label="Minimum price"
-              />
-              <span className="text-muted-foreground">–</span>
-              <Input
-                type="number"
-                inputMode="numeric"
-                min="0"
-                placeholder="Max"
-                value={filters.maxPrice}
-                onChange={(e) => set("maxPrice", e.target.value)}
-                aria-label="Maximum price"
-              />
+          {/* Price Tiers — multi-select (OR); tiers come from Config → Tiers */}
+          {tiers.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <FormLabel>Price Tiers</FormLabel>
+                {filters.tierKeys.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => set("tierKeys", [])}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {tiers.map((t) => {
+                  const selected = filters.tierKeys.includes(t.key)
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => toggleTier(t.key)}
+                      aria-pressed={selected}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
+                        selected
+                          ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {t.label}
+                      {t.short && <span className="opacity-60">{t.short}</span>}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <DialogFooter className="items-center sm:justify-between">

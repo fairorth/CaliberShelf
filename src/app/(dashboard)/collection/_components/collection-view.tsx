@@ -20,6 +20,7 @@ import {
 import { cn, formatCurrency } from "@/lib/utils"
 import { SHOW_COST_KEY } from "@/lib/preferences"
 import { KNOWN_COMPLICATIONS } from "@/lib/validations/watch"
+import { tierBandForCents, type TierBand } from "@/lib/tiers"
 import type { Category, WatchWithCover } from "@/lib/types/watch"
 
 interface CollectionViewProps {
@@ -27,6 +28,8 @@ interface CollectionViewProps {
   categories: Category[]
   /** Latest valuation mid (cents) per watch_id, from watch_valuations. */
   valuationMids: Record<string, number>
+  /** The user's configured price-tier bands (Config → Tiers). */
+  tierBands: TierBand[]
 }
 
 const ALL = "all"
@@ -74,11 +77,11 @@ function matchesStatus(w: WatchWithCover, f: CollectionFilters): boolean {
   return f.showOwned
 }
 
-function applyFilters(watches: WatchWithCover[], f: CollectionFilters): WatchWithCover[] {
-  const minCents = f.minPrice.trim() ? Math.round(parseFloat(f.minPrice) * 100) : null
-  const maxCents = f.maxPrice.trim() ? Math.round(parseFloat(f.maxPrice) * 100) : null
-  const priceActive = minCents !== null || maxCents !== null
-
+function applyFilters(
+  watches: WatchWithCover[],
+  f: CollectionFilters,
+  tierBands: TierBand[]
+): WatchWithCover[] {
   return watches.filter((w) => {
     if (!matchesStatus(w, f)) return false
     if (f.brandId && w.brand_id !== f.brandId) return false
@@ -99,11 +102,9 @@ function applyFilters(watches: WatchWithCover[], f: CollectionFilters): WatchWit
     if (f.categoryIds.length > 0 && !f.categoryIds.includes(w.category_id)) return false
     if (f.priceTracking === "tracked" && !w.price_check_enabled) return false
     if (f.priceTracking === "untracked" && w.price_check_enabled) return false
-    if (priceActive) {
-      const p = w.purchase_price_cents
-      if (p === null) return false
-      if (minCents !== null && p < minCents) return false
-      if (maxCents !== null && p > maxCents) return false
+    if (f.tierKeys.length > 0) {
+      const key = tierBandForCents(w.purchase_price_cents, tierBands).key
+      if (!f.tierKeys.includes(key)) return false
     }
     return true
   })
@@ -140,7 +141,7 @@ function sortWatches(watches: WatchWithCover[], key: SortKey, dir: SortDir): Wat
   })
 }
 
-export function CollectionView({ watches, categories, valuationMids }: CollectionViewProps) {
+export function CollectionView({ watches, categories, valuationMids, tierBands }: CollectionViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
@@ -279,6 +280,16 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
   // KNOWN_COMPLICATIONS the watch form uses), never free-text "other" values.
   const complicationOptions = [...KNOWN_COMPLICATIONS]
 
+  // Price-tier filter options come from the user's configured tiers, plus a
+  // "No price" bucket for watches without a purchase price.
+  const tierOptions = useMemo(
+    () => [
+      ...tierBands.map((b) => ({ key: `t${b.tier}`, label: b.label, short: b.short })),
+      { key: "unpriced", label: "No price", short: "" },
+    ],
+    [tierBands]
+  )
+
   // The "X of Y" total is status-scoped so unchecked statuses (e.g. hiding
   // wish-list watches) don't count toward the collection size.
   const ownershipTotal = useMemo(
@@ -290,7 +301,10 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
     () => (selectedId === ALL ? watches : watches.filter((w) => w.category_id === selectedId)),
     [watches, selectedId]
   )
-  const afterFilters = useMemo(() => applyFilters(afterCategory, filters), [afterCategory, filters])
+  const afterFilters = useMemo(
+    () => applyFilters(afterCategory, filters, tierBands),
+    [afterCategory, filters, tierBands]
+  )
   const afterSearch = useMemo(
     () => (query.trim() ? afterFilters.filter((w) => matchesQuery(w, query)) : afterFilters),
     [afterFilters, query]
@@ -370,6 +384,7 @@ export function CollectionView({ watches, categories, valuationMids }: Collectio
           caseMaterials={caseMaterials}
           boxes={boxOptions}
           complications={complicationOptions}
+          tiers={tierOptions}
           labels={labelOptions}
           categories={categories.map((c) => ({ id: c.id, name: c.name }))}
           matchCount={afterFilters.length}
