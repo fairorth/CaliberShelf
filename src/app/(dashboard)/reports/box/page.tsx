@@ -7,39 +7,47 @@ import { CollapsibleReportGroup } from "@/components/collapsible-report-group"
 import type { WatchWithCover } from "@/lib/types/watch"
 
 export const metadata: Metadata = {
-  title: "Watches by Category | CaliberShelf",
+  title: "Watches by Box | CaliberShelf",
 }
 
 export const dynamic = "force-dynamic"
 
-interface CatGroup {
-  id: string | null
+const NO_BOX = "__none__"
+
+interface BoxGroup {
+  key: string
   name: string
   watches: WatchWithCover[]
   subtotalCents: number
 }
 
-export default async function ByCategoryPage() {
+export default async function ByBoxPage() {
   const all = await getWatches()
   const owned = all.filter((w) => !w.is_wishlist)
 
-  const groups = new Map<string, CatGroup>()
+  const groups = new Map<string, BoxGroup>()
   for (const w of owned) {
-    const id = w.category_id ?? "none"
-    const name = w.category?.name ?? "Uncategorized"
-    let g = groups.get(id)
+    const box = (w.box ?? "").trim()
+    const key = box || NO_BOX
+    const name = box || "No box assigned"
+    let g = groups.get(key)
     if (!g) {
-      g = { id: w.category_id ?? null, name, watches: [], subtotalCents: 0 }
-      groups.set(id, g)
+      g = { key, name, watches: [], subtotalCents: 0 }
+      groups.set(key, g)
     }
     g.watches.push(w)
     g.subtotalCents += w.purchase_price_cents ?? 0
   }
 
-  const ordered = [...groups.values()].sort(
-    (a, b) => b.subtotalCents - a.subtotalCents || b.watches.length - a.watches.length
-  )
+  // Assigned boxes first (natural sort: Box1, Box2, … Box10); "No box" last.
+  const ordered = [...groups.values()].sort((a, b) => {
+    if (a.key === NO_BOX) return 1
+    if (b.key === NO_BOX) return -1
+    return a.name.localeCompare(b.name, undefined, { numeric: true })
+  })
+
   const grandTotal = ordered.reduce((s, g) => s + g.subtotalCents, 0)
+  const boxCount = ordered.filter((g) => g.key !== NO_BOX).length
 
   return (
     <div className="space-y-6">
@@ -50,11 +58,12 @@ export default async function ByCategoryPage() {
         >
           ‹ Reports
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">Watches by Category</h1>
+        <h1 className="font-display text-lg font-medium tracking-tight">Watches by Box</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {owned.length} owned {owned.length === 1 ? "watch" : "watches"} across{" "}
-          {ordered.length} {ordered.length === 1 ? "category" : "categories"} ·{" "}
-          <span className="font-mono text-brass">{formatCurrency(grandTotal, "USD", true)}</span> total at cost
+          {boxCount} {boxCount === 1 ? "box" : "boxes"} ·{" "}
+          <span className="font-mono text-brass">{formatCurrency(grandTotal, "USD", true)}</span>{" "}
+          total at cost
         </p>
       </div>
 
@@ -68,9 +77,8 @@ export default async function ByCategoryPage() {
         <div className="space-y-4">
           {ordered.map((g) => (
             <CollapsibleReportGroup
-              key={g.id ?? "none"}
+              key={g.key}
               title={g.name}
-              titleHref={g.id ? `/collection?category=${g.id}` : undefined}
               summary={
                 <>
                   {g.watches.length} {g.watches.length === 1 ? "watch" : "watches"} ·{" "}
@@ -97,9 +105,9 @@ export default async function ByCategoryPage() {
                           {w.nickname && (
                             <span className="ml-2 text-xs text-muted-foreground">{w.nickname}</span>
                           )}
-                          {w.is_coming_soon && (
-                            <span className="ml-2 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
-                              coming soon
+                          {w.category?.name && (
+                            <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                              {w.category.name}
                             </span>
                           )}
                         </span>

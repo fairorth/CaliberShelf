@@ -34,6 +34,12 @@ const REPORTS: ReportLink[] = [
     available: true,
   },
   {
+    slug: "box",
+    title: "Watches by Box",
+    description: "Every storage box with the watches it holds and a price subtotal — collapsible.",
+    available: true,
+  },
+  {
     slug: "valuations",
     title: "Watch Valuations",
     description: "Agent-researched market values by run date, with drill-down to evidence.",
