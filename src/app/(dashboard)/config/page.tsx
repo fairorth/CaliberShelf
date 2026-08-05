@@ -7,6 +7,7 @@ import { getLabels } from "@/lib/queries/labels"
 import { getWatches } from "@/lib/queries/watches"
 import { getTierConfig } from "@/lib/queries/tier-config"
 import { getBoxCount } from "@/lib/queries/box-config"
+import { getWatchImagesPath } from "@/lib/queries/app-settings"
 import { BrandsTab } from "./_components/brands-tab"
 import { MovementsTab } from "./_components/movements-tab"
 import { CategoriesTab } from "./_components/categories-tab"
@@ -30,7 +31,7 @@ export default async function ConfigPage({
   const { tab } = await searchParams
   const initialTab = tab && TAB_VALUES.includes(tab) ? tab : "brands"
 
-  const [brands, movements, categories, labels, watches, tierConfig, boxCount] = await Promise.all([
+  const [brands, movements, categories, labels, watches, tierConfig, boxCount, watchImagesPath] = await Promise.all([
     getBrands(),
     getMovements(),
     getCategories(),
@@ -38,6 +39,7 @@ export default async function ConfigPage({
     getWatches(),
     getTierConfig(),
     getBoxCount(),
+    getWatchImagesPath(),
   ])
 
   // Count watches per brand
@@ -97,7 +99,7 @@ export default async function ConfigPage({
         </TabsContent>
 
         <TabsContent value="settings" className="mt-4">
-          <SettingsTab />
+          <SettingsTab initialWatchImagesPath={watchImagesPath} />
         </TabsContent>
       </Tabs>
     </div>

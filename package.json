@@ -1,6 +1,6 @@
 {
   "name": "caliber-shelf",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -13,7 +13,8 @@
     "find-store-urls": "node scripts/find-store-urls.mjs",
     "find-references": "node scripts/find-references.mjs",
     "chronoscout-sync": "node scripts/chronoscout-sync.mjs",
-    "backfill-agent-runs": "node scripts/backfill-agent-runs.mjs"
+    "backfill-agent-runs": "node scripts/backfill-agent-runs.mjs",
+    "sync-watch-folders": "node scripts/sync-watch-folders.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",

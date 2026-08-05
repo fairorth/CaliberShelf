@@ -1,7 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
 import {
   SHOW_COST_KEY,
   HERO_DWELL_KEY,
@@ -10,12 +13,19 @@ import {
   heroDwellLabel,
   readHeroDwellSeconds,
 } from "@/lib/preferences"
+import { saveWatchImagesPath } from "@/lib/actions/settings-actions"
 
-export function SettingsTab() {
+export function SettingsTab({
+  initialWatchImagesPath = "",
+}: {
+  initialWatchImagesPath?: string
+}) {
   const [showCost, setShowCost] = useState(false)
   const [heroDwell, setHeroDwell] = useState<number>(DEFAULT_HERO_DWELL_SECONDS)
+  const [imagesPath, setImagesPath] = useState(initialWatchImagesPath)
+  const [isSaving, startSaving] = useTransition()
 
-  // Read the saved preferences after hydration (localStorage is client-only).
+  // Read the saved per-device preferences after hydration (localStorage is client-only).
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowCost(localStorage.getItem(SHOW_COST_KEY) === "1")
@@ -32,51 +42,92 @@ export function SettingsTab() {
     localStorage.setItem(HERO_DWELL_KEY, String(next))
   }
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Display Settings</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <label className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            checked={showCost}
-            onChange={(e) => toggle(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
-          />
-          <span className="space-y-0.5">
-            <span className="block text-sm font-medium">Include Cost in Category Listing</span>
-            <span className="block text-xs text-muted-foreground">
-              Show each watch&apos;s purchase price in the Collection table and gallery.
-            </span>
-          </span>
-        </label>
-        <div className="space-y-1.5 border-t border-border pt-4">
-          <label htmlFor="hero-dwell" className="block text-sm font-medium">
-            Home screen — featured watch duration
-          </label>
-          <p className="text-xs text-muted-foreground">
-            How long each watch stays on the home screen before switching to the next.
-          </p>
-          <select
-            id="hero-dwell"
-            value={heroDwell}
-            onChange={(e) => changeHeroDwell(Number(e.target.value))}
-            className="mt-1 flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          >
-            {HERO_DWELL_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {heroDwellLabel(s)}
-              </option>
-            ))}
-          </select>
-        </div>
+  function saveImagesPath() {
+    startSaving(async () => {
+      const res = await saveWatchImagesPath(imagesPath)
+      if (res.error) toast.error(res.error)
+      else toast.success("Watch Images folder saved.")
+    })
+  }
 
-        <p className="text-xs text-muted-foreground">
-          These preferences are saved on this device.
-        </p>
-      </CardContent>
-    </Card>
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Display Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={showCost}
+              onChange={(e) => toggle(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+            />
+            <span className="space-y-0.5">
+              <span className="block text-sm font-medium">Include Cost in Category Listing</span>
+              <span className="block text-xs text-muted-foreground">
+                Show each watch&apos;s purchase price in the Collection table and gallery.
+              </span>
+            </span>
+          </label>
+          <div className="space-y-1.5 border-t border-border pt-4">
+            <label htmlFor="hero-dwell" className="block text-sm font-medium">
+              Home screen — featured watch duration
+            </label>
+            <p className="text-xs text-muted-foreground">
+              How long each watch stays on the home screen before switching to the next.
+            </p>
+            <select
+              id="hero-dwell"
+              value={heroDwell}
+              onChange={(e) => changeHeroDwell(Number(e.target.value))}
+              className="mt-1 flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            >
+              {HERO_DWELL_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {heroDwellLabel(s)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            These preferences are saved on this device.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Photo Lab</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-1.5">
+            <label htmlFor="watch-images-path" className="block text-sm font-medium">
+              Watch Images folder location
+            </label>
+            <p className="text-xs text-muted-foreground">
+              The parent folder on your machine that holds one image folder per watch (e.g.
+              <span className="font-mono"> C:\WatchImages</span>). Used by the local
+              <span className="font-mono"> sync-watch-folders</span> script — the app itself
+              can&apos;t create folders on your disk.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                id="watch-images-path"
+                value={imagesPath}
+                onChange={(e) => setImagesPath(e.target.value)}
+                placeholder="C:\WatchImages"
+                className="h-9 font-mono"
+              />
+              <Button size="sm" onClick={saveImagesPath} disabled={isSaving}>
+                {isSaving ? "Saving…" : "Save"}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
