@@ -14,6 +14,12 @@ export const brandFormSchema = z.object({
     .optional()
     .default("")
     .transform((val) => val.trim().replace(/\/+$/, "")),
+  // Wish-list brand — no owned watches yet, but we want one. Accepts the
+  // checkbox's "on" (form-bound createBrand) or a boolean (direct updateBrand).
+  is_wishlist: z
+    .union([z.string(), z.boolean()])
+    .optional()
+    .transform((v) => v === "on" || v === true),
 })
 
 export type BrandFormValues = z.input<typeof brandFormSchema>

@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createBrandInline } from "@/lib/actions/brand-actions"
+import { WishlistBadge } from "@/components/wishlist-badge"
 import { cn } from "@/lib/utils"
 import type { Brand } from "@/lib/types/watch"
 
@@ -56,6 +57,7 @@ export function BrandCombobox({ brands, defaultBrandId, onChange }: BrandCombobo
           brand_type: null,
           store_url: null,
           logo_url: null,
+          is_wishlist: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
@@ -123,6 +125,7 @@ export function BrandCombobox({ brands, defaultBrandId, onChange }: BrandCombobo
                   {brand.id === selectedId ? "✓" : ""}
                 </span>
                 <span>{brand.name}</span>
+                {brand.is_wishlist && <WishlistBadge />}
                 {brand.country_of_origin && (
                   <span className="ml-auto text-xs text-muted-foreground">
                     {brand.country_of_origin}

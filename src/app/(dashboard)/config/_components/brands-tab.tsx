@@ -23,6 +23,7 @@ import {
 import { createBrand, deleteBrand, updateBrand } from "@/lib/actions/brand-actions"
 import type { BrandActionState } from "@/lib/actions/brand-actions"
 import { brandTypeLabels } from "@/lib/validations/brand"
+import { WishlistBadge } from "@/components/wishlist-badge"
 import { toast } from "sonner"
 import type { Brand } from "@/lib/types/watch"
 
@@ -67,6 +68,7 @@ function BrandRow({
   const [editCountry, setEditCountry] = useState(brand.country_of_origin ?? "")
   const [editType, setEditType] = useState<string>(brand.brand_type ?? "")
   const [editStoreUrl, setEditStoreUrl] = useState(brand.store_url ?? "")
+  const [editWishlist, setEditWishlist] = useState(brand.is_wishlist)
 
   function handleSave() {
     startSaveTransition(async () => {
@@ -75,6 +77,7 @@ function BrandRow({
         country_of_origin: editCountry,
         brand_type: editType,
         store_url: editStoreUrl,
+        is_wishlist: editWishlist,
       })
       if (result.error) {
         toast.error(result.error)
@@ -90,6 +93,7 @@ function BrandRow({
     setEditCountry(brand.country_of_origin ?? "")
     setEditType(brand.brand_type ?? "")
     setEditStoreUrl(brand.store_url ?? "")
+    setEditWishlist(brand.is_wishlist)
     setEditing(false)
   }
 
@@ -102,6 +106,15 @@ function BrandRow({
             onChange={(e) => setEditName(e.target.value)}
             className="h-8"
           />
+          <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={editWishlist}
+              onChange={(e) => setEditWishlist(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-border accent-brass"
+            />
+            Wish list brand
+          </label>
         </TableCell>
         <TableCell>
           <Input
@@ -164,7 +177,10 @@ function BrandRow({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">{brand.name}</TableCell>
+      <TableCell className="font-medium">
+        {brand.name}
+        {brand.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
+      </TableCell>
       <TableCell className="text-muted-foreground">
         {brand.country_of_origin ?? "\u2014"}
       </TableCell>
@@ -281,6 +297,16 @@ export function BrandsTab({ brands, watchCountByBrand }: BrandsTabProps) {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2 self-center pb-1">
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="is_wishlist"
+                  className="h-4 w-4 rounded border-border accent-brass"
+                />
+                <span className="whitespace-nowrap">Wish list</span>
+              </label>
             </div>
             <Button type="submit" disabled={isPending}>
               {isPending ? "Adding..." : "Add"}

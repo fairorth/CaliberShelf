@@ -43,6 +43,8 @@ export interface Brand {
   brand_type: BrandType | null
   store_url: string | null
   logo_url: string | null
+  /** Wish-list brand: no owned watches yet, but we want one. */
+  is_wishlist: boolean
   created_at: string
   updated_at: string
 }

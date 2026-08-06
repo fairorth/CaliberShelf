@@ -23,6 +23,34 @@ export type WatchActionState = {
 }
 
 /**
+ * A wish-list BRAND means "we own nothing from them yet". Saving a watch that
+ * is owned or coming soon (i.e. not a wish-list watch) fulfils that wish, so
+ * the brand tag clears. Saving a wish-list WATCH leaves the brand tag alone.
+ * Idempotent unconditional update — cheap, and a no-op for non-tagged brands.
+ */
+async function clearBrandWishlist(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  brandId: string,
+  watchIsWishlist: boolean
+) {
+  if (watchIsWishlist) return
+  const { error } = await supabase
+    .from("brands")
+    .update({ is_wishlist: false })
+    .eq("id", brandId)
+    .eq("user_id", userId)
+    .eq("is_wishlist", true)
+  if (error) {
+    // Non-fatal: the watch save already succeeded.
+    console.error("Failed to clear brand wish-list tag:", error.message)
+  } else {
+    revalidatePath("/config")
+    revalidatePath("/reports/brand-wishlist")
+  }
+}
+
+/**
  * Create a new watch. Redirects to the watch detail page on success.
  */
 export async function createWatch(
@@ -95,6 +123,8 @@ export async function createWatch(
   if (data.label_ids.length > 0) {
     await setWatchLabels(watch.id, data.label_ids)
   }
+
+  await clearBrandWishlist(supabase, user.id, data.brand_id, data.is_wishlist)
 
   revalidatePath("/dashboard")
   redirect(`/watch/${watch.id}/edit`)
@@ -173,6 +203,8 @@ export async function updateWatch(
 
   // Sync labels
   await setWatchLabels(watchId, data.label_ids)
+
+  await clearBrandWishlist(supabase, user.id, data.brand_id, data.is_wishlist)
 
   revalidatePath("/dashboard")
   revalidatePath("/collection")
@@ -402,6 +434,8 @@ export async function createWatchWithPhoto(
       }
     }
   }
+
+  await clearBrandWishlist(supabase, user.id, data.brand_id, data.is_wishlist)
 
   revalidatePath("/dashboard")
   // Return the destination instead of calling redirect(). This action is invoked

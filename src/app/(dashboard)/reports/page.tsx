@@ -40,6 +40,13 @@ const REPORTS: ReportLink[] = [
     available: true,
   },
   {
+    slug: "brand-wishlist",
+    title: "Brand Wish List",
+    description:
+      "Brands you want but don't own from yet, with ChronoScout catalog context and best-fit models.",
+    available: true,
+  },
+  {
     slug: "valuations",
     title: "Watch Valuations",
     description: "Agent-researched market values by run date, with drill-down to evidence.",

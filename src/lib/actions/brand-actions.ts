@@ -98,6 +98,7 @@ export async function updateBrand(
     country_of_origin: string
     brand_type: string
     store_url: string
+    is_wishlist: boolean
   }
 ): Promise<BrandActionState> {
   const supabase = await createClient()
@@ -121,6 +122,7 @@ export async function updateBrand(
       country_of_origin: parsed.data.country_of_origin || null,
       brand_type: parsed.data.brand_type || null,
       store_url: parsed.data.store_url || null,
+      is_wishlist: parsed.data.is_wishlist,
     })
     .eq("id", brandId)
     .eq("user_id", user.id)
@@ -167,6 +169,7 @@ export async function createBrand(
     country_of_origin: data.country_of_origin || null,
     brand_type: data.brand_type || null,
     store_url: data.store_url || null,
+    is_wishlist: data.is_wishlist,
   })
 
   if (error) {
