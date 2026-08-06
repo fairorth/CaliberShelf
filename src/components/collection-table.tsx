@@ -43,6 +43,13 @@ function movementTypeLabel(watch: WatchWithCover): string {
 type SortKey = "category" | "brand" | "model" | "nickname" | "reference" | "movementType" | "caliber" | "box" | "wearCount" | "price"
 type SortDir = "asc" | "desc"
 
+const SORT_KEYS: SortKey[] = ["category", "brand", "model", "nickname", "reference", "movementType", "caliber", "box", "wearCount", "price"]
+
+/** Header-click sort persists per device so it survives an edit round-trip.
+ *  The collection view clears this key when the toolbar Sort dropdown changes,
+ *  so an explicit dropdown choice wins on the next mount. */
+export const TABLE_SORT_KEY = "collection-table-sort"
+
 function getSortValue(watch: WatchWithCover, key: SortKey): string {
   switch (key) {
     case "category":
@@ -229,6 +236,20 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
+  // Restore the header sort (localStorage is unreachable during SSR).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(TABLE_SORT_KEY)
+      if (!saved) return
+      const parsed = JSON.parse(saved) as { key?: SortKey; dir?: SortDir }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (parsed.key && SORT_KEYS.includes(parsed.key)) setSortKey(parsed.key)
+      if (parsed.dir === "asc" || parsed.dir === "desc") setSortDir(parsed.dir)
+    } catch {
+      // ignore malformed stored value
+    }
+  }, [])
+
   // Column widths — user-resizable via header drag handles, persisted per device.
   const [colWidths, setColWidths] = useState<Record<ColumnId, number>>(DEFAULT_WIDTHS)
   const widthsRef = useRef(colWidths)
@@ -319,12 +340,17 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
   }, [watches, sortKey, sortDir])
 
   function handleSort(key: SortKey) {
+    let nextKey = key
+    let nextDir: SortDir = "asc"
     if (sortKey === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+      nextKey = sortKey
+      nextDir = sortDir === "asc" ? "desc" : "asc"
+      setSortDir(nextDir)
     } else {
       setSortKey(key)
       setSortDir("asc")
     }
+    localStorage.setItem(TABLE_SORT_KEY, JSON.stringify({ key: nextKey, dir: nextDir }))
   }
 
   if (watches.length === 0) {

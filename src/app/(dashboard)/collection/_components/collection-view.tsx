@@ -9,7 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select"
-import { CollectionTable } from "@/components/collection-table"
+import { CollectionTable, TABLE_SORT_KEY } from "@/components/collection-table"
 import { SearchInput } from "@/components/search-input"
 import { GalleryGrid } from "./gallery-grid"
 import {
@@ -226,12 +226,16 @@ export function CollectionView({ watches, categories, valuationMids, tierBands }
   function updateSortKey(key: SortKey) {
     setSortKey(key)
     persistSort(key, sortDir)
+    // An explicit dropdown choice discards any saved header-click sort, which
+    // would otherwise override it again on the next mount.
+    localStorage.removeItem(TABLE_SORT_KEY)
   }
 
   function toggleSortDir() {
     const next = sortDir === "asc" ? "desc" : "asc"
     setSortDir(next)
     persistSort(sortKey, next)
+    localStorage.removeItem(TABLE_SORT_KEY)
   }
 
   // URL is the source of truth for the category filter.
