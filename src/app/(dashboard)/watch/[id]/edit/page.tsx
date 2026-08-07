@@ -8,6 +8,9 @@ import { getLabels, getLabelsForWatch } from "@/lib/queries/labels"
 import { getWearCountForWatch } from "@/lib/queries/wear-logs"
 import { getTimegrapherRuns } from "@/lib/queries/timegrapher"
 import { getValuationsForWatch } from "@/lib/queries/valuations"
+import { getStraps } from "@/lib/queries/straps"
+import { strapMaterialLabels } from "@/lib/validations/strap"
+import { strapDisplayName } from "@/lib/types/strap"
 import { WatchForm } from "@/components/watch-form"
 import { PhotoGallery } from "../_components/photo-gallery"
 import { PhotoUploader } from "../_components/photo-uploader"
@@ -15,6 +18,7 @@ import { TimegrapherPanel } from "../_components/timegrapher-panel"
 import { ValuationPanel } from "../_components/valuation-panel"
 import { WearTodayButton } from "../_components/wear-today-button"
 import { DialFramingEditor } from "./_components/dial-framing-editor"
+import { StrapPanel } from "../_components/strap-panel"
 import { updateWatch } from "@/lib/actions/watch-actions"
 
 export async function generateMetadata({
@@ -43,7 +47,7 @@ export default async function EditWatchPage({
   // paths; everything else falls back to the collection.
   const returnTo = from === "attention" ? "/reports/attention-needed" : "/collection"
 
-  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, valuations, boxCount] =
+  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, valuations, boxCount, straps] =
     await Promise.all([
       getWatchById(id),
       getBrands(),
@@ -55,6 +59,7 @@ export default async function EditWatchPage({
       getTimegrapherRuns(id),
       getValuationsForWatch(id),
       getBoxCount(),
+      getStraps(),
     ])
 
   if (!watch) {
@@ -77,6 +82,13 @@ export default async function EditWatchPage({
   // Resolve the cover photo's signed URL for the dial-framing editor
   const coverPhoto = watch.watch_photos.find((p) => p.is_cover)
   const coverPhotoUrl = coverPhoto ? photoUrls[coverPhoto.storage_path] ?? null : null
+
+  // Display names for the strap panel (computed server-side; the panel is a
+  // client component and shouldn't need the material label map).
+  const strapLabels: Record<string, string> = {}
+  for (const s of straps) {
+    strapLabels[s.id] = strapDisplayName(s, strapMaterialLabels[s.material])
+  }
 
   return (
     <div className="space-y-6 pb-28">
@@ -105,6 +117,12 @@ export default async function EditWatchPage({
               initialFocalX={watch.dial_focal_x}
               initialFocalY={watch.dial_focal_y}
               initialZoom={watch.dial_zoom}
+            />
+            <StrapPanel
+              watchId={watch.id}
+              watchStrapWidthMm={watch.strap_width_mm}
+              straps={straps}
+              strapLabels={strapLabels}
             />
           </div>
         </div>

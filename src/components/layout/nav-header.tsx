@@ -13,6 +13,7 @@ import { CaliberShelfMark } from "@/components/calibershelf-mark"
 
 const navItems = [
   { href: "/collection", label: "Collection", icon: "📋" },
+  { href: "/straps", label: "Straps", icon: "〰️" },
   { href: "/batch-import", label: "Batch Import", icon: "📦" },
   { href: "/wear-log", label: "Wear Log", icon: "📅" },
   { href: "/deals", label: "Deals", icon: "💰" },
