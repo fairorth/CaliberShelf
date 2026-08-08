@@ -549,8 +549,10 @@ export function WatchForm({
             </Select>
           </div>
 
-          <div className="sm:col-span-2 lg:col-span-3">
-            <label className="flex items-center gap-2 text-sm">
+          {/* Clickable area = checkbox + title only (w-fit label) — a full-width
+              label made the whole row toggle the box. Descriptions live outside. */}
+          <div className="flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-3">
+            <label className="inline-flex w-fit cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 name="is_coming_soon"
@@ -559,14 +561,14 @@ export function WatchForm({
                 className="h-4 w-4 rounded border-border accent-brass"
               />
               <span className="font-medium">Coming soon</span>
-              <span className="text-xs text-muted-foreground">
-                — ordered, awaiting arrival (use Notes for sale details)
-              </span>
             </label>
+            <span className="text-xs text-muted-foreground">
+              — ordered, awaiting arrival (use Notes for sale details)
+            </span>
           </div>
 
-          <div className="sm:col-span-2 lg:col-span-3">
-            <label className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-3">
+            <label className="inline-flex w-fit cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 name="is_wishlist"
@@ -575,17 +577,22 @@ export function WatchForm({
                 className="h-4 w-4 rounded border-border accent-brass"
               />
               <span className="font-medium">Wish list</span>
-              <span className="text-xs text-muted-foreground">
-                — not owned; excluded from collection counts and total value
-              </span>
             </label>
+            <span className="text-xs text-muted-foreground">
+              — not owned; excluded from collection counts and total value
+            </span>
           </div>
 
-          <div className="sm:col-span-2 lg:col-span-3">
+          <div
+            className={cn(
+              "flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-3",
+              !hasRef && "opacity-50"
+            )}
+          >
             <label
               className={cn(
-                "flex items-center gap-2 text-sm",
-                !hasRef && "cursor-not-allowed opacity-50"
+                "inline-flex w-fit items-center gap-2",
+                hasRef ? "cursor-pointer" : "cursor-not-allowed"
               )}
             >
               <input
@@ -600,12 +607,12 @@ export function WatchForm({
                 className="h-4 w-4 rounded border-border accent-brass"
               />
               <span className="font-medium">Perform price checking</span>
-              <span className="text-xs text-muted-foreground">
-                {hasRef
-                  ? "— include in automated market-value updates"
-                  : "— requires a reference number"}
-              </span>
             </label>
+            <span className="text-xs text-muted-foreground">
+              {hasRef
+                ? "— include in automated market-value updates"
+                : "— requires a reference number"}
+            </span>
           </div>
 
           <div className="space-y-2 sm:col-span-2 lg:col-span-3">
