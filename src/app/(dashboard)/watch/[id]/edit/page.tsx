@@ -44,8 +44,15 @@ export default async function EditWatchPage({
   const { id } = await params
   const { from } = await searchParams
   // Where "Save"/"Cancel" return to. Known entry points map to safe internal
-  // paths; everything else falls back to the collection.
-  const returnTo = from === "attention" ? "/reports/attention-needed" : "/collection"
+  // paths (never a raw URL — that would be an open redirect); everything else
+  // falls back to the collection.
+  const RETURN_TARGETS: Record<string, string> = {
+    attention: "/reports/attention-needed",
+    box: "/reports/box",
+    category: "/reports/by-category",
+    "brand-wishlist": "/reports/brand-wishlist",
+  }
+  const returnTo = RETURN_TARGETS[from ?? ""] ?? "/collection"
 
   const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, valuations, boxCount, straps] =
     await Promise.all([

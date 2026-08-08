@@ -95,7 +95,7 @@ export default async function ByBoxPage() {
                   .map((w) => (
                     <li key={w.id}>
                       <Link
-                        href={`/watch/${w.id}`}
+                        href={`/watch/${w.id}/edit?from=box`}
                         className="group flex items-center justify-between gap-3 px-6 py-2 text-sm hover:bg-accent/40"
                       >
                         <span className="min-w-0 truncate">

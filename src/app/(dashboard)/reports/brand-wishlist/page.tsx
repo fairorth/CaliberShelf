@@ -164,7 +164,7 @@ export default async function BrandWishlistPage() {
                       {wishlistWatches.map((w) => (
                         <li key={w.id}>
                           <Link
-                            href={`/watch/${w.id}`}
+                            href={`/watch/${w.id}/edit?from=brand-wishlist`}
                             className="group flex items-center justify-between gap-3 py-1.5 text-sm hover:bg-accent/40"
                           >
                             <span className="min-w-0 truncate font-medium group-hover:text-primary">
