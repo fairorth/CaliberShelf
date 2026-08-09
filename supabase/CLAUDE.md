@@ -5,7 +5,7 @@
 - Each migration is a single logical change (one table or set of related policies)
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
-- Latest applied migration: `00037_create_straps.sql` (see docs/data-model.md for the table catalog). `00038_create_collection_guides.sql` is written but NOT yet applied — guides pages and the seed script fail until it runs.
+- Latest applied migration: `00038_create_collection_guides.sql` (see docs/data-model.md for the table catalog). 00039 is reserved for the photo-scoring agent's `watch_image_scores`.
 - `ALTER TABLE RENAME` preserves existing FK relationships — preferred over drop-and-recreate
 - When renaming tables, also rename: RLS policies, triggers, indexes, and FK column references
 - Junction tables (many-to-many): use composite PK, cascade deletes, and RLS that joins to the parent table's owner

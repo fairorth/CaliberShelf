@@ -140,11 +140,17 @@ async function main() {
     .eq("user_id", userId)
     .eq("brand_id", brandId)
   if (wErr) throw new Error(`watches: ${wErr.message}`)
-  const watchByRef = new Map(
-    (gsWatches ?? [])
-      .filter((w) => w.reference_number)
-      .map((w) => [w.reference_number.trim().toLowerCase(), w])
-  )
+  // Reference matching is normalized (uppercase, no spaces) and accepts a
+  // suffix match so stored refs like "GS 4520-7010" still match "4520-7010".
+  const norm = (r) => r.toUpperCase().replace(/\s+/g, "")
+  const refWatches = (gsWatches ?? []).filter((w) => w.reference_number)
+  const findByRef = (ref) => {
+    const target = norm(ref)
+    return refWatches.find((w) => {
+      const wr = norm(w.reference_number)
+      return wr === target || wr.endsWith(target) || target.endsWith(wr)
+    })
+  }
 
   // 1. Guide upsert (by user+name).
   let guideId
@@ -186,9 +192,7 @@ async function main() {
   let created = 0, updated = 0, linked = 0, watchesCreated = 0
   for (const e of ENTRIES) {
     // Resolve the watch link: existing watch with this reference?
-    const match = e.reference_number
-      ? watchByRef.get(e.reference_number.trim().toLowerCase())
-      : undefined
+    const match = e.reference_number ? findByRef(e.reference_number) : undefined
     let watchId = match?.id ?? null
     let watchNote = match
       ? `linked to existing ${match.is_wishlist ? "wish-list " : ""}watch (${match.model})`
