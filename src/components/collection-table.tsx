@@ -15,6 +15,7 @@ import { caliberTypeLabels } from "@/lib/validations/movement"
 import { labelColorMap } from "@/lib/validations/label"
 import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import { WishlistBadge } from "@/components/wishlist-badge"
+import { GuideBadge } from "@/components/guide-badge"
 import { cn, formatCurrency } from "@/lib/utils"
 import type { WatchWithCover, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
@@ -23,6 +24,8 @@ interface CollectionTableProps {
   watches: WatchWithCover[]
   /** Show each watch's purchase price (driven by the Config → Settings toggle). */
   showCost?: boolean
+  /** watch_id → collection-guide name, for badging guide members. */
+  guideNames?: Record<string, string>
 }
 
 function priceLabel(watch: WatchWithCover): string {
@@ -232,7 +235,7 @@ function HoverPhoto({
 
 // ── Main Component ─────────────────────────────────────────────────
 
-export function CollectionTable({ watches, showCost = false }: CollectionTableProps) {
+export function CollectionTable({ watches, showCost = false, guideNames }: CollectionTableProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
@@ -440,6 +443,9 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                     </Link>
                     {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
                     {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
+                    {watch.is_wishlist && guideNames?.[watch.id] && (
+                      <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
+                    )}
                     {watch.price_check_enabled && (
                       <span
                         title="Price checking enabled"
@@ -522,6 +528,9 @@ export function CollectionTable({ watches, showCost = false }: CollectionTablePr
                   {watch.brand.name}
                   {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
                   {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
+                  {watch.is_wishlist && guideNames?.[watch.id] && (
+                    <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
+                  )}
                   {watch.price_check_enabled && (
                     <span
                       title="Price checking enabled"

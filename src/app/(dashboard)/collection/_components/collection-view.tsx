@@ -30,6 +30,8 @@ interface CollectionViewProps {
   valuationMids: Record<string, number>
   /** The user's configured price-tier bands (Config → Tiers). */
   tierBands: TierBand[]
+  /** watch_id → collection-guide name, for badging guide members. */
+  guideNames?: Record<string, string>
 }
 
 const ALL = "all"
@@ -141,7 +143,7 @@ function sortWatches(watches: WatchWithCover[], key: SortKey, dir: SortDir): Wat
   })
 }
 
-export function CollectionView({ watches, categories, valuationMids, tierBands }: CollectionViewProps) {
+export function CollectionView({ watches, categories, valuationMids, tierBands, guideNames }: CollectionViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
@@ -522,9 +524,9 @@ export function CollectionView({ watches, categories, valuationMids, tierBands }
           )}
         </div>
       ) : view === "table" ? (
-        <CollectionTable watches={displayed} showCost={showCost} />
+        <CollectionTable watches={displayed} showCost={showCost} guideNames={guideNames} />
       ) : (
-        <GalleryGrid watches={displayed} itemSize={size} showCost={showCost} />
+        <GalleryGrid watches={displayed} itemSize={size} showCost={showCost} guideNames={guideNames} />
       )}
     </div>
   )

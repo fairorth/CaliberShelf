@@ -51,6 +51,7 @@ export default async function EditWatchPage({
     box: "/reports/box",
     category: "/reports/by-category",
     "brand-wishlist": "/reports/brand-wishlist",
+    guides: "/guides",
   }
   const returnTo = RETURN_TARGETS[from ?? ""] ?? "/collection"
 

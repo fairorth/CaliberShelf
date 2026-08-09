@@ -3,6 +3,7 @@ import { getWatches } from "@/lib/queries/watches"
 import { getCategories } from "@/lib/queries/categories"
 import { getLatestValuationMids } from "@/lib/queries/valuations"
 import { getTierBands } from "@/lib/queries/tier-config"
+import { getGuideMembership } from "@/lib/queries/guides"
 import { CollectionView } from "./_components/collection-view"
 
 export const metadata: Metadata = {
@@ -10,11 +11,12 @@ export const metadata: Metadata = {
 }
 
 export default async function CollectionPage() {
-  const [watches, categories, valuationMids, tierBands] = await Promise.all([
+  const [watches, categories, valuationMids, tierBands, guideNames] = await Promise.all([
     getWatches(),
     getCategories(),
     getLatestValuationMids(),
     getTierBands(),
+    getGuideMembership(),
   ])
 
   // The CollectionView reads ?category from the URL itself via
@@ -25,6 +27,7 @@ export default async function CollectionPage() {
       categories={categories}
       valuationMids={valuationMids}
       tierBands={tierBands}
+      guideNames={guideNames}
     />
   )
 }

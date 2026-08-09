@@ -5,6 +5,7 @@ import Link from "next/link"
 import { caliberTypeLabels } from "@/lib/validations/movement"
 import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import { WishlistBadge } from "@/components/wishlist-badge"
+import { GuideBadge } from "@/components/guide-badge"
 import { formatCurrency } from "@/lib/utils"
 import type { WatchWithCover } from "@/lib/types/watch"
 
@@ -14,9 +15,11 @@ interface GalleryGridProps {
   itemSize: number
   /** Show each watch's purchase price (driven by the Config → Settings toggle). */
   showCost?: boolean
+  /** watch_id → collection-guide name, for badging guide members. */
+  guideNames?: Record<string, string>
 }
 
-export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGridProps) {
+export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }: GalleryGridProps) {
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -72,6 +75,9 @@ export function GalleryGrid({ watches, itemSize, showCost = false }: GalleryGrid
             <div className="ml-auto flex items-center gap-1.5">
               {watch.is_coming_soon && <ComingSoonBadge />}
               {watch.is_wishlist && <WishlistBadge />}
+              {watch.is_wishlist && guideNames?.[watch.id] && (
+                <GuideBadge name={guideNames[watch.id]} />
+              )}
               {watch.price_check_enabled && (
                 <span
                   title="Price checking enabled"

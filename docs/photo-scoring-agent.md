@@ -94,7 +94,7 @@ Not every image uses stacking — singles pass through untouched. This section i
 
 `watch_photos` (00003; `id, watch_id, user_id, storage_path, display_order, caption, is_cover, thumb_path, created_at`) has no scoring columns, and capture-folder frames aren't rows in it at all. **Decision: Option B — a new table** `watch_image_scores`, keyed by watch + content hash, covering any image whether uploaded or still local; optionally linked to `watch_photos.id` once uploaded. Keeps scoring data separate from presentation.
 
-Proposed migration **`00038_create_watch_image_scores.sql`** (house style: owner-scoped RLS `auth.uid() = user_id`, `IF NOT EXISTS`; **owner-only** — no public-read policy for now):
+Proposed migration **`00039_create_watch_image_scores.sql`** (renumbered — 00038 became collection guides; house style: owner-scoped RLS `auth.uid() = user_id`, `IF NOT EXISTS`; **owner-only** — no public-read policy for now):
 
 ```
 watch_image_scores
@@ -223,7 +223,7 @@ Mirror `price-check.mjs` conventions (see price-check.mjs.md):
 
 ## 11. Phased rollout
 
-1. **Phase 1 — CV only, free.** Migration 00038 + `photo-score.mjs --no-ai`: CR3 preview extraction (+ the full-res preview verification), stack-sequence collapse, ROI sharpness/brightness/glare, dup clustering, score write-back, and the local HTML report. Real value at $0; validates the pixel pipeline on actual captures before the first paid token.
+1. **Phase 1 — CV only, free.** Migration 00039 + `photo-score.mjs --no-ai`: CR3 preview extraction (+ the full-res preview verification), stack-sequence collapse, ROI sharpness/brightness/glare, dup clustering, score write-back, and the local HTML report. Real value at $0; validates the pixel pipeline on actual captures before the first paid token.
 2. **Phase 2 — Track A.** Shot-card evaluator (Haiku), coverage matrix + reshoot list in the report and DB. Cheap, objective, immediately workflow-useful.
 3. **Phase 3 — Track B.** Rubric pass + comparative hero ranking (Sonnet), composite scores, cover nominee. Dry-run → small `--limit` → full.
 4. **Phase 4 — Polish.** Score-at-upload for `watch_photos`, in-app badges + cover suggestion, Attention Needed coverage chips, card list promoted to a config table if it needs per-user editing.
