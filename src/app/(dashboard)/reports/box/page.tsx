@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { getWatches } from "@/lib/queries/watches"
+import { getBoxConfig } from "@/lib/queries/box-config"
+import { boxLabel } from "@/lib/boxes"
 import { formatCurrency } from "@/lib/utils"
 import { CollapsibleReportGroup } from "@/components/collapsible-report-group"
 import type { WatchWithCover } from "@/lib/types/watch"
@@ -22,12 +24,15 @@ interface BoxGroup {
 }
 
 export default async function ByBoxPage() {
-  const all = await getWatches()
+  const [all, boxConfig] = await Promise.all([getWatches(), getBoxConfig()])
   const owned = all.filter((w) => !w.is_wishlist)
 
   const groups = new Map<string, BoxGroup>()
   for (const w of owned) {
     const box = (w.box ?? "").trim()
+    // "No box" lists only watches that are here and need a home — a coming-soon
+    // watch without a box isn't misplaced, it just hasn't arrived.
+    if (!box && w.is_coming_soon) continue
     const key = box || NO_BOX
     const name = box || "No box assigned"
     let g = groups.get(key)
@@ -48,6 +53,7 @@ export default async function ByBoxPage() {
 
   const grandTotal = ordered.reduce((s, g) => s + g.subtotalCents, 0)
   const boxCount = ordered.filter((g) => g.key !== NO_BOX).length
+  const shownCount = ordered.reduce((s, g) => s + g.watches.length, 0)
 
   return (
     <div className="space-y-6">
@@ -60,7 +66,7 @@ export default async function ByBoxPage() {
         </Link>
         <h1 className="font-display text-lg font-medium tracking-tight">Watches by Box</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {owned.length} owned {owned.length === 1 ? "watch" : "watches"} across{" "}
+          {shownCount} owned {shownCount === 1 ? "watch" : "watches"} across{" "}
           {boxCount} {boxCount === 1 ? "box" : "boxes"} ·{" "}
           <span className="font-mono text-brass">{formatCurrency(grandTotal, "USD", true)}</span>{" "}
           total at cost
@@ -78,7 +84,7 @@ export default async function ByBoxPage() {
           {ordered.map((g) => (
             <CollapsibleReportGroup
               key={g.key}
-              title={g.name}
+              title={g.key === NO_BOX ? g.name : boxLabel(g.name, boxConfig.descriptions)}
               summary={
                 <>
                   {g.watches.length} {g.watches.length === 1 ? "watch" : "watches"} ·{" "}

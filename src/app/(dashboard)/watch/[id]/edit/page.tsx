@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import { getWatchById } from "@/lib/queries/watches"
 import { getBrands } from "@/lib/queries/brands"
 import { getMovements } from "@/lib/queries/movements"
-import { getBoxCount } from "@/lib/queries/box-config"
+import { getBoxConfig } from "@/lib/queries/box-config"
 import { getCategories } from "@/lib/queries/categories"
 import { getLabels, getLabelsForWatch } from "@/lib/queries/labels"
 import { getWearCountForWatch } from "@/lib/queries/wear-logs"
@@ -54,7 +54,7 @@ export default async function EditWatchPage({
   }
   const returnTo = RETURN_TARGETS[from ?? ""] ?? "/collection"
 
-  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, valuations, boxCount, straps] =
+  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, valuations, boxConfig, straps] =
     await Promise.all([
       getWatchById(id),
       getBrands(),
@@ -65,7 +65,7 @@ export default async function EditWatchPage({
       getWearCountForWatch(id),
       getTimegrapherRuns(id),
       getValuationsForWatch(id),
-      getBoxCount(),
+      getBoxConfig(),
       getStraps(),
     ])
 
@@ -144,7 +144,8 @@ export default async function EditWatchPage({
             movements={movements}
             categories={categories}
             labels={labels}
-            boxCount={boxCount}
+            boxCount={boxConfig.count}
+            boxDescriptions={boxConfig.descriptions}
             defaultLabelIds={watchLabels.map((l) => l.id)}
             stickyBar
             cancelHref={returnTo}
