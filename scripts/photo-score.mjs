@@ -1,26 +1,33 @@
-// Photo-scoring agent for CaliberShelf — Layer 1: CV triage (free, deterministic).
+// Photo-scoring agent for CaliberShelf.
+//   Layer 1 — CV triage (free, deterministic): stack collapse, dial-ROI
+//     sharpness / brightness / glare, perceptual-hash duplicate clustering.
+//   Layer 2, Track A — shot-card evaluation (Haiku vision): matches each CV
+//     survivor against the standard shot list and returns pass/fail with a
+//     named defect. Output per watch is a coverage matrix + reshoot list.
 //
-// Reads each watch's capture folder under the \WatchImages parent, collapses
-// focus-stack bracket runs to their in-camera composite, computes dial-ROI
-// sharpness / brightness / glare and a perceptual hash per frame, clusters
-// near-duplicates, writes scores to watch_image_scores (00040), and drops a
-// self-contained _photo-report.html culling report into each watch folder.
+// Scores land in watch_image_scores (00040); each watch folder also gets a
+// self-contained _photo-report.html culling report.
 // Plan: docs/photo-scoring-agent.md. Operator guide: docs/agents.md.
 //
 // Usage:
 //   npm run photo-score                        # score all watches with folders
 //   npm run photo-score -- --dry-run           # compute + print, write nothing
+//   npm run photo-score -- --no-ai             # Layer 1 only, $0
 //   npm run photo-score -- --limit 2           # only the first N watches
 //   npm run photo-score -- --watch <uuid>      # a single watch
 //   npm run photo-score -- --force             # re-score already-scored frames
+//   npm run photo-score -- --model <id>        # override the card-grader model
 //   npm run photo-score -- --dir "D:\Path"     # override the WatchImages parent
 //
 // Parent folder resolution: --dir > WATCH_IMAGES_DIR env > profiles.watch_images_path.
-// Required in .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+// Required in .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+// and ANTHROPIC_API_KEY unless --no-ai.
 
 import nextEnv from "@next/env"
 const { loadEnvConfig } = nextEnv
 import { createClient } from "@supabase/supabase-js"
+import Anthropic from "@anthropic-ai/sdk"
+import { z } from "zod"
 import { exiftool } from "exiftool-vendored"
 import sharp from "sharp"
 import crypto from "node:crypto"
@@ -47,6 +54,49 @@ const PREVIEW_DIR = "_previews" // regenerable thumbs for the HTML report
 const PREVIEW_LONG_EDGE = 640
 const REPORT_NAME = "_photo-report.html"
 
+// ── Track A model + pricing (fleet convention: constants up top) ─
+const DEFAULT_MODEL = "claude-haiku-4-5"
+const MAX_TOKENS = 512
+// List pricing for the run-cost printout (Haiku 4.5: $1/$5 per MTok).
+const PRICE_PER_MTOK = { input: 1, output: 5 }
+const AI_LONG_EDGE = 1024 // card-grader input size (≈1k image tokens)
+const AI_JPEG_QUALITY = 82
+
+// The standard shot list every watch gets (plan 3.6). Each card carries the
+// expected subject/angle and objective pass criteria — the grader returns
+// pass/fail with a named defect, never an aesthetic score. Frames matching no
+// card route to Track B ("creative") for the Phase 3 rubric.
+const SHOT_CARDS = [
+  {
+    key: "overhead_dial",
+    label: "Overhead dial",
+    spec:
+      "Straight overhead shot, dial parallel to the camera, whole watch head in frame with margin. " +
+      "Pass only if the dial is in sharp focus, dial text is legible, and no blown highlight patch hides dial detail.",
+  },
+  {
+    key: "caseback",
+    label: "Caseback",
+    spec:
+      "The case back (engraved solid back or exhibition movement view). " +
+      "Pass only if the caseback is roughly centered, in focus, and engravings or movement details are legible.",
+  },
+  {
+    key: "crown_side",
+    label: "Crown side",
+    spec:
+      "Side profile showing the crown and case flank. " +
+      "Pass only if the crown is in focus and the case side profile is clearly visible.",
+  },
+  {
+    key: "lug_low",
+    label: "Low lug angle",
+    spec:
+      "Deliberate low-angle shot of the lug/case junction. " +
+      "Pass only if the lug junction is in focus and the low angle is clearly intentional (not a crooked overhead).",
+  },
+]
+
 // ── CLI args ─────────────────────────────────────────────────────
 const args = process.argv.slice(2)
 const DRY_RUN = args.includes("--dry-run")
@@ -60,15 +110,21 @@ const ONLY_WATCH = args.includes("--watch")
 const DIR_OVERRIDE = args.includes("--dir")
   ? args[args.indexOf("--dir") + 1]
   : null
+const NO_AI = args.includes("--no-ai")
+const MODEL = args.includes("--model")
+  ? args[args.indexOf("--model") + 1]
+  : DEFAULT_MODEL
 
 // Reject anything unrecognized — a mistyped flag must never silently change
 // what a run does (agents.md foot-gun rule).
 validateArgs(args, {
   "--dry-run": false,
   "--force": false,
+  "--no-ai": false,
   "--limit": true,
   "--watch": true,
   "--dir": true,
+  "--model": true,
 })
 function validateArgs(argv, known) {
   for (let i = 0; i < argv.length; i++) {
@@ -86,11 +142,14 @@ function validateArgs(argv, known) {
 }
 
 // ── Env checks (values are never printed) ────────────────────────
-const missing = ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"].filter(
-  (k) => !process.env[k]
-)
+const requiredEnv = ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
+if (!NO_AI) requiredEnv.push("ANTHROPIC_API_KEY")
+const missing = requiredEnv.filter((k) => !process.env[k])
 if (missing.length > 0) {
-  console.error(`Missing env vars in .env.local: ${missing.join(", ")}`)
+  console.error(
+    `Missing env vars in .env.local: ${missing.join(", ")}` +
+      (missing.includes("ANTHROPIC_API_KEY") ? " (or pass --no-ai for the free CV layer only)" : "")
+  )
   process.exit(1)
 }
 
@@ -99,6 +158,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY,
   { auth: { persistSession: false } }
 )
+const anthropic = NO_AI ? null : new Anthropic() // reads ANTHROPIC_API_KEY
 
 // ── Folder resolution (same chain as sync-watch-folders) ─────────
 async function resolveParent() {
@@ -360,6 +420,94 @@ async function decodeFrame(record, tags) {
   }
 }
 
+// ── Track A: shot-card evaluation (Haiku vision) ─────────────────
+const verdictSchema = z.object({
+  matched_card: z.enum([...SHOT_CARDS.map((c) => c.key), "none"]),
+  pass: z.boolean(),
+  defect: z.string(),
+})
+
+const CARD_SYSTEM_PROMPT = `You are the shot-card grader for a watch photography lab. Every watch gets a fixed list of standard shots ("cards"). Given ONE photograph of a known watch, decide which card it matches (or none) and whether it passes that card's criteria.
+
+Be objective: right subject, in focus where the card demands it, legible detail. Deliberate shallow depth of field and controlled specular highlights on polished case edges are technique, not defects. A blown highlight patch that hides dial detail IS a defect.
+
+Shot cards:
+${SHOT_CARDS.map((c) => `- ${c.key}: ${c.spec}`).join("\n")}
+
+Reply with RAW JSON ONLY — no markdown fences, no prose:
+{"matched_card": ${SHOT_CARDS.map((c) => `"${c.key}"`).join(" | ")} | "none", "pass": true | false, "defect": "<= 6 words, or NONE"}
+
+A frame that matches no card (props, flat-lays, artistic angles, wrist shots) is "none" — set pass to false and defect to NONE; it is not a failure, it just routes to the creative track.`
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+async function evaluateCard(buffer, watch, record) {
+  const image = await sharp(buffer)
+    .rotate()
+    .resize(AI_LONG_EDGE, AI_LONG_EDGE, { fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: AI_JPEG_QUALITY })
+    .toBuffer()
+
+  const grounding =
+    `Watch: ${watch.brands?.name ?? "unknown"} ${watch.model ?? ""}` +
+    `${watch.reference_number ? ` (ref ${watch.reference_number})` : ""}. ` +
+    `Source: ${record.kind}${record.stackRole === "composite" ? ", focus-stacked composite (sharp everywhere by design)" : ""}. ` +
+    `Grade this frame.`
+
+  let lastErr
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await anthropic.messages.create({
+        model: MODEL,
+        max_tokens: MAX_TOKENS,
+        system: CARD_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "image",
+                source: {
+                  type: "base64",
+                  media_type: "image/jpeg",
+                  data: image.toString("base64"),
+                },
+              },
+              { type: "text", text: grounding },
+            ],
+          },
+        ],
+      })
+      const usage = {
+        input: response.usage.input_tokens,
+        output: response.usage.output_tokens,
+      }
+      const text = response.content
+        .filter((b) => b.type === "text")
+        .map((b) => b.text)
+        .join("")
+        .trim()
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/, "")
+      const start = text.indexOf("{")
+      const end = text.lastIndexOf("}")
+      if (start === -1 || end === -1) throw new Error(`no JSON in verdict: ${text.slice(0, 120)}`)
+      const parsed = verdictSchema.safeParse(JSON.parse(text.slice(start, end + 1)))
+      if (!parsed.success) throw new Error(`verdict schema: ${parsed.error.issues[0].message}`)
+      return { verdict: parsed.data, usage }
+    } catch (err) {
+      lastErr = err
+      const status = err?.status ?? 0
+      if (status === 429 || status >= 500) {
+        await sleep(2000 * 2 ** attempt)
+        continue
+      }
+      throw err
+    }
+  }
+  throw lastErr
+}
+
 // ── HTML report ──────────────────────────────────────────────────
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c])
@@ -375,6 +523,13 @@ function frameCard(f) {
     flags.push(
       `<span class="flag ${f.dupBest ? "good" : ""}">dup #${f.dupGroup}${f.dupBest ? " · best" : ""}</span>`
     )
+  if (f.shotCard === "creative") flags.push('<span class="flag">creative</span>')
+  else if (f.shotCard != null)
+    flags.push(
+      `<span class="flag ${f.cardPass ? "pass" : "fail"}">${esc(f.shotCard)} ${f.cardPass ? "✓" : "✗"}${
+        !f.cardPass && f.aiDefect ? " — " + esc(f.aiDefect) : ""
+      }</span>`
+    )
   const img = f.previewName
     ? `<a href="${href(f.relPath)}"><img loading="lazy" src="${PREVIEW_DIR}/${esc(f.previewName)}" alt=""></a>`
     : `<a href="${href(f.relPath)}" class="noimg">${esc(f.fileName)}</a>`
@@ -388,6 +543,39 @@ function frameCard(f) {
   <div class="metrics">${metrics}</div>
   <div class="flags">${flags.join(" ")}</div>
 </div>`
+}
+
+// Coverage matrix + reshoot list (Track A output). A card is covered when at
+// least one frame matched it AND passed; the keeper is the sharpest passer.
+function coverageHtml(records) {
+  const carded = records.filter((r) => r.shotCard != null && r.stackRole !== "source")
+  if (carded.length === 0) return ""
+  const reshoots = []
+  const rows = SHOT_CARDS.map((card) => {
+    const matches = carded.filter((r) => r.shotCard === card.key)
+    const passing = matches
+      .filter((r) => r.cardPass)
+      .sort((a, b) => (b.sharpness ?? -1) - (a.sharpness ?? -1))
+    if (passing.length > 0) {
+      const keeper = passing[0]
+      return `<tr><td>${esc(card.label)}</td><td><span class="flag pass">PASS</span> keeper: <a href="${href(keeper.relPath)}">${esc(keeper.fileName)}</a> (${passing.length}/${matches.length} passing)</td></tr>`
+    }
+    reshoots.push(card.label)
+    const defects = [...new Set(matches.map((m) => m.aiDefect).filter(Boolean))]
+    const why =
+      matches.length === 0
+        ? "no matching frame"
+        : `all ${matches.length} failed${defects.length > 0 ? ": " + esc(defects.join("; ")) : ""}`
+    return `<tr><td>${esc(card.label)}</td><td><span class="flag fail">RESHOOT</span> ${why}</td></tr>`
+  }).join("\n")
+  const creative = carded.filter((r) => r.shotCard === "creative").length
+  return `<h2>Standard-shot coverage</h2>
+<table><tr><th>Card</th><th>Status</th></tr>${rows}</table>
+<p class="note">${
+    reshoots.length > 0
+      ? `Reshoot list: <strong>${reshoots.map(esc).join(", ")}</strong>.`
+      : "All standard shots covered."
+  } ${creative} frame(s) routed to the creative track.</p>`
 }
 
 function buildReport(watchLabel, frames, sequences, coverage) {
@@ -464,7 +652,9 @@ function warnMissingTable() {
 }
 
 // ── Per-watch pipeline ───────────────────────────────────────────
-async function processWatch(watch, folderAbs) {
+// `totals` is accumulated the moment tokens are spent — a later per-watch
+// failure (e.g. DB write) must never lose paid usage from the run accounting.
+async function processWatch(watch, folderAbs, totals) {
   const files = listImageFiles(folderAbs)
   if (files.length === 0) return null
 
@@ -581,6 +771,51 @@ async function processWatch(watch, folderAbs) {
     r.weakSharp = r.sharpness != null && r.sharpness <= cutoff
   }
 
+  // Track A: card-match the CV survivors. Stack sources and non-best
+  // duplicates never reach the model — that's the "cheap CV in bulk, AI on
+  // the survivors" economy. Already-carded frames are skipped unless --force.
+  const aiUsage = { input: 0, output: 0, evaluated: 0, failed: 0 }
+  if (!NO_AI) {
+    const candidates = records.filter(
+      (r) =>
+        r.stackRole !== "source" &&
+        (r.dupGroup == null || r.dupBest) &&
+        (FORCE || r.existing?.shot_card == null)
+    )
+    for (const r of candidates) {
+      const buffer = await decodeFrame(r, r.tags)
+      if (!buffer) continue
+      try {
+        const { verdict, usage } = await evaluateCard(buffer, watch, r)
+        aiUsage.input += usage.input
+        aiUsage.output += usage.output
+        aiUsage.evaluated++
+        r.aiEvaluated = true
+        r.shotCard = verdict.matched_card === "none" ? "creative" : verdict.matched_card
+        r.cardPass = verdict.matched_card === "none" ? null : verdict.pass
+        r.aiDefect =
+          verdict.defect && verdict.defect.trim().toUpperCase() !== "NONE"
+            ? verdict.defect.trim()
+            : null
+      } catch (err) {
+        aiUsage.failed++
+        console.warn(`\n    (card grading failed for ${r.fileName}: ${err.message})`)
+      }
+    }
+    totals.input += aiUsage.input
+    totals.output += aiUsage.output
+    totals.evaluated += aiUsage.evaluated
+    totals.aiFailed += aiUsage.failed
+  }
+  // Merged card view (fresh verdicts win, else what the DB already knew).
+  for (const r of records) {
+    if (!r.aiEvaluated) {
+      r.shotCard = r.existing?.shot_card ?? null
+      r.cardPass = r.existing?.card_pass ?? null
+      r.aiDefect = r.existing?.ai_primary_defect ?? null
+    }
+  }
+
   const label = `${watch.brands?.name ?? "?"} ${watch.model ?? ""}`.trim()
 
   // The report is pure local value — write it before the DB round-trip so a
@@ -588,7 +823,7 @@ async function processWatch(watch, folderAbs) {
   if (!DRY_RUN) {
     fs.writeFileSync(
       path.join(folderAbs, REPORT_NAME),
-      buildReport(label, records, sequences, null)
+      buildReport(label, records, sequences, coverageHtml(records))
     )
   }
 
@@ -609,8 +844,8 @@ async function processWatch(watch, folderAbs) {
     phash: r.phash,
     dup_group: r.dupGroup,
     dup_best: r.dupBest,
-    shot_card: r.existing?.shot_card ?? null,
-    card_pass: r.existing?.card_pass ?? null,
+    shot_card: r.shotCard ?? null,
+    card_pass: r.cardPass ?? null,
     angle_class: r.existing?.angle_class ?? null,
     ai_dial_focus: r.existing?.ai_dial_focus ?? null,
     ai_framing: r.existing?.ai_framing ?? null,
@@ -619,9 +854,9 @@ async function processWatch(watch, folderAbs) {
     ai_lighting: r.existing?.ai_lighting ?? null,
     ai_color: r.existing?.ai_color ?? null,
     ai_detail: r.existing?.ai_detail ?? null,
-    ai_primary_defect: r.existing?.ai_primary_defect ?? null,
+    ai_primary_defect: r.aiDefect ?? null,
     ai_unusable: r.existing?.ai_unusable ?? false,
-    ai_model: r.existing?.ai_model ?? null,
+    ai_model: r.aiEvaluated ? MODEL : (r.existing?.ai_model ?? null),
     composite_score: r.existing?.composite_score ?? null,
     hero_for_class: r.existing?.hero_for_class ?? false,
     scored_at: nowIso,
@@ -643,7 +878,13 @@ async function processWatch(watch, folderAbs) {
           : "(not scored)"
       const stack = r.stackSeq != null ? ` stack#${r.stackSeq}/${r.stackRole}` : ""
       const dup = r.dupGroup != null ? ` dup#${r.dupGroup}${r.dupBest ? "*" : ""}` : ""
-      console.log(`    ${r.fileName} [${r.kind}]${stack}${dup} ${m}`)
+      const card =
+        r.shotCard != null
+          ? ` card:${r.shotCard}${r.cardPass != null ? (r.cardPass ? "/pass" : "/FAIL") : ""}${
+              r.aiDefect ? ` (${r.aiDefect})` : ""
+            }`
+          : ""
+      console.log(`    ${r.fileName} [${r.kind}]${stack}${dup}${card} ${m}`)
     }
   }
 
@@ -657,6 +898,12 @@ async function processWatch(watch, folderAbs) {
     sequences: sequences.length,
     unstacked: sequences.filter((s) => !s.composite).length,
     dupGroups,
+    aiUsage,
+    reshoots: NO_AI
+      ? []
+      : SHOT_CARDS.filter(
+          (card) => !records.some((r) => r.shotCard === card.key && r.cardPass)
+        ).map((c) => c.label),
   }
 }
 
@@ -670,7 +917,10 @@ async function main() {
     process.exit(1)
   }
 
-  let query = supabase.from("watches").select("id, user_id, model, brands(name)").order("model")
+  let query = supabase
+    .from("watches")
+    .select("id, user_id, model, reference_number, brands(name)")
+    .order("model")
   if (ONLY_WATCH) query = query.eq("id", ONLY_WATCH)
   const { data: watches, error } = await query
   if (error) {
@@ -692,16 +942,18 @@ async function main() {
     .slice(0, LIMIT)
 
   console.log(
-    `${DRY_RUN ? "[DRY RUN] " : ""}Photo-scoring ${queue.length} watch folder(s) under ${parent}\n`
+    `${DRY_RUN ? "[DRY RUN] " : ""}Photo-scoring ${queue.length} watch folder(s) under ${parent}` +
+      `${NO_AI ? " (CV only, --no-ai)" : ` (card grading with ${MODEL})`}\n`
   )
 
   const run = await startRun(supabase, {
     agent: "photo-score",
     trigger: process.env.AGENT_RUN_TRIGGER,
-    model: null,
+    model: NO_AI ? null : MODEL,
     dryRun: DRY_RUN,
   })
   const runItems = []
+  const totals = { input: 0, output: 0, evaluated: 0, aiFailed: 0 }
   let ok = 0
   let failed = 0
   let skippedEmpty = 0
@@ -710,7 +962,7 @@ async function main() {
     const shortLabel = `${watch.brands?.name ?? "?"} ${watch.model ?? ""}`.trim()
     process.stdout.write(`→ ${shortLabel} ... `)
     try {
-      const result = await processWatch(watch, path.join(parent, folder))
+      const result = await processWatch(watch, path.join(parent, folder), totals)
       if (!result) {
         skippedEmpty++
         console.log("no images, skipped")
@@ -721,7 +973,10 @@ async function main() {
         `${result.files} files: ${result.scoredNew} newly scored, ${result.reused} reused, ` +
           `${result.stackSources} stack sources in ${result.sequences} sequence(s)` +
           `${result.unstacked > 0 ? ` (${result.unstacked} unstacked!)` : ""}, ` +
-          `${result.dupGroups} dup group(s)${DRY_RUN ? "" : " [report written]"}`
+          `${result.dupGroups} dup group(s)` +
+          `${NO_AI ? "" : `, ${result.aiUsage.evaluated} card-graded`}` +
+          `${result.reshoots.length > 0 ? ` — RESHOOT: ${result.reshoots.join(", ")}` : ""}` +
+          `${DRY_RUN ? "" : " [report written]"}`
       )
       runItems.push({
         entityType: "watch",
@@ -729,7 +984,10 @@ async function main() {
         label: shortLabel,
         action: "updated",
         field: "image_scores",
-        detail: `${result.scoredNew} new frames scored, ${result.stackSources} stack sources collapsed, ${result.dupGroups} dup groups`,
+        detail:
+          `${result.scoredNew} new frames scored, ${result.stackSources} stack sources collapsed, ` +
+          `${result.dupGroups} dup groups` +
+          `${NO_AI ? "" : `, ${result.aiUsage.evaluated} card-graded, reshoot: ${result.reshoots.join("/") || "none"}`}`,
       })
     } catch (err) {
       failed++
@@ -745,9 +1003,17 @@ async function main() {
     }
   }
 
+  const cost =
+    (totals.input * PRICE_PER_MTOK.input) / 1e6 +
+    (totals.output * PRICE_PER_MTOK.output) / 1e6
   console.log(
     `\nDone. ${ok} watch(es) scored, ${failed} failed, ${skippedEmpty} empty` +
-      `${DRY_RUN ? " (dry run — nothing written)" : ""}. Cost: $0.00 (CV layer is free).`
+      `${DRY_RUN ? " (dry run — nothing written)" : ""}.` +
+      (NO_AI
+        ? " Cost: $0.00 (CV layer is free)."
+        : ` ${totals.evaluated} frames card-graded` +
+          `${totals.aiFailed > 0 ? ` (${totals.aiFailed} grading failures)` : ""} — ` +
+          `${totals.input + totals.output} tokens ≈ $${cost.toFixed(4)} (${MODEL}, list pricing).`)
   )
 
   await finishRun(run, {
@@ -756,8 +1022,12 @@ async function main() {
     itemsUpdated: DRY_RUN ? 0 : ok,
     itemsSkipped: skippedEmpty,
     itemsFailed: failed,
-    costUsdMicros: usdToMicros(0),
-    notes: `${ok} scored, ${failed} failed, ${skippedEmpty} empty`,
+    inputTokens: totals.input,
+    outputTokens: totals.output,
+    costUsdMicros: usdToMicros(cost),
+    notes:
+      `${ok} scored, ${failed} failed, ${skippedEmpty} empty` +
+      `${NO_AI ? " (no-ai)" : `, ${totals.evaluated} card-graded`}`,
     items: runItems,
   })
 

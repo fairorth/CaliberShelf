@@ -24,7 +24,7 @@ follow), see [price-check.mjs.md](price-check.mjs.md).
 | Reference sweep (`find-references.mjs`) | LLM + web search | Manual script | Sonnet 5, 4 uses | **$0.44/watch** ($2.20 for 5) | One-time-ish; ~77 watches remain ≈ $30–35 |
 | Deal check (`deal-check.mjs`) | Deterministic (no LLM) | Daily cron (13:00 UTC) + manual | — | **$0** | Yes — daily, free |
 | ChronoScout sync (`chronoscout-sync.mjs`) | Deterministic API mirror (no LLM) | Manual, run locally (`npm run chronoscout-sync`) | — | **$0** | Manual/local — GitHub Actions blocked by Cloudflare |
-| Photo score (`photo-score.mjs`) | CV triage, free | Manual, run locally (`npm run photo-score`) | — (Phase 1) | **$0** | Manual/local — needs the `\WatchImages` capture folders |
+| Photo score (`photo-score.mjs`) | CV triage + shot-card grading | Manual, run locally (`npm run photo-score`) | Haiku 4.5 (cards); `--no-ai` = free | ~$0.0015/frame graded (~7k tokens per 5 frames) | Manual/local — needs the `\WatchImages` capture folders |
 
 The dominant cost driver everywhere is **web searches**: each search feeds
 ~16k tokens of results into the model, so cost scales almost linearly with
@@ -188,32 +188,48 @@ case-size/movement/style specs, `price_range_usd`) and watch models
   Shows "Data provided by Chronoscout" attribution. **Planned next:** brand
   enrichment (domain → `store_url` candidate, logo, price band).
 
-## 7. Photo score — `npm run photo-score` (Phase 1: free)
+## 7. Photo score — `npm run photo-score`
 
-Layer 1 of the photo-scoring agent ([photo-scoring-agent.md](photo-scoring-agent.md)):
-deterministic CV triage over each watch's capture folder under the
-`\WatchImages` parent. Per watch it collapses focus-stack bracket runs to
-their in-camera composite (30 CR3s → 1 unit), computes dial-ROI sharpness
-(Laplacian variance on a center crop), brightness, glare fraction, and a
-64-bit perceptual hash, clusters near-duplicates (union-find, Hamming ≤ 10),
-upserts everything to `watch_image_scores` (00040, keyed by content hash —
-re-runs only touch new frames), and writes a self-contained
-`_photo-report.html` culling report into the watch folder (thumbnails in a
-regenerable `_previews/` subfolder; click-through to originals).
+The photo-scoring agent ([photo-scoring-agent.md](photo-scoring-agent.md)),
+Phases 1–2, over each watch's capture folder under the `\WatchImages` parent.
 
-- **Initiate:** run LOCALLY — `npm run photo-score -- [--dry-run] [--limit N]
-  [--watch <uuid>] [--force] [--dir <path>]`, or double-click
-  `scripts\photo-score.cmd`. Parent folder: `--dir` > `WATCH_IMAGES_DIR` >
-  `profiles.watch_images_path` (Config → Settings).
+**Layer 1 — CV triage (free, always runs).** Collapses focus-stack bracket
+runs to their in-camera composite (30 CR3s → 1 unit, detected via EXIF
+timestamp bursts), computes dial-ROI sharpness (Laplacian variance on a
+center crop), brightness, glare fraction, and a 64-bit perceptual hash,
+clusters near-duplicates (union-find, Hamming ≤ 10).
+
+**Layer 2, Track A — shot cards (Haiku).** Each CV survivor (best-of-dup-group;
+stack sources never reach the model) is matched against the `SHOT_CARDS`
+constant (overhead_dial, caseback, crown_side, lug_low) and graded
+**pass/fail with a named defect** — objective checks, no aesthetic scores.
+Output per watch: a **coverage matrix** (each card → sharpest passing keeper)
+and a **reshoot list** for cards with no passer. Non-matching frames route to
+`shot_card = 'creative'` for the Phase 3 rubric.
+
+Everything upserts to `watch_image_scores` (00040, keyed by content hash —
+re-runs only bill/score new frames unless `--force`), and each watch folder
+gets a self-contained `_photo-report.html` (coverage matrix on top, cull
+suggestions, dup groups, collapsed stack sequences; thumbnails in a
+regenerable `_previews/` subfolder, click-through to originals).
+
+- **Initiate:** run LOCALLY — `npm run photo-score -- [--dry-run] [--no-ai]
+  [--limit N] [--watch <uuid>] [--force] [--model <id>] [--dir <path>]`, or
+  double-click `scripts\photo-score.cmd`. Parent folder: `--dir` >
+  `WATCH_IMAGES_DIR` > `profiles.watch_images_path` (Config → Settings).
 - **CR3 handling:** sharp can't decode CR3; the script extracts the embedded
   full-resolution JPG (`JpgFromRaw`, verified full-res on the R10 — a
   `PreviewImage` fallback and a resolution warning guard the assumption) via
   `exiftool-vendored`.
-- **Cost:** $0 — no model calls in Phase 1. Suggestions only: nothing is ever
-  deleted or uploaded.
-- **Sharpness semantics:** stack *sources* are never scored or cull-suggested
-  (deliberately soft); comparisons are per-watch relative (bottom-percentile),
-  so a moody session isn't condemned globally.
+- **Cost:** `--no-ai` is $0. Card grading ≈ **$0.0015/frame** on Haiku 4.5
+  (~1.4k tokens per frame at ≤1024px, list pricing); a typical session's
+  survivors are pennies. Dry-run still calls the model (like price-check) —
+  it just writes nothing.
+- **Safety:** suggestions only — nothing is ever deleted or uploaded. Stack
+  *sources* are never scored or cull-suggested (deliberately soft); sharpness
+  comparisons are per-watch relative, so a moody session isn't condemned
+  globally. Specular highlights on case edges are treated as technique;
+  only dial-obscuring blowouts count as defects.
 
 ## Lowering costs: options and trade-offs
 

@@ -77,7 +77,9 @@ script (or `route.ts` for spec-fetch).
   `brand_type`, NULL-only.
 - **photo-score** (`scripts/photo-score.mjs`) → `watch_image_scores` (00040);
   CV triage over `\WatchImages` capture folders (stack collapse, dial-ROI
-  sharpness, dup clustering) + local `_photo-report.html`; local-only, free.
+  sharpness, dup clustering) + Track A shot-card grading (Haiku,
+  ~$0.0015/frame, `--no-ai` = free) + local `_photo-report.html` with
+  coverage matrix/reshoot list; local-only.
 - **chronoscout-sync** (`scripts/chronoscout-sync.mjs`) → `chronoscout_*` mirror
   (00027); catalog-only API (no prices/refs/alerts) — does NOT power Phase B;
   weekly `chronoscout-sync.yml`. Licensing: display in-app only, attribute
