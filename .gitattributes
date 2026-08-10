@@ -1,0 +1,12 @@
+# Never apply line-ending normalization to binary document formats —
+# git's text heuristic can misclassify PDFs (their streams look text-like),
+# and CRLF conversion on checkout would corrupt them.
+*.pdf binary
+*.docx binary
+*.dotx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.heic binary
+*.ico binary
