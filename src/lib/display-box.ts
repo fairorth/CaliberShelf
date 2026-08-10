@@ -5,8 +5,10 @@
 // a human-readable "reason".
 //
 // House rules (in priority order):
-// 1. 3–4 gym watches — chronograph category or rotating bezel, never luxury
-//    and never a dressy category (Dress/Horology).
+// 1. 3–4 gym watches — chronograph category or rotating bezel, never a dressy
+//    category (Dress/Horology), and only from the lower tier bands (bottom
+//    half of the user's ladder, at most three — Tiers 1–3 with the default
+//    six-tier config).
 // 2. 1–2 swim-ready watches — ≥200 m water resistance, never luxury. A gym
 //    diver counts toward both quotas.
 // 3. At most 2 luxury watches (the top tier bands — special-occasion pieces).
@@ -72,6 +74,12 @@ function luxuryFloor(tierCount: number): number {
   return tierCount >= 4 ? tierCount - 2 : tierCount - 1
 }
 
+// Gym watches must be genuinely inexpensive: only the bottom half of the tier
+// ladder qualifies, capped at three bands (default six-tier config → Tiers 1–3).
+function gymTierCeiling(tierCount: number): number {
+  return Math.min(3, Math.ceil(tierCount / 2))
+}
+
 function classify(c: DisplayBoxCandidate, tierCount: number): Roles {
   const luxury =
     tierCount > 0 && c.tierIndex >= 0 && c.tierIndex >= luxuryFloor(tierCount)
@@ -79,9 +87,11 @@ function classify(c: DisplayBoxCandidate, tierCount: number): Roles {
   // qualifies technically, but nobody takes a Dress watch to the gym.
   const dressy = /dress|horolog/i.test(c.categoryName ?? "")
   const sporty = c.rotatingBezel || /chrono/i.test(c.categoryName ?? "")
+  // tierIndex -1 (unpriced) passes the gym tier check — assumed inexpensive.
+  const cheapEnough = tierCount === 0 || c.tierIndex < gymTierCeiling(tierCount)
   return {
     luxury,
-    gym: sporty && !luxury && !dressy,
+    gym: sporty && !luxury && !dressy && cheapEnough,
     swim: !luxury && (c.waterResistanceM ?? 0) >= SWIM_WR_METERS,
   }
 }
