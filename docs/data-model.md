@@ -63,6 +63,7 @@ mirror — they are **not** foreign-keyed to the user's `brands`/`watches`; the
 | `timegrapher_runs` | owner | app | accuracy measurements; rate/amplitude/beat error |
 | `watch_valuations` | owner | `price-check` | time series of market-value estimates; `value_mid_cents`, `confidence`, `datapoints`, `sources`, `agent_model` |
 | `wishlist_deals` | owner | `deal-check` | one current row per wish-list watch; `availability`, `retail_price_cents`; `best_used_*` reserved for Phase B |
+| `inspiration_images` | owner | app | Inspiration Gallery (00039): admired watch photography as a photo-lab mood board; storage under `{user_id}/inspiration/`, note ≤80 chars |
 | `collection_guides` | owner | app + `seed-gs-guide` | Master Collection Guides (00038): name, thesis, source document, version |
 | `guide_entries` | owner | app + `seed-gs-guide` | guide chapters (00038): position/chapter/title/reference, target band cents, priority, stored status (candidate\|passed), nullable `watch_id` — a linked entry's display status derives LIVE from the watch |
 | `straps` | owner | app | strap/bracelet assets (00037): `material` (validated set), `width_mm` (Phase Two fit matching vs `watches.strap_width_mm`), `quick_release`, `micro_adjust`, `source` + `source_watch_id` (OEM origin), `current_watch_id` (mounted watch, unique per watch), money columns |
