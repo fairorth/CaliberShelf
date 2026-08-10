@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { getWatches } from "@/lib/queries/watches"
 import { getTierBands } from "@/lib/queries/tier-config"
-import { tierBandForCents } from "@/lib/tiers"
+import { tierBandForCents, tierIndexFor } from "@/lib/tiers"
 import {
   selectDisplayBox,
   DISPLAY_BOX_SIZE,
@@ -50,13 +50,17 @@ export async function createDisplayBox(): Promise<DisplayBoxActionState> {
   const candidates: DisplayBoxCandidate[] = owned.map((w) => ({
     id: w.id,
     name: `${w.brand?.name ?? ""} ${w.model}`.trim(),
+    brandId: w.brand_id ?? null,
     categoryId: w.category_id,
     categoryName: w.category?.name ?? null,
     tierLabel: tierBandForCents(w.purchase_price_cents, tierBands).label,
+    tierIndex: tierIndexFor(w.purchase_price_cents, tierBands),
     complications: (w.complication ?? "")
       .split(",")
       .map((c) => c.trim())
       .filter(Boolean),
+    rotatingBezel: w.rotating_bezel ?? false,
+    waterResistanceM: w.water_resistance_m ?? null,
     wearCount: w.wear_count ?? 0,
     lastWornDate: w.last_worn_date ?? null,
     purchaseDate: w.purchase_date ?? null,
@@ -68,6 +72,7 @@ export async function createDisplayBox(): Promise<DisplayBoxActionState> {
     size: DISPLAY_BOX_SIZE,
     previousBoxIds,
     todayIso,
+    tierCount: tierBands.length,
   })
   if (picks.length === 0) return { error: "Could not assemble a display box." }
 
