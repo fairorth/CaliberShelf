@@ -226,7 +226,7 @@ Mirror `price-check.mjs` conventions (see price-check.mjs.md):
 1. **Phase 1 — CV only, free.** Migration 00040 + `photo-score.mjs --no-ai`: CR3 preview extraction (+ the full-res preview verification), stack-sequence collapse, ROI sharpness/brightness/glare, dup clustering, score write-back, and the local HTML report. Real value at $0; validates the pixel pipeline on actual captures before the first paid token.
 2. **Phase 2 — Track A.** Shot-card evaluator (Haiku), coverage matrix + reshoot list in the report and DB. Cheap, objective, immediately workflow-useful.
 3. **Phase 3 — Track B.** Rubric pass + comparative hero ranking (Sonnet), composite scores, cover nominee. Dry-run → small `--limit` → full.
-4. **Phase 4 — Polish.** Score-at-upload for `watch_photos`, in-app badges + cover suggestion, Attention Needed coverage chips, card list promoted to a config table if it needs per-user editing.
+4. **Phase 4 — Polish.** Score-at-upload for `watch_photos`, in-app badges + cover suggestion, Attention Needed coverage chips, card list promoted to a config table if it needs per-user editing. **Inspiration-to-card tagging:** let Inspiration Gallery images (00039) be tagged to a shot card — "this is the caseback treatment I'm chasing" — so each card carries its own reference board; surfaces in the lab workflow next to the card's pass criteria (agreed 2026-08-09).
 
 ---
 
