@@ -1,6 +1,6 @@
 # Photo Scoring Agent — Implementation Plan
 
-**Status:** Plan / design, v1.1. Not yet built.
+**Status:** Phase 1 (CV triage, migration 00040 + `scripts/photo-score.mjs`) BUILT in v1.7.0. CR3 embedded-preview resolution verified full-res on a real R10 file (plan 3.1 → option b confirmed, no LibRaw fallback needed). Plan v1.1.
 **v1.1 (2026-08-09):** joint review pass — adds the two-track shot-card/creative design, stack-sequence collapse, ROI and glare corrections, the local HTML culling report, and comparative ranking as the hero mechanism. v1.0 was authored in the VacationRecap project.
 **Purpose:** Automatically grade the images of each watch so the best shots can be *kept* (cull the capture folder), *highlighted* (nominate a cover/hero), and *audited for coverage* (every watch has its standard shots, or a reshoot list says what's missing) — realizing the "AI image-selection agent (planned)" section of [photo-lab.md](photo-lab.md).
 **Reference implementation:** VacationRecap's image-quality evaluation (CV triage + AI vision). See that project's `docs/Image-Quality-Evaluation.md` for the technique breakdown; this document adapts it to CaliberShelf's schema, storage, agent framework, and the watch-photography domain.

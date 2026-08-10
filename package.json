@@ -1,6 +1,6 @@
 {
   "name": "caliber-shelf",
-  "version": "1.6.3",
+  "version": "1.7.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -15,6 +15,7 @@
     "chronoscout-sync": "node scripts/chronoscout-sync.mjs",
     "backfill-agent-runs": "node scripts/backfill-agent-runs.mjs",
     "sync-watch-folders": "node scripts/sync-watch-folders.mjs",
+    "photo-score": "node scripts/photo-score.mjs",
     "seed-gs-guide": "node scripts/seed-gs-guide.mjs"
   },
   "dependencies": {
@@ -25,6 +26,7 @@
     "@supabase/supabase-js": "^2.98.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "exiftool-vendored": "^37.2.0",
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",

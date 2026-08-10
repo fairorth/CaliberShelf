@@ -75,6 +75,9 @@ script (or `route.ts` for spec-fetch).
   + `reference_unverified` (00026); `--majors-only`, `--value-limit N`.
 - **find-store-urls** (`scripts/find-store-urls.mjs`) → `brands.store_url` /
   `brand_type`, NULL-only.
+- **photo-score** (`scripts/photo-score.mjs`) → `watch_image_scores` (00040);
+  CV triage over `\WatchImages` capture folders (stack collapse, dial-ROI
+  sharpness, dup clustering) + local `_photo-report.html`; local-only, free.
 - **chronoscout-sync** (`scripts/chronoscout-sync.mjs`) → `chronoscout_*` mirror
   (00027); catalog-only API (no prices/refs/alerts) — does NOT power Phase B;
   weekly `chronoscout-sync.yml`. Licensing: display in-app only, attribute

@@ -120,12 +120,12 @@ dials change with tiny light-angle moves.
 | Composite edge artifacts | More framing margin, crop ON, smaller increment, or external stacking |
 | Composite is JPEG despite RAW sources | Normal — in-camera composite is always JPEG/HEIF |
 
-## Implications for the AI image-selection agent (planned)
+## Implications for the AI image-selection agent (now building — see photo-scoring-agent.md)
 
-- **File formats:** sharp (our image library) cannot decode CR3. Options:
-  (a) score only JPEG/HEIF files, (b) extract the embedded JPEG preview every
-  CR3 carries (preferred — leaves the lab workflow untouched), (c) switch
-  capture to RAW+JPEG. Decide when the agent is built.
+- **File formats:** sharp (our image library) cannot decode CR3. RESOLVED
+  (v1.7.0): option (b) — `photo-score.mjs` extracts the embedded `JpgFromRaw`
+  preview via ExifTool, verified full-resolution on a real R10 CR3. The lab
+  workflow is untouched.
 - **Sharpness semantics:** stacked composites are sharp everywhere by design;
   singles are sharp only at the focal plane. Scoring must not penalize
   intentional shallow-DoF singles against composites.
