@@ -1,6 +1,6 @@
 {
   "name": "caliber-shelf",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -16,7 +16,8 @@
     "backfill-agent-runs": "node scripts/backfill-agent-runs.mjs",
     "sync-watch-folders": "node scripts/sync-watch-folders.mjs",
     "photo-score": "node scripts/photo-score.mjs",
-    "seed-gs-guide": "node scripts/seed-gs-guide.mjs"
+    "seed-gs-guide": "node scripts/seed-gs-guide.mjs",
+    "seed-swiss-guide": "node scripts/seed-swiss-guide.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
