@@ -1,0 +1,75 @@
+CaliberShelf. My project folder is C:\Projects\CaliberShelf on this machine.
+This is a LOCAL session — your Read/Edit/shell tools act directly on my files.
+No cloud workspace, no device mount, no staging: just edit in place.
+
+I run CaliberShelf on TWO Windows 11 workstations: "ms-02-ultra" (office, my
+main dev machine) and the PhotoLab workstation (upstairs — where the tethered
+Canon rig and the real \WatchImages captures live). I may be on either one.
+Claude Code sessions and your memory directory are PER-MACHINE and do not
+sync; the git repo is what travels. Consequences:
+
+- This machine's memory may lag reality. Where memory disagrees with the repo
+  (CLAUDE.md files, docs/, supabase/CLAUDE.md, git history), THE REPO WINS —
+  and update this machine's memory when you catch drift.
+- Ask me which machine I'm on if it matters and you can't tell (memory notes
+  machine-specific facts like the WatchImages path).
+
+Before doing anything else, initialize:
+
+1. Read project memory: MEMORY.md's index first, then project_status.md
+   (current version, latest migration, what shipped, what's next, outstanding
+   manual steps). Read the topic files the index points to as they become
+   relevant, and handle any unresolved follow-ups memory flags during
+   initialization.
+2. Read CLAUDE.md at the repo root, plus the scoped ones (supabase/CLAUDE.md,
+   src/app/CLAUDE.md, src/components/CLAUDE.md).
+3. Skim docs/ as needed — especially data-model.md and using-calibershelf.md.
+4. Run `git fetch`, then `git log --oneline -10` and `git status --short` so
+   you know where the tree actually stands.
+   * If local is BEHIND origin/master, I probably switched machines without
+     pulling — remind me to `git pull` (and `npm install` if package-lock
+     changed) before we touch anything, and wait for my go-ahead.
+   * If local is AHEAD of origin/master, that's just me not having pushed —
+     never "fix" it; track it as unpushed commits.
+
+Ground rules that trip people up here:
+
+- Every code change bumps "version" in package.json (usually patch) — edit the
+  field directly, never `npm version`. No exceptions. (Docs/config-only changes
+  don't need a bump.)
+- Migrations go in supabase/migrations/ but I apply them BY HAND in the Supabase
+  SQL Editor — always tell me the exact filename to run, and never assume a
+  migration is applied until I confirm it. supabase/CLAUDE.md tracks the latest
+  applied one.
+- I push to GitHub by hand. Remind me to `git push` when work is committed, and
+  keep a running count of unpushed commits. Before I leave a machine, remind me:
+  push first — that IS the machine-to-machine sync.
+- Both machines talk to the SAME hosted Supabase (dev server included). Browser
+  preview is fine for looking, but don't click anything that mutates my real
+  data (regenerating the display box, logging wears, deleting things) without
+  asking me first. .env.local is gitignored and maintained on each machine by
+  hand — if a key is missing here, tell me; never invent or move secrets.
+- Photo-lab specifics: the \WatchImages parent folder is local to each machine,
+  and profiles.watch_images_path is ONE shared DB value — it should hold the
+  PhotoLab machine's path. Scripts resolve --dir > WATCH_IMAGES_DIR (.env.local)
+  > the DB value; use the overrides on the office machine, never repoint the DB
+  value casually.
+- Permission hygiene (I hate prompts):
+  * Use the dedicated Grep/Glob/Read tools — never shell grep/find/cat.
+  * Run npm/npx/node/git commands through the BASH tool, plain and undecorated
+    (no pipes, no `2>&1 | tail`, no chained `&&` compounds, no preambles).
+  * If anything you run prompts me anyway, treat it as a bug: diagnose the rule
+    gap in .claude/settings.json and fix it with `Tool(prefix:*)` syntax.
+- Verifying changes: `npm run typecheck` and `npm run lint` as separate calls
+  after every change. `npm run build` is fine locally when the change warrants
+  it. Pure logic can be sanity-tested by compiling the module standalone with
+  npx tsc into your scratchpad and running it with node.
+- For small, clearly-specified changes: grep the touch points, edit, typecheck,
+  lint, commit. Skip the exploratory tour.
+
+Then give me a one-paragraph confirmation of where the project stands — version,
+latest migration (and whether anything still needs running), and what
+project_status.md lists as the likely next builds — and flag anything
+outstanding (unrun migrations, unpushed/unpulled commits, memory follow-ups,
+memory-vs-repo drift you corrected). Then wait for me to tell you what we're
+building.
