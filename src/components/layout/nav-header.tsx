@@ -2,26 +2,38 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { Moon, Plus, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { SearchInput } from "@/components/search-input"
 import { signOut } from "@/lib/actions/auth-actions"
 import { cn } from "@/lib/utils"
 import { APP_VERSION } from "@/lib/version"
 import { CaliberShelfMark } from "@/components/calibershelf-mark"
 
-const navItems = [
-  { href: "/collection", label: "Collection", icon: "📋" },
-  { href: "/straps", label: "Straps", icon: "〰️" },
-  { href: "/guides", label: "Guides", icon: "🧭" },
-  { href: "/gallery", label: "Gallery", icon: "📸" },
-  { href: "/batch-import", label: "Batch Import", icon: "📦" },
-  { href: "/wear-log", label: "Wear Log", icon: "📅" },
-  { href: "/deals", label: "Deals", icon: "💰" },
-  { href: "/reports", label: "Reports", icon: "📊" },
-  { href: "/config", label: "Config", icon: "⚙️" },
-  { href: "/about", label: "About", icon: "ℹ️" },
+// Menu groups render with a separator between them: assets | analysis |
+// acquisition & imagery | system.
+const navGroups = [
+  [
+    { href: "/collection", label: "Collection", icon: "📋" },
+    { href: "/brands", label: "Brands", icon: "🏷️" },
+    { href: "/straps", label: "Straps", icon: "〰️" },
+  ],
+  [
+    { href: "/wear-log", label: "Wear Log", icon: "📅" },
+    { href: "/reports", label: "Reports", icon: "📊" },
+    { href: "/guides", label: "Guides", icon: "🧭" },
+  ],
+  [
+    { href: "/deals", label: "Deals", icon: "💰" },
+    { href: "/gallery", label: "Gallery", icon: "📸" },
+    { href: "/batch-import", label: "Batch Import", icon: "📦" },
+  ],
+  [
+    { href: "/config", label: "Config", icon: "⚙️" },
+    { href: "/about", label: "About", icon: "ℹ️" },
+  ],
 ]
 
 interface NavHeaderProps {
@@ -30,7 +42,9 @@ interface NavHeaderProps {
 
 export function NavHeader({ userEmail }: NavHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const pathname = usePathname()
+  const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
@@ -45,6 +59,19 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
   // (and any watch detail, which is reached from the collection).
   const isHome = pathname === "/dashboard"
   const isCollection = pathname.startsWith("/collection") || pathname.startsWith("/watch")
+
+  // Global search: jump to the collection filtered by the query. Hidden on
+  // home and the collection list, which carry their own (state-owning) search
+  // boxes — pushing ?q= at the collection view would not re-seed its local
+  // state. Watch detail pages DO get it (navigating there is a fresh mount).
+  const showSearch = !isHome && !pathname.startsWith("/collection")
+  const submitSearch = () => {
+    const q = searchQuery.trim()
+    if (!q) return
+    router.push(`/collection?q=${encodeURIComponent(q)}`)
+    setSearchQuery("")
+    setMenuOpen(false)
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -119,8 +146,18 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
           </Link>
         </div>
 
-        {/* Add watch + user info + theme toggle + sign out */}
+        {/* Search + add watch + user info + theme toggle + sign out */}
         <div className="flex items-center gap-3">
+          {showSearch && (
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onSubmit={submitSearch}
+              placeholder="Search collection…"
+              ariaLabel="Search collection"
+              className="hidden w-44 md:block lg:w-56"
+            />
+          )}
           <span className="hidden text-sm text-muted-foreground sm:inline">
             {userEmail}
           </span>
@@ -159,6 +196,18 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
       {menuOpen && (
         <nav className="border-t p-3">
           <div className="space-y-1">
+            {/* Search (the header box is hidden below md) */}
+            {showSearch && (
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSubmit={submitSearch}
+                placeholder="Search collection…"
+                ariaLabel="Search collection"
+                className="mb-2 md:hidden"
+              />
+            )}
+
             {/* Add Watch */}
             <Link
               href={addWatchHref}
@@ -169,22 +218,27 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
               Add Watch
             </Link>
 
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMenuOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  pathname === item.href ||
-                    pathname.startsWith(item.href + "/")
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <span>{item.icon}</span>
-                {item.label}
-              </Link>
+            {navGroups.map((group, gi) => (
+              <div key={gi} className="space-y-1">
+                {gi > 0 && <div className="mx-3 my-2 border-t border-border" />}
+                {group.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      pathname === item.href ||
+                        pathname.startsWith(item.href + "/")
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <span>{item.icon}</span>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             ))}
           </div>
         </nav>

@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getBrands } from "@/lib/queries/brands"
 import { getMovements } from "@/lib/queries/movements"
 import { getCategories } from "@/lib/queries/categories"
 import { getLabels } from "@/lib/queries/labels"
@@ -8,7 +7,6 @@ import { getWatches } from "@/lib/queries/watches"
 import { getTierConfig } from "@/lib/queries/tier-config"
 import { getBoxConfig } from "@/lib/queries/box-config"
 import { getWatchImagesPath } from "@/lib/queries/app-settings"
-import { BrandsTab } from "./_components/brands-tab"
 import { MovementsTab } from "./_components/movements-tab"
 import { CategoriesTab } from "./_components/categories-tab"
 import { LabelsTab } from "./_components/labels-tab"
@@ -20,7 +18,8 @@ export const metadata: Metadata = {
   title: "Config | CaliberShelf",
 }
 
-const TAB_VALUES = ["brands", "movements", "categories", "labels", "tiers", "boxes", "settings"]
+// Brands graduated to its own top-level page (/brands) — no longer a tab here.
+const TAB_VALUES = ["movements", "categories", "labels", "tiers", "boxes", "settings"]
 
 export default async function ConfigPage({
   searchParams,
@@ -29,10 +28,9 @@ export default async function ConfigPage({
 }) {
   // Deep-linkable tabs (e.g. /config?tab=movements from the Attention report)
   const { tab } = await searchParams
-  const initialTab = tab && TAB_VALUES.includes(tab) ? tab : "brands"
+  const initialTab = tab && TAB_VALUES.includes(tab) ? tab : "movements"
 
-  const [brands, movements, categories, labels, watches, tierConfig, boxConfig, watchImagesPath] = await Promise.all([
-    getBrands(),
+  const [movements, categories, labels, watches, tierConfig, boxConfig, watchImagesPath] = await Promise.all([
     getMovements(),
     getCategories(),
     getLabels(),
@@ -41,12 +39,6 @@ export default async function ConfigPage({
     getBoxConfig(),
     getWatchImagesPath(),
   ])
-
-  // Count watches per brand
-  const watchCountByBrand = new Map<string, number>()
-  for (const w of watches) {
-    watchCountByBrand.set(w.brand_id, (watchCountByBrand.get(w.brand_id) ?? 0) + 1)
-  }
 
   // Count watches per category
   const watchCountByCategory = new Map<string, number>()
@@ -65,7 +57,6 @@ export default async function ConfigPage({
 
       <Tabs defaultValue={initialTab}>
         <TabsList>
-          <TabsTrigger value="brands">Brands ({brands.length})</TabsTrigger>
           <TabsTrigger value="movements">Movements ({movements.length})</TabsTrigger>
           <TabsTrigger value="categories">Categories ({categories.length})</TabsTrigger>
           <TabsTrigger value="labels">Labels ({labels.length})</TabsTrigger>
@@ -73,10 +64,6 @@ export default async function ConfigPage({
           <TabsTrigger value="boxes">Boxes ({boxConfig.count})</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="brands" className="mt-4">
-          <BrandsTab brands={brands} watchCountByBrand={watchCountByBrand} />
-        </TabsContent>
 
         <TabsContent value="movements" className="mt-4">
           <MovementsTab movements={movements} usedMovementIds={usedMovementIds} />

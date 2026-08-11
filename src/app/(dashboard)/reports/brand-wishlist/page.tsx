@@ -112,21 +112,21 @@ export default async function BrandWishlistPage() {
               want but don&apos;t own from yet.
             </>
           )}{" "}
-          Tag brands in{" "}
-          <Link href="/config?tab=brands" className="text-primary underline-offset-2 hover:underline">
-            Config › Brands
-          </Link>
-          ; the tag clears itself when you add an owned or incoming watch from the brand.
+          Tag brands on the{" "}
+          <Link href="/brands" className="text-primary underline-offset-2 hover:underline">
+            Brands
+          </Link>{" "}
+          page; the tag clears itself when you add an owned or incoming watch from the brand.
         </p>
       </div>
 
       {wishlistBrands.length === 0 ? (
         <Card className="max-w-2xl">
           <CardContent className="pt-6 text-sm text-muted-foreground">
-            Tick &ldquo;Wish list&rdquo; when adding or editing a brand in{" "}
-            <Link href="/config?tab=brands" className="text-primary underline-offset-2 hover:underline">
-              Config › Brands
-            </Link>{" "}
+            Tick &ldquo;Wish list&rdquo; when adding or editing a brand on the{" "}
+            <Link href="/brands" className="text-primary underline-offset-2 hover:underline">
+              Brands
+            </Link>{" "}page{" "}
             and it will show up here with ChronoScout catalog context.
           </CardContent>
         </Card>
@@ -136,7 +136,7 @@ export default async function BrandWishlistPage() {
             <CollapsibleReportGroup
               key={brand.id}
               title={brand.name}
-              titleHref="/config?tab=brands"
+              titleHref="/brands"
               summary={
                 <>
                   {brand.brand_type ? `${brandTypeLabels[brand.brand_type]} · ` : ""}

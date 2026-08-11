@@ -55,7 +55,7 @@ export async function getAttentionReport(): Promise<AttentionReport> {
         name: b.name,
         detail: b.country_of_origin,
         missing,
-        href: "/config?tab=brands",
+        href: "/brands",
         status: null,
       })
     }

@@ -84,6 +84,7 @@ export default async function ByBoxPage() {
           {ordered.map((g) => (
             <CollapsibleReportGroup
               key={g.key}
+              defaultOpen={false}
               title={g.key === NO_BOX ? g.name : boxLabel(g.name, boxConfig.descriptions)}
               summary={
                 <>
@@ -97,7 +98,11 @@ export default async function ByBoxPage() {
               <ul className="divide-y divide-border/50">
                 {g.watches
                   .slice()
-                  .sort((a, b) => (b.purchase_price_cents ?? 0) - (a.purchase_price_cents ?? 0))
+                  .sort(
+                    (a, b) =>
+                      (a.brand?.name ?? "").localeCompare(b.brand?.name ?? "") ||
+                      (a.model ?? "").localeCompare(b.model ?? "")
+                  )
                   .map((w) => (
                     <li key={w.id}>
                       <Link
@@ -110,6 +115,11 @@ export default async function ByBoxPage() {
                           </span>
                           {w.nickname && (
                             <span className="ml-2 text-xs text-muted-foreground">{w.nickname}</span>
+                          )}
+                          {w.dial_color && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              {w.dial_color} dial
+                            </span>
                           )}
                           {w.category?.name && (
                             <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">

@@ -100,7 +100,8 @@ columns** — manual edits are never overwritten.
   2026-07-19); future runs only cost for newly added brands.
 - **Warnings:** sites that bot-block (Cartier, Christopher Ward) show
   "UNREACHABLE" — the stored URL is usually still correct. Low-confidence
-  rows are listed at the end for manual review in Config → Brands.
+  rows are listed at the end for manual review on the Brands page (top-level
+  since v1.7.3; formerly Config → Brands).
 
 ## 4. Reference sweep — `npm run find-references`
 
