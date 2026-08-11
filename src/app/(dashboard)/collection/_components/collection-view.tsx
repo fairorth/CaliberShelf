@@ -79,13 +79,26 @@ function matchesStatus(w: WatchWithCover, f: CollectionFilters): boolean {
   return f.showOwned
 }
 
+/** Wish-list source: all ("") · hand-added ("manual") · a specific guide name. */
+function matchesWishlistSource(
+  w: WatchWithCover,
+  f: CollectionFilters,
+  guideNames: Record<string, string>
+): boolean {
+  if (!w.is_wishlist || !f.wishlistSource) return true
+  const guide = guideNames[w.id]
+  return f.wishlistSource === "manual" ? !guide : guide === f.wishlistSource
+}
+
 function applyFilters(
   watches: WatchWithCover[],
   f: CollectionFilters,
-  tierBands: TierBand[]
+  tierBands: TierBand[],
+  guideNames: Record<string, string>
 ): WatchWithCover[] {
   return watches.filter((w) => {
     if (!matchesStatus(w, f)) return false
+    if (!matchesWishlistSource(w, f, guideNames)) return false
     if (f.brandId && w.brand_id !== f.brandId) return false
     if (f.movementId && w.movement_id !== f.movementId) return false
     if (f.caliberType && w.movement?.caliber_type !== f.caliberType) return false
@@ -286,6 +299,12 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   // KNOWN_COMPLICATIONS the watch form uses), never free-text "other" values.
   const complicationOptions = [...KNOWN_COMPLICATIONS]
 
+  // Guides that actually have wish-list members, for the wish-list sub-filter.
+  const guideOptions = useMemo(
+    () => [...new Set(Object.values(guideNames ?? {}))].sort(),
+    [guideNames]
+  )
+
   // Price-tier filter options come from the user's configured tiers, plus a
   // "No price" bucket for watches without a purchase price.
   const tierOptions = useMemo(
@@ -308,8 +327,8 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     [watches, selectedId]
   )
   const afterFilters = useMemo(
-    () => applyFilters(afterCategory, filters, tierBands),
-    [afterCategory, filters, tierBands]
+    () => applyFilters(afterCategory, filters, tierBands, guideNames ?? {}),
+    [afterCategory, filters, tierBands, guideNames]
   )
   const afterSearch = useMemo(
     () => (query.trim() ? afterFilters.filter((w) => matchesQuery(w, query)) : afterFilters),
@@ -384,6 +403,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
         <CollectionFiltersDialog
           filters={filters}
           onChange={updateFilters}
+          guides={guideOptions}
           brands={brandOptions}
           movements={movementOptions}
           caliberTypes={caliberTypes}
@@ -524,7 +544,12 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           )}
         </div>
       ) : view === "table" ? (
-        <CollectionTable watches={displayed} showCost={showCost} guideNames={guideNames} />
+        <CollectionTable
+          watches={displayed}
+          showCost={showCost}
+          guideNames={guideNames}
+          onBrandClick={(brandId) => updateFilters({ ...filters, brandId })}
+        />
       ) : (
         <GalleryGrid watches={displayed} itemSize={size} showCost={showCost} guideNames={guideNames} />
       )}

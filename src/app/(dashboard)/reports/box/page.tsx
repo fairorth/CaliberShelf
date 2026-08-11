@@ -118,7 +118,7 @@ export default async function ByBoxPage() {
                           )}
                           {w.dial_color && (
                             <span className="ml-2 text-xs text-muted-foreground">
-                              {w.dial_color} dial
+                              ({w.dial_color})
                             </span>
                           )}
                           {w.category?.name && (

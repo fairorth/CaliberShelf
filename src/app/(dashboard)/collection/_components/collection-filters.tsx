@@ -26,6 +26,9 @@ export interface CollectionFilters {
   showOwned: boolean
   showComingSoon: boolean
   showWishlist: boolean
+  // Which wish-list watches to show (applies only while showWishlist is on):
+  // "" = all · "manual" = hand-added (no guide) · else a collection-guide name.
+  wishlistSource: string
   brandId: string
   movementId: string
   caliberType: string
@@ -46,6 +49,7 @@ export const EMPTY_FILTERS: CollectionFilters = {
   showOwned: true,
   showComingSoon: true,
   showWishlist: true,
+  wishlistSource: "",
   brandId: "",
   movementId: "",
   caliberType: "",
@@ -61,6 +65,7 @@ export const EMPTY_FILTERS: CollectionFilters = {
 export function activeFilterCount(f: CollectionFilters): number {
   let n = 0
   if (!f.showOwned || !f.showComingSoon || !f.showWishlist) n++
+  if (f.showWishlist && f.wishlistSource) n++
   if (f.brandId) n++
   if (f.movementId) n++
   if (f.caliberType) n++
@@ -102,6 +107,8 @@ export interface TierFilterOption {
 interface CollectionFiltersDialogProps {
   filters: CollectionFilters
   onChange: (next: CollectionFilters) => void
+  /** Distinct collection-guide names with wish-list members (e.g. "Grand Seiko"). */
+  guides?: string[]
   brands: BrandOption[]
   movements: MovementOption[]
   caliberTypes: string[]
@@ -120,6 +127,7 @@ const SELECT_CLASS =
 export function CollectionFiltersDialog({
   filters,
   onChange,
+  guides = [],
   brands,
   movements,
   caliberTypes,
@@ -209,6 +217,38 @@ export function CollectionFiltersDialog({
                 </label>
               ))}
             </div>
+
+            {/* Wish-list source — only meaningful while wish-list is shown */}
+            {filters.showWishlist && (
+              <div className="space-y-1.5 pl-1 pt-1">
+                <span className="text-xs text-muted-foreground">Wish list from</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { value: "", label: "All" },
+                    { value: "manual", label: "Manual" },
+                    ...guides.map((g) => ({ value: g, label: g })),
+                  ].map((opt) => {
+                    const selected = filters.wishlistSource === opt.value
+                    return (
+                      <button
+                        key={opt.value || "all"}
+                        type="button"
+                        onClick={() => set("wishlistSource", opt.value)}
+                        aria-pressed={selected}
+                        className={cn(
+                          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
+                          selected
+                            ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                            : "bg-muted text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Category — multi-select (OR); empty = all categories */}

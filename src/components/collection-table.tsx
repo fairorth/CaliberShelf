@@ -26,6 +26,8 @@ interface CollectionTableProps {
   showCost?: boolean
   /** watch_id → collection-guide name, for badging guide members. */
   guideNames?: Record<string, string>
+  /** Brand cell click → filter by that brand (mirrors the category link). */
+  onBrandClick?: (brandId: string) => void
 }
 
 function priceLabel(watch: WatchWithCover): string {
@@ -235,7 +237,7 @@ function HoverPhoto({
 
 // ── Main Component ─────────────────────────────────────────────────
 
-export function CollectionTable({ watches, showCost = false, guideNames }: CollectionTableProps) {
+export function CollectionTable({ watches, showCost = false, guideNames, onBrandClick }: CollectionTableProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
@@ -433,9 +435,21 @@ export function CollectionTable({ watches, showCost = false, guideNames }: Colle
                     )}
                   </TableCell>
                   <TableCell>
-                    <Link href={`/watch/${watch.id}/edit`} className="font-display text-[15.5px] font-semibold hover:underline">
-                      {watch.brand.name}
-                    </Link>
+                    {onBrandClick ? (
+                      // Filters to this brand — same affordance as the category link.
+                      <button
+                        type="button"
+                        onClick={() => onBrandClick(watch.brand_id)}
+                        title={`Show all ${watch.brand.name}`}
+                        className="font-display text-[15.5px] font-semibold hover:underline"
+                      >
+                        {watch.brand.name}
+                      </button>
+                    ) : (
+                      <Link href={`/watch/${watch.id}/edit`} className="font-display text-[15.5px] font-semibold hover:underline">
+                        {watch.brand.name}
+                      </Link>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Link href={`/watch/${watch.id}/edit`} className="text-muted-foreground hover:underline">
