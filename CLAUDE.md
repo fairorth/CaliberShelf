@@ -31,6 +31,27 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - Store money as BIGINT cents to avoid floating-point issues
 - One component per file; import directly (no barrel exports)
 
+## Design System — see docs/design-system.md
+- **Accent:** brass (`--brass`) = action/brand (buttons, active nav, focus, selection).
+  Steel-blue (`--primary`) = data only (charts, links, info chips). Prices and totals are
+  `--foreground` + `font-mono tabular-nums` — never colored. Brass is NEVER decoration
+  (no colored card borders or header washes).
+- **Type:** six steps only — 11 / 13 / 15 / 19 / 26 / 38px. Every page `h1` is 26px.
+  `font-display` (Fraunces) only at ≥19px. Mono only at 11px and 13px. Never write an
+  arbitrary `text-[Npx]`.
+- **Radii:** 8px controls · 14px cards · full pills. Nothing else (physical-object
+  illustrations in watch-hero/display-box excepted).
+- **Color:** tokens only. No hex or `white/[0.0x]` literals for surfaces, borders, fields
+  or text. Never stack opacity on `--muted-foreground`.
+- **Icons:** lucide-react only, `currentColor`, `aria-hidden`. No emoji in UI — the two
+  exceptions are ✨ (AI autofill) and ⚠ (unverified reference).
+- **Images:** `object-contain` where the photo is the subject; `object-cover` only in
+  dense grids, framed by `dial_focal_x/y/zoom`.
+- **Motion:** 150ms color / 200ms transform, ease-out. `prefers-reduced-motion` must stop
+  the hero auto-advance, the ring sweep and hover scales.
+- **Text hierarchy:** exactly one full-`--foreground` value per surface; everything else
+  `--muted-foreground` at 13px+.
+
 ## Zod v4 Notes
 - This project uses Zod v4 (package `zod@^4.x`)
 - Use `.issues` not `.errors` on ZodError (e.g., `parsed.error.issues[0].message`)
