@@ -151,7 +151,7 @@ export function MovementCombobox({
                 <div className="flex flex-1 items-center gap-2 overflow-hidden">
                   <span className="truncate">{movement.caliber_name}</span>
                   {movement.caliber_type && (
-                    <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
+                    <Badge variant="secondary" className="ml-auto shrink-0 text-2xs">
                       {caliberTypeLabels[movement.caliber_type] ?? movement.caliber_type}
                     </Badge>
                   )}

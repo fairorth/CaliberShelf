@@ -51,11 +51,11 @@ function StatusBadge({ status, dryRun }: { status: AgentRun["status"]; dryRun: b
           : "bg-foreground/10 text-muted-foreground"
   return (
     <span className="flex items-center gap-1.5">
-      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${color}`}>
+      <span className={`rounded-full px-2 py-0.5 text-2xs font-medium ${color}`}>
         {status}
       </span>
       {dryRun && (
-        <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[11px] font-medium text-sky-400">
+        <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-2xs font-medium text-sky-400">
           dry run
         </span>
       )}
@@ -67,7 +67,7 @@ function Kpi({ label, value, hint }: { label: string; value: string; hint?: stri
   return (
     <Card className="rounded-2xl">
       <CardContent className="pt-5">
-        <div className="text-2xl font-semibold tabular-nums">{value}</div>
+        <div className="text-md font-semibold tabular-nums">{value}</div>
         <div className="mt-0.5 text-sm text-muted-foreground">{label}</div>
         {hint && <div className="mt-1 text-xs text-muted-foreground/70">{hint}</div>}
       </CardContent>
@@ -87,7 +87,7 @@ export default async function AgentReviewPage() {
         >
           ‹ Reports
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           Agent Execution Review
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -99,9 +99,9 @@ export default async function AgentReviewPage() {
         <Card className="max-w-2xl">
           <CardContent className="pt-6 text-sm text-muted-foreground">
             No agent runs recorded yet. Apply migration{" "}
-            <code className="font-mono text-[12px]">00028_create_agent_runs.sql</code>, then
+            <code className="font-mono text-xs">00028_create_agent_runs.sql</code>, then
             run an agent (or{" "}
-            <code className="font-mono text-[12px]">npm run backfill-agent-runs</code> to import
+            <code className="font-mono text-xs">npm run backfill-agent-runs</code> to import
             past valuation runs).
           </CardContent>
         </Card>
@@ -118,7 +118,7 @@ export default async function AgentReviewPage() {
           {/* Per-agent rollup */}
           <Card className="overflow-hidden rounded-2xl">
             <CardHeader>
-              <CardTitle className="font-display text-[19px] font-semibold">By agent</CardTitle>
+              <CardTitle className="font-display text-md font-semibold">By agent</CardTitle>
             </CardHeader>
             <CardContent className="px-0 pb-0">
               <div className="divide-y divide-border/50">
@@ -155,7 +155,7 @@ export default async function AgentReviewPage() {
           {/* Run history */}
           <Card className="overflow-hidden rounded-2xl">
             <CardHeader>
-              <CardTitle className="text-base">Recent runs</CardTitle>
+              <CardTitle className="text-sm">Recent runs</CardTitle>
             </CardHeader>
             <CardContent className="px-0 pb-0">
               <div className="divide-y divide-border/50">

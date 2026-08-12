@@ -34,7 +34,7 @@ export function WearStatsView({ stats }: WearStatsViewProps) {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Most Worn */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Most Worn</h3>
+          <h3 className="text-md font-semibold">Most Worn</h3>
           {stats.mostWorn.length === 0 ? (
             <p className="text-sm text-muted-foreground">No data yet</p>
           ) : (
@@ -53,7 +53,7 @@ export function WearStatsView({ stats }: WearStatsViewProps) {
 
         {/* Least Worn */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Least Worn</h3>
+          <h3 className="text-md font-semibold">Least Worn</h3>
           {stats.leastWorn.length === 0 ? (
             <p className="text-sm text-muted-foreground">No data yet</p>
           ) : (
@@ -74,7 +74,7 @@ export function WearStatsView({ stats }: WearStatsViewProps) {
       {/* Never Worn */}
       {stats.neverWorn.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-md font-semibold">
             Never Worn{" "}
             <span className="text-sm font-normal text-muted-foreground">
               ({stats.neverWorn.length})
@@ -97,7 +97,7 @@ export function WearStatsView({ stats }: WearStatsViewProps) {
                       sizes="24px"
                     />
                   ) : (
-                    <span className="flex h-full w-full items-center justify-center bg-muted text-[8px] font-bold text-muted-foreground">
+                    <span className="flex h-full w-full items-center justify-center bg-muted text-2xs font-bold text-muted-foreground">
                       {w.brand.name.charAt(0)}
                     </span>
                   )}
@@ -128,7 +128,7 @@ function StatCard({
       <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-bold tracking-tight">
+      <p className="mt-1 text-md font-bold tracking-tight">
         {value}
         {suffix && <span className="text-sm font-normal text-muted-foreground">{suffix}</span>}
       </p>

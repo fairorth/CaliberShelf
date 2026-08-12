@@ -37,7 +37,7 @@ export function DisplayBoxPanel({ box }: { box: CurrentDisplayBox | null }) {
   return (
     <Card className="overflow-hidden rounded-2xl">
       <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <CardTitle className="flex items-center gap-2.5 font-display text-[19px] font-semibold">
+        <CardTitle className="flex items-center gap-2.5 font-display text-md font-semibold">
           <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-muted text-sm">
             🧰
           </span>

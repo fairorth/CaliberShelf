@@ -157,13 +157,13 @@ function SortableHeader({
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          "flex items-center gap-1 truncate text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80 transition-colors hover:text-foreground",
+          "flex items-center gap-1 truncate text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground/80 transition-colors hover:text-foreground",
           isActive && "text-foreground",
           alignRight ? "w-full justify-end" : "text-left"
         )}
       >
         {label}
-        <span className="text-[10px]">
+        <span className="text-2xs">
           {isActive ? (currentDir === "asc" ? "▲" : "▼") : "⇅"}
         </span>
       </button>
@@ -178,7 +178,7 @@ function LabelBadge({ label }: { label: Label }) {
   const colors = labelColorMap[label.color as LabelColor] ?? labelColorMap.blue
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-2xs font-medium ${colors.bg} ${colors.text}`}
     >
       {label.name}
     </span>
@@ -215,7 +215,7 @@ function HoverPhoto({
         {url ? (
           <Image src={url} alt={alt} fill className="object-cover" sizes={thumbPx} unoptimized />
         ) : (
-          <div className="flex h-full items-center justify-center text-lg text-muted-foreground">⌚</div>
+          <div className="flex h-full items-center justify-center text-md text-muted-foreground">⌚</div>
         )}
       </div>
       {url && (
@@ -366,7 +366,7 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <span className="text-5xl">⌚</span>
-        <h3 className="mt-4 text-lg font-semibold">No watches yet</h3>
+        <h3 className="mt-4 text-md font-semibold">No watches yet</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Add your first watch to start building your collection.
         </p>
@@ -387,7 +387,7 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
             </colgroup>
             <TableHeader>
               <TableRow>
-                <TableHead className="relative text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80">
+                <TableHead className="relative text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground/80">
                   Photo
                   <ResizeHandle onPointerDown={(e) => handleResizeStart(e, "photo")} />
                 </TableHead>
@@ -450,12 +450,12 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                         type="button"
                         onClick={() => onBrandClick(watch.brand_id)}
                         title={`Show all ${watch.brand.name}`}
-                        className="font-display text-[15.5px] font-semibold hover:underline"
+                        className="text-sm font-medium hover:underline"
                       >
                         {watch.brand.name}
                       </button>
                     ) : (
-                      <Link href={`/watch/${watch.id}/edit`} className="font-display text-[15.5px] font-semibold hover:underline">
+                      <Link href={`/watch/${watch.id}/edit`} className="text-sm font-medium hover:underline">
                         {watch.brand.name}
                       </Link>
                     )}
@@ -472,7 +472,7 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                     {watch.price_check_enabled && (
                       <span
                         title="Price checking enabled"
-                        className="ml-2 align-middle font-mono text-[13px] font-semibold text-emerald-600 dark:text-emerald-400"
+                        className="ml-2 align-middle font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400"
                       >
                         $$
                       </span>
@@ -487,25 +487,25 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                       "—"
                     )}
                   </TableCell>
-                  <TableCell className="font-mono text-[12px] text-muted-foreground">
+                  <TableCell className="font-mono text-xs text-muted-foreground">
                     {watch.reference_number || "—"}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {movementTypeLabel(watch)}
                   </TableCell>
-                  <TableCell className="font-mono text-[12px] text-muted-foreground">
+                  <TableCell className="font-mono text-xs text-muted-foreground">
                     {watch.movement
                       ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim()
                       : "—"}
                   </TableCell>
-                  <TableCell className="truncate text-[13px] text-muted-foreground">
+                  <TableCell className="truncate text-xs text-muted-foreground">
                     {watch.box || "\u2014"}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                  <TableCell className="text-right font-mono text-xs tabular-nums text-muted-foreground">
                     {watch.wear_count ?? 0}
                   </TableCell>
                   {showCost && (
-                    <TableCell className="text-right font-mono text-[13.5px] font-medium tabular-nums text-foreground">
+                    <TableCell className="text-right font-mono text-xs font-medium tabular-nums text-foreground">
                       {priceLabel(watch)}
                     </TableCell>
                   )}
@@ -538,12 +538,12 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                     unoptimized
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-lg text-muted-foreground">⌚</div>
+                  <div className="flex h-full items-center justify-center text-md text-muted-foreground">⌚</div>
                 )}
               </div>
               <div className="min-w-0 flex-1">
                 {watch.category && (
-                  <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <p className="truncate text-2xs uppercase tracking-wide text-muted-foreground">
                     {watch.category.name}
                   </p>
                 )}
@@ -557,7 +557,7 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                   {watch.price_check_enabled && (
                     <span
                       title="Price checking enabled"
-                      className="ml-2 align-middle font-mono text-[13px] font-semibold text-emerald-600 dark:text-emerald-400"
+                      className="ml-2 align-middle font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400"
                     >
                       $$
                     </span>

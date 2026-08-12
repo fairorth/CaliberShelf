@@ -96,7 +96,7 @@ export function StrapPhotoManager({ strapId, photos }: StrapPhotoManagerProps) {
                 <div className="h-full w-full bg-muted" />
               )}
               {photo.is_cover && (
-                <span className="absolute left-1 top-1 rounded-full bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-brass backdrop-blur">
+                <span className="absolute left-1 top-1 rounded-full bg-background/85 px-1.5 py-0.5 text-2xs font-medium text-brass backdrop-blur">
                   ★ cover
                 </span>
               )}
@@ -106,7 +106,7 @@ export function StrapPhotoManager({ strapId, photos }: StrapPhotoManagerProps) {
                     type="button"
                     onClick={() => handleSetCover(photo.id)}
                     disabled={isPending}
-                    className="rounded bg-background/80 px-1.5 py-0.5 text-[10px] hover:bg-background"
+                    className="rounded bg-background/80 px-1.5 py-0.5 text-2xs hover:bg-background"
                     title="Set as cover"
                   >
                     ★
@@ -116,7 +116,7 @@ export function StrapPhotoManager({ strapId, photos }: StrapPhotoManagerProps) {
                   type="button"
                   onClick={() => handleDelete(photo.id)}
                   disabled={isPending}
-                  className="rounded bg-background/80 px-1.5 py-0.5 text-[10px] hover:bg-background"
+                  className="rounded bg-background/80 px-1.5 py-0.5 text-2xs hover:bg-background"
                   title="Delete photo"
                 >
                   🗑️
@@ -155,7 +155,7 @@ export function StrapPhotoManager({ strapId, photos }: StrapPhotoManagerProps) {
       >
         {isPending ? "Uploading..." : "Upload Photo"}
       </Button>
-      <p className="text-center font-mono text-[11px] text-muted-foreground">
+      <p className="text-center font-mono text-2xs text-muted-foreground">
         or paste a copied image (Ctrl+V)
       </p>
     </div>

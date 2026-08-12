@@ -27,7 +27,7 @@ export default async function NewWatchPage() {
         <Button variant="ghost" size="sm" render={<Link href="/dashboard" />}>
           &larr; Gallery
         </Button>
-        <h1 className="font-display text-lg font-medium tracking-tight">Add a Watch</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Add a Watch</h1>
       </div>
 
       <WatchForm

@@ -51,12 +51,12 @@ export function CollapsibleReportGroup({
             <Link
               href={titleHref}
               onClick={(e) => e.stopPropagation()}
-              className="text-base font-semibold underline-offset-2 hover:underline"
+              className="text-sm font-semibold underline-offset-2 hover:underline"
             >
               {title}
             </Link>
           ) : (
-            <span className="text-base font-semibold">{title}</span>
+            <span className="text-sm font-semibold">{title}</span>
           )}
         </div>
         {summary != null && (

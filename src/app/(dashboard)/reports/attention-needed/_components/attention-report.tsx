@@ -9,14 +9,14 @@ import { ATTENTION_INCLUDE_WISHLIST_KEY } from "@/lib/preferences"
 function StatusBadge({ status }: { status: AttentionItem["status"] }) {
   if (status === "wishlist") {
     return (
-      <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[11px] font-medium text-sky-400">
+      <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-2xs font-medium text-sky-400">
         Wish List
       </span>
     )
   }
   if (status === "coming_soon") {
     return (
-      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-400">
+      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-2xs font-medium text-amber-400">
         Coming Soon
       </span>
     )
@@ -38,7 +38,7 @@ function AttentionSection({
   return (
     <Card className="overflow-hidden rounded-2xl">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2.5 font-display text-[19px] font-semibold">
+        <CardTitle className="flex items-center gap-2.5 font-display text-md font-semibold">
           <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-brass/15 text-sm">
             {icon}
           </span>
@@ -68,7 +68,7 @@ function AttentionSection({
                     {item.missing.map((m) => (
                       <span
                         key={m}
-                        className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-400"
+                        className="rounded-full bg-amber-500/10 px-2 py-0.5 text-2xs font-medium text-amber-400"
                       >
                         {m}
                       </span>
@@ -115,7 +115,7 @@ export function AttentionReportView({ report }: { report: AttentionReport }) {
   return (
     <>
       <div className="flex flex-wrap items-baseline gap-3">
-        <h1 className="font-display text-lg font-medium tracking-tight">Attention Needed</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Attention Needed</h1>
         <p className="text-sm text-muted-foreground">
           {total === 0
             ? "Everything is complete 🎉"

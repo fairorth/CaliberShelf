@@ -89,7 +89,7 @@ function SortableHeader({
         className="flex items-center gap-1 text-left font-medium hover:text-foreground"
       >
         {label}
-        <span className="text-[10px]">
+        <span className="text-2xs">
           {isActive ? (currentDir === "asc" ? "▲" : "▼") : "⇅"}
         </span>
       </button>

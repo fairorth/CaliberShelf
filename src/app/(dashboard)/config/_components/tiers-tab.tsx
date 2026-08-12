@@ -74,7 +74,7 @@ export function TiersTab({ initialConfig }: { initialConfig: TierConfigRow[] }) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Price Tiers</CardTitle>
+        <CardTitle className="text-sm">Price Tiers</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">

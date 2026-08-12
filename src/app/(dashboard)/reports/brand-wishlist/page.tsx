@@ -102,7 +102,7 @@ export default async function BrandWishlistPage() {
         >
           ‹ Reports
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">Brand Wish List</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Brand Wish List</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {wishlistBrands.length === 0 ? (
             <>No wish-list brands.</>
@@ -266,7 +266,7 @@ export default async function BrandWishlistPage() {
                       </div>
                     )}
 
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-2xs text-muted-foreground">
                       Catalog data from{" "}
                       {catalog.chronoscout_url ? (
                         <a

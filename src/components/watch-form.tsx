@@ -80,7 +80,7 @@ const FIELD = "bg-[#1b212a] border-white/12 focus-visible:border-brass/55 focus-
 // (E1: brass is never decoration).
 const CARD = "overflow-hidden rounded-2xl"
 const CARD_HEADER = ""
-const CARD_TITLE = "flex items-center gap-2.5 font-display text-[19px] font-semibold"
+const CARD_TITLE = "flex items-center gap-2.5 font-display text-md font-semibold"
 const CHIP = "flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground"
 
 // Serialise the form's submittable state for dirty comparison. FormData
@@ -515,7 +515,7 @@ export function WatchForm({
               <FormLabel htmlFor="reference_number">Reference Number</FormLabel>
               {refUnverified && (
                 <>
-                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-400">
+                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-2xs font-medium text-amber-400">
                     ⚠ needs verification
                   </span>
                   <button
@@ -524,7 +524,7 @@ export function WatchForm({
                       setRefUnverified(false)
                       markDirty()
                     }}
-                    className="text-[11px] font-medium text-primary underline-offset-2 hover:underline"
+                    className="text-2xs font-medium text-primary underline-offset-2 hover:underline"
                   >
                     Mark verified
                   </button>
@@ -550,7 +550,7 @@ export function WatchForm({
               }}
               className={cn(
                 FIELD,
-                "font-mono text-[13px]",
+                "font-mono text-xs",
                 (refAutofilled || refUnverified) &&
                   "border-amber-500/60 ring-1 ring-amber-500/30"
               )}
@@ -563,7 +563,7 @@ export function WatchForm({
               name="serial_number"
               placeholder="Private — only visible to you"
               defaultValue={watch?.serial_number ?? ""}
-              className={cn(FIELD, "font-mono text-[13px]")}
+              className={cn(FIELD, "font-mono text-xs")}
             />
           </div>
 
@@ -774,7 +774,7 @@ export function WatchForm({
               {specFetchResult.specs.suggested_caliber && (
                 <p className="text-muted-foreground">
                   Suggested caliber:{" "}
-                  <span className="font-mono text-[13px] text-foreground">
+                  <span className="font-mono text-xs text-foreground">
                     {specFetchResult.specs.suggested_caliber}
                   </span>{" "}
                   — select it in the Movement box above if it matches.
@@ -817,7 +817,7 @@ export function WatchForm({
           {/* Movement subsection */}
           <div className="flex items-center gap-2 pt-1">
             <span className="text-xs opacity-60">⏱️</span>
-            <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Movement</h4>
+            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground/60">Movement</h4>
             <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
           <div className="space-y-2">
@@ -840,7 +840,7 @@ export function WatchForm({
           {/* Case subsection */}
           <div className="flex items-center gap-2">
             <span className="text-xs opacity-60">🔩</span>
-            <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Case</h4>
+            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground/60">Case</h4>
             <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
           {/* Selects submit via hidden inputs (controlled value + name prop
@@ -1042,7 +1042,7 @@ export function WatchForm({
           {/* Complications subsection */}
           <div className="flex items-center gap-2">
             <span className="text-xs opacity-60">✨</span>
-            <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Complications</h4>
+            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground/60">Complications</h4>
             <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
           <div className="space-y-3">

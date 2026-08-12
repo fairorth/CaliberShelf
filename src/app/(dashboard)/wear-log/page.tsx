@@ -28,7 +28,7 @@ export default async function WearLogPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-lg font-medium tracking-tight">Wear Log</h1>
+      <h1 className="font-display text-lg font-semibold tracking-tight">Wear Log</h1>
 
       <DisplayBoxPanel box={displayBox} />
 

@@ -308,23 +308,23 @@ export function WatchDial({ watches, seed, stats }: WatchDialProps) {
         className="mt-[88px] text-center sm:mt-[112px]"
         style={{ animation: "csfade .5s ease" }}
       >
-        <div className="font-display text-[24px] font-semibold leading-[1.1] sm:text-[28px]">
+        <div className="font-display text-lg font-semibold leading-[1.1]">
           {active ? active.nickname || active.model : "—"}
         </div>
         {active && (
-          <div className="mt-0.5 font-display text-[17px] text-muted-foreground sm:text-[19px]">
+          <div className="mt-0.5 font-display text-md text-muted-foreground">
             {active.brand.name}
           </div>
         )}
         {active && metaLine(active) && (
-          <div className="mt-3 font-mono text-[12px] text-muted-foreground">
+          <div className="mt-3 font-mono text-xs text-muted-foreground">
             {metaLine(active)}
           </div>
         )}
         {active && (
           <Link
             href={`/watch/${active.id}/edit`}
-            className="mt-5 inline-block rounded-[10px] border border-primary px-5 py-2 text-[13px] text-primary transition-colors hover:bg-primary/10"
+            className="mt-5 inline-block rounded-[10px] border border-primary px-5 py-2 text-xs text-primary transition-colors hover:bg-primary/10"
           >
             View watch →
           </Link>
@@ -332,7 +332,7 @@ export function WatchDial({ watches, seed, stats }: WatchDialProps) {
       </div>
 
       {/* Stat line */}
-      <div className="mt-10 flex gap-[26px] font-mono text-[12px] text-muted-foreground">
+      <div className="mt-10 flex gap-[26px] font-mono text-xs text-muted-foreground">
         <span>
           <span className="text-foreground/80">{stats.watches}</span> watches
         </span>

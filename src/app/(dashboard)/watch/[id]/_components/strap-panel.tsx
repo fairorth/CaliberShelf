@@ -66,7 +66,7 @@ export function StrapPanel({ watchId, watchStrapWidthMm, straps, strapLabels }: 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">
+        <CardTitle className="text-sm">
           Strap
           {watchStrapWidthMm != null && (
             <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
@@ -86,7 +86,7 @@ export function StrapPanel({ watchId, watchStrapWidthMm, straps, strapLabels }: 
                 className="h-12 w-12 shrink-0 rounded-md border object-cover"
               />
             ) : (
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border bg-muted text-lg opacity-60">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border bg-muted text-md opacity-60">
                 〰️
               </span>
             )}

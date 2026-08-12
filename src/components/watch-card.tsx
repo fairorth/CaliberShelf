@@ -57,7 +57,7 @@ export function WatchCard({ watch }: WatchCardProps) {
 
           {/* Storage box */}
           {watch.box && (
-            <p className="truncate font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+            <p className="truncate font-mono text-2xs uppercase tracking-[0.06em] text-muted-foreground">
               ▣ {watch.box}
             </p>
           )}

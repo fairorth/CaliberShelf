@@ -145,7 +145,7 @@ export function CatalogCombobox({ defaultQuery = "", onApply, disabled }: Catalo
           })}
         </div>
 
-        <p className="border-t px-3 py-1.5 text-[11px] text-muted-foreground">
+        <p className="border-t px-3 py-1.5 text-2xs text-muted-foreground">
           Data provided by Chronoscout
         </p>
       </PopoverContent>

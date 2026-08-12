@@ -129,7 +129,7 @@ export function PhotoUploader({ watchId }: PhotoUploaderProps) {
           >
             {isPending ? "Uploading..." : "Upload Photo"}
           </Button>
-          <p className="text-center font-mono text-[11px] text-muted-foreground">
+          <p className="text-center font-mono text-2xs text-muted-foreground">
             or paste a copied image (Ctrl+V)
           </p>
         </div>

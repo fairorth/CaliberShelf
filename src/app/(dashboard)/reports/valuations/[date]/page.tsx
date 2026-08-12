@@ -57,7 +57,7 @@ export default async function ValuationRunPage({
         >
           <ArrowLeft className="h-3.5 w-3.5" /> All valuation runs
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           Valuation Run — {formatRunDate(date)}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -77,7 +77,7 @@ export default async function ValuationRunPage({
         {rows.map((v) => (
           <Card key={v.id} className="overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="flex flex-wrap items-baseline justify-between gap-2 text-base">
+              <CardTitle className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
                 <Link
                   href={`/watch/${v.watch?.id}/edit`}
                   className="underline-offset-2 hover:underline"
@@ -93,7 +93,7 @@ export default async function ValuationRunPage({
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <span className="font-mono text-xl font-semibold tabular-nums text-foreground">
+                <span className="font-mono text-md font-semibold tabular-nums text-foreground">
                   {formatCurrency(v.value_mid_cents, v.currency, true)}
                 </span>
                 {v.value_low_cents != null && v.value_high_cents != null && (

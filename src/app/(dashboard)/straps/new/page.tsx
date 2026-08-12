@@ -19,7 +19,7 @@ export default async function NewStrapPage() {
         >
           ‹ Straps
         </Link>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Add Strap</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Add Strap</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Save the strap first — you can add photos on the next screen.
         </p>

@@ -50,7 +50,7 @@ export default async function ByCategoryPage() {
         >
           ‹ Reports
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">Watches by Category</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Watches by Category</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {owned.length} owned {owned.length === 1 ? "watch" : "watches"} across{" "}
           {ordered.length} {ordered.length === 1 ? "category" : "categories"} ·{" "}
@@ -98,7 +98,7 @@ export default async function ByCategoryPage() {
                             <span className="ml-2 text-xs text-muted-foreground">{w.nickname}</span>
                           )}
                           {w.is_coming_soon && (
-                            <span className="ml-2 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
+                            <span className="ml-2 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-2xs font-medium text-amber-400">
                               coming soon
                             </span>
                           )}

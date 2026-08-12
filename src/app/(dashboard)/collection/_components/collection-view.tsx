@@ -369,7 +369,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-lg font-medium tracking-tight">Collection</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Collection</h1>
 
         <SearchInput
           value={query}

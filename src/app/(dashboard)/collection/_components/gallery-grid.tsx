@@ -24,7 +24,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <span className="text-5xl">⌚</span>
-        <h3 className="mt-4 text-lg font-semibold">No watches match this filter</h3>
+        <h3 className="mt-4 text-md font-semibold">No watches match this filter</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Try changing the category filter above.
         </p>
@@ -68,7 +68,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
               so it never covers the watch image. */}
           <div className="flex h-7 items-center px-3 pt-1">
             {typeLabel && (
-              <span className="rounded-full bg-white/[0.06] px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.08em] text-muted-foreground">
+              <span className="rounded-full bg-white/[0.06] px-2 py-0.5 font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
                 {typeLabel}
               </span>
             )}
@@ -81,7 +81,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
               {watch.price_check_enabled && (
                 <span
                   title="Price checking enabled"
-                  className="font-mono text-[11px] font-semibold text-emerald-600 dark:text-emerald-400"
+                  className="font-mono text-2xs font-semibold text-emerald-600 dark:text-emerald-400"
                 >
                   $$
                 </span>
@@ -89,7 +89,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
               {wearCount > 0 && (
                 <span
                   title={`Worn ${wearCount} ${wearCount === 1 ? "time" : "times"}`}
-                  className="font-mono text-[10px] text-muted-foreground"
+                  className="font-mono text-2xs text-muted-foreground"
                 >
                   ◷ {wearCount}
                 </span>
@@ -117,14 +117,14 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
             )}
           </div>
           <div className="px-3.5 pb-4 pt-3">
-            <p className="truncate font-display text-base font-semibold leading-tight">
+            <p className="truncate text-sm font-medium leading-tight">
               {watch.brand.name}
             </p>
-            <p className="truncate text-[13px] text-muted-foreground">{watch.model}</p>
+            <p className="truncate text-xs text-muted-foreground">{watch.model}</p>
             {watch.box && (
               <p
                 title={`Stored in ${watch.box}`}
-                className="mt-1 truncate font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground/70"
+                className="mt-1 truncate font-mono text-2xs uppercase tracking-[0.06em] text-muted-foreground/70"
               >
                 ▣ {watch.box}
               </p>
@@ -134,11 +134,11 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
                 {/* Caliber name wraps up to 3 lines (then ellipsis) so long
                     movement names aren't clipped to a few characters when the
                     price shares the row. */}
-                <span className="min-w-0 flex-1 font-mono text-[10.5px] leading-snug text-muted-foreground/80 [overflow-wrap:anywhere] line-clamp-3">
+                <span className="min-w-0 flex-1 font-mono text-2xs leading-snug text-muted-foreground/80 [overflow-wrap:anywhere] line-clamp-3">
                   {caliberLine ?? ""}
                 </span>
                 {priceLabel && (
-                  <span className="shrink-0 font-mono text-[13px] font-medium tabular-nums text-foreground">
+                  <span className="shrink-0 font-mono text-xs font-medium tabular-nums text-foreground">
                     {priceLabel}
                   </span>
                 )}

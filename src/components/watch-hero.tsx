@@ -308,26 +308,26 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
 
       {/* Caption — "now showing" */}
       <div key={current.id} className="mt-[88px] text-center sm:mt-[112px]" style={{ animation: "csfade .5s ease" }}>
-        <div className="font-display text-[20px] font-bold leading-[1.15] sm:text-[23px]">
+        <div className="font-display text-md font-bold leading-[1.15]">
           {current.brand.name}
         </div>
-        <div className="mt-0.5 font-display text-[20px] font-normal leading-[1.15] text-muted-foreground sm:text-[23px]">
+        <div className="mt-0.5 font-display text-md font-normal leading-[1.15] text-muted-foreground">
           {current.nickname || current.model}
         </div>
         {metaLine(current) && (
-          <div className="mt-3 font-mono text-[12px] text-muted-foreground">{metaLine(current)}</div>
+          <div className="mt-3 font-mono text-xs text-muted-foreground">{metaLine(current)}</div>
         )}
-        <div className="mt-1.5 font-mono text-[12px] text-muted-foreground">{wearLine(current)}</div>
+        <div className="mt-1.5 font-mono text-xs text-muted-foreground">{wearLine(current)}</div>
         <Link
           href={`/watch/${current.id}/edit`}
-          className="mt-5 inline-block rounded-[10px] border border-primary px-5 py-2 text-[13px] text-primary transition-colors hover:bg-primary/10"
+          className="mt-5 inline-block rounded-[10px] border border-primary px-5 py-2 text-xs text-primary transition-colors hover:bg-primary/10"
         >
           View watch →
         </Link>
       </div>
 
       {/* Stat line */}
-      <div className="mt-10 flex gap-[26px] font-mono text-[12px] text-muted-foreground">
+      <div className="mt-10 flex gap-[26px] font-mono text-xs text-muted-foreground">
         <span>
           <span className="text-foreground/80">{stats.watches}</span> watches
         </span>

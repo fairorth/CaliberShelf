@@ -10,6 +10,20 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-jetbrains-mono);
   --font-display: var(--font-fraunces);
+  /* The six-step type scale (design system §2). No other font sizes exist:
+     2xs 11px eyebrows/table headers/badges · xs 13px mono data/helper text ·
+     sm 15px body/labels/cells · md 19px card titles · lg 26px page titles ·
+     xl 38px the one hero size. Never write an arbitrary text-[Npx]. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1.4;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-md: 1.1875rem;
+  --text-md--line-height: 1.35;
+  --text-lg: 1.625rem;
+  --text-lg--line-height: 1.25;
+  --text-xl: 2.375rem;
+  --text-xl--line-height: 1.15;
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);

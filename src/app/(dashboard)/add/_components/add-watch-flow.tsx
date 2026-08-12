@@ -163,11 +163,11 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
       </Link>
 
       <div className="mb-6 mt-3.5">
-        <div className="mb-2.5 font-mono text-[11px] tracking-[3px] text-muted-foreground">NEW ENTRY</div>
-        <h1 className="font-display text-3xl font-semibold leading-[1.05] sm:text-[34px]">
+        <div className="mb-2.5 font-mono text-2xs tracking-[3px] text-muted-foreground">NEW ENTRY</div>
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           Add a Watch
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-[14.5px]">
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Just the essentials to file it — brand, model, and a category. Photos, specs &amp;
           dial framing follow on the Edit page.
         </p>
@@ -205,7 +205,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm text-foreground">{file.name}</div>
-                <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+                <div className="mt-0.5 font-mono text-2xs text-muted-foreground">
                   {formatSize(file.size)} · will be set as cover
                 </div>
               </div>
@@ -228,10 +228,10 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
                 dragging && "border-brass/60"
               )}
             >
-              <span className="grid h-11 w-11 place-items-center rounded-[11px] bg-muted text-lg text-muted-foreground">
+              <span className="grid h-11 w-11 place-items-center rounded-[11px] bg-muted text-md text-muted-foreground">
                 ⬆
               </span>
-              <span className="text-sm text-foreground sm:text-[14.5px]">
+              <span className="text-sm text-foreground sm:text-sm">
                 {processing ? (
                   "Optimizing photo…"
                 ) : (
@@ -240,7 +240,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
                   </>
                 )}
               </span>
-              <span className="font-mono text-[11px] text-muted-foreground">
+              <span className="font-mono text-2xs text-muted-foreground">
                 JPG, PNG, HEIC or WebP
               </span>
             </button>
@@ -321,7 +321,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
                 className="h-11 pl-7"
               />
             </div>
-            <p className="text-[12px] leading-relaxed text-muted-foreground">
+            <p className="text-xs leading-relaxed text-muted-foreground">
               For wish-list watches, use the estimated cost to buy it.
             </p>
           </div>
@@ -374,7 +374,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
             Save & close
           </Button>
         </div>
-        <p className="mt-3.5 text-[12.5px] leading-relaxed text-muted-foreground">
+        <p className="mt-3.5 text-xs leading-relaxed text-muted-foreground">
           “Save &amp; add details” opens the full Edit page (specs, more photos, dial framing).
           “Save &amp; close” files it and returns to the watch.
         </p>

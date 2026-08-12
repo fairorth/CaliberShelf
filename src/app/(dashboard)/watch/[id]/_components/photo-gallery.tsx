@@ -136,7 +136,7 @@ export function PhotoGallery({ photos, photoUrls, fullPhotoUrls, watchId }: Phot
               </button>
 
               {photo.is_cover && (
-                <Badge className="pointer-events-none absolute left-2 top-2 text-[10px]">
+                <Badge className="pointer-events-none absolute left-2 top-2 text-2xs">
                   Cover
                 </Badge>
               )}

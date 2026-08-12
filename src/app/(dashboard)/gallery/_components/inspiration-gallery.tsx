@@ -69,7 +69,7 @@ function GalleryTile({
             className="w-full transition-transform duration-200 group-hover:scale-[1.02]"
           />
         ) : (
-          <div className="flex aspect-square w-full items-center justify-center bg-muted text-3xl opacity-40">
+          <div className="flex aspect-square w-full items-center justify-center bg-muted text-lg opacity-40">
             🖼️
           </div>
         )}
@@ -163,7 +163,7 @@ export function InspirationGallery({ images }: InspirationGalleryProps) {
         >
           {isUploading ? "Uploading…" : "Upload Image"}
         </Button>
-        <p className="font-mono text-[11px] text-muted-foreground">
+        <p className="font-mono text-2xs text-muted-foreground">
           or paste a copied image (Ctrl+V)
         </p>
       </div>
@@ -171,7 +171,7 @@ export function InspirationGallery({ images }: InspirationGalleryProps) {
       {images.length === 0 && !preview ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-16 text-center">
           <span className="text-5xl">📸</span>
-          <h3 className="mt-4 text-lg font-semibold">Nothing pinned yet</h3>
+          <h3 className="mt-4 text-md font-semibold">Nothing pinned yet</h3>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
             See a watch photo that makes you stop scrolling? Copy it and paste it
             here — build the board your photo lab aspires to.

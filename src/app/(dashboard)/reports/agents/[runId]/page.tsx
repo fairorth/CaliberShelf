@@ -40,7 +40,7 @@ function ActionBadge({ action }: { action: AgentRunItem["action"] }) {
           ? "bg-rose-500/15 text-rose-400"
           : "bg-foreground/10 text-muted-foreground"
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${color}`}>
+    <span className={`rounded-full px-2 py-0.5 text-2xs font-medium ${color}`}>
       {action}
     </span>
   )
@@ -50,7 +50,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="font-mono text-sm tabular-nums">{value}</div>
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground/70">{label}</div>
+      <div className="text-2xs uppercase tracking-wide text-muted-foreground/70">{label}</div>
     </div>
   )
 }
@@ -82,10 +82,10 @@ export default async function AgentRunPage({
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Agent Execution Review
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           {AGENT_LABEL[run.agent] ?? run.agent}
           {run.dry_run && (
-            <span className="ml-2 rounded-full bg-sky-500/15 px-2 py-0.5 align-middle text-[11px] font-medium text-sky-400">
+            <span className="ml-2 rounded-full bg-sky-500/15 px-2 py-0.5 align-middle text-2xs font-medium text-sky-400">
               dry run
             </span>
           )}
@@ -136,7 +136,7 @@ export default async function AgentRunPage({
       {/* Audit trail */}
       <Card className="overflow-hidden rounded-2xl">
         <CardHeader>
-          <CardTitle className="text-base">
+          <CardTitle className="text-sm">
             Audit trail{items.length > 0 ? ` · ${items.length} item${items.length === 1 ? "" : "s"}` : ""}
           </CardTitle>
         </CardHeader>

@@ -183,7 +183,7 @@ export function CollectionFiltersDialog({
         <SlidersHorizontal className="h-4 w-4" />
         <span className="hidden sm:inline">Filters</span>
         {count > 0 && (
-          <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 text-[11px] font-semibold text-background">
+          <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 text-2xs font-semibold text-background">
             {count}
           </span>
         )}

@@ -169,7 +169,7 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
       {/* Settings */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Settings</CardTitle>
+          <CardTitle className="text-sm">Settings</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="max-w-sm space-y-2">
@@ -240,7 +240,7 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
       {images.length > 0 && !importing && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">
+            <CardTitle className="text-sm">
               {images.length} {images.length === 1 ? "image" : "images"} selected
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={clearAll}>
@@ -261,13 +261,13 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); removeImage(i) }}
-                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-[10px] text-white opacity-0 transition-opacity hover:bg-destructive group-hover:opacity-100"
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-2xs text-white opacity-0 transition-opacity hover:bg-destructive group-hover:opacity-100"
                     title="Remove"
                   >
                     ✕
                   </button>
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1 pb-1 pt-4">
-                    <p className="truncate text-[9px] font-medium text-white">
+                    <p className="truncate text-2xs font-medium text-white">
                       Batch {i + 1}
                     </p>
                   </div>
@@ -278,7 +278,7 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-border text-2xl text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/30"
+                className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-border text-md text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/30"
                 title="Add more images"
               >
                 +
@@ -325,7 +325,7 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
       {result && (
         <Card className={result.errors.length > 0 ? "border-amber-500/30" : "border-emerald-500/30"}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-sm flex items-center gap-2">
               {result.errors.length === 0 ? (
                 <>
                   <span className="text-emerald-600">✓</span>

@@ -253,7 +253,7 @@ export function BrandsTab({ brands, watchCountByBrand }: BrandsTabProps) {
       {/* Add brand form */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Add Brand</CardTitle>
+          <CardTitle className="text-sm">Add Brand</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={formAction} className="flex items-end gap-3">

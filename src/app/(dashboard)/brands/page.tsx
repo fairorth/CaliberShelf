@@ -17,7 +17,7 @@ export default async function BrandsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-lg font-medium tracking-tight">Brands</h1>
+      <h1 className="font-display text-lg font-semibold tracking-tight">Brands</h1>
       <BrandsTab brands={brands} watchCountByBrand={watchCountByBrand} />
     </div>
   )

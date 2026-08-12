@@ -28,7 +28,7 @@ export function ValuationPanel({ valuations, purchasePriceCents }: ValuationPane
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2.5 font-display text-[19px] font-semibold">
+        <CardTitle className="flex items-center gap-2.5 font-display text-md font-semibold">
           <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-muted text-muted-foreground">
             <TrendingUp className="h-4 w-4" />
           </span>
@@ -39,12 +39,12 @@ export function ValuationPanel({ valuations, purchasePriceCents }: ValuationPane
         {!latest ? (
           <p className="text-sm text-muted-foreground">
             No valuations yet. Enable &ldquo;Perform price checking&rdquo; above (requires a
-            reference number), then run <code className="font-mono text-[12px]">npm run price-check</code>.
+            reference number), then run <code className="font-mono text-xs">npm run price-check</code>.
           </p>
         ) : (
           <>
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <span className="font-mono text-3xl font-semibold tabular-nums text-foreground">
+              <span className="font-mono text-lg font-semibold tabular-nums text-foreground">
                 {formatCurrency(latest.value_mid_cents, latest.currency, true)}
               </span>
               {latest.value_low_cents != null && latest.value_high_cents != null && (

@@ -25,7 +25,7 @@ export default async function StrapsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Straps</h1>
+          <h1 className="font-display text-lg font-semibold tracking-tight">Straps</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {straps.length} {straps.length === 1 ? "strap" : "straps"}
             {mounted > 0 && <> · {mounted} mounted</>}
@@ -74,23 +74,23 @@ export default async function StrapsPage() {
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {strap.quick_release && (
-                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-2xs font-medium text-primary">
                         quick release
                       </span>
                     )}
                     {strap.micro_adjust && (
-                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-2xs font-medium text-primary">
                         micro-adjust
                       </span>
                     )}
                   </div>
                   {strap.current_watch && (
-                    <p className="truncate text-[11px] text-emerald-600 dark:text-emerald-400">
+                    <p className="truncate text-2xs text-emerald-600 dark:text-emerald-400">
                       On: {watchLabel(strap.current_watch)}
                     </p>
                   )}
                   {strap.source_watch && (
-                    <p className="truncate text-[11px] text-muted-foreground">
+                    <p className="truncate text-2xs text-muted-foreground">
                       Came with {watchLabel(strap.source_watch)}
                     </p>
                   )}

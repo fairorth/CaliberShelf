@@ -76,7 +76,7 @@ function Matrix({ map }: { map: CollectionMap }) {
               <th key={c.key} className="align-bottom px-0.5 pb-1">
                 <div className="flex flex-col items-center gap-1">
                   <Swatch hex={c.hex} />
-                  <span className="w-12 truncate text-center text-[10px] leading-tight text-muted-foreground">
+                  <span className="w-12 truncate text-center text-2xs leading-tight text-muted-foreground">
                     {c.label.split(" ")[0]}
                   </span>
                 </div>
@@ -154,19 +154,19 @@ function Scatter({ map }: { map: CollectionMap }) {
       ))}
       {/* axes labels */}
       {xticks.map((t) => (
-        <text key={`tx${t}`} x={sx(t)} y={H - pad.b + 16} textAnchor="middle" className="fill-muted-foreground text-[10px]">
+        <text key={`tx${t}`} x={sx(t)} y={H - pad.b + 16} textAnchor="middle" className="fill-muted-foreground text-2xs">
           {t}
         </text>
       ))}
       {yticks.map((t) => (
-        <text key={`ty${t}`} x={pad.l - 8} y={sy(t) + 3} textAnchor="end" className="fill-muted-foreground text-[10px]">
+        <text key={`ty${t}`} x={pad.l - 8} y={sy(t) + 3} textAnchor="end" className="fill-muted-foreground text-2xs">
           {t}
         </text>
       ))}
-      <text x={(pad.l + W - pad.r) / 2} y={H - 4} textAnchor="middle" className="fill-muted-foreground text-[11px]">
+      <text x={(pad.l + W - pad.r) / 2} y={H - 4} textAnchor="middle" className="fill-muted-foreground text-2xs">
         Case diameter (mm)
       </text>
-      <text x={12} y={(pad.t + H - pad.b) / 2} textAnchor="middle" className="fill-muted-foreground text-[11px]" transform={`rotate(-90 12 ${(pad.t + H - pad.b) / 2})`}>
+      <text x={12} y={(pad.t + H - pad.b) / 2} textAnchor="middle" className="fill-muted-foreground text-2xs" transform={`rotate(-90 12 ${(pad.t + H - pad.b) / 2})`}>
         Thickness (mm)
       </text>
       {/* points */}
@@ -250,7 +250,7 @@ function PriceCategoryScatter({ map }: { map: CollectionMap }) {
         return (
           <g key={b.tier}>
             <line x1={pad.l} y1={top} x2={W - pad.r} y2={top} stroke="currentColor" className="text-border/40" strokeWidth={1} />
-            <text x={pad.l - 8} y={center + 3} textAnchor="end" className="fill-muted-foreground text-[10px]">
+            <text x={pad.l - 8} y={center + 3} textAnchor="end" className="fill-muted-foreground text-2xs">
               {b.short}
             </text>
           </g>
@@ -263,7 +263,7 @@ function PriceCategoryScatter({ map }: { map: CollectionMap }) {
           x={cx(ci)}
           y={H - pad.b + 14}
           textAnchor="end"
-          className="fill-muted-foreground text-[10px]"
+          className="fill-muted-foreground text-2xs"
           transform={`rotate(-30 ${cx(ci)} ${H - pad.b + 14})`}
         >
           {name.length > 12 ? name.slice(0, 11) + "…" : name}
@@ -298,7 +298,7 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
       {map.insights.length > 0 && (
         <Card className="overflow-hidden rounded-2xl">
           <CardHeader className="pb-2">
-            <CardTitle className="font-display text-[17px] font-semibold">What the map shows</CardTitle>
+            <CardTitle className="font-display text-md font-semibold">What the map shows</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-1.5 text-sm">
@@ -316,7 +316,7 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
       {/* Size × Color matrix — the headline */}
       <Card className="overflow-hidden rounded-2xl">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Size × dial color</CardTitle>
+          <CardTitle className="text-sm">Size × dial color</CardTitle>
         </CardHeader>
         <CardContent>
           <Matrix map={map} />

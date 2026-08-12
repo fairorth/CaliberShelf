@@ -222,7 +222,7 @@ export function QuickCapture({ watches }: QuickCaptureProps) {
                     />
                   </div>
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-md bg-muted text-lg">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-md bg-muted text-md">
                     ⌚
                   </div>
                 )}

@@ -64,14 +64,14 @@ export function CalendarDayCell({
                   sizes="24px"
                 />
               ) : (
-                <span className="flex h-full w-full items-center justify-center bg-muted text-[8px] font-bold text-muted-foreground">
+                <span className="flex h-full w-full items-center justify-center bg-muted text-2xs font-bold text-muted-foreground">
                   {log.watch.brand.name.charAt(0)}
                 </span>
               )}
             </div>
           ))}
           {overflow > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-medium text-muted-foreground sm:h-6 sm:w-6">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-2xs font-medium text-muted-foreground sm:h-6 sm:w-6">
               +{overflow}
             </span>
           )}

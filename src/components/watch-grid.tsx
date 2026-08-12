@@ -10,7 +10,7 @@ export function WatchGrid({ watches }: WatchGridProps) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
         <span className="text-4xl">⌚</span>
-        <h3 className="mt-4 text-lg font-semibold">No watches yet</h3>
+        <h3 className="mt-4 text-md font-semibold">No watches yet</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Add your first watch to start building your collection.
         </p>

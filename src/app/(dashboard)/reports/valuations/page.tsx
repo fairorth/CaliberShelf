@@ -24,7 +24,7 @@ export default async function ValuationsReportPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-lg font-medium tracking-tight">Watch Valuations</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Watch Valuations</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Each row is a valuation run. Open a date to see every watch valued that day and
           the evidence behind each estimate.
@@ -35,7 +35,7 @@ export default async function ValuationsReportPage() {
         <Card className="max-w-2xl">
           <CardContent className="pt-6 text-sm text-muted-foreground">
             No valuation runs yet. Flag watches with &ldquo;Perform price checking&rdquo; and run{" "}
-            <code className="font-mono text-[12px]">npm run price-check</code>.
+            <code className="font-mono text-xs">npm run price-check</code>.
           </CardContent>
         </Card>
       ) : (
@@ -48,7 +48,7 @@ export default async function ValuationsReportPage() {
             >
               <Card className="transition-colors group-hover:border-primary/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{formatRunDate(run.date)}</CardTitle>
+                  <CardTitle className="text-sm">{formatRunDate(run.date)}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm">
                   <span>

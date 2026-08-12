@@ -145,7 +145,7 @@ export function WearCalendar({
           >
             &larr;
           </Button>
-          <h2 className="min-w-[160px] text-center text-lg font-semibold">
+          <h2 className="min-w-[160px] text-center text-md font-semibold">
             {MONTH_NAMES[month - 1]} {year}
           </h2>
           <Button

@@ -94,7 +94,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             href="/dashboard"
             onClick={guardClick("/dashboard")}
             className={cn(
-              "rounded-lg px-4 py-1.5 text-[13.5px] font-medium transition-colors",
+              "rounded-lg px-4 py-1.5 text-xs font-medium transition-colors",
               isHome
                 ? "bg-brass/15 text-brass"
                 : "text-muted-foreground hover:text-foreground"
@@ -106,7 +106,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             href="/collection"
             onClick={guardClick("/collection")}
             className={cn(
-              "rounded-lg px-4 py-1.5 text-[13.5px] font-medium transition-colors",
+              "rounded-lg px-4 py-1.5 text-xs font-medium transition-colors",
               isCollection
                 ? "bg-brass/15 text-brass"
                 : "text-muted-foreground hover:text-foreground"
@@ -149,10 +149,10 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
           <Link href="/dashboard" onClick={guardClick("/dashboard")} className="flex items-center gap-2">
             <CaliberShelfMark size={26} className="rounded-[7px]" />
             <span className="flex items-baseline gap-1.5">
-              <span className="font-display text-xl font-medium tracking-tight">
+              <span className="font-display text-md font-medium tracking-tight">
                 CaliberShelf
               </span>
-              <span className="font-mono text-[10px] text-muted-foreground">
+              <span className="font-mono text-2xs text-muted-foreground">
                 v{APP_VERSION}
               </span>
             </span>

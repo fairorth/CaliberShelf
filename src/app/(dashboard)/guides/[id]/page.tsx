@@ -34,7 +34,7 @@ function StatusBadge({ status }: { status: GuideEntryDisplayStatus }) {
   switch (status) {
     case "owned":
       return (
-        <span className="inline-flex items-center rounded-full bg-chart-2/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-chart-2 ring-1 ring-chart-2/30">
+        <span className="inline-flex items-center rounded-full bg-chart-2/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-chart-2 ring-1 ring-chart-2/30">
           Owned
         </span>
       )
@@ -44,13 +44,13 @@ function StatusBadge({ status }: { status: GuideEntryDisplayStatus }) {
       return <WishlistBadge />
     case "passed":
       return (
-        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">
+        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-muted-foreground/60">
           Passed
         </span>
       )
     default:
       return (
-        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
           Hunting
         </span>
       )
@@ -95,9 +95,9 @@ export default async function GuideDetailPage({
         >
           ‹ Guides
         </Link>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           {guide.name}{" "}
-          <span className="text-base font-normal text-muted-foreground">
+          <span className="text-sm font-normal text-muted-foreground">
             Master Collection Guide{guide.version ? ` · v${guide.version}` : ""}
           </span>
         </h1>
@@ -180,7 +180,7 @@ export default async function GuideDetailPage({
                         <p className="mt-0.5 text-xs text-muted-foreground">{e.historical_role}</p>
                       )}
                       {e.recommended_variant && status !== "owned" && (
-                        <p className="mt-0.5 text-[11px] italic text-muted-foreground/80">
+                        <p className="mt-0.5 text-2xs italic text-muted-foreground/80">
                           {e.recommended_variant}
                         </p>
                       )}

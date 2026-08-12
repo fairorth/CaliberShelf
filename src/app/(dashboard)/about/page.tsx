@@ -189,14 +189,14 @@ export default async function AboutPage() {
         <div className="mx-auto mb-5 w-fit">
           <CaliberShelfMark size={64} className="rounded-2xl" />
         </div>
-        <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+        <h1 className="font-display text-xl font-semibold tracking-tight">
           CaliberShelf
         </h1>
-        <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-muted-foreground sm:text-base">
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-sm">
           Part collection manager, part private research lab — a personal horology platform
           where a fleet of AI agents handles the busywork and your watches take center stage.
         </p>
-        <div className="mt-4 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[2px] text-muted-foreground">
+        <div className="mt-4 flex items-center justify-center gap-2 font-mono text-2xs uppercase tracking-[2px] text-muted-foreground">
           <span className="h-px w-8 bg-border" />
           v{APP_VERSION}
           <span className="h-px w-8 bg-border" />
@@ -215,7 +215,7 @@ export default async function AboutPage() {
       {SECTIONS.map((section) => (
         <section key={section.heading} className="space-y-4">
           <div>
-            <h2 className="font-display text-2xl font-semibold tracking-tight">
+            <h2 className="font-display text-md font-semibold tracking-tight">
               {section.heading}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">{section.blurb}</p>
@@ -226,12 +226,12 @@ export default async function AboutPage() {
                 key={f.title}
                 className="flex gap-3.5 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-brass/40"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-lg">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-md">
                   {f.icon}
                 </span>
                 <div className="min-w-0">
                   <h3 className="text-sm font-semibold">{f.title}</h3>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                     {f.text}
                   </p>
                 </div>

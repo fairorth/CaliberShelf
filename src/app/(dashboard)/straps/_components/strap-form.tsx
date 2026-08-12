@@ -42,7 +42,7 @@ export function StrapForm({ strap, watches, submitLabel }: StrapFormProps) {
     <form action={formAction} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Strap Details</CardTitle>
+          <CardTitle className="text-sm">Strap Details</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -130,7 +130,7 @@ export function StrapForm({ strap, watches, submitLabel }: StrapFormProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Source & Mounting</CardTitle>
+          <CardTitle className="text-sm">Source & Mounting</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -183,7 +183,7 @@ export function StrapForm({ strap, watches, submitLabel }: StrapFormProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Purchase</CardTitle>
+          <CardTitle className="text-sm">Purchase</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">

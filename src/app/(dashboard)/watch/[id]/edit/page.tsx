@@ -101,7 +101,7 @@ export default async function EditWatchPage({
   return (
     <div className="space-y-6 pb-28">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           {watch.brand.name}{" "}
           <span className="text-muted-foreground">{watch.nickname || watch.model}</span>
         </h1>

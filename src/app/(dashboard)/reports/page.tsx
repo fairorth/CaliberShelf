@@ -77,17 +77,17 @@ const REPORTS: ReportLink[] = [
 export default function ReportsPage() {
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-lg font-medium tracking-tight">Reports</h1>
+      <h1 className="font-display text-lg font-semibold tracking-tight">Reports</h1>
 
       <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
         {REPORTS.map((report) => (
           <Link key={report.slug} href={`/reports/${report.slug}`} className="group block">
             <Card className="h-full transition-colors group-hover:border-primary/50">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between gap-2 text-base">
+                <CardTitle className="flex items-center justify-between gap-2 text-sm">
                   {report.title}
                   {!report.available && (
-                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-400">
+                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-2xs font-medium text-amber-400">
                       Coming soon
                     </span>
                   )}

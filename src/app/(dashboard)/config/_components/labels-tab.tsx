@@ -51,7 +51,7 @@ export function LabelsTab({ labels }: LabelsTabProps) {
       {/* Add label form */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Add Label</CardTitle>
+          <CardTitle className="text-sm">Add Label</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={formAction} className="space-y-4">

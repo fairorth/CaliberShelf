@@ -48,7 +48,7 @@ export default async function DealsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-baseline gap-3">
-        <h1 className="font-display text-lg font-medium tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           Wish List Deals
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -104,7 +104,7 @@ export default async function DealsPage() {
                         <span className="text-foreground/90">{watch.model}</span>
                       </Link>
                       {watch.reference_number && (
-                        <div className="font-mono text-[11px] text-muted-foreground">
+                        <div className="font-mono text-2xs text-muted-foreground">
                           {watch.reference_number}
                         </div>
                       )}

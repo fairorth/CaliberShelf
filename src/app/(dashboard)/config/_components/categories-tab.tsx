@@ -165,7 +165,7 @@ export function CategoriesTab({ categories, watchCountByCategory }: CategoriesTa
       {/* Add category form */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Add Category</CardTitle>
+          <CardTitle className="text-sm">Add Category</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={formAction} className="space-y-4">

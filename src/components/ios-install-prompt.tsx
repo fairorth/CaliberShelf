@@ -44,7 +44,7 @@ export function IosInstallPrompt() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background p-4 shadow-lg md:hidden">
       <div className="flex items-start gap-3">
-        <span className="text-2xl shrink-0">⌚</span>
+        <span className="text-md shrink-0">⌚</span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium">Install CaliberShelf</p>
           <p className="text-xs text-muted-foreground">
