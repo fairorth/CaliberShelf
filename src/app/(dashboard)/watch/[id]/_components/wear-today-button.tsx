@@ -32,7 +32,7 @@ export function WearTodayButton({ watchId, wearInfo }: WearTodayButtonProps) {
   return (
     <div className="flex flex-col items-end gap-1.5">
       <Button variant="outline" size="sm" onClick={handleQuickWear} disabled={isPending}>
-        ⌚ Wore Today
+        Wore Today
       </Button>
       {wearInfo && (
         <span className="text-xs text-muted-foreground">

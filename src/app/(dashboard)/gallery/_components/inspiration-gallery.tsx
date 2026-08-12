@@ -1,5 +1,7 @@
 "use client"
 
+import { ImageIcon, Images, Trash2 } from "lucide-react"
+
 import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
@@ -70,7 +72,7 @@ function GalleryTile({
           />
         ) : (
           <div className="flex aspect-square w-full items-center justify-center bg-muted text-lg opacity-40">
-            🖼️
+            <ImageIcon className="h-5 w-5" aria-hidden="true" />
           </div>
         )}
       </button>
@@ -94,7 +96,7 @@ function GalleryTile({
           title="Delete image"
           className="shrink-0 rounded p-1 text-xs opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100"
         >
-          🗑️
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
         </button>
       </figcaption>
     </figure>
@@ -170,7 +172,7 @@ export function InspirationGallery({ images }: InspirationGalleryProps) {
 
       {images.length === 0 && !preview ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-          <span className="text-5xl">📸</span>
+          <Images className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
           <h3 className="mt-4 text-md font-semibold">Nothing pinned yet</h3>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
             See a watch photo that makes you stop scrolling? Copy it and paste it

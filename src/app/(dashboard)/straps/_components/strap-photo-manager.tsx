@@ -1,5 +1,7 @@
 "use client"
 
+import { Star, Trash2 } from "lucide-react"
+
 import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -97,7 +99,7 @@ export function StrapPhotoManager({ strapId, photos }: StrapPhotoManagerProps) {
               )}
               {photo.is_cover && (
                 <span className="absolute left-1 top-1 rounded-full bg-background/85 px-1.5 py-0.5 text-2xs font-medium text-brass backdrop-blur">
-                  ★ cover
+                  <Star className="inline h-3 w-3 fill-current" aria-hidden="true" /> cover
                 </span>
               )}
               <div className="absolute inset-x-0 bottom-0 flex justify-end gap-1 bg-gradient-to-t from-black/60 to-transparent p-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -109,7 +111,7 @@ export function StrapPhotoManager({ strapId, photos }: StrapPhotoManagerProps) {
                     className="rounded bg-background/80 px-1.5 py-0.5 text-2xs hover:bg-background"
                     title="Set as cover"
                   >
-                    ★
+                    <Star className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
                 )}
                 <button
@@ -119,7 +121,7 @@ export function StrapPhotoManager({ strapId, photos }: StrapPhotoManagerProps) {
                   className="rounded bg-background/80 px-1.5 py-0.5 text-2xs hover:bg-background"
                   title="Delete photo"
                 >
-                  🗑️
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import { Archive, Watch } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
@@ -26,8 +27,8 @@ export function WatchCard({ watch }: WatchCardProps) {
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-4xl text-muted-foreground">
-              ⌚
+            <div className="flex h-full items-center justify-center text-muted-foreground">
+              <Watch className="h-8 w-8" aria-hidden="true" />
             </div>
           )}
         </div>
@@ -57,8 +58,8 @@ export function WatchCard({ watch }: WatchCardProps) {
 
           {/* Storage box */}
           {watch.box && (
-            <p className="truncate font-mono text-2xs uppercase tracking-[0.06em] text-muted-foreground">
-              ▣ {watch.box}
+            <p className="flex items-center gap-1 truncate font-mono text-2xs uppercase tracking-[0.06em] text-muted-foreground">
+              <Archive className="h-3 w-3 shrink-0" aria-hidden="true" /> {watch.box}
             </p>
           )}
 

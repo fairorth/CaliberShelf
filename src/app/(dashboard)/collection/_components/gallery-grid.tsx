@@ -1,5 +1,7 @@
 "use client"
 
+import { Archive, CalendarDays, Watch } from "lucide-react"
+
 import Image from "next/image"
 import Link from "next/link"
 import { caliberTypeLabels } from "@/lib/validations/movement"
@@ -23,7 +25,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <span className="text-5xl">⌚</span>
+        <Watch className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
         <h3 className="mt-4 text-md font-semibold">No watches match this filter</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Try changing the category filter above.
@@ -91,7 +93,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
                   title={`Worn ${wearCount} ${wearCount === 1 ? "time" : "times"}`}
                   className="font-mono text-2xs text-muted-foreground"
                 >
-                  ◷ {wearCount}
+                  <CalendarDays className="h-3 w-3" aria-hidden="true" /> {wearCount}
                 </span>
               )}
             </div>
@@ -112,7 +114,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
               />
             ) : (
               <div className="flex h-full items-center justify-center text-4xl text-muted-foreground">
-                ⌚
+                <Watch className="h-5 w-5" aria-hidden="true" />
               </div>
             )}
           </div>
@@ -126,7 +128,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
                 title={`Stored in ${watch.box}`}
                 className="mt-1 truncate font-mono text-2xs uppercase tracking-[0.06em] text-muted-foreground/70"
               >
-                ▣ {watch.box}
+                <Archive className="h-3 w-3" aria-hidden="true" /> {watch.box}
               </p>
             )}
             {showFooter && (

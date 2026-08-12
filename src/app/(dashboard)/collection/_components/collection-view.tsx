@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { LayoutGrid, Table as TableIcon } from "lucide-react"
+import { ArrowDown, ArrowUp, LayoutGrid, Table as TableIcon } from "lucide-react"
 import { CollectionTable, TABLE_SORT_KEY } from "@/components/collection-table"
 import { SearchInput } from "@/components/search-input"
 import { GalleryGrid } from "./gallery-grid"
@@ -417,7 +417,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
             title={sortDir === "asc" ? "Ascending" : "Descending"}
             className="flex h-9 w-9 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
           >
-            {sortDir === "asc" ? "▲" : "▼"}
+            {sortDir === "asc" ? <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" /> : <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />}
           </button>
         </div>
 

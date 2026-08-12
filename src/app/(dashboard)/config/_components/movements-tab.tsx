@@ -1,5 +1,7 @@
 "use client"
 
+import { ArrowDown, ArrowUp, ChevronsUpDown, Cog, Pencil, Trash2 } from "lucide-react"
+
 import { useMemo, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -90,7 +92,7 @@ function SortableHeader({
       >
         {label}
         <span className="text-2xs">
-          {isActive ? (currentDir === "asc" ? "▲" : "▼") : "⇅"}
+          {isActive ? (currentDir === "asc" ? <ArrowUp className="h-3 w-3" aria-hidden="true" /> : <ArrowDown className="h-3 w-3" aria-hidden="true" />) : <ChevronsUpDown className="h-3 w-3" aria-hidden="true" />}
         </span>
       </button>
     </TableHead>
@@ -200,7 +202,7 @@ export function MovementsTab({ movements, usedMovementIds }: MovementsTabProps) 
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <span className="text-4xl">⏱️</span>
+          <Cog className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-3 text-sm text-muted-foreground">
             {usedOnly
               ? "No calibers are assigned to a watch in your collection yet."
@@ -255,7 +257,7 @@ export function MovementsTab({ movements, usedMovementIds }: MovementsTabProps) 
                       onClick={() => handleEdit(m)}
                       title="Edit caliber"
                     >
-                      ✏️
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -264,7 +266,7 @@ export function MovementsTab({ movements, usedMovementIds }: MovementsTabProps) 
                       onClick={() => handleDelete(m.id, m.caliber_name)}
                       title="Delete caliber"
                     >
-                      🗑️
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </TableCell>

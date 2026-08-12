@@ -1,7 +1,10 @@
 "use client"
 
+import { Share } from "lucide-react"
+
 import { useState, useSyncExternalStore, useCallback } from "react"
 import { Button } from "@/components/ui/button"
+import { CaliberShelfMark } from "@/components/calibershelf-mark"
 
 const STORAGE_KEY = "calibershelf-ios-install-dismissed"
 
@@ -44,14 +47,12 @@ export function IosInstallPrompt() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background p-4 shadow-lg md:hidden">
       <div className="flex items-start gap-3">
-        <span className="text-md shrink-0">⌚</span>
+        <CaliberShelfMark size={24} className="shrink-0 rounded-md" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium">Install CaliberShelf</p>
           <p className="text-xs text-muted-foreground">
             Tap the share button{" "}
-            <span className="inline-block">
-              ⬆️
-            </span>{" "}
+            <Share className="inline h-3.5 w-3.5" aria-hidden="true" />{" "}
             then &ldquo;Add to Home Screen&rdquo; for the best experience.
           </p>
         </div>

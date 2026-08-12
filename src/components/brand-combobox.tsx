@@ -1,5 +1,7 @@
 "use client"
 
+import { Check, ChevronDown } from "lucide-react"
+
 import { useState, useMemo, useTransition } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
@@ -90,7 +92,7 @@ export function BrandCombobox({ brands, defaultBrandId, onChange }: BrandCombobo
           }
         >
           {selectedBrand ? selectedBrand.name : "Select brand..."}
-          <span className="ml-auto text-xs opacity-50">▼</span>
+          <ChevronDown className="ml-auto h-4 w-4 opacity-50" aria-hidden="true" />
         </PopoverTrigger>
 
         <PopoverContent align="start" className="w-[var(--anchor-width)] p-0">
@@ -122,7 +124,7 @@ export function BrandCombobox({ brands, defaultBrandId, onChange }: BrandCombobo
                 onClick={() => handleSelect(brand)}
               >
                 <span className="w-4 text-center">
-                  {brand.id === selectedId ? "✓" : ""}
+                  {brand.id === selectedId ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : ""}
                 </span>
                 <span>{brand.name}</span>
                 {brand.is_wishlist && <WishlistBadge />}

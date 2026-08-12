@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState, useTransition } from "react"
+import { Check, Pencil, ShoppingCart, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -159,7 +160,7 @@ function BrandRow({
               onClick={handleSave}
               title="Save"
             >
-              {savePending ? "..." : "✓"}
+              {savePending ? "..." : <Check className="h-4 w-4" aria-hidden="true" />}
             </Button>
             <Button
               variant="ghost"
@@ -168,7 +169,7 @@ function BrandRow({
               onClick={handleCancel}
               title="Cancel"
             >
-              ✕
+              <X className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </TableCell>
@@ -197,7 +198,7 @@ function BrandRow({
             className="text-xs text-primary underline-offset-2 hover:underline"
             title={brand.store_url}
           >
-            🛒 store
+            <ShoppingCart className="inline h-3 w-3" aria-hidden="true" /> store
           </a>
         ) : (
           <span className="text-muted-foreground">—</span>
@@ -212,7 +213,7 @@ function BrandRow({
             onClick={() => setEditing(true)}
             title="Edit brand"
           >
-            ✏️
+            <Pencil className="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -221,7 +222,7 @@ function BrandRow({
             onClick={() => onDelete(brand.id, brand.name)}
             title={count > 0 ? "Cannot delete \u2014 has watches" : "Delete brand"}
           >
-            🗑️
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </TableCell>

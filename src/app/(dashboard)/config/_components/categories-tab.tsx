@@ -1,5 +1,7 @@
 "use client"
 
+import { Check, Pencil, Trash2, X } from "lucide-react"
+
 import { useActionState, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -92,7 +94,7 @@ function CategoryRow({
               onClick={handleSave}
               title="Save"
             >
-              {savePending ? "..." : "✓"}
+              {savePending ? "..." : <Check className="h-4 w-4" aria-hidden="true" />}
             </Button>
             <Button
               variant="ghost"
@@ -101,7 +103,7 @@ function CategoryRow({
               onClick={handleCancel}
               title="Cancel"
             >
-              ✕
+              <X className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </TableCell>
@@ -124,7 +126,7 @@ function CategoryRow({
             onClick={() => setEditing(true)}
             title="Edit category"
           >
-            ✏️
+            <Pencil className="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -133,7 +135,7 @@ function CategoryRow({
             onClick={() => onDelete(category.id, category.name)}
             title={count > 0 ? "Cannot delete — has watches" : "Delete category"}
           >
-            🗑️
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </TableCell>

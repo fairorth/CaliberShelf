@@ -1,5 +1,7 @@
 "use client"
 
+import { Camera, ImageIcon } from "lucide-react"
+
 import { useCallback, useEffect, useRef, useState, useTransition, useSyncExternalStore } from "react"
 import { Button } from "@/components/ui/button"
 import { uploadWatchPhoto } from "@/lib/actions/photo-actions"
@@ -109,14 +111,14 @@ export function PhotoUploader({ watchId }: PhotoUploaderProps) {
             onClick={() => cameraInputRef.current?.click()}
             disabled={isPending}
           >
-            {isPending ? "Uploading..." : "📷 Take Photo"}
+            {isPending ? "Uploading..." : <><Camera className="h-4 w-4" aria-hidden="true" /> Take Photo</>}
           </Button>
           <Button
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
             disabled={isPending}
           >
-            {isPending ? "Uploading..." : "🖼️ Gallery"}
+            {isPending ? "Uploading..." : <><ImageIcon className="h-4 w-4" aria-hidden="true" /> Gallery</>}
           </Button>
         </div>
       ) : (

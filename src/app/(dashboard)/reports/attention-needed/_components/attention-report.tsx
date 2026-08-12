@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { Check, Settings, Tag, Watch } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { AttentionItem, AttentionReport } from "@/lib/queries/attention"
 import { ATTENTION_INCLUDE_WISHLIST_KEY } from "@/lib/preferences"
@@ -26,12 +28,12 @@ function StatusBadge({ status }: { status: AttentionItem["status"] }) {
 
 function AttentionSection({
   title,
-  icon,
+  icon: Icon,
   items,
   emptyText,
 }: {
   title: string
-  icon: string
+  icon: LucideIcon
   items: AttentionItem[]
   emptyText: string
 }) {
@@ -39,8 +41,8 @@ function AttentionSection({
     <Card className="overflow-hidden rounded-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2.5 font-display text-md font-semibold">
-          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-brass/15 text-sm">
-            {icon}
+          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <Icon className="h-4 w-4" aria-hidden="true" />
           </span>
           {title}
           <span className="ml-auto rounded-full bg-foreground/10 px-2.5 py-0.5 text-sm font-medium text-muted-foreground">
@@ -50,7 +52,9 @@ function AttentionSection({
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="py-2 text-sm text-muted-foreground">✓ {emptyText}</p>
+          <p className="flex items-center gap-1.5 py-2 text-sm text-muted-foreground">
+            <Check className="h-4 w-4" aria-hidden="true" /> {emptyText}
+          </p>
         ) : (
           <ul className="divide-y divide-border/50">
             {items.map((item) => (
@@ -118,7 +122,7 @@ export function AttentionReportView({ report }: { report: AttentionReport }) {
         <h1 className="font-display text-lg font-semibold tracking-tight">Attention Needed</h1>
         <p className="text-sm text-muted-foreground">
           {total === 0
-            ? "Everything is complete 🎉"
+            ? "Everything is complete"
             : `${total} item${total === 1 ? "" : "s"} with missing information — click any row to fix it`}
         </p>
       </div>
@@ -141,19 +145,19 @@ export function AttentionReportView({ report }: { report: AttentionReport }) {
       <div className="space-y-5">
         <AttentionSection
           title="Watches"
-          icon="⌚"
+          icon={Watch}
           items={watches}
           emptyText="Every watch has its critical specs."
         />
         <AttentionSection
           title="Movements"
-          icon="⚙️"
+          icon={Settings}
           items={report.movements}
           emptyText="Every in-use movement has lift angle, beat rate, and type."
         />
         <AttentionSection
           title="Brands"
-          icon="🏷️"
+          icon={Tag}
           items={report.brands}
           emptyText="Every brand has a store URL and type."
         />

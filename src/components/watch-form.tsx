@@ -10,6 +10,7 @@ import {
 } from "react"
 import type { MouseEvent } from "react"
 import { useRouter } from "next/navigation"
+import { Check, Cog, FolderOpen, Layers, Ruler, Settings2, Tag, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -473,7 +474,7 @@ export function WatchForm({
       <Card className={CARD}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className={CARD_TITLE}>
-            <span className={CHIP}>🏷️</span>
+            <span className={CHIP}><Tag className="h-4 w-4" aria-hidden="true" /></span>
             Identity & Ownership
           </CardTitle>
         </CardHeader>
@@ -702,7 +703,7 @@ export function WatchForm({
         <CardHeader className={CARD_HEADER}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className={CARD_TITLE}>
-              <span className={CHIP}>⚙️</span>
+              <span className={CHIP}><Settings2 className="h-4 w-4" aria-hidden="true" /></span>
               Specifications
             </CardTitle>
             <div className="flex flex-wrap items-center gap-2">
@@ -743,7 +744,7 @@ export function WatchForm({
                   className="text-muted-foreground hover:text-foreground"
                   title="Dismiss"
                 >
-                  ✕
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
               <p className="truncate text-xs text-muted-foreground">
@@ -768,7 +769,7 @@ export function WatchForm({
                   className="text-muted-foreground hover:text-foreground"
                   title="Dismiss"
                 >
-                  ✕
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
               {specFetchResult.specs.suggested_caliber && (
@@ -816,7 +817,7 @@ export function WatchForm({
           )}
           {/* Movement subsection */}
           <div className="flex items-center gap-2 pt-1">
-            <span className="text-xs opacity-60">⏱️</span>
+            <Cog className="h-4 w-4 text-muted-foreground/60" aria-hidden="true" />
             <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground/60">Movement</h4>
             <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
@@ -839,7 +840,7 @@ export function WatchForm({
 
           {/* Case subsection */}
           <div className="flex items-center gap-2">
-            <span className="text-xs opacity-60">🔩</span>
+            <Ruler className="h-4 w-4 text-muted-foreground/60" aria-hidden="true" />
             <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground/60">Case</h4>
             <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
@@ -1041,7 +1042,7 @@ export function WatchForm({
 
           {/* Complications subsection */}
           <div className="flex items-center gap-2">
-            <span className="text-xs opacity-60">✨</span>
+            <Layers className="h-4 w-4 text-muted-foreground/60" aria-hidden="true" />
             <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground/60">Complications</h4>
             <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
@@ -1078,7 +1079,7 @@ export function WatchForm({
       <Card className={CARD}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className={CARD_TITLE}>
-            <span className={CHIP}>📂</span>
+            <span className={CHIP}><FolderOpen className="h-4 w-4" aria-hidden="true" /></span>
             Category & Labels
           </CardTitle>
         </CardHeader>
@@ -1135,7 +1136,7 @@ export function WatchForm({
                           : "bg-muted text-muted-foreground hover:bg-muted/80"
                       }`}
                     >
-                      {isSelected && <span className="mr-1">✓</span>}
+                      {isSelected && <Check className="mr-1 inline h-3 w-3" aria-hidden="true" />}
                       {label.name}
                     </button>
                   )

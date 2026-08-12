@@ -1,5 +1,7 @@
 "use client"
 
+import { Trash2 } from "lucide-react"
+
 import { useState, useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -166,7 +168,7 @@ export function WearHistory({ watches }: WearHistoryProps) {
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" />
                 }
               >
-                🗑️
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>

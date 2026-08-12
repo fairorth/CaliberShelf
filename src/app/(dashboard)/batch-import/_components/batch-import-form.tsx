@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { Check, Images, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -224,7 +225,7 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
               : "border-border hover:border-primary/50 hover:bg-muted/30"
           )}
         >
-          <span className="text-4xl">📸</span>
+          <Images className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
           <div className="text-center">
             <p className="text-sm font-medium">
               {isDragging ? "Drop images here" : "Drag & drop watch photos here"}
@@ -264,7 +265,7 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
                     className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-2xs text-white opacity-0 transition-opacity hover:bg-destructive group-hover:opacity-100"
                     title="Remove"
                   >
-                    ✕
+                    <X className="h-3 w-3" aria-hidden="true" />
                   </button>
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1 pb-1 pt-4">
                     <p className="truncate text-2xs font-medium text-white">
@@ -328,7 +329,7 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
             <CardTitle className="text-sm flex items-center gap-2">
               {result.errors.length === 0 ? (
                 <>
-                  <span className="text-emerald-600">✓</span>
+                  <Check className="h-4 w-4 text-emerald-600" aria-hidden="true" />
                   Import Complete
                 </>
               ) : (

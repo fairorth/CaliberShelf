@@ -4,7 +4,23 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { Moon, Plus, Sun } from "lucide-react"
+import {
+  BadgeDollarSign,
+  CalendarDays,
+  ChartColumn,
+  Compass,
+  Images,
+  Info,
+  Link2,
+  List,
+  Moon,
+  PackagePlus,
+  Plus,
+  Settings,
+  Sun,
+  Tag,
+} from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { signOut } from "@/lib/actions/auth-actions"
@@ -14,26 +30,26 @@ import { APP_VERSION } from "@/lib/version"
 import { CaliberShelfMark } from "@/components/calibershelf-mark"
 
 // Menu groups render with a separator between them: assets | analysis |
-// acquisition & imagery | system.
-const navGroups = [
+// acquisition & imagery | system. Icons are lucide only (E2).
+const navGroups: { href: string; label: string; icon: LucideIcon }[][] = [
   [
-    { href: "/collection", label: "Collection", icon: "📋" },
-    { href: "/brands", label: "Brands", icon: "🏷️" },
-    { href: "/straps", label: "Straps", icon: "〰️" },
+    { href: "/collection", label: "Collection", icon: List },
+    { href: "/brands", label: "Brands", icon: Tag },
+    { href: "/straps", label: "Straps", icon: Link2 },
   ],
   [
-    { href: "/wear-log", label: "Wear Log", icon: "📅" },
-    { href: "/reports", label: "Reports", icon: "📊" },
-    { href: "/guides", label: "Guides", icon: "🧭" },
+    { href: "/wear-log", label: "Wear Log", icon: CalendarDays },
+    { href: "/reports", label: "Reports", icon: ChartColumn },
+    { href: "/guides", label: "Guides", icon: Compass },
   ],
   [
-    { href: "/deals", label: "Deals", icon: "💰" },
-    { href: "/gallery", label: "Gallery", icon: "📸" },
-    { href: "/batch-import", label: "Batch Import", icon: "📦" },
+    { href: "/deals", label: "Deals", icon: BadgeDollarSign },
+    { href: "/gallery", label: "Gallery", icon: Images },
+    { href: "/batch-import", label: "Batch Import", icon: PackagePlus },
   ],
   [
-    { href: "/config", label: "Config", icon: "⚙️" },
-    { href: "/about", label: "About", icon: "ℹ️" },
+    { href: "/config", label: "Config", icon: Settings },
+    { href: "/about", label: "About", icon: Info },
   ],
 ]
 
@@ -227,7 +243,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
               onClick={guardClick(addWatchHref)}
               className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
-              <span>➕</span>
+              <Plus className="h-4 w-4" aria-hidden="true" />
               Add Watch
             </Link>
 
@@ -247,7 +263,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                     )}
                   >
-                    <span>{item.icon}</span>
+                    <item.icon className="h-4 w-4" aria-hidden="true" />
                     {item.label}
                   </Link>
                 ))}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Link2 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -56,7 +57,7 @@ export default async function StrapsPage() {
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-4xl opacity-40">
-                      〰️
+                      <Link2 className="h-5 w-5" aria-hidden="true" />
                     </div>
                   )}
                   <span className="absolute right-2 top-2 rounded-full bg-background/85 px-2 py-0.5 font-mono text-xs font-semibold text-foreground backdrop-blur">

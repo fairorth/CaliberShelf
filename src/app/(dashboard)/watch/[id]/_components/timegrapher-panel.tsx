@@ -1,5 +1,7 @@
 "use client"
 
+import { Activity, X } from "lucide-react"
+
 import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -96,7 +98,7 @@ export function TimegrapherPanel({
       <CardHeader className="flex flex-row items-center justify-between gap-2 bg-gradient-to-br from-emerald-50/80 via-teal-50/30 to-transparent dark:from-emerald-950/30 dark:via-emerald-900/10 dark:to-transparent pb-3">
         <CardTitle className="flex items-center gap-2.5 text-sm">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100/80 dark:bg-emerald-900/40 text-sm shadow-sm">
-            📈
+            <Activity className="h-5 w-5" aria-hidden="true" />
           </span>
           Timegrapher
         </CardTitle>
@@ -260,7 +262,7 @@ export function TimegrapherPanel({
                         className="text-xs text-muted-foreground/50 opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 disabled:opacity-30"
                         title="Delete run"
                       >
-                        ✕
+                        <X className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </td>
                   </tr>

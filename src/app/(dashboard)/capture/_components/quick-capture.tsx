@@ -1,5 +1,7 @@
 "use client"
 
+import { Camera, CheckCircle2, Watch } from "lucide-react"
+
 import { useRef, useState, useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -100,7 +102,7 @@ export function QuickCapture({ watches }: QuickCaptureProps) {
   if (uploadedWatchId) {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
-        <div className="text-5xl">✅</div>
+        <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-500" aria-hidden="true" />
         <p className="text-lg font-medium">Photo uploaded successfully!</p>
         <div className="flex gap-3">
           <Button onClick={handleTakeAnother}>Take Another</Button>
@@ -155,7 +157,7 @@ export function QuickCapture({ watches }: QuickCaptureProps) {
             className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-primary bg-primary/10 text-5xl transition-transform active:scale-95"
             aria-label="Take photo"
           >
-            📷
+            <Camera className="h-10 w-10" aria-hidden="true" />
           </button>
           <p className="text-sm text-muted-foreground">
             Tap to take a photo with your camera
@@ -223,7 +225,7 @@ export function QuickCapture({ watches }: QuickCaptureProps) {
                   </div>
                 ) : (
                   <div className="flex h-12 w-12 items-center justify-center rounded-md bg-muted text-md">
-                    ⌚
+                    <Watch className="h-5 w-5" aria-hidden="true" />
                   </div>
                 )}
                 <div className="text-center">

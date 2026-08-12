@@ -1,5 +1,7 @@
 "use client"
 
+import { Check, ChevronDown } from "lucide-react"
+
 import { useState, useMemo, useTransition } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
@@ -107,7 +109,7 @@ export function MovementCombobox({
           }
         >
           {selectedMovement ? selectedMovement.caliber_name : "Select movement..."}
-          <span className="ml-auto text-xs opacity-50">▼</span>
+          <ChevronDown className="ml-auto h-4 w-4 opacity-50" aria-hidden="true" />
         </PopoverTrigger>
 
         <PopoverContent align="start" className="w-[var(--anchor-width)] p-0">
@@ -131,7 +133,7 @@ export function MovementCombobox({
               )}
               onClick={handleClear}
             >
-              <span className="w-4 text-center">{!selectedId ? "✓" : ""}</span>
+              <span className="w-4 text-center">{!selectedId ? <Check className="inline h-3.5 w-3.5" aria-hidden="true" /> : ""}</span>
               <span className="text-muted-foreground italic">None selected</span>
             </button>
 
@@ -146,7 +148,7 @@ export function MovementCombobox({
                 onClick={() => handleSelect(movement)}
               >
                 <span className="w-4 text-center">
-                  {movement.id === selectedId ? "✓" : ""}
+                  {movement.id === selectedId ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : ""}
                 </span>
                 <div className="flex flex-1 items-center gap-2 overflow-hidden">
                   <span className="truncate">{movement.caliber_name}</span>

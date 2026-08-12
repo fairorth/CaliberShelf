@@ -1,5 +1,7 @@
 "use client"
 
+import { Check, Trash2 } from "lucide-react"
+
 import { useActionState, useTransition, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -83,7 +85,7 @@ export function LabelsTab({ labels }: LabelsTabProps) {
                         title={color}
                       >
                         <span className={`text-xs ${colors.text}`}>
-                          {isSelected ? "✓" : ""}
+                          {isSelected ? <Check className="inline h-3 w-3" aria-hidden="true" /> : ""}
                         </span>
                       </button>
                     )
@@ -138,7 +140,7 @@ export function LabelsTab({ labels }: LabelsTabProps) {
                       onClick={() => handleDelete(label.id, label.name)}
                       title="Delete label"
                     >
-                      🗑️
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </TableCell>
                 </TableRow>

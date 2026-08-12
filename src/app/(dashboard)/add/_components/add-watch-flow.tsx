@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -228,8 +229,8 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
                 dragging && "border-brass/60"
               )}
             >
-              <span className="grid h-11 w-11 place-items-center rounded-lg bg-muted text-md text-muted-foreground">
-                ⬆
+              <span className="grid h-11 w-11 place-items-center rounded-lg bg-muted text-muted-foreground">
+                <Upload className="h-5 w-5" aria-hidden="true" />
               </span>
               <span className="text-sm text-foreground sm:text-sm">
                 {processing ? (

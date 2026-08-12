@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { BadgeDollarSign, BookOpen, Bot, Globe, Search, Sparkles, Tag } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getAgentReview, formatUsdMicros } from "@/lib/queries/agent-runs"
 import type { AgentRun } from "@/lib/types/watch"
@@ -11,16 +13,19 @@ export const metadata: Metadata = {
 // Reflect new runs immediately.
 export const dynamic = "force-dynamic"
 
-const AGENT_META: Record<string, { label: string; icon: string }> = {
-  "price-check": { label: "Market Valuation", icon: "💰" },
-  "deal-check": { label: "Deal Scanner", icon: "🏷️" },
-  "find-references": { label: "Reference Sweep", icon: "🔎" },
-  "find-store-urls": { label: "Brand Enrichment", icon: "🌐" },
-  "chronoscout-sync": { label: "ChronoScout Sync", icon: "📚" },
-  "spec-fetch": { label: "Spec Autofill", icon: "✨" },
+const AGENT_META: Record<string, { label: string; icon: LucideIcon }> = {
+  "price-check": { label: "Market Valuation", icon: BadgeDollarSign },
+  "deal-check": { label: "Deal Scanner", icon: Tag },
+  "find-references": { label: "Reference Sweep", icon: Search },
+  "find-store-urls": { label: "Brand Enrichment", icon: Globe },
+  "chronoscout-sync": { label: "ChronoScout Sync", icon: BookOpen },
+  "spec-fetch": { label: "Spec Autofill", icon: Sparkles },
 }
 const agentLabel = (a: string) => AGENT_META[a]?.label ?? a
-const agentIcon = (a: string) => AGENT_META[a]?.icon ?? "🤖"
+const AgentIcon = ({ agent }: { agent: string }) => {
+  const Icon = AGENT_META[agent]?.icon ?? Bot
+  return <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+}
 
 function fmtDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -128,7 +133,7 @@ export default async function AgentReviewPage() {
                     className="flex flex-wrap items-center gap-x-4 gap-y-1 px-6 py-3 text-sm"
                   >
                     <span className="flex min-w-[180px] items-center gap-2 font-medium">
-                      <span>{agentIcon(r.agent)}</span>
+                      <AgentIcon agent={r.agent} />
                       {agentLabel(r.agent)}
                     </span>
                     <span className="text-muted-foreground">
@@ -166,7 +171,7 @@ export default async function AgentReviewPage() {
                     className="group flex flex-wrap items-center gap-x-4 gap-y-1 px-6 py-3 text-sm hover:bg-accent/40"
                   >
                     <span className="flex min-w-[170px] items-center gap-2 font-medium group-hover:text-primary">
-                      <span>{agentIcon(run.agent)}</span>
+                      <AgentIcon agent={run.agent} />
                       {agentLabel(run.agent)}
                     </span>
                     <StatusBadge status={run.status} dryRun={run.dry_run} />

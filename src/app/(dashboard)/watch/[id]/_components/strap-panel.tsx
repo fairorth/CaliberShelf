@@ -1,5 +1,7 @@
 "use client"
 
+import { Link2 } from "lucide-react"
+
 import { useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -87,7 +89,7 @@ export function StrapPanel({ watchId, watchStrapWidthMm, straps, strapLabels }: 
               />
             ) : (
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border bg-muted text-md opacity-60">
-                〰️
+                <Link2 className="h-5 w-5" aria-hidden="true" />
               </span>
             )}
             <div className="min-w-0 flex-1">

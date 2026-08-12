@@ -1,5 +1,7 @@
 "use client"
 
+import { Archive, ArrowDown, ArrowUp, ChevronsUpDown, CircleDollarSign, Watch } from "lucide-react"
+
 import { useEffect, useRef, useState, useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -164,7 +166,7 @@ function SortableHeader({
       >
         {label}
         <span className="text-2xs">
-          {isActive ? (currentDir === "asc" ? "▲" : "▼") : "⇅"}
+          {isActive ? (currentDir === "asc" ? <ArrowUp className="h-3 w-3" aria-hidden="true" /> : <ArrowDown className="h-3 w-3" aria-hidden="true" />) : <ChevronsUpDown className="h-3 w-3 opacity-60" aria-hidden="true" />}
         </span>
       </button>
       <ResizeHandle onPointerDown={(e) => onResizeStart(e, colId)} />
@@ -215,7 +217,7 @@ function HoverPhoto({
         {url ? (
           <Image src={url} alt={alt} fill className="object-cover" sizes={thumbPx} unoptimized />
         ) : (
-          <div className="flex h-full items-center justify-center text-md text-muted-foreground">⌚</div>
+          <div className="flex h-full items-center justify-center text-muted-foreground"><Watch className="h-5 w-5" aria-hidden="true" /></div>
         )}
       </div>
       {url && (
@@ -365,7 +367,7 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <span className="text-5xl">⌚</span>
+        <Watch className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
         <h3 className="mt-4 text-md font-semibold">No watches yet</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Add your first watch to start building your collection.
@@ -470,12 +472,10 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                       <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
                     )}
                     {watch.price_check_enabled && (
-                      <span
-                        title="Price checking enabled"
-                        className="ml-2 align-middle font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400"
-                      >
-                        $$
-                      </span>
+                      <CircleDollarSign
+                        aria-label="Price checking enabled"
+                        className="ml-2 inline h-3.5 w-3.5 align-middle text-emerald-600 dark:text-emerald-400"
+                      />
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
@@ -514,6 +514,17 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
             </TableBody>
           </Table>
         </div>
+        {/* Visible legend — markers must not carry meaning only in a title (E2/F2). */}
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <CircleDollarSign className="h-3 w-3 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            price tracked
+          </span>
+          <span className="flex items-center gap-1">
+            <Archive className="h-3 w-3" aria-hidden="true" />
+            storage box
+          </span>
+        </div>
       </div>
 
       {/* Mobile stacked cards */}
@@ -538,7 +549,7 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                     unoptimized
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-md text-muted-foreground">⌚</div>
+                  <div className="flex h-full items-center justify-center text-muted-foreground"><Watch className="h-5 w-5" aria-hidden="true" /></div>
                 )}
               </div>
               <div className="min-w-0 flex-1">
@@ -555,17 +566,15 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                     <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
                   )}
                   {watch.price_check_enabled && (
-                    <span
-                      title="Price checking enabled"
-                      className="ml-2 align-middle font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400"
-                    >
-                      $$
-                    </span>
+                    <CircleDollarSign
+                      aria-label="Price checking enabled"
+                      className="ml-2 inline h-3.5 w-3.5 align-middle text-emerald-600 dark:text-emerald-400"
+                    />
                   )}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
                 {watch.box && (
-                  <p className="truncate text-xs text-muted-foreground">▣ {watch.box}</p>
+                  <p className="flex items-center gap-1 truncate text-xs text-muted-foreground"><Archive className="h-3 w-3 shrink-0" aria-hidden="true" /> {watch.box}</p>
                 )}
                 {showCost && (
                   <p className="text-sm font-medium tabular-nums">{priceLabel(watch)}</p>
