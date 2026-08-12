@@ -84,6 +84,74 @@ const CARD_HEADER = ""
 const CARD_TITLE = "flex items-center gap-2.5 font-display text-md font-semibold"
 const CHIP = "flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground"
 
+type WatchStatus = "owned" | "coming_soon" | "wishlist"
+
+const STATUS_OPTIONS: { value: WatchStatus; label: string; hint: string }[] = [
+  { value: "owned", label: "Owned", hint: "In the collection and counted in totals." },
+  {
+    value: "coming_soon",
+    label: "Coming soon",
+    hint: "Ordered, awaiting arrival (use Notes for sale details).",
+  },
+  {
+    value: "wishlist",
+    label: "Wish list",
+    hint: "Not owned; excluded from collection counts and total value.",
+  },
+]
+
+/** Numeric spec field: right-aligned mono value with the unit rendered as a
+ *  suffix inside the field (C3) — the form's spec-sheet treatment. */
+function MeasureField({
+  id,
+  label,
+  suffix,
+  value,
+  onChange,
+  step,
+  min,
+  max,
+  className,
+}: {
+  id: string
+  label: string
+  suffix: string
+  value: string
+  onChange: (value: string) => void
+  step?: string
+  min?: string
+  max?: string
+  className?: string
+}) {
+  return (
+    <div className="space-y-1.5">
+      <FormLabel htmlFor={id} className="text-xs text-muted-foreground">
+        {label}
+      </FormLabel>
+      <div className="relative">
+        <Input
+          id={id}
+          name={id}
+          type="number"
+          step={step}
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn(
+            FIELD,
+            "pr-10 text-right font-mono tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+            className
+          )}
+        />
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-muted-foreground">
+          {suffix}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 // Serialise the form's submittable state for dirty comparison. FormData
 // follows DOM order, so the result is stable across renders; unchecked
 // checkboxes are simply absent, which the comparison handles for free.
@@ -212,6 +280,12 @@ export function WatchForm({
 
   // Track selected category
   const [selectedCategoryId, setSelectedCategoryId] = useState(watch?.category_id ?? "")
+
+  // Status is one segmented control (C3): wish-list beats coming-soon beats
+  // owned, matching the app's own filter precedence.
+  const [status, setStatus] = useState<WatchStatus>(
+    watch?.is_wishlist ? "wishlist" : watch?.is_coming_soon ? "coming_soon" : "owned"
+  )
 
   // ── Spec fields (controlled) ─────────────────────────────────
   // Controlled (not defaultValue) so the auto-fill agent can write into them.
@@ -557,7 +631,7 @@ export function WatchForm({
               )}
             />
           </div>
-          <div className="space-y-2 sm:col-span-2">
+          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
             <FormLabel htmlFor="serial_number">Serial Number</FormLabel>
             <Input
               id="serial_number"
@@ -618,38 +692,39 @@ export function WatchForm({
             </Select>
           </div>
 
-          {/* Clickable area = checkbox + title only (w-fit label) — a full-width
-              label made the whole row toggle the box. Descriptions live outside. */}
-          <div className="flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-3">
-            <label className="inline-flex w-fit cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                name="is_coming_soon"
-                defaultChecked={watch?.is_coming_soon ?? false}
-                onChange={markDirty}
-                className="h-4 w-4 rounded border-border accent-brass"
-              />
-              <span className="font-medium">Coming soon</span>
-            </label>
-            <span className="text-xs text-muted-foreground">
-              — ordered, awaiting arrival (use Notes for sale details)
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-3">
-            <label className="inline-flex w-fit cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                name="is_wishlist"
-                defaultChecked={watch?.is_wishlist ?? false}
-                onChange={markDirty}
-                className="h-4 w-4 rounded border-border accent-brass"
-              />
-              <span className="font-medium">Wish list</span>
-            </label>
-            <span className="text-xs text-muted-foreground">
-              — not owned; excluded from collection counts and total value
-            </span>
+          {/* One Status control — a watch is exactly one of these (C3,
+              DECISIONS.md §6). The columns stay is_coming_soon/is_wishlist;
+              the control guarantees they are never both true. */}
+          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+            <FormLabel>Status</FormLabel>
+            <input type="hidden" name="is_coming_soon" value={status === "coming_soon" ? "on" : ""} />
+            <input type="hidden" name="is_wishlist" value={status === "wishlist" ? "on" : ""} />
+            <div
+              role="radiogroup"
+              aria-label="Status"
+              className="inline-flex overflow-hidden rounded-lg border border-border"
+            >
+              {STATUS_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={status === opt.value}
+                  onClick={() => setStatus(opt.value)}
+                  className={cn(
+                    "px-3.5 py-1.5 text-sm font-medium transition-colors [&:not(:first-child)]:border-l [&:not(:first-child)]:border-border",
+                    status === opt.value
+                      ? "bg-brass/15 text-brass"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {STATUS_OPTIONS.find((o) => o.value === status)?.hint}
+            </p>
           </div>
 
           <div
@@ -925,91 +1000,14 @@ export function WatchForm({
             </div>
 
             <div className="space-y-2">
-              <FormLabel htmlFor="case_diameter_mm">Case Diameter (mm)</FormLabel>
+              <FormLabel htmlFor="dial_color">Dial Color</FormLabel>
               <Input
-                id="case_diameter_mm"
-                name="case_diameter_mm"
-                type="number"
-                step="0.1"
-                min="10"
-                max="60"
-                value={specs.case_diameter_mm}
-                onChange={(e) => setSpec("case_diameter_mm", e.target.value)}
-                className={cn(FIELD, "font-mono", specHighlight("case_diameter_mm"))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <FormLabel htmlFor="strap_width_mm">Strap Width (mm)</FormLabel>
-              <Input
-                id="strap_width_mm"
-                name="strap_width_mm"
-                type="number"
-                step="0.5"
-                min="6"
-                max="30"
-                value={specs.strap_width_mm}
-                onChange={(e) => setSpec("strap_width_mm", e.target.value)}
-                className={cn(FIELD, "font-mono", specHighlight("strap_width_mm"))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <FormLabel htmlFor="lug_to_lug_mm">Lug-to-Lug (mm)</FormLabel>
-              <Input
-                id="lug_to_lug_mm"
-                name="lug_to_lug_mm"
-                type="number"
-                step="0.1"
-                min="20"
-                max="80"
-                value={specs.lug_to_lug_mm}
-                onChange={(e) => setSpec("lug_to_lug_mm", e.target.value)}
-                className={cn(FIELD, "font-mono", specHighlight("lug_to_lug_mm"))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <FormLabel htmlFor="case_height_mm">Case Height (mm)</FormLabel>
-              <Input
-                id="case_height_mm"
-                name="case_height_mm"
-                type="number"
-                step="0.1"
-                min="4"
-                max="25"
-                value={specs.case_height_mm}
-                onChange={(e) => setSpec("case_height_mm", e.target.value)}
-                className={cn(FIELD, "font-mono", specHighlight("case_height_mm"))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <FormLabel htmlFor="weight_g">Weight (g)</FormLabel>
-              <Input
-                id="weight_g"
-                name="weight_g"
-                type="number"
-                step="0.5"
-                min="5"
-                max="1000"
-                value={specs.weight_g}
-                onChange={(e) => setSpec("weight_g", e.target.value)}
-                className={cn(FIELD, "font-mono", specHighlight("weight_g"))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <FormLabel htmlFor="water_resistance_m">Water Resistance (m)</FormLabel>
-              <Input
-                id="water_resistance_m"
-                name="water_resistance_m"
-                type="number"
-                min="0"
-                max="12000"
-                value={specs.water_resistance_m}
-                onChange={(e) => setSpec("water_resistance_m", e.target.value)}
-                className={cn(FIELD, "font-mono", specHighlight("water_resistance_m"))}
+                id="dial_color"
+                name="dial_color"
+                placeholder="e.g. Black"
+                value={specs.dial_color}
+                onChange={(e) => setSpec("dial_color", e.target.value)}
+                className={cn(FIELD, specHighlight("dial_color"))}
               />
             </div>
 
@@ -1026,16 +1024,80 @@ export function WatchForm({
                 Rotating bezel
               </label>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <FormLabel htmlFor="dial_color">Dial Color</FormLabel>
-              <Input
-                id="dial_color"
-                name="dial_color"
-                placeholder="e.g. Black"
-                value={specs.dial_color}
-                onChange={(e) => setSpec("dial_color", e.target.value)}
-                className={cn(FIELD, specHighlight("dial_color"))}
+          {/* Measurements — a labelled 2×4 spec block that reads like a spec
+              sheet: right-aligned mono values, unit as a suffix inside the
+              field, never in the label (C3). */}
+          <div className="rounded-lg border border-border p-4">
+            <h5 className="mb-3 font-mono text-2xs uppercase tracking-[0.14em] text-muted-foreground">
+              Measurements
+            </h5>
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <MeasureField
+                id="case_diameter_mm"
+                label="Diameter"
+                suffix="mm"
+                step="0.1"
+                min="10"
+                max="60"
+                value={specs.case_diameter_mm}
+                onChange={(v) => setSpec("case_diameter_mm", v)}
+                className={specHighlight("case_diameter_mm")}
+              />
+              <MeasureField
+                id="case_height_mm"
+                label="Height"
+                suffix="mm"
+                step="0.1"
+                min="4"
+                max="25"
+                value={specs.case_height_mm}
+                onChange={(v) => setSpec("case_height_mm", v)}
+                className={specHighlight("case_height_mm")}
+              />
+              <MeasureField
+                id="lug_to_lug_mm"
+                label="Lug-to-lug"
+                suffix="mm"
+                step="0.1"
+                min="20"
+                max="80"
+                value={specs.lug_to_lug_mm}
+                onChange={(v) => setSpec("lug_to_lug_mm", v)}
+                className={specHighlight("lug_to_lug_mm")}
+              />
+              <MeasureField
+                id="strap_width_mm"
+                label="Lug width"
+                suffix="mm"
+                step="0.5"
+                min="6"
+                max="30"
+                value={specs.strap_width_mm}
+                onChange={(v) => setSpec("strap_width_mm", v)}
+                className={specHighlight("strap_width_mm")}
+              />
+              <MeasureField
+                id="weight_g"
+                label="Weight"
+                suffix="g"
+                step="0.5"
+                min="5"
+                max="1000"
+                value={specs.weight_g}
+                onChange={(v) => setSpec("weight_g", v)}
+                className={specHighlight("weight_g")}
+              />
+              <MeasureField
+                id="water_resistance_m"
+                label="Water res."
+                suffix="m"
+                min="0"
+                max="12000"
+                value={specs.water_resistance_m}
+                onChange={(v) => setSpec("water_resistance_m", v)}
+                className={specHighlight("water_resistance_m")}
               />
             </div>
           </div>

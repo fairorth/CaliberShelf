@@ -141,6 +141,13 @@ export const watchFormSchema = z.object({
     .pipe(z.number().min(0).nullable()),
   purchase_currency: z.string().min(3).max(3).default("USD"),
 }).refine(
+  // Status is exactly one of owned / coming soon / wish list (C3): the form's
+  // segmented control guarantees it, and the schema enforces it server-side.
+  (data) => !(data.is_coming_soon && data.is_wishlist),
+  {
+    message: "A watch cannot be both coming soon and on the wish list.",
+  }
+).refine(
   (data) => !data.price_check_enabled || data.reference_number.trim() !== "",
   {
     message: "Price checking requires a reference number.",
