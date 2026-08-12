@@ -496,7 +496,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
               type="button"
               onClick={() => updateView("gallery")}
               aria-pressed={view === "gallery"}
-              title="Gallery view"
+              title="Tile view"
               className={cn(
                 "flex h-9 items-center gap-1.5 border-l px-3 text-xs font-medium transition-colors",
                 view === "gallery"
@@ -505,7 +505,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
               )}
             >
               <LayoutGrid className="h-4 w-4" />
-              <span className="hidden sm:inline">Gallery</span>
+              <span className="hidden sm:inline">Tiles</span>
             </button>
           </div>
         </div>

@@ -5,10 +5,10 @@ import { getCurrentDisplayBox } from "@/lib/queries/display-box"
 import { HomeStage } from "@/components/home-stage"
 
 export const metadata: Metadata = {
-  title: "Gallery | CaliberShelf",
+  title: "Home | CaliberShelf",
 }
 
-export default async function GalleryPage() {
+export default async function HomePage() {
   const [watches, wornThisWeek, displayBox] = await Promise.all([
     getWatches(),
     getWornThisWeekCount(),

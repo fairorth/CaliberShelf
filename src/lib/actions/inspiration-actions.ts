@@ -77,7 +77,7 @@ export async function uploadInspirationImage(
     return { error: `Failed to save image: ${insertError.message}` }
   }
 
-  revalidatePath("/gallery")
+  revalidatePath("/inspiration")
   return { success: true }
 }
 
@@ -108,7 +108,7 @@ export async function updateInspirationNote(
 
   if (error) return { error: error.message }
 
-  revalidatePath("/gallery")
+  revalidatePath("/inspiration")
   return { success: true }
 }
 
@@ -147,6 +147,6 @@ export async function deleteInspirationImage(
 
   if (error) return { error: error.message }
 
-  revalidatePath("/gallery")
+  revalidatePath("/inspiration")
   return { success: true }
 }

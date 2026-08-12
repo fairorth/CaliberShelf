@@ -44,7 +44,7 @@ const navGroups: { href: string; label: string; icon: LucideIcon }[][] = [
   ],
   [
     { href: "/deals", label: "Deals", icon: BadgeDollarSign },
-    { href: "/gallery", label: "Gallery", icon: Images },
+    { href: "/inspiration", label: "Inspiration", icon: Images },
     { href: "/batch-import", label: "Batch Import", icon: PackagePlus },
   ],
   [

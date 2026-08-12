@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  redirects: async () => [
+    // A4: "Gallery" now means only the inspiration board, at /inspiration.
+    { source: "/gallery", destination: "/inspiration", permanent: true },
+    // A4: one add route — /collection/new folded into the quick-add flow.
+    { source: "/collection/new", destination: "/add", permanent: true },
+  ],
   headers: async () => [
     {
       source: "/sw.js",
