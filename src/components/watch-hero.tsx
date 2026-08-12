@@ -144,7 +144,6 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
   const [reducedMotion, setReducedMotion] = useState(false)
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to a client-only media query
     setReducedMotion(mq.matches)
     const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
     mq.addEventListener("change", onChange)
