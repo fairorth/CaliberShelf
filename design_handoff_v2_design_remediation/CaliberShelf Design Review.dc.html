@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #0b0e13; color: #eef1f5; font-family: Geist, "Helvetica Neue", Helvetica, sans-serif; }
+  a { color: #6ea2dd; text-decoration: none; }
+  a:hover { color: #9cc2ea; text-decoration: underline; }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#0b0e13;padding:56px 24px 96px;">
+<div style="max-width:940px;margin:0 auto;">
+
+  <div style="display:flex;flex-direction:column;gap:18px;border-bottom:1px solid rgba(255,255,255,0.10);padding-bottom:34px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.24em;color:#c9a25e;">DESIGN &amp; UI REVIEW · AUG 2026</div>
+    <h1 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:52px;font-weight:600;line-height:1.02;letter-spacing:-0.02em;">CaliberShelf</h1>
+    <p style="margin:0;max-width:660px;font-size:17px;line-height:1.6;color:#a8b0bb;text-wrap:pretty;">A critical read of the interface as built — grounded in the source at <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a25e;">fairorth/CaliberShelf@master</span>, not screenshots. 26 findings, each with what I saw, why it matters, and what I'd change.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:26px;padding-top:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">
+      <span>SCOPE · nav · collection · watch page · add/capture · photo panels · reports · theme tokens</span>
+      <span>USER · single operator (you)</span>
+    </div>
+  </div>
+
+  <div style="margin-top:46px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#c9a25e;margin-bottom:20px;">THE FIVE CALLS</div>
+    <div style="display:grid;gap:14px;">
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:18px;align-items:start;border-left:2px solid #c9a25e;background:rgba(201,162,94,0.05);padding:20px 22px;border-radius:0 14px 14px 0;">
+        <div style="font-family:Fraunces,Georgia,serif;font-size:30px;font-weight:600;color:#c9a25e;line-height:1;">01</div>
+        <div>
+          <h3 style="margin:0 0 7px;font-family:Fraunces,Georgia,serif;font-size:21px;font-weight:600;">The collection has no place to be looked at</h3>
+          <p style="margin:0;font-size:15px;line-height:1.62;color:#a8b0bb;text-wrap:pretty;">Every route into a watch — table row, gallery tile, hero “View watch →” — lands on <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/watch/[id]/edit</span>, a three-card form with ~30 inputs. For an app whose whole point is beautiful watches and beautiful photographs of them, the destination is a database record. Restore a view page as the default and make editing a deliberate mode.</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:18px;align-items:start;border-left:2px solid #c9a25e;background:rgba(201,162,94,0.05);padding:20px 22px;border-radius:0 14px 14px 0;">
+        <div style="font-family:Fraunces,Georgia,serif;font-size:30px;font-weight:600;color:#c9a25e;line-height:1;">02</div>
+        <div>
+          <h3 style="margin:0 0 7px;font-family:Fraunces,Georgia,serif;font-size:21px;font-weight:600;">The photography half of the system has no interface</h3>
+          <p style="margin:0;font-size:15px;line-height:1.62;color:#a8b0bb;text-wrap:pretty;">The lab is real and rigorous — C1 preset, folder-per-watch routing, CV triage, coverage matrix, reshoot list — and it all lives in docs, mjs scripts and a local <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">_photo-report.html</span>. The app it feeds shows none of it, even though <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">watch_image_scores</span> is already in Postgres. This is the biggest unbuilt surface in the product, and the most differentiating.</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:18px;align-items:start;border-left:2px solid #c9a25e;background:rgba(201,162,94,0.05);padding:20px 22px;border-radius:0 14px 14px 0;">
+        <div style="font-family:Fraunces,Georgia,serif;font-size:30px;font-weight:600;color:#c9a25e;line-height:1;">03</div>
+        <div>
+          <h3 style="margin:0 0 7px;font-family:Fraunces,Georgia,serif;font-size:21px;font-weight:600;">Two primary colors are competing</h3>
+          <p style="margin:0;font-size:15px;line-height:1.62;color:#a8b0bb;text-wrap:pretty;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">globals.css</span> says brass is “reserved for prices · never an interactive accent”, then brass drives the Save button, the Add CTA, required asterisks, card borders, dropzones and toggles — while steel-blue <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">--primary</span> drives the nav pills and the hero button. Two accents at equal weight means neither reads as “the action”.</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:18px;align-items:start;border-left:2px solid #c9a25e;background:rgba(201,162,94,0.05);padding:20px 22px;border-radius:0 14px 14px 0;">
+        <div style="font-family:Fraunces,Georgia,serif;font-size:30px;font-weight:600;color:#c9a25e;line-height:1;">04</div>
+        <div>
+          <h3 style="margin:0 0 7px;font-family:Fraunces,Georgia,serif;font-size:21px;font-weight:600;">Navigation hides the app from itself</h3>
+          <p style="margin:0;font-size:15px;line-height:1.62;color:#a8b0bb;text-wrap:pretty;">Eleven destinations across four semantic groups sit behind a hamburger that stays a hamburger at 1920px, labelled with OS-dependent emoji, while a two-item segmented control takes the center of the bar. Deals, Reports, Guides, Straps, Brands and the Wear Log are invisible on a desktop until you open a menu. On a single-user desktop-first tool, that's the wrong trade.</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:18px;align-items:start;border-left:2px solid #c9a25e;background:rgba(201,162,94,0.05);padding:20px 22px;border-radius:0 14px 14px 0;">
+        <div style="font-family:Fraunces,Georgia,serif;font-size:30px;font-weight:600;color:#c9a25e;line-height:1;">05</div>
+        <div>
+          <h3 style="margin:0 0 7px;font-family:Fraunces,Georgia,serif;font-size:21px;font-weight:600;">The visual system is tuned, not defined</h3>
+          <p style="margin:0;font-size:15px;line-height:1.62;color:#a8b0bb;text-wrap:pretty;">Type sizes are hand-nudged literals — 9.5, 10.5, 11, 12.5, 13.5, 14.5, 15.5, 19, 23, 34px — and radii bypass the token scale (13px, 11px, 10px, 7px alongside <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">rounded-2xl</span>). Individually each is a good judgement call; together there's no scale to design against, which is why new screens don't feel like old ones.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-top:64px;padding-top:34px;border-top:1px solid rgba(255,255,255,0.10);">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#c9a25e;">SECTION A</div>
+    <h2 style="margin:10px 0 6px;font-family:Fraunces,Georgia,serif;font-size:32px;font-weight:600;letter-spacing:-0.01em;">Information architecture</h2>
+    <p style="margin:0 0 30px;max-width:640px;font-size:15px;line-height:1.6;color:#8f98a4;">How the app is divided, and what those divisions imply about what matters.</p>
+
+    <div style="display:grid;gap:20px;">
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">A1</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(200,80,70,0.16);color:#e8877c;">CRITICAL</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Edit is the only watch page</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">watch/[id]/page.tsx</span> redirects to <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/edit</span>; the comment says the view-only page “was retired”. So the collection table, gallery tiles, hover thumbnails, the home hero CTA and Quick Capture's success state all deliver you into a form with a permanently docked save bar, a Delete button and an unsaved-changes dialog.</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Two costs. Emotionally, the collection is never presented — it's only ever maintained; the photo work never gets a stage. Practically, every casual look risks an accidental edit, and the 420px photo column is squeezed next to a three-column field grid, so neither reads well.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> bring back <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/watch/[id]</span> as a presentation page — large photo (contained, not cropped), a spec sheet in mono, wear + valuation + timegrapher as read-only strips, and a single “Edit” affordance. Keep the form intact behind it. If you liked the one-page speed, put field-level inline editing on the view page instead of a second route.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">A2</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">A hamburger at every breakpoint</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The header runs three navigation systems at once: a centered Home/Collection segmented control (desktop-only), an always-available hamburger holding eleven links in four unlabelled groups, and a persistent Add Watch button. Opening the menu expands the header and pushes the page down rather than overlaying it, so navigating costs a layout jump.</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The four groups are meaningful — assets · analysis · acquisition &amp; imagery · system — but the user sees only separator lines and emoji, so the grouping teaches nothing.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> on ≥lg, a 200px left rail with those four groups given visible headings, current item marked, collapsing to icon-only at md and to the drawer at sm. Then delete the segmented control — Home and Collection are just the first two rail items — and let the header hold identity, global search, Add, theme, account. Bonus: the rail gives Reports and Deals a permanent home, which is where the agent work actually surfaces.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">A3</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Four ways to add a photo, three interaction models</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Add-watch has a drag/paste dropzone with client-side downscaling. The edit page has a Photo Uploader with a device-dependent button pair and a global paste listener. <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/capture</span> is a three-step wizard — and appears in no nav group, so it's reachable only by typing the URL. Batch Import is a fourth path. Only the add flow downscales before upload, so the other paths are the ones that hit the “photo may be too large” error.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> one upload component (dropzone + paste + camera + downscale) used in all four places, and decide Capture's fate: either promote it into the nav as the studio-session entry point (see D1) or delete the route. An orphaned route is worse than no route.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">A4</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(110,162,221,0.16);color:#9cc2ea;">MEDIUM</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">“Gallery” names three different things</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The route <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/dashboard</span> is labelled “Home” in the nav but carries the metadata title “Gallery”. <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/gallery</span> is the inspiration-image board. And Collection's tile view is called Gallery. Three referents, one word — and the browser tab is the one that lies.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> Home (the stage) · Collection → Table/Tiles · Inspiration (rename <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/gallery</span>, it isn't your watches). Fix the <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/dashboard</span> title while you're there. Same pass: <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/add</span> vs <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/collection/new</span> are two live add routes.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">A5</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(140,149,160,0.16);color:#a9b1bb;">LOW</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">The Reports index has a dead card</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Nine cards in a uniform grid; Wear Summary carries a “Coming soon” pill but is still a full-size clickable card leading to a placeholder. Eight equal cards also give no sense of which reports you actually read weekly.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> make the unbuilt card non-interactive, and rank the grid — Collection Summary and Attention Needed are the daily ones; Agent Execution Review is the one with a live cost number, so give it a value on the card (last run, spend this month) rather than only prose.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-top:64px;padding-top:34px;border-top:1px solid rgba(255,255,255,0.10);">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#c9a25e;">SECTION B</div>
+    <h2 style="margin:10px 0 6px;font-family:Fraunces,Georgia,serif;font-size:32px;font-weight:600;letter-spacing:-0.01em;">The collection page</h2>
+    <p style="margin:0 0 30px;max-width:640px;font-size:15px;line-height:1.6;color:#8f98a4;">Your most-used screen, and the one carrying the most accumulated controls.</p>
+
+    <div style="display:grid;gap:20px;">
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">B1</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Nine controls in one wrapping row</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Title, search, category select, Filters dialog, sort select, direction toggle, the count/total/value/gain string, the tile-size slider and the view switcher all share a single <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">flex-wrap</span> line. At laptop widths the wrap point is unpredictable, and the ml-auto group jumps between rows as filters change.</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The status string is doing too much: <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">12 of 34 · $48,200 · value $52,100 +8.1%</span> is four different facts in one run of small type, two of them only appearing in one filter mode.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> two bands. Line 1: “Collection” + a small stat strip (count / cost / value / delta as labelled numbers in mono). Line 2: search grows, then category, Filters, sort, and the view switcher pinned right; move the tile-size slider into the tile view's own corner or drop it for three fixed densities. That also gets rid of the hand-rolled <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">SELECT_CLASS</span> native select sitting next to shadcn Selects.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">B2</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(200,80,70,0.16);color:#e8877c;">CRITICAL</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Filters persist invisibly</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Filters and sort are saved to localStorage and restored on mount, but the page shows no summary of what's active — only the dialog knows. Come back a week later with brand + tier + “tracked only” still set and the collection is quietly wrong; the “12 of 34” is the sole hint, and it's easy to read as “34 watches, showing a page”.</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The status/wish-list toggles compound it: they change the denominator too, so filtered state can look like a complete collection.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> a chip row under the toolbar — one removable chip per active filter, plus “Clear all”, hidden entirely when nothing is set. Consider not persisting filters across sessions at all (persist sort and view; reset filters), and put the category filter in the same chip row rather than in a second control.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">B3</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Two sort systems, arbitrated by deleting a storage key</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The toolbar dropdown sorts, and the table headers sort independently; the view clears <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">TABLE_SORT_KEY</span> so a dropdown choice wins next mount. The user's model breaks: the dropdown can read “Sort: Brand” while the table is sorted by price, and neither control shows the other's state.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> one sort state owned by the view. In table view, headers are the only control (drop the dropdown; keep the header arrow as truth). In tile view, keep the dropdown. Same state object, so switching views preserves order.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">B4</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Zebra striping in the accent hue</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Rows alternate a neutral wash with <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">oklch(0.6 0.11 233 / 0.12)</span> — the same family as <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">--primary</span>. Tinted rows read as selected or flagged, and half your table is permanently “on”. There's also no hover row treatment, so pointing at a row gives no feedback while eleven columns of muted text ask you to track across.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> drop the blue band. Either a single 3–4% white stripe or no stripe plus a 1px hairline, and spend the contrast budget on a clear hover (row background lift + brass left edge) and a real selected state you can then use for bulk actions.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">B5</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(110,162,221,0.16);color:#9cc2ea;">MEDIUM</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Identical-looking cells, three destinations</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">In one row: Category navigates to a filtered URL, Brand calls a filter callback, Model and Nickname open the edit page, and the Photo opens the edit page too. All four are underline-on-hover text. Nothing distinguishes “filter by this” from “open this”, and there's no whole-row target, so the largest click area in the row does nothing.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> the row is the watch — clicking anywhere opens it. Move “show all of this brand/category” to a small filter glyph revealed on cell hover (or a right-click/context menu), and mark those cells with a consistent affordance. Also: eleven columns is a lot of “—”; make the column set choosable and default to eight.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">B6</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(110,162,221,0.16);color:#9cc2ea;">MEDIUM</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Tiles crop the subject</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Tile covers are square <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">object-cover</span> with a hover scale — on a portrait watch shot that cuts the lugs and strap, the parts that carry the model's character. The tile header also reserves a 28px strip above every photo for a movement-type chip, so the photo is pushed down and the chip carries more visual weight than the watch.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> you already store <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">dial_focal_x/y/zoom</span> — use it for tile framing, not just the hero. Let the photo start at the tile's top edge and move the type chip into the metadata footer with the caliber, where it belongs. A 4:5 tile suits wrist shots better than 1:1.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-top:64px;padding-top:34px;border-top:1px solid rgba(255,255,255,0.10);">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#c9a25e;">SECTION C</div>
+    <h2 style="margin:10px 0 6px;font-family:Fraunces,Georgia,serif;font-size:32px;font-weight:600;letter-spacing:-0.01em;">The watch form</h2>
+    <p style="margin:0 0 30px;max-width:640px;font-size:15px;line-height:1.6;color:#8f98a4;">1,300 lines and, today, the whole watch experience. Mostly well built — three specific problems.</p>
+
+    <div style="display:grid;gap:20px;">
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">C1</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(200,80,70,0.16);color:#e8877c;">CRITICAL</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Unsaved work escapes through every exit but one</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The dirty flag guards exactly one door — the form's own Return button. The nav header, the hamburger links, the logo, the browser back button and a page reload all leave silently, and there's no <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">beforeunload</span> handler. On the page where you enter 30 fields plus agent autofill results, that's the highest-stakes loss in the app.</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Second-order: dirty is one-way. <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">onInput → true</span>, never back to false, so typing a character and deleting it leaves “Unsaved changes” glowing brass forever — which trains you to ignore the indicator that the guard depends on.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> add a <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">beforeunload</span> guard while dirty, and compare against initial values so dirty can clear. Better still, given single-user desktop use: autosave per field on blur with a “Saved 14:32” stamp in the bar, and keep Delete behind the dialog. Then the bar stops being a gate and becomes a status line.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">C2</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">The form is dark-only</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Every field uses <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">FIELD = "bg-[#1b212a] border-white/12 …"</span>, and date inputs force <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">[color-scheme:dark]</span>. In light mode you get near-black fields with white-alpha borders on a pale page. The same literal-over-token pattern appears in the nav pill (<span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">bg-white/[0.04]</span>), tile chips, tile backgrounds (<span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">#222a33 → #12161c</span>) and the add dropzone. You ship a theme toggle in the header; half the app doesn't honour it.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> decide honestly whether light mode is a feature. If yes, replace every hex/white-alpha literal with a token (<span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">--input</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">--card</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">--muted</span>) and drop the forced color-scheme; if no, remove the toggle and the light block — a dark-only tool for a jewellery-photography app is a defensible position, and it's cheaper than maintaining two truths.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">C3</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(110,162,221,0.16);color:#9cc2ea;">MEDIUM</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Three-column field grid, no rhythm</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Card 1 puts Brand, Model, Nickname, Reference, Serial, Purchase Date, Price and Box into a uniform three-column grid, so a 20-character serial gets the same width as a 4-character price and the eye finds no anchor. The three checkbox rows below each span all columns with the description as a separate sibling span, giving three near-identical full-width lines of small type. The Specifications card then measures nine numeric fields at equal width where they'd read far better as a compact measurement block with units aligned.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> size fields to their content (a 5-char mono input for mm values, full width for serial/notes), group the case measurements into a labelled 2×4 spec block with right-aligned mono numbers and a unit suffix inside the field, and turn the three status checkboxes into one “Status” control — Owned / Coming soon / Wish list are mutually exclusive in your own filter logic, so a segmented control matches the data model better than three checkboxes.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-top:64px;padding-top:34px;border-top:1px solid rgba(255,255,255,0.10);">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#c9a25e;">SECTION D</div>
+    <h2 style="margin:10px 0 6px;font-family:Fraunces,Georgia,serif;font-size:32px;font-weight:600;letter-spacing:-0.01em;">Photography</h2>
+    <p style="margin:0 0 30px;max-width:640px;font-size:15px;line-height:1.6;color:#8f98a4;">The half of the system with the most craft behind it and the least interface in front of it.</p>
+
+    <div style="display:grid;gap:20px;">
+
+      <div style="border:1px solid rgba(201,162,94,0.28);border-radius:16px;background:rgba(201,162,94,0.05);padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">D1</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(200,80,70,0.16);color:#e8877c;">CRITICAL</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">There is no Photo Lab in the app</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The lab exists as documentation and terminal output: a C1 recipe, overhead geometry, focus-stacking parameters, per-watch capture folders created by <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">sync-watch-folders</span>, and <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">photo-score.mjs</span> producing sharpness/dup triage, shot-card grades, a coverage matrix and a reshoot list into a local HTML file. In the app, photography is one uploader button and a grid of undifferentiated squares. The scores table is already migrated; nothing renders it.</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">This is the gap between what the system is and what the UI admits it is. It's also where the app stops being another collection tracker.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> add Photo Lab as a top-level destination with three views. <span style="color:#eef1f5;">Coverage</span> — a watch × angle matrix (flat dial-on, hero three-quarter, profile, caseback, macro) with cells scored/empty, so “what still needs shooting” is a glance instead of a script. <span style="color:#eef1f5;">Session</span> — pick the watch, see its folder, C1 checklist and last frames; the shoot is the unit of work, not the upload. <span style="color:#eef1f5;">Review</span> — the scored frames from a run, largest-first, keyboard-driven accept/reject with “set as cover” and angle tagging in one pass. That report is already generated; it just deserves to live where the collection lives.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">D2</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">The photo panel fights the photographer</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Four specific frictions in <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">photo-gallery.tsx</span>: the lightbox opens on <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">onDoubleClick</span> (undiscoverable, and unreliable on touch — the visible Zoom button only exists in the single-photo case); actions live in a select-then-act footer whose state is announced as “Selected: Photo 3”; the hero tile is index 0, not the cover, so your chosen cover can sit as a small tile with a badge while another photo takes the big slot; and there's no reordering, no captions, no angle labels. Every image is also <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">object-cover</span> in a square, so the review view crops the frame you carefully composed with margin for straightening.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> single click opens the lightbox; do the work there (arrow keys between frames, C to set cover, X to delete, 1–5 to tag angle) since that's the only place the pixels are big enough to judge. In the panel, hero = cover, hover reveals per-tile actions, drag reorders, and detail images are <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">object-contain</span> on a neutral field. Reserve cover-cropping for dense grids only.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">D3</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Quick Capture has the flow inverted</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Capture → select watch → confirm, one frame per pass, with the watch chosen from a grid of the entire collection after the shot. A real session is the opposite shape: one watch, many frames, over minutes. Three taps of overhead per frame, a 128px emoji shutter, and a text step indicator make it feel like a form rather than a camera.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> invert it — choose the watch once (or inherit the active session watch from D1), then shoot repeatedly with an instant filmstrip of what you just took and undo per frame. Accept multi-select from the gallery in one go. Match the lab's folder-per-watch mental model so app captures and tethered captures land in the same place conceptually.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">D4</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(110,162,221,0.16);color:#9cc2ea;">MEDIUM</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">The hero is a screensaver you can't operate</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The Living Dial is the best-crafted thing in the app — real case, lugs, crown, a brass rim line phase-locked to the wall clock. But it auto-advances on a timer with no pause, no previous/next, no keyboard, and the caption's only action is “View watch →”, which opens the edit form (see A1). <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">prefers-reduced-motion</span> is honoured for the sunburst dial only — not for the swap or the 60-second sweep. And the whole thing sits behind a Living Dial / Display Box toggle whose state is invisible until you look.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> hover pauses, ← → steps, click the dial goes to the watch. Extend the reduced-motion query to freeze the rotation. Then let the hero earn its screen space: one line of context that isn't in the caption today — days since last worn, latest valuation delta, or “no hero-angle photo yet”, which makes the stage feed the lab.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-top:64px;padding-top:34px;border-top:1px solid rgba(255,255,255,0.10);">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#c9a25e;">SECTION E</div>
+    <h2 style="margin:10px 0 6px;font-family:Fraunces,Georgia,serif;font-size:32px;font-weight:600;letter-spacing:-0.01em;">Visual system</h2>
+    <p style="margin:0 0 30px;max-width:640px;font-size:15px;line-height:1.6;color:#8f98a4;">The material story — navy, steel, brass, engraved serif — is genuinely good. It's the enforcement that's missing.</p>
+
+    <div style="display:grid;gap:20px;">
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">E1</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(200,80,70,0.16);color:#e8877c;">CRITICAL</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Brass broke its own rule</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The token is annotated “reserved for prices (never an interactive accent)”. In practice brass is: the Save button, the Add-watch primary CTA, required asterisks, every spec card's left border and header wash, the “NEW ENTRY” eyebrow, the Living Dial active pill, dropzone iconography, column-resize hover, autofill highlight rings — and prices. Meanwhile steel-blue <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">--primary</span> owns the nav pills, the hero CTA, focus rings and the photo-selection ring.</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Consequence: on the watch page the brass Save button and the blue selection ring compete for “most important thing”, and because brass is also every card's border, the button doesn't read as special at all.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> pick one and write it down. My recommendation, since brass is your brand: <span style="color:#eef1f5;">brass = action + brand</span> (primary buttons, active nav, focus) and <span style="color:#eef1f5;">steel-blue = data</span> (charts, links, informational chips), with value/price in a neutral high-contrast mono instead of a colour. Then strip brass from decoration — card borders and header washes go to a neutral hairline — so the one brass thing on screen is the thing to click.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">E2</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Emoji as the icon system</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Nav items are 📋🏷️〰️📅📊🧭💰📸📦⚙️ℹ️; card titles are 🏷️⚙️📂 in brass chips; subsection eyebrows are ⏱️🔩✨; empty states are ⌚; Capture's shutter is 📷; success is ✅. lucide-react is already installed and used for the view switcher, theme toggle and zoom. So the app runs two icon languages, one of which is rendered by the OS — colour, weight and metrics you don't control, glyphs that fight a navy-and-brass palette, and screen readers announcing “clipboard” for Collection.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> lucide everywhere at one size (16px nav / 18px headers), <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">currentColor</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">aria-hidden</span>. Keep ✨ for the AI autofill button only — there it's a deliberate convention, not decoration — and replace the ⌚ empty states with a quiet outline mark or your own logo mark, which you already have as a component.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">E3</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">No type scale, and page titles disagree</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Sizes are set as one-off literals: 9.5, 10.5, 11, 12, 12.5, 13, 13.5, 14.5, 15.5, 19, 20, 23, 34px. Page <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">h1</span>s range from <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">text-lg</span> (Collection, Config, Reports) to <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">text-2xl</span> (watch) to 34px (Add) — so the Add form shouts and the collection whispers, with no hierarchy logic behind it. Fraunces also appears at 15.5px semibold inside table rows, where a display serif adds texture to the densest part of the UI.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> six steps and stop — say 11 / 13 / 15 / 19 / 26 / 38 — as CSS vars, with mono locked to 12/13 and Fraunces reserved for ≥19px. One page-title size everywhere. Brand names in table cells go to the sans at 14–15px medium; the serif then means “heading”, consistently.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">E4</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(110,162,221,0.16);color:#9cc2ea;">MEDIUM</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Six radii, none from the token scale</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">You define <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">--radius</span> with a derived sm→4xl scale, then hardcode <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">13px</span> tiles, <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">11px</span> nav, <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">10px</span> buttons, <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">7px</span> logo mark alongside <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">rounded-2xl</span> and <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">rounded-lg</span>. Nobody notices one; everyone feels the aggregate as slight sloppiness.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> three radii — control 8px, card 14px, pill full — and delete the rest. A watch app can carry a slightly tighter radius than the shadcn default; it reads more instrument-like.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">E5</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(140,149,160,0.16);color:#a9b1bb;">LOW</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Muted text is doing 80% of the talking</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">In the table, gallery footer and hero caption, nearly everything is <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">text-muted-foreground</span> (#8c95a0) — often at 10.5–13px, sometimes at <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/70</span> or <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">/80</span> opacity on top. When everything is secondary, nothing is primary, and the smallest sizes fall below AA contrast on card surfaces.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> per surface, name one primary value (brand+model in a row; brand in a tile) at full foreground and let the rest be muted — but stop stacking opacity modifiers on an already-muted token, and floor small text at 12px.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-top:64px;padding-top:34px;border-top:1px solid rgba(255,255,255,0.10);">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#c9a25e;">SECTION F</div>
+    <h2 style="margin:10px 0 6px;font-family:Fraunces,Georgia,serif;font-size:32px;font-weight:600;letter-spacing:-0.01em;">Accessibility &amp; polish</h2>
+    <p style="margin:0 0 30px;max-width:640px;font-size:15px;line-height:1.6;color:#8f98a4;">Single-user today — but two of these will bite you personally, not hypothetically.</p>
+
+    <div style="display:grid;gap:20px;">
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">F1</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(207,122,82,0.16);color:#e0a184;">HIGH</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Pinch-zoom is disabled on the phone</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">maximumScale: 1</span> in the root viewport blocks zoom app-wide. On a photography PWA that's self-defeating — checking dial sharpness on a phone is exactly a pinch-zoom task — and it's a WCAG 1.4.4 failure.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> remove <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">maximumScale</span> (keep <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">viewportFit: cover</span>), and give the lightbox real pinch/double-tap zoom to 100%.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">F2</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(110,162,221,0.16);color:#9cc2ea;">MEDIUM</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Semantics missing where you'd feel it</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">Sortable headers use buttons with ▲▼⇅ glyphs but no <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">aria-sort</span>; the hamburger has no <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">aria-expanded</span>; nav emoji aren't hidden from the accessibility tree; column resize handles are pointer-only (no keyboard path). The <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">$$</span> price-check marker and <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">◷</span> wear count carry meaning only in a <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">title</span> attribute — invisible on touch, and cryptic anywhere.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> a half-day sweep: <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">aria-sort</span> on headers, <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">aria-expanded</span>/<span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">aria-controls</span> on the menu, <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">aria-hidden</span> on decorative glyphs, and replace <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">$$</span>/<span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">◷</span> with lucide icons plus visible labels in a legend row.</p>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#12161c;padding:24px 26px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7d8794;">F3</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;background:rgba(140,149,160,0.16);color:#a9b1bb;">LOW</span>
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;">Two buttons and a paragraph explaining them</h3>
+        </div>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.62;color:#b3bac4;text-wrap:pretty;">The Add flow ends with “Save &amp; add details →” (brass) and “Save &amp; close”, followed by a sentence explaining what each does — and the explanation contradicts itself slightly (“returns to the watch”). If two buttons need a paragraph, the labels aren't carrying their weight.</p>
+        <p style="margin:0;font-size:15px;line-height:1.62;color:#dfe4ea;"><span style="color:#c9a25e;font-weight:500;">Do:</span> one primary <span style="color:#eef1f5;">Save watch</span> that lands on the watch page (which, per A1, is where you'd continue anyway), plus a quiet “Save and add another” for batch entry. No explanatory paragraph.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-top:64px;padding-top:34px;border-top:1px solid rgba(255,255,255,0.10);">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#c9a25e;">SEQUENCE</div>
+    <h2 style="margin:10px 0 26px;font-family:Fraunces,Georgia,serif;font-size:32px;font-weight:600;letter-spacing:-0.01em;">What I'd do, in order</h2>
+
+    <div style="display:grid;gap:16px;">
+      <div style="display:grid;grid-template-columns:150px 1fr;gap:22px;border:1px solid rgba(255,255,255,0.09);border-radius:14px;background:#12161c;padding:22px 24px;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#c9a25e;">NOW</div>
+          <div style="margin-top:4px;font-size:13px;color:#7d8794;">a weekend</div>
+        </div>
+        <div style="font-size:15px;line-height:1.75;color:#b3bac4;">
+          <div>Guard unsaved work — <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">beforeunload</span> + two-way dirty <span style="color:#6c757f;">(C1)</span></div>
+          <div>Remove <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">maximumScale</span> <span style="color:#6c757f;">(F1)</span></div>
+          <div>Kill the blue zebra band; add row hover <span style="color:#6c757f;">(B4)</span></div>
+          <div>Active-filter chips with Clear all <span style="color:#6c757f;">(B2)</span></div>
+          <div>Single click opens the lightbox; hero tile = cover <span style="color:#6c757f;">(D2)</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:150px 1fr;gap:22px;border:1px solid rgba(255,255,255,0.09);border-radius:14px;background:#12161c;padding:22px 24px;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#c9a25e;">NEXT</div>
+          <div style="margin-top:4px;font-size:13px;color:#7d8794;">the structural pass</div>
+        </div>
+        <div style="font-size:15px;line-height:1.75;color:#b3bac4;">
+          <div>Watch view page; edit becomes a mode <span style="color:#6c757f;">(A1)</span></div>
+          <div>Left rail nav with named groups; retire the segmented control <span style="color:#6c757f;">(A2)</span></div>
+          <div>Pick one accent and enforce it; strip decorative brass <span style="color:#6c757f;">(E1)</span></div>
+          <div>Type scale + one page-title size; lucide everywhere <span style="color:#6c757f;">(E2, E3)</span></div>
+          <div>Collection toolbar in two bands; one sort owner <span style="color:#6c757f;">(B1, B3)</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:150px 1fr;gap:22px;border:1px solid rgba(201,162,94,0.28);border-radius:14px;background:rgba(201,162,94,0.05);padding:22px 24px;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#c9a25e;">THEN</div>
+          <div style="margin-top:4px;font-size:13px;color:#7d8794;">the differentiator</div>
+        </div>
+        <div style="font-size:15px;line-height:1.75;color:#b3bac4;">
+          <div>Photo Lab in-app: Coverage matrix · Session · Review <span style="color:#6c757f;">(D1)</span></div>
+          <div>Session-shaped capture, watch-first <span style="color:#6c757f;">(D3)</span></div>
+          <div>One upload component across all entry points <span style="color:#6c757f;">(A3)</span></div>
+          <div>Resolve the light-mode question either way <span style="color:#6c757f;">(C2)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:56px;border:1px solid rgba(255,255,255,0.09);border-radius:16px;background:#101419;padding:26px 28px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#c9a25e;margin-bottom:14px;">WORTH KEEPING</div>
+    <p style="margin:0 0 12px;font-size:15px;line-height:1.68;color:#b3bac4;text-wrap:pretty;">Criticism reads louder than praise, so to be explicit about what's already strong: the material concept — navy-black surfaces, steel-blue interaction, brass for value, an engraved serif — is a real point of view, and rare. The Living Dial is a genuinely delightful piece of craft. Agent transparency is exemplary: cost per call shown inline, sources linked, empty-fields-only fills, unverified references flagged amber until a human confirms — most products hide all four.</p>
+    <p style="margin:0;font-size:15px;line-height:1.68;color:#b3bac4;text-wrap:pretty;">The taxonomy discipline (category vs complications vs user-configured tiers) is cleaner than most commercial collection tools, resizable persisted columns and paste-to-upload are the marks of someone building for their own real use, and the sticky save bar with a dirty indicator is the right pattern — it just needs to be trustworthy. None of the findings above are about the app being badly built. They're about a strong system that hasn't yet been written down and enforced, and about a photography practice that deserves a front end.</p>
+  </div>
+
+  <sc-if value="{{ showEvidence }}" hint-placeholder-val="{{ true }}">
+  <div style="margin-top:44px;padding-top:30px;border-top:1px solid rgba(255,255,255,0.10);">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#c9a25e;margin-bottom:16px;">EVIDENCE</div>
+    <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#8f98a4;">Files read for this review, at commit <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c9a25e;">5b9687c</span>:</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:6px 26px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.9;color:#7d8794;">
+      <div>app/globals.css · layout.tsx · page.tsx</div>
+      <div>(dashboard)/layout.tsx · dashboard/page.tsx</div>
+      <div>components/layout/nav-header.tsx</div>
+      <div>components/collection-table.tsx</div>
+      <div>components/home-stage.tsx · watch-hero.tsx</div>
+      <div>components/watch-form.tsx</div>
+      <div>collection/page.tsx · collection-view.tsx</div>
+      <div>collection/_components/gallery-grid.tsx</div>
+      <div>watch/[id]/page.tsx · edit/page.tsx</div>
+      <div>watch/[id]/_components/photo-gallery.tsx</div>
+      <div>watch/[id]/_components/photo-uploader.tsx</div>
+      <div>capture/_components/quick-capture.tsx</div>
+      <div>add/_components/add-watch-flow.tsx</div>
+      <div>reports/page.tsx · config/page.tsx</div>
+      <div>docs/photo-lab.md · using-calibershelf.md</div>
+      <div>CLAUDE.md (root · app · components)</div>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showEvidence&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Report&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      showEvidence: this.props.showEvidence ?? true,
+    };
+  }
+}
+</script>
+</body>
+</html>

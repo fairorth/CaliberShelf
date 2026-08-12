@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; background: #07090c; color: #eef1f5; font-family: Geist, "Helvetica Neue", Helvetica, sans-serif; }
+  a { color: #6ea2dd; text-decoration: none; }
+  a:hover { color: #9cc2ea; }
+  .ph { background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.045) 0 10px, rgba(255,255,255,0.015) 10px 20px); }
+</style>
+</helmet>
+
+<div style="background:#07090c;min-height:100vh;padding:48px 40px 120px;display:flex;flex-direction:column;gap:64px;align-items:flex-start;">
+
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#c9a25e;">CALIBERSHELF V2 · SCREEN SPECS</div>
+    <h1 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;letter-spacing:-0.02em;">Four screens</h1>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#a8b0bb;text-wrap:pretty;">Built to the v2 design system: brass is action, steel-blue is data, prices are neutral mono, six type steps, three radii, lucide icons only. Photo areas are placeholders — real frames go there. Dark theme shown; every screen must also work in light mode.</p>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#c9a25e;">01</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Watch view page</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">/watch/[id] · finding A1 · 1440×</span>
+    </div>
+
+    <div style="width:1440px;background:#0f1318;border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;display:flex;">
+
+      <div style="width:200px;flex:none;background:#0c1015;border-right:1px solid rgba(255,255,255,0.07);padding:14px 12px;display:flex;flex-direction:column;gap:18px;">
+        <div style="display:flex;align-items:center;gap:9px;padding:4px 8px 8px;">
+          <img src="calibershelf-mark.png" alt="CaliberShelf" style="width:26px;height:26px;border-radius:8px;flex:none;" />
+          <div style="display:flex;flex-direction:column;">
+            <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;line-height:1;">CaliberShelf</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;margin-top:2px;">v2.0.0</span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;color:inherit;"><i data-lucide="house"></i></span>Home
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 10px 6px;">COLLECTION</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(201,162,94,0.14);color:#c9a25e;font-size:15px;font-weight:500;">
+            <span style="display:flex;"><i data-lucide="list"></i></span>Collection
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="tag"></i></span>Brands
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="link-2"></i></span>Straps
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 10px 6px;">ANALYSIS</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="calendar-days"></i></span>Wear Log
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="chart-column"></i></span>Reports
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="compass"></i></span>Guides
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 10px 6px;">ACQUISITION &amp; IMAGERY</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="badge-dollar-sign"></i></span>Deals
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="camera"></i></span>Photo Lab
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="images"></i></span>Inspiration
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="package-plus"></i></span>Batch Import
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 10px 6px;">SYSTEM</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="settings"></i></span>Config
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;">
+            <span style="display:flex;"><i data-lucide="info"></i></span>About
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+
+        <div style="height:56px;flex:none;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:14px;padding:0 22px;">
+          <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid rgba(255,255,255,0.10);border-radius:8px;width:280px;color:#6c757f;">
+            <span style="display:flex;"><i data-lucide="search"></i></span>
+            <span style="font-size:13px;">Search collection…</span>
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+            <div style="display:flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:8px;background:#c9a25e;color:#1a1206;font-size:13px;font-weight:600;">
+              <span style="display:flex;"><i data-lucide="plus"></i></span>Add Watch
+            </div>
+            <div style="width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,0.10);display:flex;align-items:center;justify-content:center;color:#8c95a0;">
+              <i data-lucide="sun"></i>
+            </div>
+            <div style="width:34px;height:34px;border-radius:9999px;background:#1e242c;display:flex;align-items:center;justify-content:center;color:#8c95a0;">
+              <i data-lucide="user"></i>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:22px 26px 30px;display:flex;flex-direction:column;gap:20px;">
+
+          <div style="display:flex;align-items:center;gap:6px;color:#8c95a0;font-size:13px;">
+            <span style="display:flex;"><i data-lucide="chevron-left"></i></span>Collection
+          </div>
+
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;">
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <h1 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;letter-spacing:-0.01em;">Grand Seiko <span style="color:#8c95a0;font-weight:400;">SBGA413 “Shunbun”</span></h1>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8c95a0;">SBGA413</span>
+                <span style="width:1px;height:12px;background:rgba(255,255,255,0.14);"></span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;padding:3px 9px;border-radius:9999px;background:#1e242c;color:#a8b0bb;">OWNED</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;padding:3px 9px;border-radius:9999px;background:rgba(110,162,221,0.14);color:#6ea2dd;">BOX 2</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;padding:3px 9px;border-radius:9999px;background:rgba(110,162,221,0.14);color:#6ea2dd;">PRICE TRACKED</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex:none;">
+              <div style="display:flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);color:#eef1f5;font-size:13px;font-weight:500;">
+                <span style="display:flex;"><i data-lucide="watch"></i></span>Wear today
+              </div>
+              <div style="display:flex;align-items:center;gap:7px;height:36px;padding:0 16px;border-radius:8px;background:#c9a25e;color:#1a1206;font-size:13px;font-weight:600;">
+                <span style="display:flex;"><i data-lucide="pencil"></i></span>Edit
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 380px;gap:22px;align-items:start;">
+
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="position:relative;aspect-ratio:4/3;border-radius:14px;border:1px solid rgba(255,255,255,0.07);background:#0b0e12;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <div class="ph" style="width:74%;height:88%;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#7d8794;text-align:center;">COVER FRAME · object-contain<br />no crop, neutral field</span>
+                </div>
+                <div style="position:absolute;top:12px;left:12px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;padding:4px 9px;border-radius:9999px;background:rgba(201,162,94,0.16);color:#c9a25e;">COVER · HERO</div>
+                <div style="position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:8px;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;color:#eef1f5;">
+                  <i data-lucide="maximize-2"></i>
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;">
+                <div class="ph" style="aspect-ratio:1;border-radius:8px;border:2px solid #c9a25e;display:flex;align-items:flex-end;padding:5px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#c9a25e;">HERO</span>
+                </div>
+                <div class="ph" style="aspect-ratio:1;border-radius:8px;border:1px solid rgba(255,255,255,0.09);display:flex;align-items:flex-end;padding:5px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7d8794;">FLAT</span>
+                </div>
+                <div class="ph" style="aspect-ratio:1;border-radius:8px;border:1px solid rgba(255,255,255,0.09);display:flex;align-items:flex-end;padding:5px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7d8794;">PROFILE</span>
+                </div>
+                <div class="ph" style="aspect-ratio:1;border-radius:8px;border:1px solid rgba(255,255,255,0.09);display:flex;align-items:flex-end;padding:5px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7d8794;">MACRO</span>
+                </div>
+                <div class="ph" style="aspect-ratio:1;border-radius:8px;border:1px solid rgba(255,255,255,0.09);display:flex;align-items:flex-end;padding:5px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7d8794;">CASEBACK</span>
+                </div>
+                <div style="aspect-ratio:1;border-radius:8px;border:1px dashed rgba(255,255,255,0.16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#6c757f;">
+                  <i data-lucide="plus"></i>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;">ADD</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:14px;">
+
+              <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:9px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);color:#eef1f5;">
+                  <span style="display:flex;color:#8c95a0;"><i data-lucide="settings-2"></i></span>
+                  <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;">Specifications</h3>
+                </div>
+                <div style="padding:4px 16px 12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <span style="font-size:13px;color:#8c95a0;">Movement</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">Seiko 9R65 · Spring Drive</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <span style="font-size:13px;color:#8c95a0;">Case material</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">Stainless steel</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <span style="font-size:13px;color:#8c95a0;">Crystal</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">Sapphire</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <span style="font-size:13px;color:#8c95a0;">Dial</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">Silver-white “snowflake”</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px;padding-top:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                      <span style="font-size:13px;color:#8c95a0;">Diameter</span>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">40.2 mm</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                      <span style="font-size:13px;color:#8c95a0;">Height</span>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">12.5 mm</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                      <span style="font-size:13px;color:#8c95a0;">Lug-to-lug</span>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">46.2 mm</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                      <span style="font-size:13px;color:#8c95a0;">Lug width</span>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">20.0 mm</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;">
+                      <span style="font-size:13px;color:#8c95a0;">Weight</span>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">142 g</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;">
+                      <span style="font-size:13px;color:#8c95a0;">Water res.</span>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">100 m</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:baseline;gap:10px;padding:12px 0 2px;border-top:1px solid rgba(255,255,255,0.05);margin-top:6px;">
+                    <span style="font-size:13px;color:#8c95a0;flex:none;">Complications</span>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-left:auto;">
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 8px;border-radius:9999px;background:#1e242c;color:#a8b0bb;">DATE</span>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 8px;border-radius:9999px;background:#1e242c;color:#a8b0bb;">POWER RESERVE</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:9px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);">
+                  <span style="display:flex;color:#8c95a0;"><i data-lucide="receipt"></i></span>
+                  <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;">Ownership</h3>
+                </div>
+                <div style="padding:4px 16px 12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <span style="font-size:13px;color:#8c95a0;">Purchased</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">2024-03-18</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <span style="font-size:13px;color:#8c95a0;">Paid</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;font-weight:500;">$5,800</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;">
+                    <span style="font-size:13px;color:#8c95a0;">Stored in</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">Box 2 · safe, upper tray</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+
+            <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;">WEAR</div>
+                <span style="display:flex;color:#6c757f;"><i data-lucide="chevron-right"></i></span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-variant-numeric:tabular-nums;">34</span>
+                <span style="font-size:13px;color:#8c95a0;">wears</span>
+              </div>
+              <div style="font-size:13px;color:#8c95a0;">Last worn <span style="color:#eef1f5;">Aug 9, 2026</span> · 3 days ago</div>
+            </div>
+
+            <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;">MARKET VALUE</div>
+                <span style="display:flex;color:#6c757f;"><i data-lucide="chevron-right"></i></span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:10px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-variant-numeric:tabular-nums;">$6,150</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#5aa37a;font-variant-numeric:tabular-nums;">+6.0%</span>
+              </div>
+              <div style="font-size:13px;color:#8c95a0;">Aug 2026 run · confidence <span style="color:#eef1f5;">high</span></div>
+            </div>
+
+            <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;">TIMEGRAPHER</div>
+                <span style="display:flex;color:#6c757f;"><i data-lucide="chevron-right"></i></span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:10px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-variant-numeric:tabular-nums;">+0.4</span>
+                <span style="font-size:13px;color:#8c95a0;">s/day</span>
+              </div>
+              <div style="font-size:13px;color:#8c95a0;">Jul 2026 · lift angle <span style="color:#eef1f5;">52°</span></div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#c9a25e;">02</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Navigation rail — three breakpoints</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">finding A2</span>
+    </div>
+
+    <div style="display:flex;gap:18px;align-items:flex-start;">
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:#6c757f;">≥LG · 200PX EXPANDED</div>
+        <div style="width:200px;height:420px;background:#0c1015;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:14px;overflow:hidden;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 8px;">COLLECTION</div>
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(201,162,94,0.14);color:#c9a25e;font-size:15px;font-weight:500;"><span style="display:flex;"><i data-lucide="list"></i></span>Collection</div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="tag"></i></span>Brands</div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.05);color:#eef1f5;font-size:15px;"><span style="display:flex;"><i data-lucide="link-2"></i></span>Straps</div>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 8px;">ANALYSIS</div>
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="calendar-days"></i></span>Wear Log</div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="chart-column"></i></span>Reports</div>
+          </div>
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px;padding:0 8px;">
+            <div style="font-size:13px;color:#6c757f;">Hover state = <span style="color:#eef1f5;">Straps</span></div>
+            <div style="font-size:13px;color:#6c757f;">Active = brass 14% + brass text</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:#6c757f;">MD · 56PX ICON-ONLY</div>
+        <div style="width:56px;height:420px;background:#0c1015;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 8px;display:flex;flex-direction:column;gap:6px;align-items:center;">
+          <img src="calibershelf-mark.png" alt="CaliberShelf" style="width:32px;height:32px;border-radius:8px;margin-bottom:6px;" />
+          <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8c95a0;"><i data-lucide="house"></i></div>
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(201,162,94,0.14);color:#c9a25e;display:flex;align-items:center;justify-content:center;"><i data-lucide="list"></i></div>
+          <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8c95a0;"><i data-lucide="tag"></i></div>
+          <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8c95a0;"><i data-lucide="link-2"></i></div>
+          <div style="width:24px;height:1px;background:rgba(255,255,255,0.10);margin:4px 0;"></div>
+          <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8c95a0;"><i data-lucide="calendar-days"></i></div>
+          <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8c95a0;"><i data-lucide="chart-column"></i></div>
+          <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8c95a0;"><i data-lucide="compass"></i></div>
+          <div style="width:24px;height:1px;background:rgba(255,255,255,0.10);margin:4px 0;"></div>
+          <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8c95a0;"><i data-lucide="camera"></i></div>
+          <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8c95a0;"><i data-lucide="badge-dollar-sign"></i></div>
+          <div style="margin-top:auto;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8c95a0;"><i data-lucide="settings"></i></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:#6c757f;">≤SM · OVERLAY DRAWER (NO LAYOUT PUSH)</div>
+        <div style="width:390px;height:420px;background:#0f1318;border:1px solid rgba(255,255,255,0.08);border-radius:14px;position:relative;overflow:hidden;">
+          <div style="height:52px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;padding:0 14px;">
+            <span style="display:flex;color:#eef1f5;"><i data-lucide="x"></i></span>
+            <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;">CaliberShelf</span>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:8px;background:#c9a25e;color:#1a1206;font-size:13px;font-weight:600;">
+              <span style="display:flex;"><i data-lucide="plus"></i></span>Add
+            </div>
+          </div>
+          <div class="ph" style="position:absolute;inset:52px 0 0 0;"></div>
+          <div style="position:absolute;inset:52px 0 0 0;background:rgba(7,9,12,0.66);"></div>
+          <div style="position:absolute;top:52px;left:0;bottom:0;width:264px;background:#0c1015;border-right:1px solid rgba(255,255,255,0.09);padding:12px;display:flex;flex-direction:column;gap:12px;box-shadow:14px 0 40px rgba(0,0,0,0.5);">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 8px;">COLLECTION</div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:rgba(201,162,94,0.14);color:#c9a25e;font-size:15px;font-weight:500;"><span style="display:flex;"><i data-lucide="list"></i></span>Collection</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="tag"></i></span>Brands</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="link-2"></i></span>Straps</div>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 8px;">ACQUISITION &amp; IMAGERY</div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="camera"></i></span>Photo Lab</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="badge-dollar-sign"></i></span>Deals</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#c9a25e;">03</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Photo Lab — Coverage</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">/photo-lab · finding D1 · 1240×</span>
+    </div>
+
+    <div style="width:1240px;background:#0f1318;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:24px 26px 28px;display:flex;flex-direction:column;gap:18px;">
+
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <h1 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;letter-spacing:-0.01em;">Photo Lab</h1>
+          <div style="font-size:15px;color:#8c95a0;">18 of 34 watches have a hero angle · <span style="color:#eef1f5;">6 have no photo at all</span> · 41 frames awaiting review</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex:none;">
+          <div style="display:flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);color:#eef1f5;font-size:13px;">
+            <span style="display:flex;"><i data-lucide="clipboard-check"></i></span>Reshoot list <span style="font-family:'JetBrains Mono',monospace;color:#8c95a0;">9</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;height:36px;padding:0 16px;border-radius:8px;background:#c9a25e;color:#1a1206;font-size:13px;font-weight:600;">
+            <span style="display:flex;"><i data-lucide="camera"></i></span>Start session
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0;">
+        <div style="padding:9px 14px;border-bottom:2px solid #c9a25e;color:#eef1f5;font-size:15px;font-weight:500;">Coverage</div>
+        <div style="padding:9px 14px;border-bottom:2px solid transparent;color:#8c95a0;font-size:15px;">Session</div>
+        <div style="padding:9px 14px;border-bottom:2px solid transparent;color:#8c95a0;font-size:15px;">Review <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 7px;border-radius:9999px;background:rgba(110,162,221,0.16);color:#6ea2dd;margin-left:4px;">41</span></div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid rgba(255,255,255,0.10);border-radius:8px;color:#8c95a0;font-size:13px;">
+          Sort: worst coverage first <span style="display:flex;"><i data-lucide="chevron-down"></i></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid rgba(255,255,255,0.10);border-radius:8px;color:#8c95a0;font-size:13px;">
+          Box: all <span style="display:flex;"><i data-lucide="chevron-down"></i></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid rgba(255,255,255,0.10);border-radius:8px;color:#8c95a0;font-size:13px;">
+          <span style="display:flex;"><i data-lucide="filter"></i></span>Never shot only
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:16px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.08em;color:#6c757f;">
+          <span style="display:flex;align-items:center;gap:6px;"><span style="width:11px;height:11px;border-radius:3px;background:#5aa37a;"></span>SCORED</span>
+          <span style="display:flex;align-items:center;gap:6px;"><span style="width:11px;height:11px;border-radius:3px;background:#3a4551;"></span>FRAMES, UNSCORED</span>
+          <span style="display:flex;align-items:center;gap:6px;"><span style="width:11px;height:11px;border-radius:3px;border:1px dashed rgba(255,255,255,0.28);"></span>EMPTY</span>
+        </div>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:300px repeat(5,1fr) 120px;align-items:center;padding:0 16px;height:44px;border-bottom:1px solid rgba(255,255,255,0.07);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#6c757f;">
+          <div>WATCH</div>
+          <div style="text-align:center;">FLAT DIAL-ON</div>
+          <div style="text-align:center;">HERO ¾</div>
+          <div style="text-align:center;">PROFILE</div>
+          <div style="text-align:center;">CASEBACK</div>
+          <div style="text-align:center;">MACRO</div>
+          <div style="text-align:right;">COVERAGE</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:300px repeat(5,1fr) 120px;align-items:center;padding:0 16px;height:64px;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="ph" style="width:40px;height:40px;border-radius:8px;flex:none;"></div>
+            <div style="min-width:0;">
+              <div style="font-size:15px;font-weight:500;">Christopher Ward</div>
+              <div style="font-size:13px;color:#8c95a0;">C60 Trident Pro 300</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:rgba(90,163,122,0.18);color:#8fd0ac;font-family:'JetBrains Mono',monospace;font-size:11px;">A · 4</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:rgba(90,163,122,0.18);color:#8fd0ac;font-family:'JetBrains Mono',monospace;font-size:11px;">A− · 6</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:#2a323b;color:#a8b0bb;font-family:'JetBrains Mono',monospace;font-size:11px;">2</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed rgba(255,255,255,0.22);color:#6c757f;"><i data-lucide="plus"></i></span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:rgba(90,163,122,0.18);color:#8fd0ac;font-family:'JetBrains Mono',monospace;font-size:11px;">B+ · 3</span></div>
+          <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">4/5</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:300px repeat(5,1fr) 120px;align-items:center;padding:0 16px;height:64px;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="ph" style="width:40px;height:40px;border-radius:8px;flex:none;"></div>
+            <div>
+              <div style="font-size:15px;font-weight:500;">Grand Seiko</div>
+              <div style="font-size:13px;color:#8c95a0;">SBGA413 “Shunbun”</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:rgba(90,163,122,0.18);color:#8fd0ac;font-family:'JetBrains Mono',monospace;font-size:11px;">A · 5</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:rgba(90,163,122,0.18);color:#8fd0ac;font-family:'JetBrains Mono',monospace;font-size:11px;">A · 8</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:rgba(90,163,122,0.18);color:#8fd0ac;font-family:'JetBrains Mono',monospace;font-size:11px;">B · 2</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:#2a323b;color:#a8b0bb;font-family:'JetBrains Mono',monospace;font-size:11px;">1</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:rgba(90,163,122,0.18);color:#8fd0ac;font-family:'JetBrains Mono',monospace;font-size:11px;">A− · 4</span></div>
+          <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">5/5</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:300px repeat(5,1fr) 120px;align-items:center;padding:0 16px;height:64px;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="ph" style="width:40px;height:40px;border-radius:8px;flex:none;"></div>
+            <div>
+              <div style="font-size:15px;font-weight:500;">Seiko</div>
+              <div style="font-size:13px;color:#8c95a0;">SPB143 “Sumo”</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:#2a323b;color:#a8b0bb;font-family:'JetBrains Mono',monospace;font-size:11px;">3</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed #c9a25e;color:#c9a25e;"><i data-lucide="plus"></i></span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed rgba(255,255,255,0.22);color:#6c757f;"><i data-lucide="plus"></i></span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed rgba(255,255,255,0.22);color:#6c757f;"><i data-lucide="plus"></i></span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed rgba(255,255,255,0.22);color:#6c757f;"><i data-lucide="plus"></i></span></div>
+          <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;color:#e0a184;">1/5</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:300px repeat(5,1fr) 120px;align-items:center;padding:0 16px;height:64px;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:8px;flex:none;background:#1e242c;display:flex;align-items:center;justify-content:center;color:#4d5661;"><i data-lucide="image-off"></i></div>
+            <div>
+              <div style="font-size:15px;font-weight:500;">Nomos</div>
+              <div style="font-size:13px;color:#8c95a0;">Club Campus 38</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed #c9a25e;color:#c9a25e;"><i data-lucide="plus"></i></span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed #c9a25e;color:#c9a25e;"><i data-lucide="plus"></i></span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed rgba(255,255,255,0.22);color:#6c757f;"><i data-lucide="plus"></i></span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed rgba(255,255,255,0.22);color:#6c757f;"><i data-lucide="plus"></i></span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed rgba(255,255,255,0.22);color:#6c757f;"><i data-lucide="plus"></i></span></div>
+          <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;color:#e8877c;">0/5</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:300px repeat(5,1fr) 120px;align-items:center;padding:0 16px;height:64px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="ph" style="width:40px;height:40px;border-radius:8px;flex:none;"></div>
+            <div>
+              <div style="font-size:15px;font-weight:500;">Tudor</div>
+              <div style="font-size:13px;color:#8c95a0;">Black Bay 58</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:rgba(90,163,122,0.18);color:#8fd0ac;font-family:'JetBrains Mono',monospace;font-size:11px;">A− · 3</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:rgba(90,163,122,0.18);color:#8fd0ac;font-family:'JetBrains Mono',monospace;font-size:11px;">B+ · 5</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:#2a323b;color:#a8b0bb;font-family:'JetBrains Mono',monospace;font-size:11px;">1</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;background:rgba(90,163,122,0.18);color:#8fd0ac;font-family:'JetBrains Mono',monospace;font-size:11px;">B · 2</span></div>
+          <div style="display:flex;justify-content:center;"><span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;border:1px dashed rgba(255,255,255,0.22);color:#6c757f;"><i data-lucide="plus"></i></span></div>
+          <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">4/5</div>
+        </div>
+      </div>
+
+      <div style="font-size:13px;color:#6c757f;">Cell click → starts a Session for that watch, pre-set to that angle. Brass dashed cells are the reshoot list's targets. Row click → the watch view page.</div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#c9a25e;">04</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Photo Lab — Review</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">/photo-lab/review · finding D1 · 1240×</span>
+    </div>
+
+    <div style="width:1240px;background:#0f1318;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px 22px 24px;display:flex;flex-direction:column;gap:16px;">
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid rgba(255,255,255,0.10);border-radius:8px;color:#eef1f5;font-size:13px;">
+          Run: photo-score · Aug 11, 20:14 <span style="display:flex;color:#8c95a0;"><i data-lucide="chevron-down"></i></span>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8c95a0;">FRAME <span style="color:#eef1f5;">7</span> / 42</div>
+        <div style="flex:1;height:3px;border-radius:9999px;background:#1e242c;overflow:hidden;max-width:280px;">
+          <div style="width:17%;height:100%;background:#c9a25e;"></div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">
+          <span>42 FRAMES · 38 SCORED · <span style="color:#8fd0ac;">$0.06</span></span>
+          <span style="display:flex;align-items:center;gap:6px;color:#8c95a0;"><i data-lucide="keyboard"></i>SHORTCUTS</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start;">
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="position:relative;aspect-ratio:3/2;border-radius:14px;border:1px solid rgba(255,255,255,0.07);background:#0b0e12;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="ph" style="width:80%;height:86%;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#7d8794;text-align:center;">FRAME UNDER REVIEW · object-contain<br />IMG_2481.CR3 → JpgFromRaw preview</span>
+            </div>
+            <div style="position:absolute;top:12px;left:12px;display:flex;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;padding:4px 9px;border-radius:9999px;background:rgba(110,162,221,0.16);color:#6ea2dd;">STACKED COMPOSITE · 30 SRC</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;padding:4px 9px;border-radius:9999px;background:rgba(0,0,0,0.5);color:#a8b0bb;">HERO ¾</span>
+            </div>
+            <div style="position:absolute;bottom:12px;right:12px;display:flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:8px;background:rgba(0,0,0,0.5);color:#eef1f5;font-size:13px;">
+              <span style="display:flex;"><i data-lucide="zoom-in"></i></span>Z · 100% at dial ROI
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;">
+            <div class="ph" style="width:76px;height:56px;border-radius:8px;border:1px solid rgba(255,255,255,0.09);opacity:0.45;"></div>
+            <div class="ph" style="width:76px;height:56px;border-radius:8px;border:1px solid rgba(255,255,255,0.09);opacity:0.45;"></div>
+            <div class="ph" style="width:76px;height:56px;border-radius:8px;border:2px solid #c9a25e;"></div>
+            <div class="ph" style="width:76px;height:56px;border-radius:8px;border:1px solid rgba(255,255,255,0.09);opacity:0.7;"></div>
+            <div class="ph" style="width:76px;height:56px;border-radius:8px;border:1px solid rgba(255,255,255,0.09);opacity:0.7;"></div>
+            <div style="display:flex;align-items:center;padding-left:6px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">DUP CLUSTER · 2 OF 4 KEPT</div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;">
+
+          <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:16px 18px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;">SCORE</div>
+              <span style="font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;color:#8fd0ac;line-height:1;">A−</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;flex-direction:column;gap:5px;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;">
+                  <span style="color:#8c95a0;">Dial-ROI sharpness</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">0.87</span>
+                </div>
+                <div style="height:3px;border-radius:9999px;background:#252c35;overflow:hidden;"><div style="width:87%;height:100%;background:#5aa37a;"></div></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:5px;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;">
+                  <span style="color:#8c95a0;">Highlight control</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">0.72</span>
+                </div>
+                <div style="height:3px;border-radius:9999px;background:#252c35;overflow:hidden;"><div style="width:72%;height:100%;background:#5aa37a;"></div></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:5px;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;">
+                  <span style="color:#8c95a0;">Framing margin</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">0.61</span>
+                </div>
+                <div style="height:3px;border-radius:9999px;background:#252c35;overflow:hidden;"><div style="width:61%;height:100%;background:#c9a25e;"></div></div>
+              </div>
+            </div>
+            <p style="margin:0;font-size:13px;line-height:1.6;color:#a8b0bb;text-wrap:pretty;">Dial text crisp across the composite; slight clipped highlight on the polished bezel at 2 o'clock. Crop margin tighter than the 70–80% guideline — fine for web, tight for straightening.</p>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">HAIKU SHOT-CARD · $0.0015</div>
+          </div>
+
+          <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;">ANGLE · 1–5</div>
+            <div style="display:flex;flex-wrap:wrap;gap:7px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:9999px;background:#1e242c;color:#a8b0bb;">1 FLAT</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:9999px;background:#c9a25e;color:#1a1206;font-weight:500;">2 HERO ¾</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:9999px;background:#1e242c;color:#a8b0bb;">3 PROFILE</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:9999px;background:#1e242c;color:#a8b0bb;">4 CASEBACK</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:9999px;background:#1e242c;color:#a8b0bb;">5 MACRO</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div style="display:flex;gap:9px;">
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;height:40px;border-radius:8px;background:#c9a25e;color:#1a1206;font-size:15px;font-weight:600;">
+                <span style="display:flex;"><i data-lucide="check"></i></span>Accept <span style="font-family:'JetBrains Mono',monospace;font-size:11px;opacity:0.75;">A</span>
+              </div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;height:40px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);color:#eef1f5;font-size:15px;">
+                <span style="display:flex;"><i data-lucide="x"></i></span>Reject <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;">R</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:7px;height:40px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);color:#eef1f5;font-size:15px;">
+              <span style="display:flex;"><i data-lucide="star"></i></span>Accept &amp; set as cover <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;">C</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:2px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">
+              <span>← → NAVIGATE</span>
+              <span>Z ZOOM</span>
+              <span>ESC EXIT</span>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:rgba(110,162,221,0.07);border:1px solid rgba(110,162,221,0.20);">
+            <span style="display:flex;color:#6ea2dd;flex:none;"><i data-lucide="info"></i></span>
+            <span style="font-size:13px;line-height:1.5;color:#a8b0bb;">Singles are sharp only at the focal plane — never graded against composites.</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    const draw = () => {
+      if (window.lucide && window.lucide.createIcons) {
+        window.lucide.createIcons({ attrs: { width: 16, height: 16, "stroke-width": 1.75 } });
+        return true;
+      }
+      return false;
+    };
+    if (!draw()) {
+      let tries = 0;
+      const id = setInterval(() => {
+        if (draw() || ++tries > 40) clearInterval(id);
+      }, 100);
+    }
+  }
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
