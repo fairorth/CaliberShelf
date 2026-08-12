@@ -1,95 +1,89 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import {
-  BadgeDollarSign,
-  CalendarDays,
-  ChartColumn,
-  Compass,
-  Images,
-  Info,
-  Link2,
-  List,
-  Moon,
-  PackagePlus,
-  Plus,
-  Settings,
-  Sun,
-  Tag,
-} from "lucide-react"
-import type { LucideIcon } from "lucide-react"
+import { Menu, Moon, Plus, Sun, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { SearchInput } from "@/components/search-input"
 import { signOut } from "@/lib/actions/auth-actions"
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider"
+import { CaliberShelfMark } from "@/components/calibershelf-mark"
+import { NAV_GROUPS, NAV_HOME, isNavItemActive } from "@/components/layout/nav-items"
 import { cn } from "@/lib/utils"
 import { APP_VERSION } from "@/lib/version"
-import { CaliberShelfMark } from "@/components/calibershelf-mark"
-
-// Menu groups render with a separator between them: assets | analysis |
-// acquisition & imagery | system. Icons are lucide only (E2).
-const navGroups: { href: string; label: string; icon: LucideIcon }[][] = [
-  [
-    { href: "/collection", label: "Collection", icon: List },
-    { href: "/brands", label: "Brands", icon: Tag },
-    { href: "/straps", label: "Straps", icon: Link2 },
-  ],
-  [
-    { href: "/wear-log", label: "Wear Log", icon: CalendarDays },
-    { href: "/reports", label: "Reports", icon: ChartColumn },
-    { href: "/guides", label: "Guides", icon: Compass },
-  ],
-  [
-    { href: "/deals", label: "Deals", icon: BadgeDollarSign },
-    { href: "/inspiration", label: "Inspiration", icon: Images },
-    { href: "/batch-import", label: "Batch Import", icon: PackagePlus },
-  ],
-  [
-    { href: "/config", label: "Config", icon: Settings },
-    { href: "/about", label: "About", icon: Info },
-  ],
-]
 
 interface NavHeaderProps {
   userEmail: string
 }
 
+/**
+ * The 56px app header (A2): mobile drawer trigger + brand (below lg, where
+ * the rail carries the brand), global search, Add Watch, theme toggle, and
+ * the account menu. The old centered Home/Collection segmented control and
+ * the layout-pushing dropdown menu are gone — small screens get an overlay
+ * drawer that never moves the page.
+ */
 export function NavHeader({ userEmail }: NavHeaderProps) {
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const pathname = usePathname()
   const router = useRouter()
   const { interceptNavigation } = useUnsavedChanges()
   const { resolvedTheme, setTheme } = useTheme()
+  const drawerRef = useRef<HTMLDivElement>(null)
 
-  // Consult the unsaved-changes guard before following any nav link (C1).
-  // When a dirty form intercepts, the provider shows its confirm dialog and
-  // navigates on "Discard" — so all we do here is cancel the default follow.
-  const guardClick = (href: string) => (e: React.MouseEvent) => {
-    if (interceptNavigation(href)) e.preventDefault()
-    setMenuOpen(false)
-  }
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- next-themes needs a mounted guard to avoid SSR theme mismatch
     setMounted(true)
   }, [])
 
-  // Add Watch → the desktop-first quick-add (basics now, full specs on Edit).
-  const addWatchHref = "/add"
+  // Consult the unsaved-changes guard before following any nav link (C1).
+  const guardClick = (href: string) => (e: React.MouseEvent) => {
+    if (interceptNavigation(href)) e.preventDefault()
+    setDrawerOpen(false)
+  }
 
-  // Centered top-level nav (desktop): Home = the dial, Collection = the list
-  // (and any watch detail, which is reached from the collection).
-  const isHome = pathname === "/dashboard"
-  const isCollection = pathname.startsWith("/collection") || pathname.startsWith("/watch")
+  // Escape closes the drawer; focus moves into it while open (F2).
+  useEffect(() => {
+    if (!drawerOpen) return
+    drawerRef.current?.focus()
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setDrawerOpen(false)
+      // Minimal focus trap: keep Tab cycling inside the drawer panel.
+      if (e.key === "Tab" && drawerRef.current) {
+        const focusables = drawerRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
+        )
+        if (focusables.length === 0) return
+        const first = focusables[0]
+        const last = focusables[focusables.length - 1]
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [drawerOpen])
 
   // Global search: jump to the collection filtered by the query. Hidden on
-  // home and the collection list, which carry their own (state-owning) search
-  // boxes — pushing ?q= at the collection view would not re-seed its local
-  // state. Watch detail pages DO get it (navigating there is a fresh mount).
+  // home and the collection list, which carry their own search boxes.
+  const isHome = pathname === "/dashboard"
   const showSearch = !isHome && !pathname.startsWith("/collection")
   const submitSearch = () => {
     const q = searchQuery.trim()
@@ -97,76 +91,37 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
     const href = `/collection?q=${encodeURIComponent(q)}`
     if (!interceptNavigation(href)) router.push(href)
     setSearchQuery("")
-    setMenuOpen(false)
+    setDrawerOpen(false)
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="relative flex h-14 items-center justify-between px-4">
-        {/* Centered Home / Collection segmented nav (desktop only — the
-            hamburger covers navigation on mobile and the extra routes). */}
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-lg border border-border bg-muted p-1 sm:flex">
+    <header className="sticky top-0 z-50 h-14 shrink-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-full items-center justify-between gap-3 px-4">
+        <div className="flex min-w-0 items-center gap-2.5">
+          {/* Drawer trigger — small screens only; md+ has the rail. */}
+          <button
+            type="button"
+            onClick={() => setDrawerOpen((o) => !o)}
+            aria-label="Toggle menu"
+            aria-expanded={drawerOpen}
+            aria-controls="nav-drawer"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground md:hidden"
+          >
+            {drawerOpen ? (
+              <X className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
+
+          {/* Brand — below lg only; the expanded rail carries it at lg+. */}
           <Link
             href="/dashboard"
             onClick={guardClick("/dashboard")}
-            className={cn(
-              "rounded-lg px-4 py-1.5 text-xs font-medium transition-colors",
-              isHome
-                ? "bg-brass/15 text-brass"
-                : "text-muted-foreground hover:text-foreground"
-            )}
+            className="flex items-center gap-2 lg:hidden"
           >
-            Home
-          </Link>
-          <Link
-            href="/collection"
-            onClick={guardClick("/collection")}
-            className={cn(
-              "rounded-lg px-4 py-1.5 text-xs font-medium transition-colors",
-              isCollection
-                ? "bg-brass/15 text-brass"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Collection
-          </Link>
-        </nav>
-
-        {/* Hamburger + title — visible at all sizes */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            aria-label="Toggle menu"
-            aria-expanded={menuOpen}
-            aria-controls="nav-menu"
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {menuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
-          <Link href="/dashboard" onClick={guardClick("/dashboard")} className="flex items-center gap-2">
             <CaliberShelfMark size={26} className="rounded-lg" />
-            <span className="flex items-baseline gap-1.5">
+            <span className="hidden items-baseline gap-1.5 sm:flex">
               <span className="font-display text-md font-medium tracking-tight">
                 CaliberShelf
               </span>
@@ -175,10 +130,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
               </span>
             </span>
           </Link>
-        </div>
 
-        {/* Search + add watch + user info + theme toggle + sign out */}
-        <div className="flex items-center gap-3">
           {showSearch && (
             <SearchInput
               value={searchQuery}
@@ -186,20 +138,19 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
               onSubmit={submitSearch}
               placeholder="Search collection…"
               ariaLabel="Search collection"
-              className="hidden w-44 md:block lg:w-56"
+              className="hidden w-44 md:block lg:w-[280px]"
             />
           )}
-          <span className="hidden text-sm text-muted-foreground sm:inline">
-            {userEmail}
-          </span>
-          {/* Always-visible shortcut to quick-add — no hamburger required. */}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2.5">
           <Button
             size="sm"
-            render={<Link href={addWatchHref} onClick={guardClick(addWatchHref)} />}
+            render={<Link href="/add" onClick={guardClick("/add")} />}
             title="Add a watch"
-            className="gap-1.5"
+            className="gap-1.5 bg-brass text-brass-foreground hover:bg-brass/90"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Add Watch</span>
           </Button>
           <button
@@ -207,27 +158,62 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             aria-label="Toggle light/dark theme"
             title="Toggle theme"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             {mounted && resolvedTheme === "dark" ? (
-              <Sun className="h-4 w-4" />
+              <Sun className="h-4 w-4" aria-hidden="true" />
             ) : (
-              <Moon className="h-4 w-4" />
+              <Moon className="h-4 w-4" aria-hidden="true" />
             )}
           </button>
-          <form action={signOut}>
-            <Button variant="outline" size="sm" type="submit">
-              Sign Out
-            </Button>
-          </form>
+
+          {/* Account menu — avatar circle with the account actions. */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label="Account menu"
+                  className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-muted text-sm font-medium uppercase text-foreground transition-colors hover:bg-accent"
+                />
+              }
+            >
+              {userEmail.charAt(0) || "?"}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel className="max-w-[220px] truncate font-normal text-muted-foreground">
+                {userEmail}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  void signOut()
+                }}
+              >
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      {/* Dropdown nav — visible at all sizes when open */}
-      {menuOpen && (
-        <nav id="nav-menu" className="border-t p-3">
-          <div className="space-y-1">
-            {/* Search (the header box is hidden below md) */}
+      {/* ≤sm overlay drawer — overlays the page, never pushes layout (A2). */}
+      {drawerOpen && (
+        <div className="fixed inset-0 top-14 z-50 md:hidden">
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setDrawerOpen(false)}
+            className="absolute inset-0 bg-[rgba(7,9,12,0.66)]"
+          />
+          <div
+            ref={drawerRef}
+            id="nav-drawer"
+            role="dialog"
+            aria-label="Navigation"
+            tabIndex={-1}
+            className="absolute inset-y-0 left-0 w-[264px] overflow-y-auto border-r border-border bg-surface-rail px-3 py-4 shadow-[14px_0_40px_rgba(0,0,0,0.5)] outline-none"
+          >
             {showSearch && (
               <SearchInput
                 value={searchQuery}
@@ -235,45 +221,68 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
                 onSubmit={submitSearch}
                 placeholder="Search collection…"
                 ariaLabel="Search collection"
-                className="mb-2 md:hidden"
+                className="mb-3"
               />
             )}
-
-            {/* Add Watch */}
-            <Link
-              href={addWatchHref}
-              onClick={guardClick(addWatchHref)}
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Add Watch
-            </Link>
-
-            {navGroups.map((group, gi) => (
-              <div key={gi} className="space-y-1">
-                {gi > 0 && <div className="mx-3 my-2 border-t border-border" />}
-                {group.map((item) => (
-                  <Link
+            <DrawerLink
+              href={NAV_HOME.href}
+              label={NAV_HOME.label}
+              icon={NAV_HOME.icon}
+              active={isNavItemActive(NAV_HOME.href, pathname)}
+              onClick={guardClick(NAV_HOME.href)}
+            />
+            {NAV_GROUPS.map((group) => (
+              <div key={group.heading} className="mt-4">
+                <div className="px-2.5 pb-1.5 font-mono text-2xs uppercase tracking-[0.14em] text-muted-foreground">
+                  {group.heading}
+                </div>
+                {group.items.map((item) => (
+                  <DrawerLink
                     key={item.href}
                     href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    active={isNavItemActive(item.href, pathname)}
                     onClick={guardClick(item.href)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                      pathname === item.href ||
-                        pathname.startsWith(item.href + "/")
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" aria-hidden="true" />
-                    {item.label}
-                  </Link>
+                  />
                 ))}
               </div>
             ))}
           </div>
-        </nav>
+        </div>
       )}
     </header>
+  )
+}
+
+function DrawerLink({
+  href,
+  label,
+  icon: Icon,
+  active,
+  onClick,
+}: {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string; "aria-hidden"?: "true" }>
+  active: boolean
+  onClick: (e: React.MouseEvent) => void
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        // 10px padding → 44px minimum touch target (04-screen-specs §2).
+        "flex items-center gap-2.5 rounded-lg p-2.5 text-sm transition-colors",
+        active
+          ? "bg-brass/14 font-medium text-brass"
+          : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+      )}
+    >
+      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+      {label}
+    </Link>
   )
 }
