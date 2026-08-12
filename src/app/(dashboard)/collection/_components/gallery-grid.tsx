@@ -1,6 +1,6 @@
 "use client"
 
-import { Archive, CalendarDays, Watch } from "lucide-react"
+import { Archive, CalendarDays, CircleDollarSign, Watch } from "lucide-react"
 
 import Image from "next/image"
 import Link from "next/link"
@@ -60,46 +60,20 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
         const showFooter = Boolean(caliberLine) || priceLabel !== null
         const wearCount = watch.wear_count ?? 0
 
+        // Frame the cover with the stored dial focal point + zoom, exactly as
+        // the home hero does (B6) — never a bare centred crop.
+        const focalX = watch.dial_focal_x ?? 50
+        const focalY = watch.dial_focal_y ?? 50
+        const zoom = watch.dial_zoom ?? 1
+
         return (
         <Link
           key={watch.id}
-          href={`/watch/${watch.id}/edit`}
+          href={`/watch/${watch.id}`}
           className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/45 hover:shadow-[0_16px_30px_rgba(0,0,0,0.4)]"
         >
-          {/* Header strip — movement type sits above the photo (small, top-left)
-              so it never covers the watch image. */}
-          <div className="flex h-7 items-center px-3 pt-1">
-            {typeLabel && (
-              <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
-                {typeLabel}
-              </span>
-            )}
-            <div className="ml-auto flex items-center gap-1.5">
-              {watch.is_coming_soon && <ComingSoonBadge />}
-              {watch.is_wishlist && <WishlistBadge />}
-              {watch.is_wishlist && guideNames?.[watch.id] && (
-                <GuideBadge name={guideNames[watch.id]} />
-              )}
-              {watch.price_check_enabled && (
-                <span
-                  title="Price checking enabled"
-                  className="font-mono text-2xs font-semibold text-emerald-600 dark:text-emerald-400"
-                >
-                  $$
-                </span>
-              )}
-              {wearCount > 0 && (
-                <span
-                  title={`Worn ${wearCount} ${wearCount === 1 ? "time" : "times"}`}
-                  className="font-mono text-2xs text-muted-foreground"
-                >
-                  <CalendarDays className="h-3 w-3" aria-hidden="true" /> {wearCount}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="relative aspect-square overflow-hidden border-y border-border/70 bg-surface-photo">
+          {/* Photo first: 4:5 portrait from the tile's top edge (B6). */}
+          <div className="relative aspect-[4/5] overflow-hidden border-b border-border/70 bg-surface-photo">
             {watch.cover_photo_url ? (
               <Image
                 src={watch.cover_photo_url}
@@ -111,12 +85,41 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
                 // (uncacheable, signed-URL) Next image optimization.
                 unoptimized
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
+                style={{
+                  objectPosition: `${focalX}% ${focalY}%`,
+                  transform: zoom > 1 ? `scale(${zoom})` : undefined,
+                }}
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-4xl text-muted-foreground">
-                <Watch className="h-5 w-5" aria-hidden="true" />
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                <Watch className="h-8 w-8" aria-hidden="true" />
               </div>
             )}
+            {/* Status badges overlay the photo's top-right on hover — never a
+                permanent strip that outweighs the watch (B6). */}
+            <div className="absolute right-2 top-2 flex items-center gap-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+              {watch.is_coming_soon && <ComingSoonBadge />}
+              {watch.is_wishlist && <WishlistBadge />}
+              {watch.is_wishlist && guideNames?.[watch.id] && (
+                <GuideBadge name={guideNames[watch.id]} />
+              )}
+              {watch.price_check_enabled && (
+                <span className="rounded-full bg-background/85 p-1 backdrop-blur">
+                  <CircleDollarSign
+                    aria-label="Price checking enabled"
+                    className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400"
+                  />
+                </span>
+              )}
+              {wearCount > 0 && (
+                <span
+                  aria-label={`Worn ${wearCount} ${wearCount === 1 ? "time" : "times"}`}
+                  className="flex items-center gap-1 rounded-full bg-background/85 px-1.5 py-0.5 font-mono text-2xs text-muted-foreground backdrop-blur"
+                >
+                  <CalendarDays className="h-3 w-3" aria-hidden="true" /> {wearCount}
+                </span>
+              )}
+            </div>
           </div>
           <div className="px-3.5 pb-4 pt-3">
             <p className="truncate text-sm font-medium leading-tight">
@@ -131,13 +134,12 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
                 <Archive className="h-3 w-3" aria-hidden="true" /> {watch.box}
               </p>
             )}
-            {showFooter && (
+            {(showFooter || typeLabel) && (
               <div className="mt-2.5 flex items-start justify-between gap-2.5 border-t border-border pt-2.5">
-                {/* Caliber name wraps up to 3 lines (then ellipsis) so long
-                    movement names aren't clipped to a few characters when the
-                    price shares the row. */}
+                {/* Movement type + caliber share the footer (B6); the caliber
+                    wraps up to 3 lines so long names aren't clipped. */}
                 <span className="min-w-0 flex-1 font-mono text-2xs leading-snug text-muted-foreground [overflow-wrap:anywhere] line-clamp-3">
-                  {caliberLine ?? ""}
+                  {[typeLabel, caliberLine].filter(Boolean).join(" · ")}
                 </span>
                 {priceLabel && (
                   <span className="shrink-0 font-mono text-xs font-medium tabular-nums text-foreground">
