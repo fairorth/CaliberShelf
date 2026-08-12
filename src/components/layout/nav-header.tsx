@@ -8,6 +8,7 @@ import { Moon, Plus, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { signOut } from "@/lib/actions/auth-actions"
+import { useUnsavedChanges } from "@/components/unsaved-changes-provider"
 import { cn } from "@/lib/utils"
 import { APP_VERSION } from "@/lib/version"
 import { CaliberShelfMark } from "@/components/calibershelf-mark"
@@ -45,7 +46,16 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const pathname = usePathname()
   const router = useRouter()
+  const { interceptNavigation } = useUnsavedChanges()
   const { resolvedTheme, setTheme } = useTheme()
+
+  // Consult the unsaved-changes guard before following any nav link (C1).
+  // When a dirty form intercepts, the provider shows its confirm dialog and
+  // navigates on "Discard" — so all we do here is cancel the default follow.
+  const guardClick = (href: string) => (e: React.MouseEvent) => {
+    if (interceptNavigation(href)) e.preventDefault()
+    setMenuOpen(false)
+  }
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- next-themes needs a mounted guard to avoid SSR theme mismatch
@@ -68,7 +78,8 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
   const submitSearch = () => {
     const q = searchQuery.trim()
     if (!q) return
-    router.push(`/collection?q=${encodeURIComponent(q)}`)
+    const href = `/collection?q=${encodeURIComponent(q)}`
+    if (!interceptNavigation(href)) router.push(href)
     setSearchQuery("")
     setMenuOpen(false)
   }
@@ -81,6 +92,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-[11px] border border-border bg-white/[0.04] p-1 sm:flex">
           <Link
             href="/dashboard"
+            onClick={guardClick("/dashboard")}
             className={cn(
               "rounded-lg px-4 py-1.5 text-[13.5px] font-medium transition-colors",
               isHome
@@ -92,6 +104,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
           </Link>
           <Link
             href="/collection"
+            onClick={guardClick("/collection")}
             className={cn(
               "rounded-lg px-4 py-1.5 text-[13.5px] font-medium transition-colors",
               isCollection
@@ -133,7 +146,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
               )}
             </svg>
           </button>
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/dashboard" onClick={guardClick("/dashboard")} className="flex items-center gap-2">
             <CaliberShelfMark size={26} className="rounded-[7px]" />
             <span className="flex items-baseline gap-1.5">
               <span className="font-display text-xl font-medium tracking-tight">
@@ -164,7 +177,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
           {/* Always-visible shortcut to quick-add — no hamburger required. */}
           <Button
             size="sm"
-            render={<Link href={addWatchHref} />}
+            render={<Link href={addWatchHref} onClick={guardClick(addWatchHref)} />}
             title="Add a watch"
             className="gap-1.5"
           >
@@ -211,7 +224,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             {/* Add Watch */}
             <Link
               href={addWatchHref}
-              onClick={() => setMenuOpen(false)}
+              onClick={guardClick(addWatchHref)}
               className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               <span>➕</span>
@@ -225,7 +238,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setMenuOpen(false)}
+                    onClick={guardClick(item.href)}
                     className={cn(
                       "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                       pathname === item.href ||

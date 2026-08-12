@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Star, Trash2, X } from "lucide-react"
 
 interface PhotoLightboxProps {
   /** Ordered signed URLs for the watch's photos. */
@@ -10,6 +10,14 @@ interface PhotoLightboxProps {
   index: number
   onIndexChange: (index: number) => void
   onClose: () => void
+  /** Whether the current photo is the cover (hides the set-cover action). */
+  isCover?: boolean
+  /** Set the current photo as cover (C). Omit to hide the action. */
+  onSetCover?: () => void
+  /** Request deletion of the current photo (X). Omit to hide the action. */
+  onDelete?: () => void
+  /** Suspend keyboard shortcuts (e.g. while a confirm dialog is open). */
+  keysDisabled?: boolean
 }
 
 const MIN_ZOOM = 1
@@ -19,7 +27,16 @@ const MAX_ZOOM = 4
  * Full-screen image viewer with zoom + pan. Works on desktop (wheel, drag,
  * double-click) and mobile (buttons, double-tap, touch-drag to pan).
  */
-export function PhotoLightbox({ urls, index, onIndexChange, onClose }: PhotoLightboxProps) {
+export function PhotoLightbox({
+  urls,
+  index,
+  onIndexChange,
+  onClose,
+  isCover,
+  onSetCover,
+  onDelete,
+  keysDisabled,
+}: PhotoLightboxProps) {
   const [zoom, setZoom] = useState(1)
   const scrollRef = useRef<HTMLDivElement>(null)
   const url = urls[index]
@@ -55,14 +72,19 @@ export function PhotoLightbox({ urls, index, onIndexChange, onClose }: PhotoLigh
     onIndexChange((index + 1) % urls.length)
   }, [index, urls.length, onIndexChange])
 
-  // Keyboard controls + lock body scroll while open.
+  // Keyboard controls + lock body scroll while open. The photo work happens
+  // here, where the pixels are big enough to judge (D2): C sets cover,
+  // X asks to delete.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (keysDisabled) return
       if (e.key === "Escape") onClose()
       else if (e.key === "ArrowLeft") goPrev()
       else if (e.key === "ArrowRight") goNext()
       else if (e.key === "+" || e.key === "=") setZoom((z) => clampZoom(z + 0.5))
       else if (e.key === "-") setZoom((z) => clampZoom(z - 0.5))
+      else if ((e.key === "c" || e.key === "C") && onSetCover && !isCover) onSetCover()
+      else if ((e.key === "x" || e.key === "X") && onDelete) onDelete()
     }
     window.addEventListener("keydown", onKey)
     const prevOverflow = document.body.style.overflow
@@ -71,7 +93,7 @@ export function PhotoLightbox({ urls, index, onIndexChange, onClose }: PhotoLigh
       window.removeEventListener("keydown", onKey)
       document.body.style.overflow = prevOverflow
     }
-  }, [onClose, goPrev, goNext])
+  }, [onClose, goPrev, goNext, onSetCover, onDelete, isCover, keysDisabled])
 
   // Wheel zoom (non-passive listener so we can preventDefault the page scroll).
   useEffect(() => {
@@ -114,6 +136,16 @@ export function PhotoLightbox({ urls, index, onIndexChange, onClose }: PhotoLigh
           {hasMultiple ? `${index + 1} / ${urls.length}` : ""}
         </span>
         <div className="flex items-center gap-1">
+          {onSetCover && !isCover && (
+            <ToolbarButton label="Set as cover (C)" onClick={onSetCover}>
+              <Star className="h-5 w-5" />
+            </ToolbarButton>
+          )}
+          {onDelete && (
+            <ToolbarButton label="Delete photo (X)" onClick={onDelete}>
+              <Trash2 className="h-5 w-5" />
+            </ToolbarButton>
+          )}
           <ToolbarButton label="Zoom out" onClick={() => setZoom((z) => clampZoom(z - 0.5))} disabled={zoom <= MIN_ZOOM}>
             <Minus className="h-5 w-5" />
           </ToolbarButton>
@@ -135,7 +167,12 @@ export function PhotoLightbox({ urls, index, onIndexChange, onClose }: PhotoLigh
         <div
           ref={scrollRef}
           className="absolute inset-0 overflow-auto overscroll-contain"
-          style={{ cursor: zoom > 1 ? "grab" : "zoom-in", touchAction: "pan-x pan-y" }}
+          style={{
+            cursor: zoom > 1 ? "grab" : "zoom-in",
+            // pinch-zoom must reach the browser so the image can hit 1:1 on
+            // a phone (F1); panning stays native scroll.
+            touchAction: "pan-x pan-y pinch-zoom",
+          }}
           onDoubleClick={toggleZoom}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -169,6 +206,9 @@ export function PhotoLightbox({ urls, index, onIndexChange, onClose }: PhotoLigh
       </div>
 
       <p className="pb-3 text-center text-xs text-white/40">
+        {hasMultiple && "← → navigate · "}
+        {onSetCover && "C set cover · "}
+        {onDelete && "X delete · "}
         Double-click to zoom · drag or scroll to pan · Esc to close
       </p>
     </div>
