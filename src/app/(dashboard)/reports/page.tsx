@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getAttentionReport } from "@/lib/queries/attention"
-import { getAgentRuns, computeKpis, formatUsdMicros } from "@/lib/queries/agent-runs"
+import { getAgentReview, formatUsdMicros } from "@/lib/queries/agent-runs"
 import { getAllValuations, valuationRunDate } from "@/lib/queries/valuations"
 
 export const metadata: Metadata = {
@@ -66,15 +66,15 @@ function ReportCard({ report }: { report: ReportLink }) {
 }
 
 export default async function ReportsPage() {
-  const [attention, runs, valuations] = await Promise.all([
+  const [attention, agentReview, valuations] = await Promise.all([
     getAttentionReport(),
-    getAgentRuns(),
+    getAgentReview(),
     getAllValuations(),
   ])
 
   const attentionCount =
     attention.brands.length + attention.movements.length + attention.watches.length
-  const kpis = computeKpis(runs, Date.now())
+  const { runs, kpis } = agentReview
   const lastRun = runs[0]
   const lastValuation = valuations[0]
 
