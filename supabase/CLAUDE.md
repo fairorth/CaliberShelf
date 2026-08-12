@@ -6,6 +6,7 @@
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
 - Latest applied migration: `00040_create_watch_image_scores.sql` (photo-scoring agent; confirmed applied 2026-08-10). See docs/data-model.md for the table catalog.
+- PENDING (v2 Phase 3 — run these in the SQL Editor): `00041_add_watch_photo_angle_sort.sql` (watch_photos.angle + sort_order) and `00042_add_image_score_review_state.sql` (watch_image_scores.review_state + reviewed_at). The Photo Lab and photo angle tags need both.
 - `ALTER TABLE RENAME` preserves existing FK relationships — preferred over drop-and-recreate
 - When renaming tables, also rename: RLS policies, triggers, indexes, and FK column references
 - Junction tables (many-to-many): use composite PK, cascade deletes, and RLS that joins to the parent table's owner
