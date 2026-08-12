@@ -152,7 +152,7 @@ export default async function AgentRunPage({
                   <ActionBadge action={it.action} />
                   {it.entity_type === "watch" && it.entity_id ? (
                     <Link
-                      href={`/watch/${it.entity_id}/edit`}
+                      href={`/watch/${it.entity_id}`}
                       className="font-medium underline-offset-2 hover:underline"
                     >
                       {it.label}

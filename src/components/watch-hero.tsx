@@ -385,7 +385,7 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
             ` · ${daysSinceWorn === 0 ? "today" : `${daysSinceWorn} day${daysSinceWorn === 1 ? "" : "s"} ago`}`}
         </div>
         <Link
-          href={`/watch/${current.id}/edit`}
+          href={`/watch/${current.id}`}
           className="mt-5 inline-block rounded-[10px] border border-primary px-5 py-2 text-xs text-primary transition-colors hover:bg-primary/10"
         >
           View watch →

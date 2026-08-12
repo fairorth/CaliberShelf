@@ -34,7 +34,7 @@ async function dismountOtherStraps(
 function revalidateStrapSurfaces(watchIds: Array<string | null | undefined>) {
   revalidatePath("/straps")
   for (const id of watchIds) {
-    if (id) revalidatePath(`/watch/${id}/edit`)
+    if (id) revalidatePath(`/watch/${id}`); revalidatePath(`/watch/${id}/edit`)
   }
 }
 

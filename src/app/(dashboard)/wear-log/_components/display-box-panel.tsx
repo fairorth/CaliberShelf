@@ -76,7 +76,7 @@ export function DisplayBoxPanel({ box }: { box: CurrentDisplayBox | null }) {
                     {w.box ? <><Archive className="mr-1 inline h-3 w-3" aria-hidden="true" />{w.box}</> : "—"}
                   </span>
                   <Link
-                    href={`/watch/${w.watchId}/edit`}
+                    href={`/watch/${w.watchId}`}
                     className="font-medium hover:text-primary"
                   >
                     {w.name}

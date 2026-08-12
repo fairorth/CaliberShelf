@@ -79,7 +79,7 @@ export default async function ValuationRunPage({
             <CardHeader className="pb-2">
               <CardTitle className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
                 <Link
-                  href={`/watch/${v.watch?.id}/edit`}
+                  href={`/watch/${v.watch?.id}`}
                   className="underline-offset-2 hover:underline"
                 >
                   {watchLabel(v)}

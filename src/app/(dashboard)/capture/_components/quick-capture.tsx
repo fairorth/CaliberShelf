@@ -106,7 +106,7 @@ export function QuickCapture({ watches }: QuickCaptureProps) {
         <p className="text-lg font-medium">Photo uploaded successfully!</p>
         <div className="flex gap-3">
           <Button onClick={handleTakeAnother}>Take Another</Button>
-          <Button variant="outline" render={<Link href={`/watch/${uploadedWatchId}/edit`} />}>
+          <Button variant="outline" render={<Link href={`/watch/${uploadedWatchId}`} />}>
             View Watch
           </Button>
         </div>

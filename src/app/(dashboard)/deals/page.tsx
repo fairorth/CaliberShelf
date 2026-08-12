@@ -97,7 +97,7 @@ export default async function DealsPage() {
                   >
                     <td className="px-4 py-3">
                       <Link
-                        href={`/watch/${watch.id}/edit`}
+                        href={`/watch/${watch.id}`}
                         className="font-medium hover:text-primary"
                       >
                         {watch.brands?.name}{" "}
