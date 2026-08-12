@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import { version } from "./package.json";
 
 const nextConfig: NextConfig = {
+  // Native/binary packages used by the Photo Lab's promote action must not
+  // be bundled by the server compiler.
+  serverExternalPackages: ["exiftool-vendored", "sharp"],
   // Expose package.json's version to the client bundle (read in src/lib/version.ts)
   // so the header badge always matches the released version — single source of truth.
   env: {
