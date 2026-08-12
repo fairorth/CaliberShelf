@@ -241,6 +241,10 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
+  // Selected row (click anywhere in a row that isn't a link/button). Distinct
+  // from hover — the future hook for bulk actions (B4).
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
+
   // Restore the header sort (localStorage is unreachable during SSR).
   useEffect(() => {
     try {
@@ -402,15 +406,20 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sorted.map((watch, i) => (
+              {sorted.map((watch) => (
                 <TableRow
                   key={watch.id}
+                  onClick={() =>
+                    setSelectedRowId((prev) => (prev === watch.id ? null : watch.id))
+                  }
+                  aria-selected={selectedRowId === watch.id}
                   className={cn(
-                    "group",
-                    // Zebra striping: a faint neutral band alternating with a faint blue band.
-                    i % 2 === 0
-                      ? "bg-[oklch(0.78_0.012_245_/_0.05)]"
-                      : "bg-[oklch(0.6_0.11_233_/_0.12)]"
+                    // No stripe at rest — a hairline per row reads more
+                    // instrument-like and survives light mode (B4).
+                    "group border-b border-border/60",
+                    selectedRowId === watch.id
+                      ? "bg-accent/60 shadow-[inset_2px_0_0_var(--brass)] hover:bg-accent/60"
+                      : "hover:bg-accent/40 hover:shadow-[inset_2px_0_0_var(--brass)]"
                   )}
                 >
                   <TableCell className="py-2">
