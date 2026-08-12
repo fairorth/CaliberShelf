@@ -3,15 +3,10 @@
 import { useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { LayoutGrid, Table as TableIcon } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select"
 import { CollectionTable, TABLE_SORT_KEY } from "@/components/collection-table"
 import { SearchInput } from "@/components/search-input"
 import { GalleryGrid } from "./gallery-grid"
+import { ActiveFilterChips } from "./active-filter-chips"
 import {
   CollectionFiltersDialog,
   EMPTY_FILTERS,
@@ -166,8 +161,9 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   const [size, setSize] = useState<number>(DEFAULT_SIZE)
   const [showCost, setShowCost] = useState(false)
 
-  // Advanced filters + sort are session state (not URL) — the category filter
-  // stays URL-driven so it remains linkable from the dial and table.
+  // Advanced filters are session state only — deliberately NOT persisted
+  // (B2, DECISIONS.md §3): a fresh mount always shows the whole collection.
+  // The category filter stays URL-driven so it remains linkable.
   const [filters, setFilters] = useState<CollectionFilters>(EMPTY_FILTERS)
   const [sortKey, setSortKey] = useState<SortKey>("default")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
@@ -186,13 +182,9 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     if (savedSize >= MIN_SIZE && savedSize <= MAX_SIZE) setSize(savedSize)
     setShowCost(localStorage.getItem(SHOW_COST_KEY) === "1")
 
-    // Restore saved filters + sort so they survive navigating away and back.
-    try {
-      const savedFilters = localStorage.getItem(FILTERS_KEY)
-      if (savedFilters) setFilters({ ...EMPTY_FILTERS, ...JSON.parse(savedFilters) })
-    } catch {
-      // ignore malformed stored value
-    }
+    // Filters no longer persist across sessions (B2); drop any stale value
+    // a previous version left behind. Sort is a preference and does restore.
+    localStorage.removeItem(FILTERS_KEY)
     try {
       const savedSort = localStorage.getItem(SORT_KEY)
       if (savedSort) {
@@ -231,7 +223,6 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
 
   function updateFilters(next: CollectionFilters) {
     setFilters(next)
-    localStorage.setItem(FILTERS_KEY, JSON.stringify(next))
   }
 
   function persistSort(key: SortKey, dir: SortDir) {
@@ -360,18 +351,20 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
       ? ((displayedValueCents - displayedTotalCents) / displayedTotalCents) * 100
       : null
 
-  function handleCategoryChange(val: string | null) {
-    if (!val) return
-    const url = val === ALL ? "/collection" : `/collection?category=${val}`
+  // Clearing the URL-driven category preserves the rest of the query (?q).
+  function clearUrlCategory() {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("category")
+    const qs = params.toString()
     startTransition(() => {
-      router.replace(url, { scroll: false })
+      router.replace(qs ? `/collection?${qs}` : "/collection", { scroll: false })
     })
   }
 
-  const triggerLabel =
+  const urlCategoryName =
     selectedId === ALL
-      ? "All"
-      : categories.find((c) => c.id === selectedId)?.name ?? "All"
+      ? null
+      : categories.find((c) => c.id === selectedId)?.name ?? null
 
   return (
     <div className="space-y-4">
@@ -385,20 +378,6 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           ariaLabel="Search collection"
           className="w-full sm:w-64"
         />
-
-        <Select value={selectedId} onValueChange={handleCategoryChange}>
-          <SelectTrigger className="h-9 w-[160px]">
-            <span className="text-sm">{triggerLabel}</span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>All</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
 
         <CollectionFiltersDialog
           filters={filters}
@@ -443,7 +422,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
         </div>
 
         <span className="text-sm text-muted-foreground">
-          {displayed.length} of {ownershipTotal}
+          Showing {displayed.length} of {ownershipTotal} watches
           {showCost && displayedTotalCents > 0 && (
             <>
               {" · "}
@@ -531,6 +510,19 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           </div>
         </div>
       </div>
+
+      {/* Active-filter chips — the page states what is filtering it (B2). */}
+      <ActiveFilterChips
+        filters={filters}
+        onChange={updateFilters}
+        urlCategoryName={urlCategoryName}
+        onClearUrlCategory={clearUrlCategory}
+        brands={brandOptions}
+        movements={movementOptions}
+        labels={labelOptions}
+        categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+        tiers={tierOptions}
+      />
 
       {displayed.length === 0 ? (
         <div className="rounded-lg border border-dashed py-16 text-center text-sm text-muted-foreground">
