@@ -24,10 +24,11 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 })
 
+// No maximumScale: pinch-zoom must work app-wide (WCAG 1.4.4, F1) — this is
+// a photography app; never lock the viewport scale.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
 }
 

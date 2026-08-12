@@ -135,7 +135,12 @@ export function PhotoLightbox({ urls, index, onIndexChange, onClose }: PhotoLigh
         <div
           ref={scrollRef}
           className="absolute inset-0 overflow-auto overscroll-contain"
-          style={{ cursor: zoom > 1 ? "grab" : "zoom-in", touchAction: "pan-x pan-y" }}
+          style={{
+            cursor: zoom > 1 ? "grab" : "zoom-in",
+            // pinch-zoom must reach the browser so the image can hit 1:1 on
+            // a phone (F1); panning stays native scroll.
+            touchAction: "pan-x pan-y pinch-zoom",
+          }}
           onDoubleClick={toggleZoom}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
