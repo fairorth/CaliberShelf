@@ -1,6 +1,7 @@
 import {
   BadgeDollarSign,
   CalendarDays,
+  Camera,
   ChartColumn,
   Compass,
   House,
@@ -29,7 +30,7 @@ export interface NavGroup {
 export const NAV_HOME: NavItem = { href: "/dashboard", label: "Home", icon: House }
 
 /** The four groups with visible headings, in the mockup's exact order.
- *  Photo Lab joins Acquisition & Imagery when the route lands (Phase 3). */
+ *  Capture is reached inside Photo Lab, never as a rail item (§2). */
 export const NAV_GROUPS: NavGroup[] = [
   {
     heading: "Collection",
@@ -51,6 +52,7 @@ export const NAV_GROUPS: NavGroup[] = [
     heading: "Acquisition & Imagery",
     items: [
       { href: "/deals", label: "Deals", icon: BadgeDollarSign },
+      { href: "/photo-lab", label: "Photo Lab", icon: Camera },
       { href: "/inspiration", label: "Inspiration", icon: Images },
       { href: "/batch-import", label: "Batch Import", icon: PackagePlus },
     ],
