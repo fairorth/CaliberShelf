@@ -118,15 +118,35 @@ const DEFAULT_WIDTHS: Record<ColumnId, number> = {
 }
 
 /** Drag target on a header's right edge. Stops propagation so a resize
- *  never triggers the header's sort button. */
-function ResizeHandle({ onPointerDown }: { onPointerDown: (e: React.PointerEvent) => void }) {
+ *  never triggers the header's sort button. Keyboard: focus + arrow keys
+ *  adjust the column width (F2). */
+function ResizeHandle({
+  label,
+  onPointerDown,
+  onKeyResize,
+}: {
+  label: string
+  onPointerDown: (e: React.PointerEvent) => void
+  onKeyResize: (delta: number) => void
+}) {
   return (
     <span
       role="separator"
       aria-orientation="vertical"
+      aria-label={`Resize ${label} column`}
+      tabIndex={0}
       onPointerDown={onPointerDown}
       onClick={(e) => e.stopPropagation()}
-      className="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-[3px] after:w-px after:bg-border/70 hover:after:bg-brass/70 active:after:bg-brass"
+      onKeyDown={(e) => {
+        if (e.key === "ArrowLeft") {
+          e.preventDefault()
+          onKeyResize(-16)
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault()
+          onKeyResize(16)
+        }
+      }}
+      className="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-[3px] after:w-px after:bg-border/70 hover:after:bg-brass/70 focus-visible:outline-none focus-visible:after:bg-brass active:after:bg-brass"
     />
   )
 }
@@ -139,6 +159,7 @@ function SortableHeader({
   currentDir,
   onSort,
   onResizeStart,
+  onKeyResize,
   className,
   alignRight,
 }: {
@@ -149,12 +170,16 @@ function SortableHeader({
   currentDir: SortDir
   onSort: (key: SortKey) => void
   onResizeStart: (e: React.PointerEvent, col: ColumnId) => void
+  onKeyResize: (col: ColumnId, delta: number) => void
   className?: string
   alignRight?: boolean
 }) {
   const isActive = currentKey === sortKey
   return (
-    <TableHead className={cn("relative", className)}>
+    <TableHead
+      aria-sort={isActive ? (currentDir === "asc" ? "ascending" : "descending") : "none"}
+      className={cn("relative", className)}
+    >
       <button
         type="button"
         onClick={() => onSort(sortKey)}
@@ -169,7 +194,11 @@ function SortableHeader({
           {isActive ? (currentDir === "asc" ? <ArrowUp className="h-3 w-3" aria-hidden="true" /> : <ArrowDown className="h-3 w-3" aria-hidden="true" />) : <ChevronsUpDown className="h-3 w-3 opacity-60" aria-hidden="true" />}
         </span>
       </button>
-      <ResizeHandle onPointerDown={(e) => onResizeStart(e, colId)} />
+      <ResizeHandle
+        label={label}
+        onPointerDown={(e) => onResizeStart(e, colId)}
+        onKeyResize={(delta) => onKeyResize(colId, delta)}
+      />
     </TableHead>
   )
 }
@@ -285,6 +314,19 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
     }
   }, [])
 
+  // Arrow-key resize for keyboard users (F2). Persists like a drag does.
+  function handleKeyResize(col: ColumnId, delta: number) {
+    setColWidths((prev) => {
+      const next = {
+        ...prev,
+        [col]: Math.max(MIN_COL_WIDTH, Math.round(prev[col] + delta)),
+      }
+      widthsRef.current = next
+      localStorage.setItem(COLUMN_WIDTHS_KEY, JSON.stringify(next))
+      return next
+    })
+  }
+
   function handleResizeStart(e: React.PointerEvent, col: ColumnId) {
     e.preventDefault()
     e.stopPropagation()
@@ -391,19 +433,23 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
               <TableRow>
                 <TableHead className="relative text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                   Photo
-                  <ResizeHandle onPointerDown={(e) => handleResizeStart(e, "photo")} />
+                  <ResizeHandle
+                    label="Photo"
+                    onPointerDown={(e) => handleResizeStart(e, "photo")}
+                    onKeyResize={(delta) => handleKeyResize("photo", delta)}
+                  />
                 </TableHead>
-                <SortableHeader label="Category" sortKey="category" colId="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Brand" sortKey="brand" colId="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Model" sortKey="model" colId="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Nickname" sortKey="nickname" colId="nickname" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Ref #" sortKey="reference" colId="reference" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Movement Type" sortKey="movementType" colId="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Caliber" sortKey="caliber" colId="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Box" sortKey="box" colId="box" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Worn" sortKey="wearCount" colId="worn" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} className="text-right" alignRight />
+                <SortableHeader label="Category" sortKey="category" colId="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />
+                <SortableHeader label="Brand" sortKey="brand" colId="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />
+                <SortableHeader label="Model" sortKey="model" colId="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />
+                <SortableHeader label="Nickname" sortKey="nickname" colId="nickname" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />
+                <SortableHeader label="Ref #" sortKey="reference" colId="reference" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />
+                <SortableHeader label="Movement Type" sortKey="movementType" colId="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />
+                <SortableHeader label="Caliber" sortKey="caliber" colId="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />
+                <SortableHeader label="Box" sortKey="box" colId="box" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />
+                <SortableHeader label="Worn" sortKey="wearCount" colId="worn" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />
                 {showCost && (
-                  <SortableHeader label="Price" sortKey="price" colId="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} className="text-right" alignRight />
+                  <SortableHeader label="Price" sortKey="price" colId="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />
                 )}
               </TableRow>
             </TableHeader>

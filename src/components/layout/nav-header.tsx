@@ -138,6 +138,8 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             onClick={() => setMenuOpen(!menuOpen)}
             className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             aria-label="Toggle menu"
+            aria-expanded={menuOpen}
+            aria-controls="nav-menu"
           >
             <svg
               className="h-5 w-5"
@@ -223,7 +225,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
 
       {/* Dropdown nav — visible at all sizes when open */}
       {menuOpen && (
-        <nav className="border-t p-3">
+        <nav id="nav-menu" className="border-t p-3">
           <div className="space-y-1">
             {/* Search (the header box is hidden below md) */}
             {showSearch && (
