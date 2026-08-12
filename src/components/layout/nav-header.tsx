@@ -96,7 +96,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             className={cn(
               "rounded-lg px-4 py-1.5 text-[13.5px] font-medium transition-colors",
               isHome
-                ? "bg-primary text-primary-foreground"
+                ? "bg-brass/15 text-brass"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -108,7 +108,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             className={cn(
               "rounded-lg px-4 py-1.5 text-[13.5px] font-medium transition-colors",
               isCollection
-                ? "bg-primary text-primary-foreground"
+                ? "bg-brass/15 text-brass"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >

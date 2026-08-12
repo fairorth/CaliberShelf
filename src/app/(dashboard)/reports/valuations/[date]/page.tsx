@@ -62,7 +62,7 @@ export default async function ValuationRunPage({
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {rows.length} {rows.length === 1 ? "watch" : "watches"} valued at{" "}
-          <span className="font-mono text-brass">{formatCurrency(totalMid, "USD", true)}</span>
+          <span className="font-mono tabular-nums text-foreground">{formatCurrency(totalMid, "USD", true)}</span>
           {totalPaid > 0 && (
             <>
               {" "}
@@ -75,7 +75,7 @@ export default async function ValuationRunPage({
 
       <div className="max-w-4xl space-y-4">
         {rows.map((v) => (
-          <Card key={v.id} className="overflow-hidden border-l-2 border-l-brass/40">
+          <Card key={v.id} className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="flex flex-wrap items-baseline justify-between gap-2 text-base">
                 <Link
@@ -93,7 +93,7 @@ export default async function ValuationRunPage({
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <span className="font-mono text-xl font-semibold text-brass">
+                <span className="font-mono text-xl font-semibold tabular-nums text-foreground">
                   {formatCurrency(v.value_mid_cents, v.currency, true)}
                 </span>
                 {v.value_low_cents != null && v.value_high_cents != null && (

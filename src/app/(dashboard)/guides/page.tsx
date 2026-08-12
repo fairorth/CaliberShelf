@@ -58,11 +58,11 @@ export default async function GuidesPage() {
                         <span className="text-muted-foreground">
                           {g.owned_count} of {g.entry_count} chapters owned
                         </span>
-                        <span className="font-mono text-brass">{pct}%</span>
+                        <span className="font-mono tabular-nums text-foreground">{pct}%</span>
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full bg-brass/80"
+                          className="h-full rounded-full bg-primary/80"
                           style={{ width: `${pct}%` }}
                         />
                       </div>

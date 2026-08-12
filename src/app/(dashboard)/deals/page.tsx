@@ -124,7 +124,7 @@ export default async function DealsPage() {
                         {badge.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-brass">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
                       {deal?.retail_price_cents != null
                         ? formatCurrency(deal.retail_price_cents, deal.currency, true)
                         : "—"}

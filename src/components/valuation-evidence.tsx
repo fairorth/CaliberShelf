@@ -69,7 +69,7 @@ export function ValuationEvidence({ valuation: v }: ValuationEvidenceProps) {
             <tbody>
               {v.datapoints.map((dp, i) => (
                 <tr key={i} className="border-b border-border/50 align-top">
-                  <td className="py-1.5 pr-3 font-mono whitespace-nowrap text-brass">
+                  <td className="py-1.5 pr-3 font-mono whitespace-nowrap tabular-nums text-foreground">
                     {formatCurrency(Math.round(dp.price_usd * 100), "USD", true)}
                   </td>
                   <td className="py-1.5 pr-3">

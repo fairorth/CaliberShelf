@@ -43,7 +43,7 @@ export default async function EditStrapPage({
         </Link>
         <h1 className="font-display text-2xl font-semibold tracking-tight">
           {displayName}{" "}
-          <span className="font-mono text-lg text-brass">{strap.width_mm}mm</span>
+          <span className="font-mono text-lg text-muted-foreground">{strap.width_mm}mm</span>
         </h1>
         {strap.current_watch && (
           <p className="mt-1 text-sm text-emerald-600 dark:text-emerald-400">

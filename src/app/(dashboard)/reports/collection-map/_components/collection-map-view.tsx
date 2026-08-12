@@ -2,9 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CollectionMap, DistBar } from "@/lib/collection-map"
 import { tierIndexFor } from "@/lib/tiers"
 
-// Magnitude fill (single hue) via the app's brass token so it tracks the theme.
-function brass(pct: number): string {
-  return `color-mix(in oklab, var(--brass) ${Math.round(pct)}%, transparent)`
+// Magnitude fill (single hue) via the data-blue token so it tracks the theme.
+// Charts are data → --primary, never brass (design system §1).
+function magnitude(pct: number): string {
+  return `color-mix(in oklab, var(--primary) ${Math.round(pct)}%, transparent)`
 }
 
 // A dial-color swatch. Empty hex = "unspecified" → dashed outline.
@@ -18,7 +19,7 @@ function Swatch({ hex, size = 12 }: { hex: string; size?: number }) {
 }
 
 // Horizontal bar list. `colored` uses each bar's real hue (the color chart);
-// otherwise a single brass magnitude hue.
+// otherwise a single data-blue magnitude hue.
 function BarList({ bars, colored }: { bars: DistBar[]; colored?: boolean }) {
   const max = Math.max(1, ...bars.map((b) => b.count))
   return (
@@ -26,7 +27,7 @@ function BarList({ bars, colored }: { bars: DistBar[]; colored?: boolean }) {
       {bars.map((b) => {
         const w = (b.count / max) * 100
         const fill =
-          colored && b.hex ? b.hex : colored && !b.hex ? undefined : brass(70)
+          colored && b.hex ? b.hex : colored && !b.hex ? undefined : magnitude(70)
         return (
           <div key={b.key} className="flex items-center gap-2 text-sm" title={`${b.count} · ${b.label}`}>
             <span className="flex w-28 shrink-0 items-center gap-1.5 text-muted-foreground">
@@ -98,7 +99,7 @@ function Matrix({ map }: { map: CollectionMap }) {
                       title={`${cell.count} watch${cell.count === 1 ? "" : "es"} · ${r.label} · ${c.label}${cell.labels.length ? `\n${cell.labels.join("\n")}` : ""}`}
                       className="flex h-9 w-12 items-center justify-center rounded text-xs tabular-nums"
                       style={{
-                        backgroundColor: cell.count > 0 ? brass(pct) : "transparent",
+                        backgroundColor: cell.count > 0 ? magnitude(pct) : "transparent",
                         outline: cell.count === 0 ? "1px dashed color-mix(in oklab, var(--muted-foreground) 25%, transparent)" : "none",
                         outlineOffset: "-1px",
                       }}
@@ -295,15 +296,15 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
 
       {/* Gap / overload insights */}
       {map.insights.length > 0 && (
-        <Card className="overflow-hidden rounded-2xl border-l-2 border-l-brass/40">
-          <CardHeader className="bg-brass/5 pb-2">
+        <Card className="overflow-hidden rounded-2xl">
+          <CardHeader className="pb-2">
             <CardTitle className="font-display text-[17px] font-semibold">What the map shows</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-1.5 text-sm">
               {map.insights.map((s, i) => (
                 <li key={i} className="flex gap-2">
-                  <span className="text-brass">•</span>
+                  <span className="text-muted-foreground">•</span>
                   <span>{s}</span>
                 </li>
               ))}

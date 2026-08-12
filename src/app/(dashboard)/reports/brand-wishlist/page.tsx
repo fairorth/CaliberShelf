@@ -194,7 +194,7 @@ export default async function BrandWishlistPage() {
                       {catalog.price_min_cents != null && catalog.price_max_cents != null && (
                         <span>
                           <span className="text-muted-foreground">Price range </span>
-                          <span className="font-mono text-brass">
+                          <span className="font-mono tabular-nums text-foreground">
                             {formatCurrency(catalog.price_min_cents, "USD", true)}–
                             {formatCurrency(catalog.price_max_cents, "USD", true)}
                           </span>

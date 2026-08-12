@@ -116,8 +116,8 @@ export default async function AgentReviewPage() {
           </div>
 
           {/* Per-agent rollup */}
-          <Card className="overflow-hidden rounded-2xl border-l-2 border-l-brass/40">
-            <CardHeader className="bg-brass/5">
+          <Card className="overflow-hidden rounded-2xl">
+            <CardHeader>
               <CardTitle className="font-display text-[19px] font-semibold">By agent</CardTitle>
             </CardHeader>
             <CardContent className="px-0 pb-0">
@@ -137,7 +137,7 @@ export default async function AgentReviewPage() {
                     <span className="text-muted-foreground">
                       {r.itemsUpdated.toLocaleString()} updated
                     </span>
-                    <span className="font-mono text-brass">
+                    <span className="font-mono tabular-nums text-foreground">
                       {r.deterministic ? "free" : formatUsdMicros(r.totalCostMicros)}
                     </span>
                     <span className="text-muted-foreground">avg {fmtDuration(r.avgDurationMs)}</span>
@@ -176,7 +176,7 @@ export default async function AgentReviewPage() {
                         <span className="text-rose-400"> · {run.items_failed} failed</span>
                       )}
                     </span>
-                    <span className="font-mono text-xs text-brass">
+                    <span className="font-mono text-xs tabular-nums text-foreground">
                       {run.cost_usd_micros > 0 ? formatUsdMicros(run.cost_usd_micros) : "free"}
                     </span>
                     <span className="text-xs text-muted-foreground">{fmtDuration(run.duration_ms)}</span>

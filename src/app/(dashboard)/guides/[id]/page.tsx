@@ -34,7 +34,7 @@ function StatusBadge({ status }: { status: GuideEntryDisplayStatus }) {
   switch (status) {
     case "owned":
       return (
-        <span className="inline-flex items-center rounded-full bg-brass/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brass ring-1 ring-brass/30">
+        <span className="inline-flex items-center rounded-full bg-chart-2/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-chart-2 ring-1 ring-chart-2/30">
           Owned
         </span>
       )
@@ -105,9 +105,9 @@ export default async function GuideDetailPage({
           <p className="mt-1 max-w-2xl text-sm italic text-muted-foreground">{guide.thesis}</p>
         )}
         <p className="mt-2 text-sm">
-          <span className="font-mono text-brass">{ownedCount}</span> of{" "}
+          <span className="font-mono tabular-nums text-foreground">{ownedCount}</span> of{" "}
           <span className="font-mono">{entries.length}</span> chapters owned ·{" "}
-          <span className="font-mono text-brass">{pct}%</span> complete
+          <span className="font-mono tabular-nums text-foreground">{pct}%</span> complete
         </p>
       </div>
 
@@ -116,8 +116,8 @@ export default async function GuideDetailPage({
 
       {/* High-value gaps */}
       {topGaps.length > 0 && (
-        <div className="max-w-2xl rounded-2xl border border-brass/25 bg-brass/[0.04] px-4 py-3">
-          <h2 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-brass">
+        <div className="max-w-2xl rounded-2xl border border-border bg-card px-4 py-3">
+          <h2 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             High-value gaps to fill first
           </h2>
           <ol className="space-y-1 text-sm">
@@ -133,7 +133,7 @@ export default async function GuideDetailPage({
                   )}
                 </span>
                 <span className="shrink-0 font-mono text-xs">
-                  <span className="text-brass">{e.priority ?? "—"}/10</span>
+                  <span className="text-foreground">{e.priority ?? "—"}/10</span>
                   <span className="ml-2 text-muted-foreground">{band(e)}</span>
                 </span>
               </li>
@@ -189,7 +189,7 @@ export default async function GuideDetailPage({
                       <div className="flex items-center gap-2">
                         {e.priority != null && (
                           <span
-                            className={`font-mono text-xs ${(e.priority ?? 0) >= 9 ? "text-brass" : "text-muted-foreground"}`}
+                            className={`font-mono text-xs ${(e.priority ?? 0) >= 9 ? "font-semibold text-foreground" : "text-muted-foreground"}`}
                             title="Guide priority"
                           >
                             {e.priority}/10

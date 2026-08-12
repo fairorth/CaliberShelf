@@ -185,7 +185,7 @@ export default async function AboutPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-10 pb-16">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-l-2 border-l-brass/50 bg-gradient-to-b from-brass/[0.08] to-transparent px-6 py-12 text-center sm:py-16">
+      <section className="relative overflow-hidden rounded-3xl border border-border px-6 py-12 text-center sm:py-16">
         <div className="mx-auto mb-5 w-fit">
           <CaliberShelfMark size={64} className="rounded-2xl" />
         </div>
@@ -196,10 +196,10 @@ export default async function AboutPage() {
           Part collection manager, part private research lab — a personal horology platform
           where a fleet of AI agents handles the busywork and your watches take center stage.
         </p>
-        <div className="mt-4 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[2px] text-brass">
-          <span className="h-px w-8 bg-brass/40" />
+        <div className="mt-4 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[2px] text-muted-foreground">
+          <span className="h-px w-8 bg-border" />
           v{APP_VERSION}
-          <span className="h-px w-8 bg-brass/40" />
+          <span className="h-px w-8 bg-border" />
         </div>
       </section>
 
@@ -226,7 +226,7 @@ export default async function AboutPage() {
                 key={f.title}
                 className="flex gap-3.5 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-brass/40"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brass/15 text-lg">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-lg">
                   {f.icon}
                 </span>
                 <div className="min-w-0">
@@ -242,7 +242,7 @@ export default async function AboutPage() {
       ))}
 
       {/* Footer note */}
-      <section className="rounded-2xl border border-dashed border-brass/40 bg-brass/[0.04] px-6 py-6 text-center">
+      <section className="rounded-2xl border border-dashed border-border px-6 py-6 text-center">
         <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground">
           Built with care for the details: transparent methods over black-box scores, agents
           that flag rather than guess, and every cost shown. A collection, properly kept.

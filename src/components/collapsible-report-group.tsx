@@ -26,7 +26,7 @@ export function CollapsibleReportGroup({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-l-2 border-l-brass/40">
+    <Card className="overflow-hidden rounded-2xl">
       <CardHeader
         role="button"
         tabIndex={0}
@@ -38,7 +38,7 @@ export function CollapsibleReportGroup({
             setOpen((o) => !o)
           }
         }}
-        className="flex cursor-pointer select-none flex-row flex-wrap items-baseline justify-between gap-2 bg-brass/5 pb-2"
+        className="flex cursor-pointer select-none flex-row flex-wrap items-baseline justify-between gap-2 pb-2"
       >
         <div className="flex min-w-0 items-center gap-2">
           <ChevronDown

@@ -59,7 +59,7 @@ export default async function StrapsPage() {
                       〰️
                     </div>
                   )}
-                  <span className="absolute right-2 top-2 rounded-full bg-background/85 px-2 py-0.5 font-mono text-xs font-semibold text-brass backdrop-blur">
+                  <span className="absolute right-2 top-2 rounded-full bg-background/85 px-2 py-0.5 font-mono text-xs font-semibold text-foreground backdrop-blur">
                     {strap.width_mm}mm
                   </span>
                 </div>

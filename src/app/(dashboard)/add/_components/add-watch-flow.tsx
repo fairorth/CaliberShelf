@@ -163,7 +163,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
       </Link>
 
       <div className="mb-6 mt-3.5">
-        <div className="mb-2.5 font-mono text-[11px] tracking-[3px] text-brass">NEW ENTRY</div>
+        <div className="mb-2.5 font-mono text-[11px] tracking-[3px] text-muted-foreground">NEW ENTRY</div>
         <h1 className="font-display text-3xl font-semibold leading-[1.05] sm:text-[34px]">
           Add a Watch
         </h1>
@@ -189,7 +189,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
           className="hidden"
         />
 
-        <div className="rounded-2xl border border-l-2 border-border border-l-brass/40 bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           {/* Photo — optional */}
           <Label className="mb-2.5 block text-xs text-muted-foreground">
             Photo <span className="font-normal text-muted-foreground/70">— optional</span>
@@ -224,11 +224,11 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
               className={cn(
-                "flex w-full flex-col items-center gap-2 rounded-[13px] border border-dashed border-border bg-white/[0.02] px-5 py-7 text-center transition-colors hover:border-brass/50 hover:bg-brass/5",
-                dragging && "border-brass/60 bg-brass/5"
+                "flex w-full flex-col items-center gap-2 rounded-[13px] border border-dashed border-border bg-white/[0.02] px-5 py-7 text-center transition-colors hover:border-brass/50",
+                dragging && "border-brass/60"
               )}
             >
-              <span className="grid h-11 w-11 place-items-center rounded-[11px] bg-brass/15 text-lg text-brass">
+              <span className="grid h-11 w-11 place-items-center rounded-[11px] bg-muted text-lg text-muted-foreground">
                 ⬆
               </span>
               <span className="text-sm text-foreground sm:text-[14.5px]">
@@ -236,7 +236,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
                   "Optimizing photo…"
                 ) : (
                   <>
-                    <span className="font-medium text-brass">Browse</span>, drag, or paste a photo here
+                    <span className="font-medium">Browse</span>, drag, or paste a photo here
                   </>
                 )}
               </span>
@@ -307,7 +307,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
               <span className="font-normal text-muted-foreground/70">— optional</span>
             </Label>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-brass">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                 $
               </span>
               <Input

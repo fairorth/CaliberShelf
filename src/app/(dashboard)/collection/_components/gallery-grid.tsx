@@ -138,7 +138,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
                   {caliberLine ?? ""}
                 </span>
                 {priceLabel && (
-                  <span className="shrink-0 font-mono text-[13px] font-medium tabular-nums text-brass">
+                  <span className="shrink-0 font-mono text-[13px] font-medium tabular-nums text-foreground">
                     {priceLabel}
                   </span>
                 )}

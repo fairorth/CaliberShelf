@@ -35,10 +35,10 @@ export function DisplayBoxPanel({ box }: { box: CurrentDisplayBox | null }) {
   }
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-l-2 border-l-brass/40">
-      <CardHeader className="flex flex-row items-center justify-between gap-2 bg-brass/5">
+    <Card className="overflow-hidden rounded-2xl">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="flex items-center gap-2.5 font-display text-[19px] font-semibold">
-          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-brass/15 text-sm">
+          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-muted text-sm">
             🧰
           </span>
           Weekly Display Box
@@ -68,7 +68,7 @@ export function DisplayBoxPanel({ box }: { box: CurrentDisplayBox | null }) {
                   className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5"
                 >
                   <span
-                    className="inline-flex h-6 min-w-[3.5rem] items-center justify-center rounded-md bg-brass/15 px-2 font-mono text-xs font-semibold text-brass"
+                    className="inline-flex h-6 min-w-[3.5rem] items-center justify-center rounded-md bg-muted px-2 font-mono text-xs font-semibold text-foreground"
                     title="Permanent storage box"
                   >
                     {w.box ? `▣ ${w.box}` : "—"}

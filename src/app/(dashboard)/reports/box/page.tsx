@@ -68,7 +68,7 @@ export default async function ByBoxPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           {shownCount} owned {shownCount === 1 ? "watch" : "watches"} across{" "}
           {boxCount} {boxCount === 1 ? "box" : "boxes"} ·{" "}
-          <span className="font-mono text-brass">{formatCurrency(grandTotal, "USD", true)}</span>{" "}
+          <span className="font-mono tabular-nums text-foreground">{formatCurrency(grandTotal, "USD", true)}</span>{" "}
           total at cost
         </p>
       </div>
@@ -89,7 +89,7 @@ export default async function ByBoxPage() {
               summary={
                 <>
                   {g.watches.length} {g.watches.length === 1 ? "watch" : "watches"} ·{" "}
-                  <span className="font-mono text-brass">
+                  <span className="font-mono tabular-nums text-foreground">
                     {formatCurrency(g.subtotalCents, "USD", true)}
                   </span>
                 </>

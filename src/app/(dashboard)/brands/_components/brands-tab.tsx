@@ -27,12 +27,13 @@ import { WishlistBadge } from "@/components/wishlist-badge"
 import { toast } from "sonner"
 import type { Brand } from "@/lib/types/watch"
 
-// Badge treatment per brand type — steel blue for micro, brass-ish amber for
+// Badge treatment per brand type — data hues only (chips are information,
+// never the brass action accent): steel blue for micro, chart amber for
 // indie, muted for the majors.
 const TYPE_BADGE: Record<string, string> = {
   major: "bg-muted text-muted-foreground",
   micro: "bg-primary/15 text-primary",
-  indie: "bg-brass/15 text-brass",
+  indie: "bg-chart-4/15 text-chart-4",
 }
 
 function BrandTypeBadge({ type }: { type: Brand["brand_type"] }) {

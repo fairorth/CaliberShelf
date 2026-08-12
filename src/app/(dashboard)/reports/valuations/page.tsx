@@ -57,7 +57,7 @@ export default async function ValuationsReportPage() {
                       {run.count === 1 ? "watch" : "watches"} valued
                     </span>
                   </span>
-                  <span className="font-mono text-brass">
+                  <span className="font-mono tabular-nums text-foreground">
                     {formatCurrency(run.totalMidCents, "USD", true)}
                   </span>
                   <span className="text-xs text-muted-foreground">

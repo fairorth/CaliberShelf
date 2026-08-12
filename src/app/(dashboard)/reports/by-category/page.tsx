@@ -54,7 +54,7 @@ export default async function ByCategoryPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           {owned.length} owned {owned.length === 1 ? "watch" : "watches"} across{" "}
           {ordered.length} {ordered.length === 1 ? "category" : "categories"} ·{" "}
-          <span className="font-mono text-brass">{formatCurrency(grandTotal, "USD", true)}</span> total at cost
+          <span className="font-mono tabular-nums text-foreground">{formatCurrency(grandTotal, "USD", true)}</span> total at cost
         </p>
       </div>
 
@@ -74,7 +74,7 @@ export default async function ByCategoryPage() {
               summary={
                 <>
                   {g.watches.length} {g.watches.length === 1 ? "watch" : "watches"} ·{" "}
-                  <span className="font-mono text-brass">
+                  <span className="font-mono tabular-nums text-foreground">
                     {formatCurrency(g.subtotalCents, "USD", true)}
                   </span>
                 </>

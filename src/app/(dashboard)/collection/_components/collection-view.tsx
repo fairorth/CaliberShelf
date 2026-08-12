@@ -426,7 +426,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           {showCost && displayedTotalCents > 0 && (
             <>
               {" · "}
-              <span className="font-mono text-brass">
+              <span className="font-mono tabular-nums text-foreground">
                 {formatCurrency(displayedTotalCents, "USD", true)}
               </span>
             </>

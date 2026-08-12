@@ -505,7 +505,7 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                     {watch.wear_count ?? 0}
                   </TableCell>
                   {showCost && (
-                    <TableCell className="text-right font-mono text-[13.5px] font-medium tabular-nums text-brass">
+                    <TableCell className="text-right font-mono text-[13.5px] font-medium tabular-nums text-foreground">
                       {priceLabel(watch)}
                     </TableCell>
                   )}

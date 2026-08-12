@@ -104,7 +104,7 @@ export default async function AgentRunPage({
       </div>
 
       {/* Metrics */}
-      <Card className="max-w-3xl overflow-hidden rounded-2xl border-l-2 border-l-brass/40">
+      <Card className="max-w-3xl overflow-hidden rounded-2xl">
         <CardContent className="grid grid-cols-2 gap-4 pt-6 sm:grid-cols-4">
           <Stat label="Duration" value={fmtDuration(run.duration_ms)} />
           <Stat
@@ -172,7 +172,7 @@ export default async function AgentRunPage({
                           href={url}
                           target="_blank"
                           rel="noreferrer"
-                          className="underline hover:text-brass"
+                          className="underline hover:text-primary"
                         >
                           {i > 0 && ", "}
                           {hostname(url)}

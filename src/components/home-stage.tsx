@@ -58,10 +58,10 @@ export function HomeStage({ watches, seed, stats, displayBox }: HomeStageProps) 
         displayBox && displayBox.watches.length > 0 ? (
           <DisplayBoxHome box={displayBox} />
         ) : (
-          <div className="mx-auto max-w-md rounded-2xl border border-dashed border-brass/40 bg-brass/[0.04] px-6 py-10 text-center">
+          <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border px-6 py-10 text-center">
             <p className="text-sm text-muted-foreground">
               No display box yet. Head to the{" "}
-              <Link href="/wear-log" className="font-medium text-brass underline">
+              <Link href="/wear-log" className="font-medium text-primary underline">
                 Wear Log
               </Link>{" "}
               and press <b>Create Display Box</b> to assemble this week&apos;s rotation.
