@@ -10,14 +10,20 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-jetbrains-mono);
   --font-display: var(--font-fraunces);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
+  /* The six-step type scale (design system §2). No other font sizes exist:
+     2xs 11px eyebrows/table headers/badges · xs 13px mono data/helper text ·
+     sm 15px body/labels/cells · md 19px card titles · lg 26px page titles ·
+     xl 38px the one hero size. Never write an arbitrary text-[Npx]. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1.4;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-md: 1.1875rem;
+  --text-md--line-height: 1.35;
+  --text-lg: 1.625rem;
+  --text-lg--line-height: 1.25;
+  --text-xl: 2.375rem;
+  --text-xl--line-height: 1.15;
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -40,13 +46,17 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-brass: var(--brass);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-brass-foreground: var(--brass-foreground);
+  --color-surface-rail: var(--surface-rail);
+  --color-surface-photo: var(--surface-photo);
+  /* Three radii only (design system §3): 8px controls (sm/md/lg),
+     14px cards/panels/dialogs (xl), full pills (rounded-full).
+     Physical-object illustrations (watch-hero, display-box, dial) are the
+     lone exception and keep their literal geometry. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.875rem;
 }
 
 :root {
@@ -70,23 +80,22 @@
   --destructive: oklch(0.55 0.2 27);
   --border: oklch(0.87 0.01 235);
   --input: oklch(0.89 0.01 235);
-  --ring: oklch(0.55 0.11 252);
-  /* Brass — reserved for prices; darker in light mode for contrast. */
+  /* Focus rings are brass — the single action accent (design system §1). */
+  --ring: oklch(0.52 0.07 75);
+  /* Brass — the action & brand accent (buttons, active nav, focus, selection).
+     Darker in light mode for contrast; do not unify with the dark value. */
   --brass: oklch(0.52 0.07 75);
+  /* Text on a brass fill: light in light mode (brass is dark here). */
+  --brass-foreground: oklch(0.99 0.01 90);
+  /* Nav rail sits a step below the page; photo fields a step below that. */
+  --surface-rail: oklch(0.955 0.006 235);
+  --surface-photo: oklch(0.94 0.007 235);
   --chart-1: oklch(0.78 0.12 210);
   --chart-2: oklch(0.66 0.16 222);
   --chart-3: oklch(0.58 0.18 235);
   --chart-4: oklch(0.5 0.16 248);
   --chart-5: oklch(0.44 0.14 258);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
@@ -94,8 +103,9 @@
      <option> popups are light-on-dark, not the illegible light-on-light default. */
   color-scheme: dark;
   /* Steel & Navy — dark theme matching the CaliberShelf redesign hand-off.
-     Navy-black surfaces, a steel-blue interactive accent, and a brass token
-     reserved for prices. */
+     Navy-black surfaces. Brass is the action/brand accent; steel blue
+     (--primary) is data only (charts, links, info chips). Prices render in
+     --foreground mono, never colored (design system §1). */
   --background: #0f1318;
   --foreground: #eef1f5;
   --card: #161b21;
@@ -113,22 +123,21 @@
   --destructive: #c85046;
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 10%);
-  --ring: #6ea2dd;
-  /* Brass — reserved for prices (never an interactive accent). */
+  /* Focus rings are brass — the single action accent (design system §1). */
+  --ring: #c9a25e;
+  /* Brass — the action & brand accent (never mere decoration: no colored
+     card borders or header washes). */
   --brass: #c9a25e;
+  /* Text on a brass fill: near-black in dark mode (brass is light here). */
+  --brass-foreground: #1a1206;
+  /* Nav rail sits a step below the page; photo fields a step below that. */
+  --surface-rail: #0c1015;
+  --surface-photo: #0b0e12;
   --chart-1: #6ea2dd;
   --chart-2: #5aa37a;
   --chart-3: #c9a25e;
   --chart-4: #cf7a52;
   --chart-5: #8fb6e4;
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {
@@ -322,5 +331,15 @@ select optgroup {
 @media (prefers-reduced-motion: reduce) {
   .dial-sunburst {
     background: oklch(0.4 0.08 238);
+  }
+  /* Freeze everything the design system animates (D4): the hero ring sweep,
+     caption/photo cross-fades, and tile hover scales. The hero's JS swap
+     interval is also disabled in-component. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

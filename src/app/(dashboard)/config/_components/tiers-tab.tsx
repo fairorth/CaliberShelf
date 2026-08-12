@@ -1,5 +1,7 @@
 "use client"
 
+import { X } from "lucide-react"
+
 import { useState, useTransition } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -74,7 +76,7 @@ export function TiersTab({ initialConfig }: { initialConfig: TierConfigRow[] }) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Price Tiers</CardTitle>
+        <CardTitle className="text-sm">Price Tiers</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
@@ -124,7 +126,7 @@ export function TiersTab({ initialConfig }: { initialConfig: TierConfigRow[] }) 
                   aria-label={`Remove tier ${i + 1}`}
                   className="flex h-9 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
                 >
-                  ✕
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             )

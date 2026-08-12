@@ -1,5 +1,7 @@
 "use client"
 
+import { Search } from "lucide-react"
+
 import { useEffect, useRef, useState } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
@@ -86,7 +88,7 @@ export function CatalogCombobox({ defaultQuery = "", onApply, disabled }: Catalo
           />
         }
       >
-        🔍 Find in catalog
+        <Search className="h-3.5 w-3.5" aria-hidden="true" /> Find in catalog
       </PopoverTrigger>
 
       <PopoverContent align="end" className="w-[min(28rem,90vw)] p-0">
@@ -145,7 +147,7 @@ export function CatalogCombobox({ defaultQuery = "", onApply, disabled }: Catalo
           })}
         </div>
 
-        <p className="border-t px-3 py-1.5 text-[11px] text-muted-foreground">
+        <p className="border-t px-3 py-1.5 text-2xs text-muted-foreground">
           Data provided by Chronoscout
         </p>
       </PopoverContent>

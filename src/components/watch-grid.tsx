@@ -1,4 +1,5 @@
 import { WatchCard } from "@/components/watch-card"
+import { Watch } from "lucide-react"
 import type { WatchWithCover } from "@/lib/types/watch"
 
 interface WatchGridProps {
@@ -9,8 +10,8 @@ export function WatchGrid({ watches }: WatchGridProps) {
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
-        <span className="text-4xl">⌚</span>
-        <h3 className="mt-4 text-lg font-semibold">No watches yet</h3>
+        <Watch className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
+        <h3 className="mt-4 text-md font-semibold">No watches yet</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Add your first watch to start building your collection.
         </p>

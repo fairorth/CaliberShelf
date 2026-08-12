@@ -1,8 +1,20 @@
 "use client"
 
-import { useEffect, useRef, useState, useMemo } from "react"
+import { Archive, ArrowDown, ArrowUp, ChevronsUpDown, CircleDollarSign, Columns3, Filter, Watch } from "lucide-react"
+
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -21,6 +33,7 @@ import type { WatchWithCover, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
 
 interface CollectionTableProps {
+  /** Already sorted by the collection view — the single sort owner (B3). */
   watches: WatchWithCover[]
   /** Show each watch's purchase price (driven by the Config → Settings toggle). */
   showCost?: boolean
@@ -28,6 +41,11 @@ interface CollectionTableProps {
   guideNames?: Record<string, string>
   /** Brand cell click → filter by that brand (mirrors the category link). */
   onBrandClick?: (brandId: string) => void
+  /** Current sort, owned by the collection view (B3). */
+  sortKey: TableSortKey | null
+  sortDir: TableSortDir
+  /** Header click — the view toggles direction / switches key. */
+  onSortChange: (key: TableSortKey) => void
 }
 
 function priceLabel(watch: WatchWithCover): string {
@@ -44,44 +62,21 @@ function movementTypeLabel(watch: WatchWithCover): string {
 }
 
 // ── Sorting ────────────────────────────────────────────────────────
+// The table renders headers only; sort state and the actual ordering live
+// in the collection view — one sort owner (B3).
 
-type SortKey = "category" | "brand" | "model" | "nickname" | "reference" | "movementType" | "caliber" | "box" | "wearCount" | "price"
-type SortDir = "asc" | "desc"
-
-const SORT_KEYS: SortKey[] = ["category", "brand", "model", "nickname", "reference", "movementType", "caliber", "box", "wearCount", "price"]
-
-/** Header-click sort persists per device so it survives an edit round-trip.
- *  The collection view clears this key when the toolbar Sort dropdown changes,
- *  so an explicit dropdown choice wins on the next mount. */
-export const TABLE_SORT_KEY = "collection-table-sort"
-
-function getSortValue(watch: WatchWithCover, key: SortKey): string {
-  switch (key) {
-    case "category":
-      return (watch.category?.name ?? "zzz").toLowerCase()
-    case "brand":
-      return watch.brand.name.toLowerCase()
-    case "model":
-      return watch.model.toLowerCase()
-    case "nickname":
-      return watch.nickname ? watch.nickname.toLowerCase() : "zzz" // push empty to bottom
-    case "reference":
-      return watch.reference_number ? watch.reference_number.toLowerCase() : "zzz"
-    case "movementType":
-      return watch.movement
-        ? (watch.movement.caliber_type ? (caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type) : "—").toLowerCase()
-        : "zzz" // push empty to bottom
-    case "box":
-      return watch.box ? watch.box.toLowerCase() : "zzz" // unassigned to the bottom
-    case "caliber":
-      return watch.movement
-        ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim().toLowerCase()
-        : "zzz"
-    case "wearCount":
-    case "price":
-      return "" // these sort numerically in the comparator below
-  }
-}
+export type TableSortKey =
+  | "category"
+  | "brand"
+  | "model"
+  | "nickname"
+  | "reference"
+  | "movementType"
+  | "caliber"
+  | "box"
+  | "wearCount"
+  | "price"
+export type TableSortDir = "asc" | "desc"
 
 // ── Column widths (resizable, persisted) ───────────────────────────
 
@@ -101,6 +96,46 @@ type ColumnId =
 const COLUMN_WIDTHS_KEY = "collection-col-widths"
 const MIN_COL_WIDTH = 56
 
+// Column visibility (B5): eight on by default; Nickname, Caliber and Price
+// are opt-in via the Columns dropdown, persisted per device.
+const VISIBLE_COLUMNS_KEY = "collection-visible-columns"
+const COLUMN_ORDER: ColumnId[] = [
+  "photo",
+  "category",
+  "brand",
+  "model",
+  "nickname",
+  "reference",
+  "movementType",
+  "caliber",
+  "box",
+  "worn",
+  "price",
+]
+const DEFAULT_VISIBLE: ColumnId[] = [
+  "photo",
+  "brand",
+  "model",
+  "category",
+  "reference",
+  "movementType",
+  "box",
+  "worn",
+]
+const COLUMN_LABELS: Record<ColumnId, string> = {
+  photo: "Photo",
+  category: "Category",
+  brand: "Brand",
+  model: "Model",
+  nickname: "Nickname",
+  reference: "Ref #",
+  movementType: "Movement Type",
+  caliber: "Caliber",
+  box: "Box",
+  worn: "Worn",
+  price: "Price",
+}
+
 const DEFAULT_WIDTHS: Record<ColumnId, number> = {
   photo: 64,
   category: 112,
@@ -116,15 +151,35 @@ const DEFAULT_WIDTHS: Record<ColumnId, number> = {
 }
 
 /** Drag target on a header's right edge. Stops propagation so a resize
- *  never triggers the header's sort button. */
-function ResizeHandle({ onPointerDown }: { onPointerDown: (e: React.PointerEvent) => void }) {
+ *  never triggers the header's sort button. Keyboard: focus + arrow keys
+ *  adjust the column width (F2). */
+function ResizeHandle({
+  label,
+  onPointerDown,
+  onKeyResize,
+}: {
+  label: string
+  onPointerDown: (e: React.PointerEvent) => void
+  onKeyResize: (delta: number) => void
+}) {
   return (
     <span
       role="separator"
       aria-orientation="vertical"
+      aria-label={`Resize ${label} column`}
+      tabIndex={0}
       onPointerDown={onPointerDown}
       onClick={(e) => e.stopPropagation()}
-      className="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-[3px] after:w-px after:bg-border/70 hover:after:bg-brass/70 active:after:bg-brass"
+      onKeyDown={(e) => {
+        if (e.key === "ArrowLeft") {
+          e.preventDefault()
+          onKeyResize(-16)
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault()
+          onKeyResize(16)
+        }
+      }}
+      className="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-[3px] after:w-px after:bg-border/70 hover:after:bg-brass/70 focus-visible:outline-none focus-visible:after:bg-brass active:after:bg-brass"
     />
   )
 }
@@ -137,37 +192,46 @@ function SortableHeader({
   currentDir,
   onSort,
   onResizeStart,
+  onKeyResize,
   className,
   alignRight,
 }: {
   label: string
-  sortKey: SortKey
+  sortKey: TableSortKey
   colId: ColumnId
-  currentKey: SortKey | null
-  currentDir: SortDir
-  onSort: (key: SortKey) => void
+  currentKey: TableSortKey | null
+  currentDir: TableSortDir
+  onSort: (key: TableSortKey) => void
   onResizeStart: (e: React.PointerEvent, col: ColumnId) => void
+  onKeyResize: (col: ColumnId, delta: number) => void
   className?: string
   alignRight?: boolean
 }) {
   const isActive = currentKey === sortKey
   return (
-    <TableHead className={cn("relative", className)}>
+    <TableHead
+      aria-sort={isActive ? (currentDir === "asc" ? "ascending" : "descending") : "none"}
+      className={cn("relative", className)}
+    >
       <button
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          "flex items-center gap-1 truncate text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80 transition-colors hover:text-foreground",
+          "flex items-center gap-1 truncate text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground transition-colors hover:text-foreground",
           isActive && "text-foreground",
           alignRight ? "w-full justify-end" : "text-left"
         )}
       >
         {label}
-        <span className="text-[10px]">
-          {isActive ? (currentDir === "asc" ? "▲" : "▼") : "⇅"}
+        <span className="text-2xs">
+          {isActive ? (currentDir === "asc" ? <ArrowUp className="h-3 w-3" aria-hidden="true" /> : <ArrowDown className="h-3 w-3" aria-hidden="true" />) : <ChevronsUpDown className="h-3 w-3 opacity-60" aria-hidden="true" />}
         </span>
       </button>
-      <ResizeHandle onPointerDown={(e) => onResizeStart(e, colId)} />
+      <ResizeHandle
+        label={label}
+        onPointerDown={(e) => onResizeStart(e, colId)}
+        onKeyResize={(delta) => onKeyResize(colId, delta)}
+      />
     </TableHead>
   )
 }
@@ -178,7 +242,7 @@ function LabelBadge({ label }: { label: Label }) {
   const colors = labelColorMap[label.color as LabelColor] ?? labelColorMap.blue
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-2xs font-medium ${colors.bg} ${colors.text}`}
     >
       {label.name}
     </span>
@@ -215,7 +279,7 @@ function HoverPhoto({
         {url ? (
           <Image src={url} alt={alt} fill className="object-cover" sizes={thumbPx} unoptimized />
         ) : (
-          <div className="flex h-full items-center justify-center text-lg text-muted-foreground">⌚</div>
+          <div className="flex h-full items-center justify-center text-muted-foreground"><Watch className="h-5 w-5" aria-hidden="true" /></div>
         )}
       </div>
       {url && (
@@ -237,27 +301,46 @@ function HoverPhoto({
 
 // ── Main Component ─────────────────────────────────────────────────
 
-export function CollectionTable({ watches, showCost = false, guideNames, onBrandClick }: CollectionTableProps) {
-  const [sortKey, setSortKey] = useState<SortKey | null>(null)
-  const [sortDir, setSortDir] = useState<SortDir>("asc")
+export function CollectionTable({
+  watches,
+  showCost = false,
+  guideNames,
+  onBrandClick,
+  sortKey,
+  sortDir,
+  onSortChange,
+}: CollectionTableProps) {
+  const router = useRouter()
 
-  // Selected row (click anywhere in a row that isn't a link/button). Distinct
+  // Selected row (Ctrl/Cmd+click — plain click navigates, B5). Distinct
   // from hover — the future hook for bulk actions (B4).
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
 
-  // Restore the header sort (localStorage is unreachable during SSR).
+  // Column visibility (B5), persisted per device.
+  const [chosenColumns, setChosenColumns] = useState<ColumnId[]>(DEFAULT_VISIBLE)
+
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(TABLE_SORT_KEY)
+      const saved = localStorage.getItem(VISIBLE_COLUMNS_KEY)
       if (!saved) return
-      const parsed = JSON.parse(saved) as { key?: SortKey; dir?: SortDir }
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (parsed.key && SORT_KEYS.includes(parsed.key)) setSortKey(parsed.key)
-      if (parsed.dir === "asc" || parsed.dir === "desc") setSortDir(parsed.dir)
+      const parsed = JSON.parse(saved) as ColumnId[]
+      if (Array.isArray(parsed)) {
+        const valid = parsed.filter((id) => COLUMN_ORDER.includes(id))
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (valid.length > 0) setChosenColumns(valid.includes("photo") ? valid : ["photo", ...valid])
+      }
     } catch {
       // ignore malformed stored value
     }
   }, [])
+
+  function toggleColumn(id: ColumnId) {
+    setChosenColumns((prev) => {
+      const next = prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+      localStorage.setItem(VISIBLE_COLUMNS_KEY, JSON.stringify(next))
+      return next
+    })
+  }
 
   // Column widths — user-resizable via header drag handles, persisted per device.
   const [colWidths, setColWidths] = useState<Record<ColumnId, number>>(DEFAULT_WIDTHS)
@@ -282,6 +365,19 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
       // ignore malformed stored value
     }
   }, [])
+
+  // Arrow-key resize for keyboard users (F2). Persists like a drag does.
+  function handleKeyResize(col: ColumnId, delta: number) {
+    setColWidths((prev) => {
+      const next = {
+        ...prev,
+        [col]: Math.max(MIN_COL_WIDTH, Math.round(prev[col] + delta)),
+      }
+      widthsRef.current = next
+      localStorage.setItem(COLUMN_WIDTHS_KEY, JSON.stringify(next))
+      return next
+    })
+  }
 
   function handleResizeStart(e: React.PointerEvent, col: ColumnId) {
     e.preventDefault()
@@ -309,64 +405,31 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
     window.addEventListener("pointerup", onUp)
   }
 
-  const visibleColumns: ColumnId[] = [
-    "photo",
-    "category",
-    "brand",
-    "model",
-    "nickname",
-    "reference",
-    "movementType",
-    "caliber",
-    "box",
-    "worn",
-    ...(showCost ? (["price"] as ColumnId[]) : []),
-  ]
+  // Price stays gated by the Config → Settings "show cost" preference on top
+  // of the column choice (B5).
+  const visibleColumns: ColumnId[] = COLUMN_ORDER.filter(
+    (id) => chosenColumns.includes(id) && (id !== "price" || showCost)
+  )
+  const isVisible = (id: ColumnId) => visibleColumns.includes(id)
 
-  // Sort watches
-  const sorted = useMemo(() => {
-    if (!sortKey) return watches
-    return [...watches].sort((a, b) => {
-      if (sortKey === "price") {
-        const pa = a.purchase_price_cents
-        const pb = b.purchase_price_cents
-        // Watches without a price always sort to the bottom.
-        if (pa === null && pb === null) return 0
-        if (pa === null) return 1
-        if (pb === null) return -1
-        return sortDir === "asc" ? pa - pb : pb - pa
-      }
-      if (sortKey === "wearCount") {
-        const wa = a.wear_count ?? 0
-        const wb = b.wear_count ?? 0
-        return sortDir === "asc" ? wa - wb : wb - wa
-      }
-      const va = getSortValue(a, sortKey)
-      const vb = getSortValue(b, sortKey)
-      const cmp = va.localeCompare(vb)
-      return sortDir === "asc" ? cmp : -cmp
-    })
-  }, [watches, sortKey, sortDir])
-
-  function handleSort(key: SortKey) {
-    let nextKey = key
-    let nextDir: SortDir = "asc"
-    if (sortKey === key) {
-      nextKey = sortKey
-      nextDir = sortDir === "asc" ? "desc" : "asc"
-      setSortDir(nextDir)
-    } else {
-      setSortKey(key)
-      setSortDir("asc")
+  // Plain click navigates to the watch; Ctrl/Cmd+click toggles selection (B5).
+  function handleRowClick(e: React.MouseEvent, watchId: string) {
+    if (e.ctrlKey || e.metaKey) {
+      setSelectedRowId((prev) => (prev === watchId ? null : watchId))
+      return
     }
-    localStorage.setItem(TABLE_SORT_KEY, JSON.stringify({ key: nextKey, dir: nextDir }))
+    router.push(`/watch/${watchId}`)
   }
+
+  // Sorting happens in the collection view (B3) — render as given.
+  const sorted = watches
+  const handleSort = onSortChange
 
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <span className="text-5xl">⌚</span>
-        <h3 className="mt-4 text-lg font-semibold">No watches yet</h3>
+        <Watch className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
+        <h3 className="mt-4 text-md font-semibold">No watches yet</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Add your first watch to start building your collection.
         </p>
@@ -378,6 +441,32 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
     <>
       {/* Desktop table */}
       <div className="hidden sm:block">
+        {/* Column chooser (B5) */}
+        <div className="mb-2 flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={<Button variant="outline" size="sm" className="h-8 gap-1.5" />}
+            >
+              <Columns3 className="h-3.5 w-3.5" aria-hidden="true" />
+              Columns
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {COLUMN_ORDER.filter((id) => id !== "photo").map((id) => (
+                <DropdownMenuCheckboxItem
+                  key={id}
+                  checked={chosenColumns.includes(id)}
+                  onCheckedChange={() => toggleColumn(id)}
+                  disabled={id === "price" && !showCost}
+                >
+                  {COLUMN_LABELS[id]}
+                  {id === "price" && !showCost && " (enable in Config)"}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <div className="rounded-lg border">
           <Table className="table-fixed">
             <colgroup>
@@ -387,21 +476,25 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
             </colgroup>
             <TableHeader>
               <TableRow>
-                <TableHead className="relative text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80">
+                <TableHead className="relative text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                   Photo
-                  <ResizeHandle onPointerDown={(e) => handleResizeStart(e, "photo")} />
+                  <ResizeHandle
+                    label="Photo"
+                    onPointerDown={(e) => handleResizeStart(e, "photo")}
+                    onKeyResize={(delta) => handleKeyResize("photo", delta)}
+                  />
                 </TableHead>
-                <SortableHeader label="Category" sortKey="category" colId="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Brand" sortKey="brand" colId="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Model" sortKey="model" colId="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Nickname" sortKey="nickname" colId="nickname" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Ref #" sortKey="reference" colId="reference" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Movement Type" sortKey="movementType" colId="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Caliber" sortKey="caliber" colId="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Box" sortKey="box" colId="box" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} />
-                <SortableHeader label="Worn" sortKey="wearCount" colId="worn" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} className="text-right" alignRight />
-                {showCost && (
-                  <SortableHeader label="Price" sortKey="price" colId="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} className="text-right" alignRight />
+                {isVisible("category") && <SortableHeader label="Category" sortKey="category" colId="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
+                {isVisible("brand") && <SortableHeader label="Brand" sortKey="brand" colId="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
+                {isVisible("model") && <SortableHeader label="Model" sortKey="model" colId="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
+                {isVisible("nickname") && <SortableHeader label="Nickname" sortKey="nickname" colId="nickname" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
+                {isVisible("reference") && <SortableHeader label="Ref #" sortKey="reference" colId="reference" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
+                {isVisible("movementType") && <SortableHeader label="Movement Type" sortKey="movementType" colId="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
+                {isVisible("caliber") && <SortableHeader label="Caliber" sortKey="caliber" colId="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
+                {isVisible("box") && <SortableHeader label="Box" sortKey="box" colId="box" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
+                {isVisible("worn") && <SortableHeader label="Worn" sortKey="wearCount" colId="worn" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
+                {isVisible("price") && (
+                  <SortableHeader label="Price" sortKey="price" colId="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />
                 )}
               </TableRow>
             </TableHeader>
@@ -409,103 +502,116 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
               {sorted.map((watch) => (
                 <TableRow
                   key={watch.id}
-                  onClick={() =>
-                    setSelectedRowId((prev) => (prev === watch.id ? null : watch.id))
-                  }
+                  onClick={(e) => handleRowClick(e, watch.id)}
                   aria-selected={selectedRowId === watch.id}
                   className={cn(
                     // No stripe at rest — a hairline per row reads more
-                    // instrument-like and survives light mode (B4).
-                    "group border-b border-border/60",
+                    // instrument-like and survives light mode (B4). The whole
+                    // row is the link to the watch (B5); Ctrl/Cmd+click selects.
+                    "group cursor-pointer border-b border-border/60",
                     selectedRowId === watch.id
                       ? "bg-accent/60 shadow-[inset_2px_0_0_var(--brass)] hover:bg-accent/60"
                       : "hover:bg-accent/40 hover:shadow-[inset_2px_0_0_var(--brass)]"
                   )}
                 >
                   <TableCell className="py-2">
-                    <Link href={`/watch/${watch.id}/edit`} className="block">
-                      <HoverPhoto
-                        url={watch.cover_photo_url}
-                        alt={`${watch.brand.name} ${watch.model}`}
-                        size="sm"
-                      />
-                    </Link>
+                    <HoverPhoto
+                      url={watch.cover_photo_url}
+                      alt={`${watch.brand.name} ${watch.model}`}
+                      size="sm"
+                    />
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {watch.category ? (
-                      <Link
-                        href={`/collection?category=${watch.category.id}`}
-                        className="hover:underline hover:text-foreground"
-                      >
-                        {watch.category.name}
-                      </Link>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {onBrandClick ? (
-                      // Filters to this brand — same affordance as the category link.
-                      <button
-                        type="button"
-                        onClick={() => onBrandClick(watch.brand_id)}
-                        title={`Show all ${watch.brand.name}`}
-                        className="font-display text-[15.5px] font-semibold hover:underline"
-                      >
-                        {watch.brand.name}
-                      </button>
-                    ) : (
-                      <Link href={`/watch/${watch.id}/edit`} className="font-display text-[15.5px] font-semibold hover:underline">
-                        {watch.brand.name}
-                      </Link>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/watch/${watch.id}/edit`} className="text-muted-foreground hover:underline">
-                      {watch.model}
-                    </Link>
-                    {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
-                    {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
-                    {watch.is_wishlist && guideNames?.[watch.id] && (
-                      <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
-                    )}
-                    {watch.price_check_enabled && (
-                      <span
-                        title="Price checking enabled"
-                        className="ml-2 align-middle font-mono text-[13px] font-semibold text-emerald-600 dark:text-emerald-400"
-                      >
-                        $$
+                  {isVisible("category") && (
+                    <TableCell className="text-muted-foreground">
+                      {watch.category ? (
+                        <span className="flex items-center gap-1">
+                          <span className="truncate">{watch.category.name}</span>
+                          <Link
+                            href={`/collection?category=${watch.category.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            title={`Show all ${watch.category.name}`}
+                            aria-label={`Filter by category ${watch.category.name}`}
+                            className="rounded p-0.5 opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                          >
+                            <Filter className="h-3 w-3" aria-hidden="true" />
+                          </Link>
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                  )}
+                  {isVisible("brand") && (
+                    <TableCell>
+                      <span className="flex items-center gap-1">
+                        <span className="truncate text-sm font-medium">{watch.brand.name}</span>
+                        {onBrandClick && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onBrandClick(watch.brand_id)
+                            }}
+                            title={`Show all ${watch.brand.name}`}
+                            aria-label={`Filter by brand ${watch.brand.name}`}
+                            className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                          >
+                            <Filter className="h-3 w-3" aria-hidden="true" />
+                          </button>
+                        )}
                       </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {watch.nickname ? (
-                      <Link href={`/watch/${watch.id}/edit`} className="hover:underline">
-                        {watch.nickname}
-                      </Link>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell className="font-mono text-[12px] text-muted-foreground">
-                    {watch.reference_number || "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {movementTypeLabel(watch)}
-                  </TableCell>
-                  <TableCell className="font-mono text-[12px] text-muted-foreground">
-                    {watch.movement
-                      ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim()
-                      : "—"}
-                  </TableCell>
-                  <TableCell className="truncate text-[13px] text-muted-foreground">
-                    {watch.box || "\u2014"}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-[13px] tabular-nums text-muted-foreground">
-                    {watch.wear_count ?? 0}
-                  </TableCell>
-                  {showCost && (
-                    <TableCell className="text-right font-mono text-[13.5px] font-medium tabular-nums text-brass">
+                    </TableCell>
+                  )}
+                  {isVisible("model") && (
+                    <TableCell>
+                      <span className="text-muted-foreground">{watch.model}</span>
+                      {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
+                      {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
+                      {watch.is_wishlist && guideNames?.[watch.id] && (
+                        <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
+                      )}
+                      {watch.price_check_enabled && (
+                        <CircleDollarSign
+                          aria-label="Price checking enabled"
+                          className="ml-2 inline h-3.5 w-3.5 align-middle text-emerald-600 dark:text-emerald-400"
+                        />
+                      )}
+                    </TableCell>
+                  )}
+                  {isVisible("nickname") && (
+                    <TableCell className="text-muted-foreground">
+                      {watch.nickname || "—"}
+                    </TableCell>
+                  )}
+                  {isVisible("reference") && (
+                    <TableCell className="font-mono text-xs text-muted-foreground">
+                      {watch.reference_number || "—"}
+                    </TableCell>
+                  )}
+                  {isVisible("movementType") && (
+                    <TableCell className="text-muted-foreground">
+                      {movementTypeLabel(watch)}
+                    </TableCell>
+                  )}
+                  {isVisible("caliber") && (
+                    <TableCell className="font-mono text-xs text-muted-foreground">
+                      {watch.movement
+                        ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim()
+                        : "—"}
+                    </TableCell>
+                  )}
+                  {isVisible("box") && (
+                    <TableCell className="truncate text-xs text-muted-foreground">
+                      {watch.box || "\u2014"}
+                    </TableCell>
+                  )}
+                  {isVisible("worn") && (
+                    <TableCell className="text-right font-mono text-xs tabular-nums text-muted-foreground">
+                      {watch.wear_count ?? 0}
+                    </TableCell>
+                  )}
+                  {isVisible("price") && (
+                    <TableCell className="text-right font-mono text-xs font-medium tabular-nums text-foreground">
                       {priceLabel(watch)}
                     </TableCell>
                   )}
@@ -513,6 +619,17 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
               ))}
             </TableBody>
           </Table>
+        </div>
+        {/* Visible legend — markers must not carry meaning only in a title (E2/F2). */}
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <CircleDollarSign className="h-3 w-3 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            price tracked
+          </span>
+          <span className="flex items-center gap-1">
+            <Archive className="h-3 w-3" aria-hidden="true" />
+            storage box
+          </span>
         </div>
       </div>
 
@@ -524,7 +641,7 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
             className="flex items-center gap-3 rounded-lg border p-3 transition-colors"
           >
             <Link
-              href={`/watch/${watch.id}/edit`}
+              href={`/watch/${watch.id}`}
               className="flex min-w-0 flex-1 items-center gap-3"
             >
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
@@ -538,12 +655,12 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                     unoptimized
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-lg text-muted-foreground">⌚</div>
+                  <div className="flex h-full items-center justify-center text-muted-foreground"><Watch className="h-5 w-5" aria-hidden="true" /></div>
                 )}
               </div>
               <div className="min-w-0 flex-1">
                 {watch.category && (
-                  <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <p className="truncate text-2xs uppercase tracking-wide text-muted-foreground">
                     {watch.category.name}
                   </p>
                 )}
@@ -555,17 +672,15 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
                     <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
                   )}
                   {watch.price_check_enabled && (
-                    <span
-                      title="Price checking enabled"
-                      className="ml-2 align-middle font-mono text-[13px] font-semibold text-emerald-600 dark:text-emerald-400"
-                    >
-                      $$
-                    </span>
+                    <CircleDollarSign
+                      aria-label="Price checking enabled"
+                      className="ml-2 inline h-3.5 w-3.5 align-middle text-emerald-600 dark:text-emerald-400"
+                    />
                   )}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
                 {watch.box && (
-                  <p className="truncate text-xs text-muted-foreground">▣ {watch.box}</p>
+                  <p className="flex items-center gap-1 truncate text-xs text-muted-foreground"><Archive className="h-3 w-3 shrink-0" aria-hidden="true" /> {watch.box}</p>
                 )}
                 {showCost && (
                   <p className="text-sm font-medium tabular-nums">{priceLabel(watch)}</p>

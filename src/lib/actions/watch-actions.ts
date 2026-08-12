@@ -208,7 +208,7 @@ export async function updateWatch(
 
   revalidatePath("/dashboard")
   revalidatePath("/collection")
-  revalidatePath(`/watch/${watchId}/edit`)
+  revalidatePath(`/watch/${watchId}`); revalidatePath(`/watch/${watchId}/edit`)
   // Return to wherever the user came from (e.g. the Attention Needed report).
   // Only allow internal paths — never an off-site (open-redirect) target.
   const dest =
@@ -245,7 +245,7 @@ export async function updateDialFraming(
   if (error) return { error: error.message }
 
   revalidatePath("/dashboard")
-  revalidatePath(`/watch/${watchId}/edit`)
+  revalidatePath(`/watch/${watchId}`); revalidatePath(`/watch/${watchId}/edit`)
   return { success: true }
 }
 
@@ -375,12 +375,10 @@ export async function createWatchWithPhoto(
 
   const data = parsed.data
 
-  // Post-create destination: the quick-add screen offers "Save & add details"
-  // (continue to the full Edit form) vs "Save & close" (back to the collection).
+  // Post-create destination (F3): "Save watch" lands on the watch page;
+  // "Save and add another" returns to a fresh quick-add form.
   const destination =
-    formData.get("redirect_to") === "edit"
-      ? `/watch/__ID__/edit`
-      : `/collection`
+    formData.get("redirect_to") === "another" ? `/add` : `/watch/__ID__`
 
   // Insert the watch
   const { data: watch, error } = await supabase

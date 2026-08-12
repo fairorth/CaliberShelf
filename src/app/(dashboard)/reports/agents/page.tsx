@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { BadgeDollarSign, BookOpen, Bot, Globe, Search, Sparkles, Tag } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getAgentReview, formatUsdMicros } from "@/lib/queries/agent-runs"
 import type { AgentRun } from "@/lib/types/watch"
@@ -11,16 +13,19 @@ export const metadata: Metadata = {
 // Reflect new runs immediately.
 export const dynamic = "force-dynamic"
 
-const AGENT_META: Record<string, { label: string; icon: string }> = {
-  "price-check": { label: "Market Valuation", icon: "💰" },
-  "deal-check": { label: "Deal Scanner", icon: "🏷️" },
-  "find-references": { label: "Reference Sweep", icon: "🔎" },
-  "find-store-urls": { label: "Brand Enrichment", icon: "🌐" },
-  "chronoscout-sync": { label: "ChronoScout Sync", icon: "📚" },
-  "spec-fetch": { label: "Spec Autofill", icon: "✨" },
+const AGENT_META: Record<string, { label: string; icon: LucideIcon }> = {
+  "price-check": { label: "Market Valuation", icon: BadgeDollarSign },
+  "deal-check": { label: "Deal Scanner", icon: Tag },
+  "find-references": { label: "Reference Sweep", icon: Search },
+  "find-store-urls": { label: "Brand Enrichment", icon: Globe },
+  "chronoscout-sync": { label: "ChronoScout Sync", icon: BookOpen },
+  "spec-fetch": { label: "Spec Autofill", icon: Sparkles },
 }
 const agentLabel = (a: string) => AGENT_META[a]?.label ?? a
-const agentIcon = (a: string) => AGENT_META[a]?.icon ?? "🤖"
+const AgentIcon = ({ agent }: { agent: string }) => {
+  const Icon = AGENT_META[agent]?.icon ?? Bot
+  return <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+}
 
 function fmtDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -51,11 +56,11 @@ function StatusBadge({ status, dryRun }: { status: AgentRun["status"]; dryRun: b
           : "bg-foreground/10 text-muted-foreground"
   return (
     <span className="flex items-center gap-1.5">
-      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${color}`}>
+      <span className={`rounded-full px-2 py-0.5 text-2xs font-medium ${color}`}>
         {status}
       </span>
       {dryRun && (
-        <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[11px] font-medium text-sky-400">
+        <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-2xs font-medium text-sky-400">
           dry run
         </span>
       )}
@@ -65,11 +70,11 @@ function StatusBadge({ status, dryRun }: { status: AgentRun["status"]; dryRun: b
 
 function Kpi({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-xl">
       <CardContent className="pt-5">
-        <div className="text-2xl font-semibold tabular-nums">{value}</div>
+        <div className="text-md font-semibold tabular-nums">{value}</div>
         <div className="mt-0.5 text-sm text-muted-foreground">{label}</div>
-        {hint && <div className="mt-1 text-xs text-muted-foreground/70">{hint}</div>}
+        {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
       </CardContent>
     </Card>
   )
@@ -87,7 +92,7 @@ export default async function AgentReviewPage() {
         >
           ‹ Reports
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           Agent Execution Review
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -99,9 +104,9 @@ export default async function AgentReviewPage() {
         <Card className="max-w-2xl">
           <CardContent className="pt-6 text-sm text-muted-foreground">
             No agent runs recorded yet. Apply migration{" "}
-            <code className="font-mono text-[12px]">00028_create_agent_runs.sql</code>, then
+            <code className="font-mono text-xs">00028_create_agent_runs.sql</code>, then
             run an agent (or{" "}
-            <code className="font-mono text-[12px]">npm run backfill-agent-runs</code> to import
+            <code className="font-mono text-xs">npm run backfill-agent-runs</code> to import
             past valuation runs).
           </CardContent>
         </Card>
@@ -116,9 +121,9 @@ export default async function AgentReviewPage() {
           </div>
 
           {/* Per-agent rollup */}
-          <Card className="overflow-hidden rounded-2xl border-l-2 border-l-brass/40">
-            <CardHeader className="bg-brass/5">
-              <CardTitle className="font-display text-[19px] font-semibold">By agent</CardTitle>
+          <Card className="overflow-hidden rounded-xl">
+            <CardHeader>
+              <CardTitle className="font-display text-md font-semibold">By agent</CardTitle>
             </CardHeader>
             <CardContent className="px-0 pb-0">
               <div className="divide-y divide-border/50">
@@ -128,7 +133,7 @@ export default async function AgentReviewPage() {
                     className="flex flex-wrap items-center gap-x-4 gap-y-1 px-6 py-3 text-sm"
                   >
                     <span className="flex min-w-[180px] items-center gap-2 font-medium">
-                      <span>{agentIcon(r.agent)}</span>
+                      <AgentIcon agent={r.agent} />
                       {agentLabel(r.agent)}
                     </span>
                     <span className="text-muted-foreground">
@@ -137,7 +142,7 @@ export default async function AgentReviewPage() {
                     <span className="text-muted-foreground">
                       {r.itemsUpdated.toLocaleString()} updated
                     </span>
-                    <span className="font-mono text-brass">
+                    <span className="font-mono tabular-nums text-foreground">
                       {r.deterministic ? "free" : formatUsdMicros(r.totalCostMicros)}
                     </span>
                     <span className="text-muted-foreground">avg {fmtDuration(r.avgDurationMs)}</span>
@@ -153,9 +158,9 @@ export default async function AgentReviewPage() {
           </Card>
 
           {/* Run history */}
-          <Card className="overflow-hidden rounded-2xl">
+          <Card className="overflow-hidden rounded-xl">
             <CardHeader>
-              <CardTitle className="text-base">Recent runs</CardTitle>
+              <CardTitle className="text-sm">Recent runs</CardTitle>
             </CardHeader>
             <CardContent className="px-0 pb-0">
               <div className="divide-y divide-border/50">
@@ -166,7 +171,7 @@ export default async function AgentReviewPage() {
                     className="group flex flex-wrap items-center gap-x-4 gap-y-1 px-6 py-3 text-sm hover:bg-accent/40"
                   >
                     <span className="flex min-w-[170px] items-center gap-2 font-medium group-hover:text-primary">
-                      <span>{agentIcon(run.agent)}</span>
+                      <AgentIcon agent={run.agent} />
                       {agentLabel(run.agent)}
                     </span>
                     <StatusBadge status={run.status} dryRun={run.dry_run} />
@@ -176,7 +181,7 @@ export default async function AgentReviewPage() {
                         <span className="text-rose-400"> · {run.items_failed} failed</span>
                       )}
                     </span>
-                    <span className="font-mono text-xs text-brass">
+                    <span className="font-mono text-xs tabular-nums text-foreground">
                       {run.cost_usd_micros > 0 ? formatUsdMicros(run.cost_usd_micros) : "free"}
                     </span>
                     <span className="text-xs text-muted-foreground">{fmtDuration(run.duration_ms)}</span>

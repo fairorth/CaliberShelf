@@ -1,5 +1,7 @@
 "use client"
 
+import { Archive, Package } from "lucide-react"
+
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -35,11 +37,11 @@ export function DisplayBoxPanel({ box }: { box: CurrentDisplayBox | null }) {
   }
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-l-2 border-l-brass/40">
-      <CardHeader className="flex flex-row items-center justify-between gap-2 bg-brass/5">
-        <CardTitle className="flex items-center gap-2.5 font-display text-[19px] font-semibold">
-          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-brass/15 text-sm">
-            🧰
+    <Card className="overflow-hidden rounded-xl">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <CardTitle className="flex items-center gap-2.5 font-display text-md font-semibold">
+          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-muted text-sm">
+            <Package className="h-4 w-4" aria-hidden="true" />
           </span>
           Weekly Display Box
         </CardTitle>
@@ -68,13 +70,13 @@ export function DisplayBoxPanel({ box }: { box: CurrentDisplayBox | null }) {
                   className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5"
                 >
                   <span
-                    className="inline-flex h-6 min-w-[3.5rem] items-center justify-center rounded-md bg-brass/15 px-2 font-mono text-xs font-semibold text-brass"
+                    className="inline-flex h-6 min-w-[3.5rem] items-center justify-center rounded-md bg-muted px-2 font-mono text-xs font-semibold text-foreground"
                     title="Permanent storage box"
                   >
-                    {w.box ? `▣ ${w.box}` : "—"}
+                    {w.box ? <><Archive className="mr-1 inline h-3 w-3" aria-hidden="true" />{w.box}</> : "—"}
                   </span>
                   <Link
-                    href={`/watch/${w.watchId}/edit`}
+                    href={`/watch/${w.watchId}`}
                     className="font-medium hover:text-primary"
                   >
                     {w.name}
@@ -89,7 +91,7 @@ export function DisplayBoxPanel({ box }: { box: CurrentDisplayBox | null }) {
               ))}
             </ul>
             <p className="pt-1 text-xs text-muted-foreground">
-              Load these into your case for the week — the ▣ box number tells you where each
+              Load these into your case for the week — the box number tells you where each
               one lives in the safe.
             </p>
           </div>

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { Construction } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 
 /** Placeholder shown for reports that are designed but not yet built. */
@@ -17,13 +18,13 @@ export function ReportPlaceholder({
       >
         ‹ Reports
       </Link>
-      <h1 className="font-display text-lg font-medium tracking-tight">{title}</h1>
+      <h1 className="font-display text-lg font-semibold tracking-tight">{title}</h1>
       <Card className="max-w-xl">
         <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
           <span className="text-4xl" aria-hidden="true">
-            🚧
+            <Construction className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
           </span>
-          <p className="text-base font-medium">Coming soon</p>
+          <p className="text-sm font-medium">Coming soon</p>
           <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
         </CardContent>
       </Card>

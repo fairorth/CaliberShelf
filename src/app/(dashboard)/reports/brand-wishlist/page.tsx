@@ -102,7 +102,7 @@ export default async function BrandWishlistPage() {
         >
           ‹ Reports
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">Brand Wish List</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Brand Wish List</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {wishlistBrands.length === 0 ? (
             <>No wish-list brands.</>
@@ -194,7 +194,7 @@ export default async function BrandWishlistPage() {
                       {catalog.price_min_cents != null && catalog.price_max_cents != null && (
                         <span>
                           <span className="text-muted-foreground">Price range </span>
-                          <span className="font-mono text-brass">
+                          <span className="font-mono tabular-nums text-foreground">
                             {formatCurrency(catalog.price_min_cents, "USD", true)}–
                             {formatCurrency(catalog.price_max_cents, "USD", true)}
                           </span>
@@ -266,7 +266,7 @@ export default async function BrandWishlistPage() {
                       </div>
                     )}
 
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-2xs text-muted-foreground">
                       Catalog data from{" "}
                       {catalog.chronoscout_url ? (
                         <a

@@ -1,5 +1,7 @@
 "use client"
 
+import { Trash2 } from "lucide-react"
+
 import { useState, useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -123,7 +125,7 @@ export function WearHistory({ watches }: WearHistoryProps) {
           <Card key={log.id} className="flex items-center gap-4 p-3">
             {/* Watch thumbnail */}
             <Link
-              href={`/watch/${log.watch_id}/edit`}
+              href={`/watch/${log.watch_id}`}
               className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-border"
             >
               {log.watch.cover_photo_url ? (
@@ -144,7 +146,7 @@ export function WearHistory({ watches }: WearHistoryProps) {
             {/* Details */}
             <div className="min-w-0 flex-1">
               <Link
-                href={`/watch/${log.watch_id}/edit`}
+                href={`/watch/${log.watch_id}`}
                 className="font-medium hover:underline"
               >
                 {log.watch.brand.name} {log.watch.model}
@@ -166,7 +168,7 @@ export function WearHistory({ watches }: WearHistoryProps) {
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" />
                 }
               >
-                🗑️
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>

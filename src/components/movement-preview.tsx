@@ -17,7 +17,7 @@ export function MovementPreview({ movement }: MovementPreviewProps) {
       <div className="flex items-center gap-2 flex-wrap">
         <span className="font-mono text-sm font-medium tracking-tight">{movement.caliber_name}</span>
         {movement.caliber_type && (
-          <Badge className="bg-primary/15 text-primary border-primary/25 text-[10px]">
+          <Badge className="bg-primary/15 text-primary border-primary/25 text-2xs">
             {caliberTypeLabels[movement.caliber_type] ?? movement.caliber_type}
           </Badge>
         )}
@@ -46,7 +46,7 @@ export function MovementPreview({ movement }: MovementPreviewProps) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <span className="inline-flex items-baseline gap-1 text-xs">
-      <span className="text-muted-foreground/70">{label}</span>
+      <span className="text-muted-foreground">{label}</span>
       <span className="font-mono font-medium text-foreground/90">{value}</span>
     </span>
   )

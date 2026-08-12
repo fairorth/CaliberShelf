@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { Check, X } from "lucide-react"
+import { PhotoDrop } from "@/components/photo-drop"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -18,7 +20,6 @@ import {
   finalizeBatchImport,
 } from "@/lib/actions/batch-import-actions"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
 import type { Category } from "@/lib/types/watch"
 
 interface BatchImportFormProps {
@@ -37,22 +38,18 @@ interface ImportResult {
 }
 
 export function BatchImportForm({ categories }: BatchImportFormProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [images, setImages] = useState<PreviewImage[]>([])
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "")
-  const [isDragging, setIsDragging] = useState(false)
   const [importing, setImporting] = useState(false)
   const [progress, setProgress] = useState({ current: 0, total: 0 })
   const [result, setResult] = useState<ImportResult | null>(null)
 
-  const addFiles = useCallback((files: FileList | File[]) => {
-    const newImages: PreviewImage[] = []
-    for (const file of Array.from(files)) {
-      if (file.type.startsWith("image/")) {
-        newImages.push({ file, url: URL.createObjectURL(file) })
-      }
-    }
-    setImages((prev) => [...prev, ...newImages])
+  // Files arrive already downscaled from PhotoDrop (A3).
+  const addFiles = useCallback((files: File[]) => {
+    setImages((prev) => [
+      ...prev,
+      ...files.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    ])
     setResult(null)
   }, [])
 
@@ -70,14 +67,6 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
     }
     setImages([])
     setResult(null)
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
-    if (e.dataTransfer.files.length > 0) {
-      addFiles(e.dataTransfer.files)
-    }
   }
 
   async function handleImport() {
@@ -169,7 +158,7 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
       {/* Settings */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Settings</CardTitle>
+          <CardTitle className="text-sm">Settings</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="max-w-sm space-y-2">
@@ -197,50 +186,20 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
         </CardContent>
       </Card>
 
-      {/* Drop zone */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        accept="image/jpeg,image/png,image/webp,image/heic"
-        onChange={(e) => {
-          if (e.target.files) addFiles(e.target.files)
-          e.target.value = "" // reset so same files can be re-selected
-        }}
-        className="hidden"
-      />
-
+      {/* Drop zone — the shared upload surface, downscales every file (A3). */}
       {!importing && (
-        <div
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-          onDragEnter={(e) => { e.preventDefault(); setIsDragging(true) }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={cn(
-            "flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors",
-            isDragging
-              ? "border-primary bg-primary/5"
-              : "border-border hover:border-primary/50 hover:bg-muted/30"
-          )}
-        >
-          <span className="text-4xl">📸</span>
-          <div className="text-center">
-            <p className="text-sm font-medium">
-              {isDragging ? "Drop images here" : "Drag & drop watch photos here"}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              or click to browse · JPEG, PNG, WebP, HEIC · max 10MB each
-            </p>
-          </div>
-        </div>
+        <PhotoDrop
+          multiple
+          onFiles={addFiles}
+          label={<>Drag &amp; drop watch photos here, or <span className="font-medium">browse</span></>}
+        />
       )}
 
       {/* Preview grid */}
       {images.length > 0 && !importing && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">
+            <CardTitle className="text-sm">
               {images.length} {images.length === 1 ? "image" : "images"} selected
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={clearAll}>
@@ -261,28 +220,19 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); removeImage(i) }}
-                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-[10px] text-white opacity-0 transition-opacity hover:bg-destructive group-hover:opacity-100"
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-2xs text-white opacity-0 transition-opacity hover:bg-destructive group-hover:opacity-100"
                     title="Remove"
                   >
-                    ✕
+                    <X className="h-3 w-3" aria-hidden="true" />
                   </button>
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-1 pb-1 pt-4">
-                    <p className="truncate text-[9px] font-medium text-white">
+                    <p className="truncate text-2xs font-medium text-white">
                       Batch {i + 1}
                     </p>
                   </div>
                 </div>
               ))}
 
-              {/* Add more button */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-border text-2xl text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/30"
-                title="Add more images"
-              >
-                +
-              </button>
             </div>
           </CardContent>
         </Card>
@@ -325,10 +275,10 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
       {result && (
         <Card className={result.errors.length > 0 ? "border-amber-500/30" : "border-emerald-500/30"}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-sm flex items-center gap-2">
               {result.errors.length === 0 ? (
                 <>
-                  <span className="text-emerald-600">✓</span>
+                  <Check className="h-4 w-4 text-emerald-600" aria-hidden="true" />
                   Import Complete
                 </>
               ) : (

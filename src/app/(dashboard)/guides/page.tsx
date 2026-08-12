@@ -15,7 +15,7 @@ export default async function GuidesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           Collection Guides
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -40,10 +40,10 @@ export default async function GuidesPage() {
               <Link key={g.id} href={`/guides/${g.id}`} className="group block">
                 <Card className="h-full transition-colors group-hover:border-primary/50">
                   <CardHeader>
-                    <CardTitle className="flex items-baseline justify-between gap-2 text-base">
+                    <CardTitle className="flex items-baseline justify-between gap-2 text-sm">
                       {g.name}
                       {g.version && (
-                        <span className="font-mono text-[11px] font-normal text-muted-foreground">
+                        <span className="font-mono text-2xs font-normal text-muted-foreground">
                           v{g.version}
                         </span>
                       )}
@@ -58,11 +58,11 @@ export default async function GuidesPage() {
                         <span className="text-muted-foreground">
                           {g.owned_count} of {g.entry_count} chapters owned
                         </span>
-                        <span className="font-mono text-brass">{pct}%</span>
+                        <span className="font-mono tabular-nums text-foreground">{pct}%</span>
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full bg-brass/80"
+                          className="h-full rounded-full bg-primary/80"
                           style={{ width: `${pct}%` }}
                         />
                       </div>

@@ -1,5 +1,7 @@
 "use client"
 
+import { Star, Trash2 } from "lucide-react"
+
 import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -96,8 +98,8 @@ export function StrapPhotoManager({ strapId, photos }: StrapPhotoManagerProps) {
                 <div className="h-full w-full bg-muted" />
               )}
               {photo.is_cover && (
-                <span className="absolute left-1 top-1 rounded-full bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-brass backdrop-blur">
-                  ★ cover
+                <span className="absolute left-1 top-1 rounded-full bg-background/85 px-1.5 py-0.5 text-2xs font-medium text-brass backdrop-blur">
+                  <Star className="inline h-3 w-3 fill-current" aria-hidden="true" /> cover
                 </span>
               )}
               <div className="absolute inset-x-0 bottom-0 flex justify-end gap-1 bg-gradient-to-t from-black/60 to-transparent p-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -106,20 +108,20 @@ export function StrapPhotoManager({ strapId, photos }: StrapPhotoManagerProps) {
                     type="button"
                     onClick={() => handleSetCover(photo.id)}
                     disabled={isPending}
-                    className="rounded bg-background/80 px-1.5 py-0.5 text-[10px] hover:bg-background"
+                    className="rounded bg-background/80 px-1.5 py-0.5 text-2xs hover:bg-background"
                     title="Set as cover"
                   >
-                    ★
+                    <Star className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => handleDelete(photo.id)}
                   disabled={isPending}
-                  className="rounded bg-background/80 px-1.5 py-0.5 text-[10px] hover:bg-background"
+                  className="rounded bg-background/80 px-1.5 py-0.5 text-2xs hover:bg-background"
                   title="Delete photo"
                 >
-                  🗑️
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -155,7 +157,7 @@ export function StrapPhotoManager({ strapId, photos }: StrapPhotoManagerProps) {
       >
         {isPending ? "Uploading..." : "Upload Photo"}
       </Button>
-      <p className="text-center font-mono text-[11px] text-muted-foreground">
+      <p className="text-center font-mono text-2xs text-muted-foreground">
         or paste a copied image (Ctrl+V)
       </p>
     </div>

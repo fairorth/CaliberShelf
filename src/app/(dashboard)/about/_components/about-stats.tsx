@@ -46,9 +46,9 @@ export function AboutStats({
       {stats.map((s) => (
         <div
           key={s.label}
-          className="rounded-2xl border border-border bg-card px-4 py-5 text-center"
+          className="rounded-xl border border-border bg-card px-4 py-5 text-center"
         >
-          <div className="font-display text-2xl font-semibold tabular-nums text-brass sm:text-3xl">
+          <div className="font-display text-lg font-semibold tabular-nums text-foreground">
             {s.value}
           </div>
           <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>

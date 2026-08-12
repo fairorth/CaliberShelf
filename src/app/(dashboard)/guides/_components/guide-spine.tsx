@@ -25,7 +25,7 @@ export function GuideSpine({ entries }: { entries: GuideEntryWithWatch[] }) {
 
   return (
     <div className="space-y-2">
-      <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card/50 py-2">
+      <div className="overflow-x-auto rounded-xl border border-border/70 bg-card/50 py-2">
         <svg
           width={width}
           height={H}
@@ -112,7 +112,7 @@ export function GuideSpine({ entries }: { entries: GuideEntryWithWatch[] }) {
           })}
         </svg>
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted-foreground">
         <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-brass align-middle" /> Owned</span>
         <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-amber-400 align-middle" /> Coming soon</span>
         <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-sky-400 align-middle" /> Wish list</span>

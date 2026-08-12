@@ -48,7 +48,7 @@ export default async function DealsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-baseline gap-3">
-        <h1 className="font-display text-lg font-medium tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           Wish List Deals
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -63,7 +63,7 @@ export default async function DealsPage() {
       </div>
 
       {listings.length === 0 ? (
-        <div className="max-w-xl rounded-xl border border-border bg-white/[0.02] px-5 py-6 text-sm text-muted-foreground">
+        <div className="max-w-xl rounded-xl border border-border bg-muted/30 px-5 py-6 text-sm text-muted-foreground">
           <p>
             No wish-list watches yet. Mark a watch as{" "}
             <span className="text-foreground">Wish list</span> on its edit page
@@ -75,7 +75,7 @@ export default async function DealsPage() {
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-white/[0.03] text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
                 <th className="px-4 py-3 font-medium">Watch</th>
                 <th className="px-4 py-3 font-medium">Availability</th>
                 <th className="px-4 py-3 text-right font-medium">Retail</th>
@@ -92,19 +92,19 @@ export default async function DealsPage() {
                     key={watch.id}
                     className={cn(
                       "border-b border-border/50 last:border-0",
-                      i % 2 === 1 && "bg-white/[0.02]"
+                      i % 2 === 1 && "bg-muted/30"
                     )}
                   >
                     <td className="px-4 py-3">
                       <Link
-                        href={`/watch/${watch.id}/edit`}
+                        href={`/watch/${watch.id}`}
                         className="font-medium hover:text-primary"
                       >
                         {watch.brands?.name}{" "}
                         <span className="text-foreground/90">{watch.model}</span>
                       </Link>
                       {watch.reference_number && (
-                        <div className="font-mono text-[11px] text-muted-foreground">
+                        <div className="font-mono text-2xs text-muted-foreground">
                           {watch.reference_number}
                         </div>
                       )}
@@ -124,7 +124,7 @@ export default async function DealsPage() {
                         {badge.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-brass">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
                       {deal?.retail_price_cents != null
                         ? formatCurrency(deal.retail_price_cents, deal.currency, true)
                         : "—"}

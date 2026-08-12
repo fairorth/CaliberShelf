@@ -1,5 +1,7 @@
 "use client"
 
+import { ImageIcon, Images, Trash2 } from "lucide-react"
+
 import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
@@ -53,7 +55,7 @@ function GalleryTile({
   }
 
   return (
-    <figure className="group mb-4 break-inside-avoid overflow-hidden rounded-[13px] border border-border bg-card">
+    <figure className="group mb-4 break-inside-avoid overflow-hidden rounded-xl border border-border bg-card">
       <button
         type="button"
         onClick={onOpen}
@@ -69,8 +71,8 @@ function GalleryTile({
             className="w-full transition-transform duration-200 group-hover:scale-[1.02]"
           />
         ) : (
-          <div className="flex aspect-square w-full items-center justify-center bg-muted text-3xl opacity-40">
-            🖼️
+          <div className="flex aspect-square w-full items-center justify-center bg-muted text-lg opacity-40">
+            <ImageIcon className="h-5 w-5" aria-hidden="true" />
           </div>
         )}
       </button>
@@ -85,7 +87,7 @@ function GalleryTile({
           maxLength={INSPIRATION_NOTE_MAX}
           placeholder="Add a note…"
           disabled={disabled || isPending}
-          className="h-7 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 hover:border-border focus:border-ring"
+          className="h-7 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground hover:border-border focus:border-ring"
         />
         <button
           type="button"
@@ -94,7 +96,7 @@ function GalleryTile({
           title="Delete image"
           className="shrink-0 rounded p-1 text-xs opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100"
         >
-          🗑️
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
         </button>
       </figcaption>
     </figure>
@@ -163,15 +165,15 @@ export function InspirationGallery({ images }: InspirationGalleryProps) {
         >
           {isUploading ? "Uploading…" : "Upload Image"}
         </Button>
-        <p className="font-mono text-[11px] text-muted-foreground">
+        <p className="font-mono text-2xs text-muted-foreground">
           or paste a copied image (Ctrl+V)
         </p>
       </div>
 
       {images.length === 0 && !preview ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-16 text-center">
-          <span className="text-5xl">📸</span>
-          <h3 className="mt-4 text-lg font-semibold">Nothing pinned yet</h3>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
+          <Images className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+          <h3 className="mt-4 text-md font-semibold">Nothing pinned yet</h3>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
             See a watch photo that makes you stop scrolling? Copy it and paste it
             here — build the board your photo lab aspires to.
@@ -180,7 +182,7 @@ export function InspirationGallery({ images }: InspirationGalleryProps) {
       ) : (
         <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
           {preview && (
-            <figure className="relative mb-4 break-inside-avoid overflow-hidden rounded-[13px] border">
+            <figure className="relative mb-4 break-inside-avoid overflow-hidden rounded-xl border">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={preview} alt="Upload preview" className="w-full opacity-50" />
               <div className="absolute inset-0 flex items-center justify-center">

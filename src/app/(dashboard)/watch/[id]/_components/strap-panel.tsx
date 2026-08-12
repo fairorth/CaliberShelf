@@ -1,5 +1,7 @@
 "use client"
 
+import { Link2 } from "lucide-react"
+
 import { useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -66,7 +68,7 @@ export function StrapPanel({ watchId, watchStrapWidthMm, straps, strapLabels }: 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">
+        <CardTitle className="text-sm">
           Strap
           {watchStrapWidthMm != null && (
             <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
@@ -86,8 +88,8 @@ export function StrapPanel({ watchId, watchStrapWidthMm, straps, strapLabels }: 
                 className="h-12 w-12 shrink-0 rounded-md border object-cover"
               />
             ) : (
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border bg-muted text-lg opacity-60">
-                〰️
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border bg-muted text-md opacity-60">
+                <Link2 className="h-5 w-5" aria-hidden="true" />
               </span>
             )}
             <div className="min-w-0 flex-1">

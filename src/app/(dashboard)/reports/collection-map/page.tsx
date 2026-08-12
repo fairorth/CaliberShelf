@@ -28,7 +28,7 @@ export default async function CollectionMapPage() {
         >
           ‹ Reports
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">Collection Map</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Collection Map</h1>
       </div>
 
       {owned.length === 0 ? (

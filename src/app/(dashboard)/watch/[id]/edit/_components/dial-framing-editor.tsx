@@ -38,7 +38,7 @@ export function DialFramingEditor({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Dial framing</CardTitle>
+          <CardTitle className="text-sm">Dial framing</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           Set a cover photo above, then come back to frame the dial for the home page.
@@ -108,7 +108,7 @@ export function DialFramingEditor({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Dial framing</CardTitle>
+        <CardTitle className="text-sm">Dial framing</CardTitle>
         <p className="text-xs text-muted-foreground">
           Drag the crosshair onto the part of the dial you want centered, then zoom
           to crop tight. The preview shows how it appears on the home-page watch face.
@@ -143,7 +143,7 @@ export function DialFramingEditor({
                 <div className="absolute left-1/2 top-1/2 h-3 w-px -translate-x-1/2 -translate-y-1/2 bg-white" />
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               focal {focalX.toFixed(0)}%, {focalY.toFixed(0)}%
             </p>
           </div>
@@ -166,7 +166,7 @@ export function DialFramingEditor({
                 }}
               />
             </div>
-            <p className="text-[10px] text-muted-foreground">preview</p>
+            <p className="text-2xs text-muted-foreground">preview</p>
           </div>
         </div>
 

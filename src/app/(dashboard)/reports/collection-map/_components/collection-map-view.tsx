@@ -2,23 +2,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CollectionMap, DistBar } from "@/lib/collection-map"
 import { tierIndexFor } from "@/lib/tiers"
 
-// Magnitude fill (single hue) via the app's brass token so it tracks the theme.
-function brass(pct: number): string {
-  return `color-mix(in oklab, var(--brass) ${Math.round(pct)}%, transparent)`
+// Magnitude fill (single hue) via the data-blue token so it tracks the theme.
+// Charts are data → --primary, never brass (design system §1).
+function magnitude(pct: number): string {
+  return `color-mix(in oklab, var(--primary) ${Math.round(pct)}%, transparent)`
 }
 
 // A dial-color swatch. Empty hex = "unspecified" → dashed outline.
 function Swatch({ hex, size = 12 }: { hex: string; size?: number }) {
   return (
     <span
-      className={hex ? "inline-block rounded-full border border-black/10 dark:border-white/15" : "inline-block rounded-full border border-dashed border-muted-foreground/50"}
+      className={hex ? "inline-block rounded-full border border-border" : "inline-block rounded-full border border-dashed border-muted-foreground/50"}
       style={{ width: size, height: size, backgroundColor: hex || "transparent" }}
     />
   )
 }
 
 // Horizontal bar list. `colored` uses each bar's real hue (the color chart);
-// otherwise a single brass magnitude hue.
+// otherwise a single data-blue magnitude hue.
 function BarList({ bars, colored }: { bars: DistBar[]; colored?: boolean }) {
   const max = Math.max(1, ...bars.map((b) => b.count))
   return (
@@ -26,7 +27,7 @@ function BarList({ bars, colored }: { bars: DistBar[]; colored?: boolean }) {
       {bars.map((b) => {
         const w = (b.count / max) * 100
         const fill =
-          colored && b.hex ? b.hex : colored && !b.hex ? undefined : brass(70)
+          colored && b.hex ? b.hex : colored && !b.hex ? undefined : magnitude(70)
         return (
           <div key={b.key} className="flex items-center gap-2 text-sm" title={`${b.count} · ${b.label}`}>
             <span className="flex w-28 shrink-0 items-center gap-1.5 text-muted-foreground">
@@ -52,7 +53,7 @@ function BarList({ bars, colored }: { bars: DistBar[]; colored?: boolean }) {
 
 function DistCard({ title, bars, colored }: { title: string; bars: DistBar[]; colored?: boolean }) {
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-xl">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
       </CardHeader>
@@ -75,7 +76,7 @@ function Matrix({ map }: { map: CollectionMap }) {
               <th key={c.key} className="align-bottom px-0.5 pb-1">
                 <div className="flex flex-col items-center gap-1">
                   <Swatch hex={c.hex} />
-                  <span className="w-12 truncate text-center text-[10px] leading-tight text-muted-foreground">
+                  <span className="w-12 truncate text-center text-2xs leading-tight text-muted-foreground">
                     {c.label.split(" ")[0]}
                   </span>
                 </div>
@@ -98,7 +99,7 @@ function Matrix({ map }: { map: CollectionMap }) {
                       title={`${cell.count} watch${cell.count === 1 ? "" : "es"} · ${r.label} · ${c.label}${cell.labels.length ? `\n${cell.labels.join("\n")}` : ""}`}
                       className="flex h-9 w-12 items-center justify-center rounded text-xs tabular-nums"
                       style={{
-                        backgroundColor: cell.count > 0 ? brass(pct) : "transparent",
+                        backgroundColor: cell.count > 0 ? magnitude(pct) : "transparent",
                         outline: cell.count === 0 ? "1px dashed color-mix(in oklab, var(--muted-foreground) 25%, transparent)" : "none",
                         outlineOffset: "-1px",
                       }}
@@ -153,19 +154,19 @@ function Scatter({ map }: { map: CollectionMap }) {
       ))}
       {/* axes labels */}
       {xticks.map((t) => (
-        <text key={`tx${t}`} x={sx(t)} y={H - pad.b + 16} textAnchor="middle" className="fill-muted-foreground text-[10px]">
+        <text key={`tx${t}`} x={sx(t)} y={H - pad.b + 16} textAnchor="middle" className="fill-muted-foreground text-2xs">
           {t}
         </text>
       ))}
       {yticks.map((t) => (
-        <text key={`ty${t}`} x={pad.l - 8} y={sy(t) + 3} textAnchor="end" className="fill-muted-foreground text-[10px]">
+        <text key={`ty${t}`} x={pad.l - 8} y={sy(t) + 3} textAnchor="end" className="fill-muted-foreground text-2xs">
           {t}
         </text>
       ))}
-      <text x={(pad.l + W - pad.r) / 2} y={H - 4} textAnchor="middle" className="fill-muted-foreground text-[11px]">
+      <text x={(pad.l + W - pad.r) / 2} y={H - 4} textAnchor="middle" className="fill-muted-foreground text-2xs">
         Case diameter (mm)
       </text>
-      <text x={12} y={(pad.t + H - pad.b) / 2} textAnchor="middle" className="fill-muted-foreground text-[11px]" transform={`rotate(-90 12 ${(pad.t + H - pad.b) / 2})`}>
+      <text x={12} y={(pad.t + H - pad.b) / 2} textAnchor="middle" className="fill-muted-foreground text-2xs" transform={`rotate(-90 12 ${(pad.t + H - pad.b) / 2})`}>
         Thickness (mm)
       </text>
       {/* points */}
@@ -249,7 +250,7 @@ function PriceCategoryScatter({ map }: { map: CollectionMap }) {
         return (
           <g key={b.tier}>
             <line x1={pad.l} y1={top} x2={W - pad.r} y2={top} stroke="currentColor" className="text-border/40" strokeWidth={1} />
-            <text x={pad.l - 8} y={center + 3} textAnchor="end" className="fill-muted-foreground text-[10px]">
+            <text x={pad.l - 8} y={center + 3} textAnchor="end" className="fill-muted-foreground text-2xs">
               {b.short}
             </text>
           </g>
@@ -262,7 +263,7 @@ function PriceCategoryScatter({ map }: { map: CollectionMap }) {
           x={cx(ci)}
           y={H - pad.b + 14}
           textAnchor="end"
-          className="fill-muted-foreground text-[10px]"
+          className="fill-muted-foreground text-2xs"
           transform={`rotate(-30 ${cx(ci)} ${H - pad.b + 14})`}
         >
           {name.length > 12 ? name.slice(0, 11) + "…" : name}
@@ -295,15 +296,15 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
 
       {/* Gap / overload insights */}
       {map.insights.length > 0 && (
-        <Card className="overflow-hidden rounded-2xl border-l-2 border-l-brass/40">
-          <CardHeader className="bg-brass/5 pb-2">
-            <CardTitle className="font-display text-[17px] font-semibold">What the map shows</CardTitle>
+        <Card className="overflow-hidden rounded-xl">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-display text-md font-semibold">What the map shows</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-1.5 text-sm">
               {map.insights.map((s, i) => (
                 <li key={i} className="flex gap-2">
-                  <span className="text-brass">•</span>
+                  <span className="text-muted-foreground">•</span>
                   <span>{s}</span>
                 </li>
               ))}
@@ -313,9 +314,9 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
       )}
 
       {/* Size × Color matrix — the headline */}
-      <Card className="overflow-hidden rounded-2xl">
+      <Card className="overflow-hidden rounded-xl">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Size × dial color</CardTitle>
+          <CardTitle className="text-sm">Size × dial color</CardTitle>
         </CardHeader>
         <CardContent>
           <Matrix map={map} />
@@ -337,7 +338,7 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
 
       {/* Scatters — widget-sized, two across */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <Card className="overflow-hidden rounded-2xl">
+        <Card className="overflow-hidden rounded-xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Diameter × thickness</CardTitle>
           </CardHeader>
@@ -348,7 +349,7 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
             </p>
           </CardContent>
         </Card>
-        <Card className="overflow-hidden rounded-2xl">
+        <Card className="overflow-hidden rounded-xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Price × category</CardTitle>
           </CardHeader>

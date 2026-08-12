@@ -18,7 +18,7 @@ export function ConfidenceBadge({
 }) {
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${CONFIDENCE_STYLES[confidence]}`}
+      className={`rounded-full px-2 py-0.5 text-2xs font-medium ${CONFIDENCE_STYLES[confidence]}`}
     >
       {confidence} confidence
     </span>
@@ -56,7 +56,7 @@ export function ValuationEvidence({ valuation: v }: ValuationEvidenceProps) {
 
       {v.datapoints && v.datapoints.length > 0 && (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[480px] text-left text-[13px]">
+          <table className="w-full min-w-[480px] text-left text-xs">
             <thead>
               <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
                 <th className="py-1.5 pr-3 font-medium">Price</th>
@@ -69,15 +69,15 @@ export function ValuationEvidence({ valuation: v }: ValuationEvidenceProps) {
             <tbody>
               {v.datapoints.map((dp, i) => (
                 <tr key={i} className="border-b border-border/50 align-top">
-                  <td className="py-1.5 pr-3 font-mono whitespace-nowrap text-brass">
+                  <td className="py-1.5 pr-3 font-mono whitespace-nowrap tabular-nums text-foreground">
                     {formatCurrency(Math.round(dp.price_usd * 100), "USD", true)}
                   </td>
                   <td className="py-1.5 pr-3">
                     <span
                       className={
                         dp.type === "sold"
-                          ? "rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"
-                          : "rounded-full bg-sky-500/15 px-2 py-0.5 text-[11px] font-medium text-sky-600 dark:text-sky-400"
+                          ? "rounded-full bg-emerald-500/15 px-2 py-0.5 text-2xs font-medium text-emerald-600 dark:text-emerald-400"
+                          : "rounded-full bg-sky-500/15 px-2 py-0.5 text-2xs font-medium text-sky-600 dark:text-sky-400"
                       }
                     >
                       {dp.type}

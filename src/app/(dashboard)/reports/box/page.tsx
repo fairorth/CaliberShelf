@@ -64,11 +64,11 @@ export default async function ByBoxPage() {
         >
           ‹ Reports
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">Watches by Box</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Watches by Box</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {shownCount} owned {shownCount === 1 ? "watch" : "watches"} across{" "}
           {boxCount} {boxCount === 1 ? "box" : "boxes"} ·{" "}
-          <span className="font-mono text-brass">{formatCurrency(grandTotal, "USD", true)}</span>{" "}
+          <span className="font-mono tabular-nums text-foreground">{formatCurrency(grandTotal, "USD", true)}</span>{" "}
           total at cost
         </p>
       </div>
@@ -89,7 +89,7 @@ export default async function ByBoxPage() {
               summary={
                 <>
                   {g.watches.length} {g.watches.length === 1 ? "watch" : "watches"} ·{" "}
-                  <span className="font-mono text-brass">
+                  <span className="font-mono tabular-nums text-foreground">
                     {formatCurrency(g.subtotalCents, "USD", true)}
                   </span>
                 </>
@@ -122,7 +122,7 @@ export default async function ByBoxPage() {
                             </span>
                           )}
                           {w.category?.name && (
-                            <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-2xs text-muted-foreground">
                               {w.category.name}
                             </span>
                           )}

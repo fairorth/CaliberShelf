@@ -54,7 +54,7 @@ export function SettingsTab({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Display Settings</CardTitle>
+          <CardTitle className="text-sm">Display Settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <label className="flex items-start gap-3">
@@ -100,7 +100,7 @@ export function SettingsTab({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Photo Lab</CardTitle>
+          <CardTitle className="text-sm">Photo Lab</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-1.5">

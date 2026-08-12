@@ -40,7 +40,7 @@ function ActionBadge({ action }: { action: AgentRunItem["action"] }) {
           ? "bg-rose-500/15 text-rose-400"
           : "bg-foreground/10 text-muted-foreground"
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${color}`}>
+    <span className={`rounded-full px-2 py-0.5 text-2xs font-medium ${color}`}>
       {action}
     </span>
   )
@@ -50,7 +50,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="font-mono text-sm tabular-nums">{value}</div>
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground/70">{label}</div>
+      <div className="text-2xs uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
   )
 }
@@ -82,10 +82,10 @@ export default async function AgentRunPage({
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Agent Execution Review
         </Link>
-        <h1 className="font-display text-lg font-medium tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           {AGENT_LABEL[run.agent] ?? run.agent}
           {run.dry_run && (
-            <span className="ml-2 rounded-full bg-sky-500/15 px-2 py-0.5 align-middle text-[11px] font-medium text-sky-400">
+            <span className="ml-2 rounded-full bg-sky-500/15 px-2 py-0.5 align-middle text-2xs font-medium text-sky-400">
               dry run
             </span>
           )}
@@ -104,7 +104,7 @@ export default async function AgentRunPage({
       </div>
 
       {/* Metrics */}
-      <Card className="max-w-3xl overflow-hidden rounded-2xl border-l-2 border-l-brass/40">
+      <Card className="max-w-3xl overflow-hidden rounded-xl">
         <CardContent className="grid grid-cols-2 gap-4 pt-6 sm:grid-cols-4">
           <Stat label="Duration" value={fmtDuration(run.duration_ms)} />
           <Stat
@@ -134,9 +134,9 @@ export default async function AgentRunPage({
       {run.notes && <p className="text-sm text-muted-foreground">{run.notes}</p>}
 
       {/* Audit trail */}
-      <Card className="overflow-hidden rounded-2xl">
+      <Card className="overflow-hidden rounded-xl">
         <CardHeader>
-          <CardTitle className="text-base">
+          <CardTitle className="text-sm">
             Audit trail{items.length > 0 ? ` · ${items.length} item${items.length === 1 ? "" : "s"}` : ""}
           </CardTitle>
         </CardHeader>
@@ -152,7 +152,7 @@ export default async function AgentRunPage({
                   <ActionBadge action={it.action} />
                   {it.entity_type === "watch" && it.entity_id ? (
                     <Link
-                      href={`/watch/${it.entity_id}/edit`}
+                      href={`/watch/${it.entity_id}`}
                       className="font-medium underline-offset-2 hover:underline"
                     >
                       {it.label}
@@ -172,7 +172,7 @@ export default async function AgentRunPage({
                           href={url}
                           target="_blank"
                           rel="noreferrer"
-                          className="underline hover:text-brass"
+                          className="underline hover:text-primary"
                         >
                           {i > 0 && ", "}
                           {hostname(url)}

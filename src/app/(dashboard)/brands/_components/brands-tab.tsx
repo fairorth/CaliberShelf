@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState, useTransition } from "react"
+import { Check, Pencil, ShoppingCart, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,12 +28,13 @@ import { WishlistBadge } from "@/components/wishlist-badge"
 import { toast } from "sonner"
 import type { Brand } from "@/lib/types/watch"
 
-// Badge treatment per brand type — steel blue for micro, brass-ish amber for
+// Badge treatment per brand type — data hues only (chips are information,
+// never the brass action accent): steel blue for micro, chart amber for
 // indie, muted for the majors.
 const TYPE_BADGE: Record<string, string> = {
   major: "bg-muted text-muted-foreground",
   micro: "bg-primary/15 text-primary",
-  indie: "bg-brass/15 text-brass",
+  indie: "bg-chart-4/15 text-chart-4",
 }
 
 function BrandTypeBadge({ type }: { type: Brand["brand_type"] }) {
@@ -158,7 +160,7 @@ function BrandRow({
               onClick={handleSave}
               title="Save"
             >
-              {savePending ? "..." : "✓"}
+              {savePending ? "..." : <Check className="h-4 w-4" aria-hidden="true" />}
             </Button>
             <Button
               variant="ghost"
@@ -167,7 +169,7 @@ function BrandRow({
               onClick={handleCancel}
               title="Cancel"
             >
-              ✕
+              <X className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </TableCell>
@@ -196,7 +198,7 @@ function BrandRow({
             className="text-xs text-primary underline-offset-2 hover:underline"
             title={brand.store_url}
           >
-            🛒 store
+            <ShoppingCart className="inline h-3 w-3" aria-hidden="true" /> store
           </a>
         ) : (
           <span className="text-muted-foreground">—</span>
@@ -211,7 +213,7 @@ function BrandRow({
             onClick={() => setEditing(true)}
             title="Edit brand"
           >
-            ✏️
+            <Pencil className="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -220,7 +222,7 @@ function BrandRow({
             onClick={() => onDelete(brand.id, brand.name)}
             title={count > 0 ? "Cannot delete \u2014 has watches" : "Delete brand"}
           >
-            🗑️
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </TableCell>
@@ -252,7 +254,7 @@ export function BrandsTab({ brands, watchCountByBrand }: BrandsTabProps) {
       {/* Add brand form */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Add Brand</CardTitle>
+          <CardTitle className="text-sm">Add Brand</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={formAction} className="flex items-end gap-3">

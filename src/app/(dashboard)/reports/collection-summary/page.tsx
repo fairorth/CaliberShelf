@@ -29,7 +29,7 @@ function SummaryRow({
         <span className="text-sm font-medium">{label}</span>
         {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
-      <span className="text-lg font-semibold tabular-nums">{value}</span>
+      <span className="text-md font-semibold tabular-nums">{value}</span>
     </div>
   )
 }
@@ -58,11 +58,11 @@ export default async function CollectionSummaryPage() {
       >
         ‹ Reports
       </Link>
-      <h1 className="font-display text-lg font-medium tracking-tight">Collection Summary</h1>
+      <h1 className="font-display text-lg font-semibold tracking-tight">Collection Summary</h1>
 
       <Card className="max-w-xl">
         <CardHeader>
-          <CardTitle className="text-base">Collection Summary</CardTitle>
+          <CardTitle className="text-sm">Collection Summary</CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-border/60">
           <SummaryRow label="Total Watches" value={totalWatches.toLocaleString()} />

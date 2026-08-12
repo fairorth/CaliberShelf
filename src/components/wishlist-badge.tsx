@@ -5,7 +5,7 @@ export function WishlistBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700 ring-1 ring-sky-500/30 dark:text-sky-400",
+        "inline-flex items-center rounded-full bg-sky-500/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-sky-700 ring-1 ring-sky-500/30 dark:text-sky-400",
         className
       )}
     >

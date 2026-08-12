@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react"
 import Image from "next/image"
-import { Star, Trash2 } from "lucide-react"
+import { Star, Trash2, Watch } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { PhotoLightbox } from "./photo-lightbox"
 import {
@@ -80,7 +80,7 @@ export function PhotoGallery({ photos, photoUrls, fullPhotoUrls, watchId }: Phot
     return (
       <div className="flex aspect-square items-center justify-center rounded-lg border border-dashed bg-muted">
         <div className="text-center">
-          <span className="text-5xl">⌚</span>
+          <Watch className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-2 text-sm text-muted-foreground">No photos yet</p>
         </div>
       </div>
@@ -136,7 +136,7 @@ export function PhotoGallery({ photos, photoUrls, fullPhotoUrls, watchId }: Phot
               </button>
 
               {photo.is_cover && (
-                <Badge className="pointer-events-none absolute left-2 top-2 text-[10px]">
+                <Badge className="pointer-events-none absolute left-2 top-2 text-2xs">
                   Cover
                 </Badge>
               )}

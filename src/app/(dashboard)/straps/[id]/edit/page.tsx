@@ -41,9 +41,9 @@ export default async function EditStrapPage({
         >
           ‹ Straps
         </Link>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           {displayName}{" "}
-          <span className="font-mono text-lg text-brass">{strap.width_mm}mm</span>
+          <span className="font-mono text-xs text-muted-foreground">{strap.width_mm}mm</span>
         </h1>
         {strap.current_watch && (
           <p className="mt-1 text-sm text-emerald-600 dark:text-emerald-400">
@@ -56,7 +56,7 @@ export default async function EditStrapPage({
         {/* Left: photos */}
         <Card className="lg:sticky lg:top-[calc(3.5rem+1.5rem)]">
           <CardHeader>
-            <CardTitle className="text-base">Photos</CardTitle>
+            <CardTitle className="text-sm">Photos</CardTitle>
           </CardHeader>
           <CardContent>
             <StrapPhotoManager strapId={strap.id} photos={strap.photos} />
