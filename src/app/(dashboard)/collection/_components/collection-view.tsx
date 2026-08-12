@@ -5,6 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowDown, ArrowUp, LayoutGrid, Table as TableIcon } from "lucide-react"
 import { CollectionTable, TABLE_SORT_KEY } from "@/components/collection-table"
 import { SearchInput } from "@/components/search-input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select"
 import { GalleryGrid } from "./gallery-grid"
 import { ActiveFilterChips } from "./active-filter-chips"
 import {
@@ -39,8 +45,12 @@ const DEFAULT_SIZE = 200
 const MIN_SIZE = 120
 const MAX_SIZE = 400
 
-const SELECT_CLASS =
-  "flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+// Three fixed tile densities replace the old continuous slider (B1).
+const TILE_DENSITIES = [
+  { label: "S", title: "Small", size: 150 },
+  { label: "M", title: "Medium", size: 200 },
+  { label: "L", title: "Large", size: 280 },
+] as const
 
 type SortKey = "default" | "brand" | "price" | "purchaseDate" | "caseDiameter" | "wearCount"
 type SortDir = "asc" | "desc"
@@ -52,6 +62,28 @@ const SORT_LABELS: Record<SortKey, string> = {
   purchaseDate: "Sort: Purchase date",
   caseDiameter: "Sort: Case size",
   wearCount: "Sort: Wear count",
+}
+
+/** Labelled mono stat for the toolbar's identity band (B1). */
+function Stat({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string
+  value: string
+  valueClassName?: string
+}) {
+  return (
+    <span className="flex items-baseline gap-1.5">
+      <span className="font-mono text-2xs uppercase tracking-[0.1em] text-muted-foreground">
+        {label}
+      </span>
+      <span className={cn("font-mono text-xs tabular-nums text-foreground", valueClassName)}>
+        {value}
+      </span>
+    </span>
+  )
 }
 
 // ── Pure filter/sort helpers ───────────────────────────────────────
@@ -179,7 +211,13 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedView === "table" || savedView === "gallery") setView(savedView)
     const savedSize = Number(localStorage.getItem(SIZE_KEY))
-    if (savedSize >= MIN_SIZE && savedSize <= MAX_SIZE) setSize(savedSize)
+    if (savedSize >= MIN_SIZE && savedSize <= MAX_SIZE) {
+      // Snap legacy slider values onto the fixed S/M/L densities.
+      const nearest = TILE_DENSITIES.reduce((best, d) =>
+        Math.abs(d.size - savedSize) < Math.abs(best.size - savedSize) ? d : best
+      )
+      setSize(nearest.size)
+    }
     setShowCost(localStorage.getItem(SHOW_COST_KEY) === "1")
 
     // Filters no longer persist across sessions (B2); drop any stale value
@@ -368,15 +406,39 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Band 1 — identity + labelled stats (B1). */}
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <h1 className="font-display text-lg font-semibold tracking-tight">Collection</h1>
+        <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+          <Stat label="Showing" value={`${displayed.length}/${ownershipTotal}`} />
+          {showCost && displayedTotalCents > 0 && (
+            <Stat label="Cost" value={formatCurrency(displayedTotalCents, "USD", true)} />
+          )}
+          {showCost && filters.priceTracking === "tracked" && displayedValueCents > 0 && (
+            <>
+              <Stat label="Value" value={formatCurrency(displayedValueCents, "USD", true)} />
+              {gainPct !== null && (
+                <Stat
+                  label="Delta"
+                  value={`${gainPct >= 0 ? "+" : ""}${gainPct.toFixed(1)}%`}
+                  valueClassName={
+                    gainPct >= 0 ? "text-chart-2" : "text-destructive"
+                  }
+                />
+              )}
+            </>
+          )}
+        </div>
+      </div>
 
+      {/* Band 2 — controls. */}
+      <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           value={query}
           onChange={setQuery}
           placeholder="Search brand, model, nickname, ref…"
           ariaLabel="Search collection"
-          className="w-full sm:w-64"
+          className="w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-md"
         />
 
         <CollectionFiltersDialog
@@ -397,18 +459,23 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
 
         {/* Sort */}
         <div className="flex items-center gap-1">
-          <select
-            aria-label="Sort by"
-            className={SELECT_CLASS}
+          <Select
             value={sortKey}
-            onChange={(e) => updateSortKey(e.target.value as SortKey)}
+            onValueChange={(val) => {
+              if (val) updateSortKey(val as SortKey)
+            }}
           >
-            {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
-              <option key={k} value={k}>
-                {SORT_LABELS[k]}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger aria-label="Sort by" className="h-9 w-[180px]">
+              <span className="text-sm">{SORT_LABELS[sortKey]}</span>
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
+                <SelectItem key={k} value={k}>
+                  {SORT_LABELS[k]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <button
             type="button"
             onClick={toggleSortDir}
@@ -421,55 +488,32 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           </button>
         </div>
 
-        <span className="text-sm text-muted-foreground">
-          Showing {displayed.length} of {ownershipTotal} watches
-          {showCost && displayedTotalCents > 0 && (
-            <>
-              {" · "}
-              <span className="font-mono tabular-nums text-foreground">
-                {formatCurrency(displayedTotalCents, "USD", true)}
-              </span>
-            </>
-          )}
-          {showCost && filters.priceTracking === "tracked" && displayedValueCents > 0 && (
-            <>
-              {" · value "}
-              <span className="font-mono text-emerald-600 dark:text-emerald-400">
-                {formatCurrency(displayedValueCents, "USD", true)}
-              </span>
-              {gainPct !== null && (
-                <span
-                  className={cn(
-                    "ml-1.5 font-mono",
-                    gainPct >= 0
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-600 dark:text-rose-400"
-                  )}
-                >
-                  {gainPct >= 0 ? "+" : ""}
-                  {gainPct.toFixed(1)}%
-                </span>
-              )}
-            </>
-          )}
-        </span>
-
-        {/* Push view controls to the right on wider screens */}
+        {/* View controls pinned right */}
         <div className="ml-auto flex flex-wrap items-center gap-3">
           {view === "gallery" && (
-            <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="hidden sm:inline">Size</span>
-              <input
-                type="range"
-                min={MIN_SIZE}
-                max={MAX_SIZE}
-                step={10}
-                value={size}
-                onChange={(e) => updateSize(Number(e.target.value))}
-                className="h-1 w-32 accent-foreground sm:w-40"
-                aria-label="Gallery tile size"
-              />
-            </label>
+            <div
+              role="group"
+              aria-label="Tile density"
+              className="inline-flex overflow-hidden rounded-md border"
+            >
+              {TILE_DENSITIES.map((d) => (
+                <button
+                  key={d.label}
+                  type="button"
+                  onClick={() => updateSize(d.size)}
+                  aria-pressed={size === d.size}
+                  title={`${d.title} tiles`}
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center text-xs font-medium transition-colors first:border-l-0 [&:not(:first-child)]:border-l",
+                    size === d.size
+                      ? "bg-foreground text-background"
+                      : "bg-background text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
           )}
 
           <div
