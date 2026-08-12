@@ -78,7 +78,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   // Which CTA was pressed — read by the form action to choose the redirect.
-  const destRef = useRef<"edit" | "close">("close")
+  const destRef = useRef<"view" | "another">("view")
 
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -87,6 +87,9 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState("")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  // Bumped after "Save and add another" to remount the form fresh (resets
+  // the comboboxes' internal state, which form.reset() can't reach).
+  const [formKey, setFormKey] = useState(0)
 
   const attachFile = useCallback(async (f: File | undefined | null) => {
     if (!f) return
@@ -143,6 +146,13 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
         if (result?.error) {
           setError(result.error)
           toast.error(result.error)
+        } else if (result?.redirectTo === "/add") {
+          // Batch entry: stay here with a fresh form.
+          toast.success("Watch saved — add the next one")
+          removeFile()
+          setSelectedCategoryId("")
+          setFormKey((k) => k + 1)
+          router.refresh()
         } else if (result?.redirectTo) {
           router.push(result.redirectTo)
         }
@@ -180,7 +190,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
         </div>
       )}
 
-      <form action={handleSubmit}>
+      <form key={formKey} action={handleSubmit}>
         <input type="hidden" name="category_id" value={selectedCategoryId} />
         <input
           ref={fileInputRef}
@@ -354,31 +364,28 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
           </label>
         </div>
 
-        {/* Two CTAs */}
+        {/* One primary CTA plus a quiet batch-entry escape (F3). */}
         <div className="mt-[22px] flex flex-wrap items-center gap-3">
           <Button
             type="submit"
             size="lg"
             disabled={isPending || processing}
-            onClick={() => (destRef.current = "edit")}
+            onClick={() => (destRef.current = "view")}
             className="bg-brass text-brass-foreground hover:bg-brass/90"
           >
-            {isPending ? "Saving…" : "Save & add details →"}
+            {isPending ? "Saving…" : "Save watch"}
           </Button>
           <Button
             type="submit"
             size="lg"
-            variant="outline"
+            variant="ghost"
             disabled={isPending || processing}
-            onClick={() => (destRef.current = "close")}
+            onClick={() => (destRef.current = "another")}
+            className="text-muted-foreground hover:text-foreground"
           >
-            Save & close
+            Save and add another
           </Button>
         </div>
-        <p className="mt-3.5 text-xs leading-relaxed text-muted-foreground">
-          “Save &amp; add details” opens the full Edit page (specs, more photos, dial framing).
-          “Save &amp; close” files it and returns to the watch.
-        </p>
       </form>
     </div>
   )
