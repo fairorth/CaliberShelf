@@ -30,7 +30,7 @@ export function HomeStage({ watches, seed, stats, displayBox }: HomeStageProps) 
   }
 
   const pill = "px-3.5 py-1.5 text-xs font-medium transition-colors"
-  const active = "bg-brass text-[#20242b]"
+  const active = "bg-brass text-brass-foreground"
   const idle = "text-muted-foreground hover:text-foreground"
 
   return (

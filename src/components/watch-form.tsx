@@ -75,7 +75,7 @@ interface WatchFormProps {
 }
 
 // Filled dark input with a brass focus ring (the redesign's field treatment).
-const FIELD = "bg-[#1b212a] border-white/12 focus-visible:border-brass/55 focus-visible:ring-brass/25"
+const FIELD = "bg-input border-border focus-visible:border-brass/55 focus-visible:ring-brass/25"
 
 // Neutral spec card — identity comes from icon + title, not a colored edge
 // (E1: brass is never decoration).
@@ -576,7 +576,7 @@ export function WatchForm({
               name="purchase_date"
               type="date"
               defaultValue={watch?.purchase_date ?? ""}
-              className={cn(FIELD, "[color-scheme:dark]")}
+              className={FIELD}
             />
           </div>
 
@@ -1207,7 +1207,7 @@ export function WatchForm({
               <Button
                 type="submit"
                 disabled={!isDirty || isPending || isDeleting}
-                className="bg-brass text-[#1a1206] hover:bg-brass/90 disabled:opacity-50"
+                className="bg-brass text-brass-foreground hover:bg-brass/90 disabled:opacity-50"
               >
                 {isPending ? "Saving…" : "Save"}
               </Button>

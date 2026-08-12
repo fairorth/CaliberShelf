@@ -70,7 +70,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
               so it never covers the watch image. */}
           <div className="flex h-7 items-center px-3 pt-1">
             {typeLabel && (
-              <span className="rounded-full bg-white/[0.06] px-2 py-0.5 font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
+              <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
                 {typeLabel}
               </span>
             )}
@@ -99,7 +99,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
             </div>
           </div>
 
-          <div className="relative aspect-square overflow-hidden border-y border-border/70 bg-[radial-gradient(circle_at_50%_38%,#222a33,#12161c_80%)]">
+          <div className="relative aspect-square overflow-hidden border-y border-border/70 bg-surface-photo">
             {watch.cover_photo_url ? (
               <Image
                 src={watch.cover_photo_url}

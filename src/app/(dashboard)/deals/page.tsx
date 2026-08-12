@@ -63,7 +63,7 @@ export default async function DealsPage() {
       </div>
 
       {listings.length === 0 ? (
-        <div className="max-w-xl rounded-xl border border-border bg-white/[0.02] px-5 py-6 text-sm text-muted-foreground">
+        <div className="max-w-xl rounded-xl border border-border bg-muted/30 px-5 py-6 text-sm text-muted-foreground">
           <p>
             No wish-list watches yet. Mark a watch as{" "}
             <span className="text-foreground">Wish list</span> on its edit page
@@ -75,7 +75,7 @@ export default async function DealsPage() {
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-white/[0.03] text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
                 <th className="px-4 py-3 font-medium">Watch</th>
                 <th className="px-4 py-3 font-medium">Availability</th>
                 <th className="px-4 py-3 text-right font-medium">Retail</th>
@@ -92,7 +92,7 @@ export default async function DealsPage() {
                     key={watch.id}
                     className={cn(
                       "border-b border-border/50 last:border-0",
-                      i % 2 === 1 && "bg-white/[0.02]"
+                      i % 2 === 1 && "bg-muted/30"
                     )}
                   >
                     <td className="px-4 py-3">

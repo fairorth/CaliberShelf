@@ -105,7 +105,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
       <div className="relative flex h-14 items-center justify-between px-4">
         {/* Centered Home / Collection segmented nav (desktop only — the
             hamburger covers navigation on mobile and the extra routes). */}
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-lg border border-border bg-white/[0.04] p-1 sm:flex">
+        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-lg border border-border bg-muted p-1 sm:flex">
           <Link
             href="/dashboard"
             onClick={guardClick("/dashboard")}

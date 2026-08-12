@@ -12,7 +12,7 @@ function magnitude(pct: number): string {
 function Swatch({ hex, size = 12 }: { hex: string; size?: number }) {
   return (
     <span
-      className={hex ? "inline-block rounded-full border border-black/10 dark:border-white/15" : "inline-block rounded-full border border-dashed border-muted-foreground/50"}
+      className={hex ? "inline-block rounded-full border border-border" : "inline-block rounded-full border border-dashed border-muted-foreground/50"}
       style={{ width: size, height: size, backgroundColor: hex || "transparent" }}
     />
   )

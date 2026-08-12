@@ -197,7 +197,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
           </Label>
 
           {file ? (
-            <div className="flex items-center gap-3.5 rounded-xl border border-border bg-white/[0.03] p-3.5">
+            <div className="flex items-center gap-3.5 rounded-xl border border-border bg-muted/40 p-3.5">
               <div className="relative h-[60px] w-[60px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
                 {previewUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -225,7 +225,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
               className={cn(
-                "flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-white/[0.02] px-5 py-7 text-center transition-colors hover:border-brass/50",
+                "flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-5 py-7 text-center transition-colors hover:border-brass/50",
                 dragging && "border-brass/60"
               )}
             >
@@ -361,7 +361,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
             size="lg"
             disabled={isPending || processing}
             onClick={() => (destRef.current = "edit")}
-            className="bg-brass text-[#1a1206] hover:bg-brass/90"
+            className="bg-brass text-brass-foreground hover:bg-brass/90"
           >
             {isPending ? "Saving…" : "Save & add details →"}
           </Button>
