@@ -1,17 +1,21 @@
-// One-time seeder for the "Grand Seiko" Master Collection Guide (migration
-// 00038). Data extracted from docs/Watch guides/Grand Seiko Master Collection
-// Guide.pdf (v1.1, Aug 2026).
+// Seeder for the "Grand Seiko" Master Collection Guide — v2.0 (2026 Edition,
+// Revision 2). Data from docs/Watch Guides/Grand Seiko.pdf, restructured per
+// the August 2026 adversarial review (docs/Watch Guides/Grand Seiko Review
+// 2026-08.md): 15-slot Part A acquisition plan + 4-entry Part B Canon,
+// validated market bands, re-based priorities.
 //
 // What it does, idempotently:
-//   1. Upserts the collection_guides row ("Grand Seiko").
-//   2. Upserts all 22 guide_entries by (guide, position).
-//   3. For each entry, links an existing watch when one matches the entry's
-//      reference number (this catches the 3 OWNED FOUNDATION pieces AND any
-//      wish-list watch you already created for a candidate).
-//   4. For still-unlinked candidate entries, creates a wish-list watch
-//      (estimated cost = target band midpoint) and links it.
+//   1. DELETES the wish-list watches for cut entries (57GS, SBGT241, SBGA001,
+//      SBGH001, SBGW253) and de-capitalized Canon watches (SLGT003, SBGZ001,
+//      SBGD001, SLGH002) — wish-list rows only, never owned watches; their
+//      storage photos are removed first.
+//   2. Upserts the collection_guides row to v2.0.
+//   3. REPLACES all guide_entries (positions changed meaning in v2, so the
+//      old rows are deleted and 19 fresh rows inserted: 15 Part A + 4 Canon).
+//   4. Links existing watches by reference; creates wish-list watches for the
+//      three NEW Part A chapters (SLGA015, SBGX261, SLGW003).
 //
-// Deterministic, $0, no AI. Requires migration 00038 to be applied first.
+// Deterministic, $0, no AI.
 //
 // Usage:
 //   npm run seed-gs-guide -- --dry-run     # report what would happen
@@ -52,46 +56,57 @@ const supabase = createClient(
 const GUIDE = {
   name: "Grand Seiko",
   thesis:
-    "Every watch must earn its place: a future Grand Seiko should add a chapter, not merely another beautiful dial.",
+    "Build a compact history of Grand Seiko told one engine at a time: the precision quest from the chronometer-contest hi-beats to U.F.A. No chapter told twice; every purchase must contribute a chapter not already represented.",
   source_document: "Grand Seiko.pdf",
-  version: "1.2", // Aug 2026 edition: 61GS Hi-Beat 6145-8000 acquired (4th owned foundation)
+  version: "2.0", // Aug 2026 Revision 2 — restructured per the adversarial review
 }
 
-// category: preferred category name for the auto-created wish-list watch
-// (falls back to "Daily", then the first category found).
-const ENTRIES = [
-  { position: 1, chapter: "Origins & Golden Age", title: "Grand Seiko First", reference_number: "J14070", caliber: "3180 - manual wind", year_from: 1960, dates_text: "1960-1963", historical_role: "Genesis. The first Grand Seiko and the opening statement of the brand's pursuit of precision, legibility, durability and refinement.", recommended_variant: "14K gold-filled J14070 with original dial, crown and caseback medallion. Pay up for originality; avoid redials.", target_low: 4500, target_high: 8000, priority: 9.5, category: "Dress" },
-  { position: 2, chapter: "Origins & Golden Age", title: "57GS", reference_number: "5722-9990", caliber: "5722A/B - manual wind", year_from: 1964, dates_text: "c. 1964-1967", historical_role: "The bridge from the classical First toward the sharper, more modern visual language that would culminate in the 44GS.", recommended_variant: "Sharp steel 5722-9990 with factory-original dial and strong medallion. Treat AD/SD dial claims cautiously unless documented.", target_low: 1400, target_high: 2300, priority: 6.5, category: "Dress" },
-  { position: 3, chapter: "Origins & Golden Age", title: "44GS", reference_number: "4420-9000", caliber: "4420B - manual wind", year_from: 1967, dates_text: "1967-1968/69", historical_role: "The design milestone. This reference established the Grand Seiko Style: broad planes, razor-like facets and deliberate light-shadow geometry.", recommended_variant: "The sharpest honest case you can find, with intact medallion and original dial. Case geometry matters more than saving $1,000.", target_low: 3200, target_high: 5000, priority: 10, category: "Dress" },
-  { position: 4, chapter: "Origins & Golden Age", title: "45GS", reference_number: "4520-7010", caliber: "4520A - manual wind, 36,000 vph", year_from: 1969, dates_text: "c. 1969-1970", historical_role: "Vintage technical anchor. A late-1960s manual Hi-Beat Grand Seiko carrying the first generation of GS 36,000-vph precision in a softer C-line case.", recommended_variant: "Keep this exact 4520-7010. Preserve the clean no-date dial, original case geometry and medallion — the vintage starting point of the precision lineage.", target_low: 1000, target_high: 1600, priority: 10, category: "Dress", owned: true },
-  { position: 5, chapter: "Origins & Golden Age", title: "62GS", reference_number: "6245-9000", caliber: "6245A - automatic", year_from: 1966, dates_text: "1966-1968", historical_role: "Grand Seiko's first automatic watch, and a historically important bezel-free case architecture still echoed in modern GS design.", recommended_variant: "Date-only 6245-9000, preferably with a crisp case and correct lion medallion. Cleaner and more elegant than the day-date 6246.", target_low: 1500, target_high: 3000, priority: 8.5, category: "Dress" },
-  { position: 6, chapter: "Origins & Golden Age", title: "61GS Hi-Beat", reference_number: "6145-8000", caliber: "6145A - automatic 36,000 vph", year_from: 1968, dates_text: "October 1968", historical_role: "Japan's first automatic 10-beat / 36,000-vph Grand Seiko. The early-dial example is the perfect automatic counterpart to the manual-wind 45GS.", recommended_variant: "Keep the early Grand Seiko dial / Grand Seiko rotor configuration, service paperwork, signed buckle and spare mainspring together as provenance.", target_low: 1000, target_high: 1000, priority: 9, category: "Dress", owned: true },
-  { position: 7, chapter: "Origins & Golden Age", title: "61GS V.F.A.", reference_number: "6185-8020", caliber: "6185A - automatic 36,000 vph V.F.A.", year_from: 1969, dates_text: "1969-early 1970s", historical_role: "The vintage mechanical precision summit. V.F.A. watches were adjusted to extraordinary monthly accuracy and form the ideal bridge to modern U.F.A.", recommended_variant: "Dream target: early 1969 short-hand, applied Suwa-logo dial without printed VFA, if originality is verified. Otherwise the best original printed-VFA example.", target_low: 8000, target_high: 14000, priority: 10, category: "Horology" },
-  { position: 8, chapter: "Quartz & The Rebirth", title: "95GS Quartz", reference_number: "SBGS001", caliber: "9581 - high-accuracy quartz", year_from: 1988, dates_text: "1988-early 1990s", historical_role: "The 1988 return of Grand Seiko in quartz form. The historically exact 95GS chapter before the later 9F generation.", recommended_variant: "Steel SBGS001 from the first generation, ideally with original crown and bracelet/strap hardware and an unmolested slim case.", target_low: 500, target_high: 900, priority: 6.5, category: "Dress" },
-  { position: 9, chapter: "Quartz & The Rebirth", title: "9F 25th Anniversary", reference_number: "SBGT241", caliber: "9F83 - special +/-5 sec/year quartz", year_from: 2018, dates_text: "2018 only - LE 1,500", historical_role: "A deliberately collectible commemoration of 25 years of 9F, revisiting the original 9F aesthetic with a specially selected oscillator.", recommended_variant: "Full-set SBGT241 with sharp case and original bracelet. Tells the 9F story more vividly than a generic later 9F reference.", target_low: 2500, target_high: 3200, priority: 8, category: "Dress" },
-  { position: 10, chapter: "Quartz & The Rebirth", title: "Mechanical Rebirth", reference_number: "SBGR001", caliber: "9S55 - automatic", year_from: 1998, dates_text: "1998-early 2000s", historical_role: "The 1998 rebirth of mechanical Grand Seiko and the start of the modern 9S lineage. Quiet-looking, historically enormous.", recommended_variant: "Early double-logo SBGR001, ideally full set. Buy on condition and completeness rather than dial drama.", target_low: 1800, target_high: 3000, priority: 8, category: "Daily" },
-  { position: 11, chapter: "Quartz & The Rebirth", title: "Automatic Spring Drive Genesis", reference_number: "SBGA001", caliber: "9R65 - automatic Spring Drive", year_from: 2004, dates_text: "2004-2017", historical_role: "The launch-generation automatic 9R Spring Drive Grand Seiko — Spring Drive becoming a core GS technology rather than an experiment.", recommended_variant: "Pre-2017 double-logo SBGA001, preferably an early full-set example. The old branding makes the watch a timestamp.", target_low: 2500, target_high: 3500, priority: 8.5, category: "Daily" },
-  { position: 12, chapter: "Modern Grand Seiko Emerges", title: "Original Snowflake", reference_number: "SBGA011", caliber: "9R65 - automatic Spring Drive", year_from: 2005, dates_text: "2005-2017", historical_role: "The watch that made Spring Drive visually and emotionally synonymous with Grand Seiko. A modern icon with real historical weight.", recommended_variant: "SBGA011 specifically, not SBGA211: the pre-2017 SEIKO / Grand Seiko double-logo dial is the more historically expressive version.", target_low: 3300, target_high: 4200, priority: 10, category: "Daily" },
-  { position: 13, chapter: "Modern Grand Seiko Emerges", title: "Modern Hi-Beat Revival", reference_number: "SBGH001", caliber: "9S85 - automatic 36,000 vph", year_from: 2009, dates_text: "2009-2017 era", historical_role: "The return of automatic 36,000-vph Grand Seiko roughly four decades after the 61GS. A direct modern echo of the vintage Hi-Beat era.", recommended_variant: "Early double-logo SBGH001, ideally full set. Lower priority only because the 45GS already owns this historical theme so well.", target_low: 2700, target_high: 3500, priority: 7, category: "Daily" },
-  { position: 14, chapter: "Modern Grand Seiko Emerges", title: "Spring Drive 8 Days", reference_number: "SBGD001", caliber: "9R01 - manual Spring Drive, 8 days", year_from: 2016, dates_text: "2016-2017", historical_role: "First Grand Seiko made by the Micro Artist Studio. The 8-day movement and rear power-reserve display push Spring Drive into haute horlogerie.", recommended_variant: "SBGD001 rather than later SBGD201: the original pre-rebrand, first-series expression. Full provenance is highly desirable.", target_low: 35000, target_high: 55000, priority: 7.5, category: "Horology" },
-  { position: 15, chapter: "Modern Grand Seiko Emerges", title: "First Re-Creation", reference_number: "SBGW253", caliber: "9S64 - manual wind", year_from: 2017, dates_text: "2017 only - LE 1,960", historical_role: "A modern steel re-creation of the 1960 First, released as Grand Seiko stepped forward with a more independent global brand identity.", recommended_variant: "Steel SBGW253 over the precious-metal sisters for wearability and value. Full set, clean case, original strap/buckle preferred. (Guide: priority 9 while the First is unowned; drops to 7 once a First is acquired.)", target_low: 5000, target_high: 6500, priority: 9, category: "Dress" },
-  { position: 16, chapter: "Modern Grand Seiko Emerges", title: "Micro Artist 9R02 Masterpiece", reference_number: "SBGZ001", caliber: "9R02 - manual Spring Drive", year_from: 2019, dates_text: "2019 - LE 30", historical_role: "An artisanal Spring Drive summit: hand-finished 9R02, 84-hour reserve and hand-engraved platinum case from the Micro Artist Studio.", recommended_variant: "SBGZ001 itself, with complete provenance. At this level, condition, original accessories and service history matter enormously.", target_low: 55000, target_high: 70000, priority: 6.5, category: "Horology" },
-  { position: 17, chapter: "The New Technical Age", title: "First 9SA5", reference_number: "SLGH002", caliber: "9SA5 - automatic Hi-Beat 36,000 vph", year_from: 2020, dates_text: "2020 - LE 100", historical_role: "The first production watch with 9SA5: Dual Impulse Escapement, free-sprung balance and 80 hours of reserve at 36,000 vph.", recommended_variant: "Full-set SLGH002 in 18K yellow gold — the collector-first choice for the literal beginning of the 9SA5 era.", target_low: 28000, target_high: 36000, priority: 8.5, category: "Horology" },
-  { position: 18, chapter: "The New Technical Age", title: "White Birch", reference_number: "SLGH005", caliber: "9SA5 - automatic Hi-Beat 36,000 vph", year_from: 2021, dates_text: "2021-present", historical_role: "The wearable flagship expression of the new 9SA5 mechanical architecture and Evolution 9 design language. A modern mechanical cornerstone.", recommended_variant: "Regular-production SLGH005, bought lightly used and unpolished. Far more wearable value than SLGH002 while telling nearly the same technical story.", target_low: 6000, target_high: 7500, priority: 9.5, category: "Daily" },
-  { position: 19, chapter: "The New Technical Age", title: "Mist Flake GMT", reference_number: "SBGE285", caliber: "9R66 - automatic Spring Drive GMT", year_from: 2022, dates_text: "2022-present", historical_role: "Modern practical anchor: Evolution 9, High-Intensity Titanium, true traveler GMT and mature Spring Drive in one highly wearable package.", recommended_variant: "Keep the SBGE285 — it fills the modern Spring Drive GMT / Evolution 9 sport chapter extremely well; no duplicate GMT needed.", target_low: 6200, target_high: 6300, priority: 9, category: "Sport", owned: true },
-  { position: 20, chapter: "The New Technical Age", title: "Kodo Constant-Force Tourbillon", reference_number: "SLGT003", caliber: "9ST1 - manual complication", year_from: 2022, dates_text: "2022 - LE 20", historical_role: "Grand Seiko's first mechanical complication: a tourbillon and constant-force mechanism coaxially on one axis. A true technical landmark.", recommended_variant: "Original SLGT003, full provenance, if the laws of household finance temporarily cease to apply. Historically essential; practically optional.", target_low: 250000, target_high: 325000, priority: 4, category: "Horology" },
-  { position: 21, chapter: "The New Technical Age", title: "Tentagraph", reference_number: "SLGC001", caliber: "9SC5 - automatic Hi-Beat chronograph", year_from: 2023, dates_text: "2023-present", historical_role: "Grand Seiko's first mechanical chronograph, built around a 36,000-vph movement with a three-day reserve. A major complication milestone.", recommended_variant: "Original blue-dial SLGC001 launch reference. Mandatory wrist test before buying: the historical importance is easier than the dimensions.", target_low: 9000, target_high: 11500, priority: 7.5, category: "Chronograph" },
-  { position: 22, chapter: "The New Technical Age", title: "Violet Dawn", reference_number: "SLGB005", caliber: "9RB2 Spring Drive U.F.A. - +/-20 sec/year", year_from: 2025, dates_text: "2025 - LE 1,300", historical_role: "The U.F.A. precision milestone and the modern endpoint of Grand Seiko's long accuracy obsession — the modern anchor of a 4520 → V.F.A. → U.F.A. precision sequence.", recommended_variant: "Keep the full set and enjoy it.", target_low: 11100, target_high: 11100, priority: 10, category: "Horology", owned: true },
+// Wish-list watches removed from the plan in v2 (cut entries + Canon
+// de-capitalization). Matched by reference; ONLY is_wishlist rows are deleted.
+const CUT_REFS = [
+  "5722-9990", // 57GS — conditional half-card candidate now, not a slot
+  "SBGT241", // replaced by a real 9F (SBGX261)
+  "SBGA001", // 9R65 chapter told by the Snowflake
+  "SBGH001", // hi-beat chapter triple-covered
+  "SBGW253", // redundant with the J14070 hunt
+  "SLGT003", // Canon — no capital
+  "SBGZ001", // Canon — no capital
+  "SBGD001", // Canon — no capital
+  "SLGH002", // Canon — no capital
 ]
 
-function dollarsToCents(d) {
-  return Math.round(d * 100)
-}
+// status: 'candidate' for Part A targets, 'passed' for Canon (acknowledged,
+// decided against chasing). owned: never auto-create. create: make a wish-list
+// watch when unlinked. Bands are the Aug 2026 validated buy bands.
+const ENTRIES = [
+  { position: 1, chapter: "Origins & Golden Age", title: "Grand Seiko First", reference_number: "J14070", caliber: "3180 - manual wind", year_from: 1960, dates_text: "1960-1963", historical_role: "Genesis. The first Grand Seiko and the opening statement of the brand's pursuit of precision, legibility, durability and refinement.", recommended_variant: "14K gold-filled J14070 with original dial, crown and caseback medallion. Highest authenticity risk in the guide - vetted specialist dealers only; budget the top of the band and the patience of a year.", target_low: 3600, target_high: 6500, priority: 7.5, category: "Dress", create: true },
+  { position: 2, chapter: "Origins & Golden Age", title: "44GS", reference_number: "4420-9000", caliber: "4420B - manual wind", year_from: 1967, dates_text: "1967-1968/69", historical_role: "The design milestone. This reference established the Grand Seiko Style: broad planes, razor-like facets and deliberate light-shadow geometry.", recommended_variant: "The sharpest honest case you can find, with intact medallion and original dial. The 30-40% sharp-case premium buys the only version that appreciates. Buy first.", target_low: 2800, target_high: 4500, priority: 10, category: "Dress", create: true },
+  { position: 3, chapter: "Origins & Golden Age", title: "45GS", reference_number: "4520-7010", caliber: "4520A - manual wind, 36,000 vph", year_from: 1969, dates_text: "c. 1969-1970", historical_role: "The vintage technical anchor: late-1960s manual Hi-Beat, first-generation 36,000-vph precision, Daini. Slot one of the precision spine.", recommended_variant: "Keep this exact 4520-7010: clean no-date dial, original case geometry, medallion. Recorded honestly: $1,850 paid was dealer-retail, above the $1,000-1,600 private-sale band.", target_low: 1000, target_high: 1600, priority: null, category: "Dress", owned: true },
+  { position: 4, chapter: "Origins & Golden Age", title: "62GS", reference_number: "6245-9000", caliber: "6245A - automatic", year_from: 1966, dates_text: "1966-1968", historical_role: "Grand Seiko's first automatic watch and the bezel-free case architecture - the design counterpoint to the 44GS, still priced pre-discovery.", recommended_variant: "Date-only 6245-9000 with crisp case and correct lion medallion, cleaner than the day-date 6246. Buy through the JDM channel; $3,000 Western asks are retail, not market.", target_low: 1400, target_high: 2600, priority: 6, category: "Dress", create: true },
+  { position: 5, chapter: "Origins & Golden Age", title: "61GS Hi-Beat", reference_number: "6145-8000", caliber: "6145A - automatic 36,000 vph", year_from: 1968, dates_text: "October 1968", historical_role: "Japan's first automatic 10-beat Grand Seiko - the Suwa answer to Daini's 45GS; the rivalry embodied by the owned pair.", recommended_variant: "Keep the early Grand Seiko dial / rotor configuration, service paperwork, signed buckle and spare mainspring together as provenance. Acquired Aug 2026 at $1,000 - validated fair market.", target_low: 1000, target_high: 1000, priority: null, category: "Dress", owned: true },
+  { position: 6, chapter: "Origins & Golden Age", title: "61GS V.F.A.", reference_number: "6185-8020", caliber: "6185A - automatic 36,000 vph V.F.A.", year_from: 1969, dates_text: "1969-early 1970s", historical_role: "The vintage mechanical precision summit and historical mirror of the owned U.F.A. Also the most faked Grand Seiko in existence.", recommended_variant: "STANDING ORDER, not a hunt item: papered, serial-coherent examples only (movement photos, matching numbers, specialist inspection), hard cap $15,000. Early applied-Suwa examples run $13-18k+. Priority becomes 10 for the right watch.", target_low: 9000, target_high: 16000, priority: 6.5, category: "Horology", create: true, note: "Standing order — papered examples only, $15k cap." },
+  { position: 7, chapter: "Quartz & The Rebirth", title: "95GS Quartz", reference_number: "SBGS001", caliber: "9581 - high-accuracy quartz", year_from: 1988, dates_text: "1988-early 1990s", historical_role: "The 1988 return of Grand Seiko in quartz form - the best narrative-per-dollar ratio in Grand Seiko collecting.", recommended_variant: "First-generation steel with original crown and hardware. Zero urgency, zero appreciation - buy whenever, never at a Western premium.", target_low: 450, target_high: 800, priority: 3, category: "Dress", create: true },
+  { position: 8, chapter: "Quartz & The Rebirth", title: "The 9F", reference_number: "SBGX261", caliber: "9F62 - thermocompensated quartz, sealed cabin", year_from: 1993, dates_text: "Caliber 1993; SBGX261 2016-present", historical_role: "The real 9F chapter: the 1993 sealed-cabin, twin-pulse quartz built as an end in itself - the hinge of the rebirth previously skipped between 1988 and 1998.", recommended_variant: "Standard-production SBGX261 (canonical 37mm 9F62). Alternate: SBGP011 if the 9F85's independent hour hand appeals. Replaces the commemorative SBGT241.", target_low: 2000, target_high: 2500, priority: 5, category: "Daily", create: true, note: "New chapter — Aug 2026 review." },
+  { position: 9, chapter: "Quartz & The Rebirth", title: "Mechanical Rebirth", reference_number: "SBGR001", caliber: "9S55 - automatic", year_from: 1998, dates_text: "1998-early 2000s", historical_role: "The 1998 rebirth of mechanical Grand Seiko and the start of the modern 9S lineage. Quiet-looking, historically enormous.", recommended_variant: "Early double-logo, ideally full set. Solds cluster $1,600-2,000 - never pay the $3,000 dealer ask. Always available; buy last and cheap.", target_low: 1700, target_high: 2500, priority: 4, category: "Daily", create: true },
+  { position: 10, chapter: "Modern Grand Seiko Emerges", title: "Original Snowflake", reference_number: "SBGA011", caliber: "9R65 - automatic Spring Drive", year_from: 2005, dates_text: "2005-2017", historical_role: "The watch that made Spring Drive synonymous with Grand Seiko - now the sole teller of the 9R65 chapter, retiring the SBGA001 slot.", recommended_variant: "SBGA011 specifically, not SBGA211: pre-2017 double-logo dial. Appreciation in progress - buy inside 6-12 months; JDM solds run $2,550-2,700.", target_low: 2900, target_high: 3700, priority: 9, category: "Daily", create: true },
+  { position: 11, chapter: "The New Technical Age", title: "White Birch", reference_number: "SLGH005", caliber: "9SA5 - automatic Hi-Beat 36,000 vph, 80h", year_from: 2021, dates_text: "2021-present", historical_role: "The wearable flagship of the 9SA5 architecture and Evolution 9 design language - the canonical form of the chapter, retiring SLGH002 to the Canon.", recommended_variant: "Regular production, lightly used and unpolished. Clean used examples at $5,500-6,000 carry near-zero remaining depreciation - the safe slot in the plan.", target_low: 5800, target_high: 7000, priority: 8, category: "Daily", create: true },
+  { position: 12, chapter: "The New Technical Age", title: "Birch Bark Manual", reference_number: "SLGW003", caliber: "9SA4 - manual wind Hi-Beat 36,000 vph, 80h", year_from: 2024, dates_text: "2024-present", historical_role: "The 2024 manual-wind hi-beat in a 44GS-lineage Evolution 9 case - the direct modern descendant of the owned 45GS; the rhyme that makes the collection read as composed.", recommended_variant: "High-Intensity Titanium SLGW003 (stretch slot). Alternate: SLGC001 Tentagraph at or under $9,500 if the chronograph chapter must exist.", target_low: 10000, target_high: 11000, priority: 5.5, category: "Dress", create: true, note: "Stretch slot — new chapter, Aug 2026 review." },
+  { position: 13, chapter: "The New Technical Age", title: "Evolution 9 Diver", reference_number: "SLGA015", caliber: "9RA5 - Spring Drive five-day, 120h", year_from: 2022, dates_text: "2022-present", historical_role: "One slot, two previously missing chapters: the 9RA5 five-day Spring Drive generation - the largest Spring Drive advance since 2004 - and the diver line.", recommended_variant: "SLGA015 Evolution 9 diver, High-Intensity Titanium. Swap candidate: SLGA007 Omiwatari if dial craft outranks the diver chapter - same movement generation.", target_low: 8000, target_high: 9500, priority: 7, category: "Sport", create: true, note: "New chapter — Aug 2026 review." },
+  { position: 14, chapter: "The New Technical Age", title: "Mist Flake GMT", reference_number: "SBGE285", caliber: "9R66 - automatic Spring Drive GMT", year_from: 2022, dates_text: "2022-present", historical_role: "The modern practical anchor: Evolution 9, High-Intensity Titanium, true traveler GMT and mature Spring Drive in one wearable package.", recommended_variant: "Keep the SBGE285 - it fills the modern Spring Drive GMT / Evolution 9 sport chapter; no duplicate GMT needed. Realized market $5,500-6,500 vs ~$4,950 paid.", target_low: 5500, target_high: 6500, priority: null, category: "Sport", owned: true },
+  { position: 15, chapter: "The New Technical Age", title: "Violet Dawn", reference_number: "SLGB005", caliber: "9RB2 Spring Drive U.F.A. - +/-20 sec/year", year_from: 2025, dates_text: "2025 - LE 1,300", historical_role: "The U.F.A. precision milestone and modern endpoint of the accuracy obsession - the anchor of the 4520 to V.F.A. to U.F.A. sequence.", recommended_variant: "Keep the full set. Year-one LE J-curve is normal (secondary ~$8,800-10,200 vs $11,100 retail) - a five-year-plus hold, not a regret.", target_low: 8800, target_high: 10200, priority: null, category: "Horology", owned: true },
+  // ── Part B: The Canon — acknowledged, unranked, no capital ─────
+  { position: 16, chapter: "The Canon", title: "Kodo Constant-Force Tourbillon", reference_number: "SLGT003", caliber: "9ST1 - manual complication", year_from: 2022, dates_text: "2022 - LE 20", historical_role: "First GS mechanical complication: tourbillon and constant force on one axis. No public secondary trade has ever occurred.", recommended_variant: "Canon entry - no capital allocated. Working assumption $250-325k, unverifiable. Enters the plan only if a papered example inside budget ever surfaces.", target_low: 250000, target_high: 325000, priority: null, category: "Horology", canon: true },
+  { position: 17, chapter: "The Canon", title: "Micro Artist 9R02 Masterpiece", reference_number: "SBGZ001", caliber: "9R02 - manual Spring Drive", year_from: 2019, dates_text: "2019 - LE 30", historical_role: "Hand-engraved platinum, hand-finished 9R02. Two public sales ever: ~$64k (2022) and $81.9k (2023).", recommended_variant: "Canon entry - no capital allocated. Realistic requirement $60-80k, auction-exit-only.", target_low: 60000, target_high: 80000, priority: null, category: "Horology", canon: true },
+  { position: 18, chapter: "The Canon", title: "Spring Drive 8 Days", reference_number: "SBGD001", caliber: "9R01 - manual Spring Drive, 8 days", year_from: 2016, dates_text: "2016-2017", historical_role: "First Micro Artist Studio GS. Same chapter as SBGZ001 - one Micro Artist slot is enough, and it lives here.", recommended_variant: "Canon entry - no capital allocated. Loupe This sold $30,989 (Aug 2025) vs $54k+ asks; a $30-48k watch with brutal spread.", target_low: 30000, target_high: 48000, priority: null, category: "Horology", canon: true },
+  { position: 19, chapter: "The Canon", title: "First 9SA5", reference_number: "SLGH002", caliber: "9SA5 - automatic Hi-Beat 36,000 vph", year_from: 2020, dates_text: "2020 - LE 100", historical_role: "The literal beginning of the 9SA5 era - but the chapter is the caliber, and the White Birch tells it on the wrist.", recommended_variant: "Canon entry - no capital allocated. Asking-only market $26-32k, ~25% under retail, months-long exits.", target_low: 26000, target_high: 32000, priority: null, category: "Horology", canon: true },
+]
+
+const dollarsToCents = (d) => (d == null ? null : Math.round(d * 100))
+const norm = (r) => r.toUpperCase().replace(/\s+/g, "")
 
 async function main() {
-  console.log(`Seeding "Grand Seiko" Master Collection Guide${DRY ? " (DRY RUN)" : ""}\n`)
+  console.log(`Seeding "Grand Seiko" Master Collection Guide v${GUIDE.version}${DRY ? " (DRY RUN)" : ""}\n`)
 
-  // Single-user app: resolve the owner from profiles.
   const { data: profiles, error: profErr } = await supabase.from("profiles").select("id")
   if (profErr) throw new Error(`profiles: ${profErr.message}`)
   if (!profiles || profiles.length !== 1) {
@@ -99,60 +114,78 @@ async function main() {
   }
   const userId = profiles[0].id
 
-  // Brand: Grand Seiko must exist (create if somehow missing).
   const { data: brands } = await supabase
     .from("brands")
     .select("id, name")
     .eq("user_id", userId)
     .ilike("name", "grand seiko")
-  let brandId = brands?.[0]?.id
-  if (!brandId) {
-    if (DRY) {
-      console.log("Would create brand: Grand Seiko")
-      brandId = "(new)"
-    } else {
-      const { data: nb, error } = await supabase
-        .from("brands")
-        .insert({ user_id: userId, name: "Grand Seiko" })
-        .select("id")
-        .single()
-      if (error) throw new Error(`create brand: ${error.message}`)
-      brandId = nb.id
-      console.log("Created brand: Grand Seiko")
-    }
-  }
+  const brandId = brands?.[0]?.id
+  if (!brandId) throw new Error("Grand Seiko brand not found — nothing to update.")
 
-  // Categories for auto-created wish-list watches.
   const { data: cats, error: catErr } = await supabase
     .from("categories")
     .select("id, name")
     .eq("user_id", userId)
   if (catErr) throw new Error(`categories: ${catErr.message}`)
-  if (!cats?.length) throw new Error("No categories found — cannot create watches.")
-  const catByName = new Map(cats.map((c) => [c.name.toLowerCase(), c.id]))
+  const catByName = new Map((cats ?? []).map((c) => [c.name.toLowerCase(), c.id]))
   const fallbackCat = catByName.get("daily") ?? cats[0].id
   const categoryFor = (name) => catByName.get(name.toLowerCase()) ?? fallbackCat
 
-  // The user's Grand Seiko watches, for reference-number linking.
-  const { data: gsWatches, error: wErr } = await supabase
-    .from("watches")
-    .select("id, model, reference_number, is_wishlist, is_coming_soon")
-    .eq("user_id", userId)
-    .eq("brand_id", brandId)
-  if (wErr) throw new Error(`watches: ${wErr.message}`)
-  // Reference matching is normalized (uppercase, no spaces) and accepts a
-  // suffix match so stored refs like "GS 4520-7010" still match "4520-7010".
-  const norm = (r) => r.toUpperCase().replace(/\s+/g, "")
-  const refWatches = (gsWatches ?? []).filter((w) => w.reference_number)
+  const loadWatches = async () => {
+    const { data, error } = await supabase
+      .from("watches")
+      .select("id, model, reference_number, is_wishlist, is_coming_soon")
+      .eq("user_id", userId)
+      .eq("brand_id", brandId)
+    if (error) throw new Error(`watches: ${error.message}`)
+    return data ?? []
+  }
+  let gsWatches = await loadWatches()
+  const refWatches = () => gsWatches.filter((w) => w.reference_number)
   const findByRef = (ref) => {
     const target = norm(ref)
-    return refWatches.find((w) => {
+    return refWatches().find((w) => {
       const wr = norm(w.reference_number)
       return wr === target || wr.endsWith(target) || target.endsWith(wr)
     })
   }
 
-  // 1. Guide upsert (by user+name).
+  // ── 1. Delete cut wish-list watches (photos + storage first) ────
+  console.log("Cut watches (v2 removes these from the plan):")
+  let deleted = 0
+  for (const ref of CUT_REFS) {
+    const match = findByRef(ref)
+    if (!match) {
+      console.log(`  ${ref}: no watch found — nothing to delete`)
+      continue
+    }
+    if (!match.is_wishlist) {
+      console.log(`  ${ref}: matched "${match.model}" but it is NOT a wish-list watch — SKIPPED (never deleting owned rows)`)
+      continue
+    }
+    if (DRY) {
+      console.log(`  ${ref}: would DELETE wish-list watch "${match.model}" (photos + storage included)`)
+      continue
+    }
+    // Remove storage objects for its photos, then the watch (FKs cascade;
+    // guide_entries.watch_id is ON DELETE SET NULL).
+    const { data: photos } = await supabase
+      .from("watch_photos")
+      .select("storage_path, thumb_path")
+      .eq("watch_id", match.id)
+    const paths = (photos ?? []).flatMap((p) => [p.storage_path, p.thumb_path]).filter(Boolean)
+    if (paths.length > 0) {
+      const { error: rmErr } = await supabase.storage.from("watch-photos").remove(paths)
+      if (rmErr) console.warn(`  (storage cleanup warning for ${ref}: ${rmErr.message})`)
+    }
+    const { error: delErr } = await supabase.from("watches").delete().eq("id", match.id)
+    if (delErr) throw new Error(`delete watch ${match.model}: ${delErr.message}`)
+    deleted++
+    console.log(`  ${ref}: DELETED wish-list watch "${match.model}" (${paths.length} storage object(s) removed)`)
+  }
+  if (!DRY) gsWatches = await loadWatches()
+
+  // ── 2. Guide upsert ─────────────────────────────────────────────
   let guideId
   const { data: existingGuide } = await supabase
     .from("collection_guides")
@@ -162,7 +195,7 @@ async function main() {
     .maybeSingle()
   if (existingGuide) {
     guideId = existingGuide.id
-    console.log(`Guide exists (${guideId}) — entries will be upserted.`)
+    console.log(`\nGuide exists (${guideId}) — updating to v${GUIDE.version}; entries will be REPLACED.`)
     if (!DRY) {
       await supabase
         .from("collection_guides")
@@ -170,7 +203,7 @@ async function main() {
         .eq("id", guideId)
     }
   } else if (DRY) {
-    console.log(`Would create guide: ${GUIDE.name} (v${GUIDE.version})`)
+    console.log(`\nWould create guide: ${GUIDE.name} (v${GUIDE.version})`)
     guideId = "(new)"
   } else {
     const { data: g, error } = await supabase
@@ -180,26 +213,24 @@ async function main() {
       .single()
     if (error) throw new Error(`create guide: ${error.message}`)
     guideId = g.id
-    console.log(`Created guide: ${GUIDE.name} (${guideId})`)
   }
 
-  // Existing entries (idempotent re-run).
-  const { data: existingEntries } = guideId === "(new)"
-    ? { data: [] }
-    : await supabase.from("guide_entries").select("id, position, watch_id").eq("guide_id", guideId)
-  const entryByPos = new Map((existingEntries ?? []).map((e) => [e.position, e]))
+  // ── 3. Replace all entries (positions changed meaning in v2) ────
+  if (!DRY && guideId !== "(new)") {
+    const { error } = await supabase.from("guide_entries").delete().eq("guide_id", guideId)
+    if (error) throw new Error(`clear old entries: ${error.message}`)
+  }
 
-  let created = 0, updated = 0, linked = 0, watchesCreated = 0
+  let created = 0, linked = 0, watchesCreated = 0
+  console.log("")
   for (const e of ENTRIES) {
-    // Resolve the watch link: existing watch with this reference?
-    const match = e.reference_number ? findByRef(e.reference_number) : undefined
+    const match = findByRef(e.reference_number)
     let watchId = match?.id ?? null
     let watchNote = match
-      ? `linked to existing ${match.is_wishlist ? "wish-list " : ""}watch (${match.model})`
+      ? `linked to ${match.is_wishlist ? "wish-list " : match.is_coming_soon ? "coming-soon " : "owned "}watch (${match.model})`
       : null
 
-    // No match and it's a candidate → create the wish-list watch.
-    if (!watchId && !e.owned) {
+    if (!watchId && e.create) {
       const mid = dollarsToCents((e.target_low + e.target_high) / 2)
       if (DRY) {
         watchNote = `would create wish-list watch "${e.title}" (${e.reference_number}, est. $${((e.target_low + e.target_high) / 2).toLocaleString()}, category ${e.category})`
@@ -224,10 +255,16 @@ async function main() {
         watchNote = `created wish-list watch "${e.title}"`
       }
     } else if (!watchId && e.owned) {
-      watchNote = `OWNED in guide but no watch matched ref ${e.reference_number} — left unlinked, link manually`
+      watchNote = `OWNED in guide but no watch matched ${e.reference_number} — link manually`
+    } else if (!watchId && e.canon) {
+      watchNote = "Canon — intentionally unlinked, no watch row"
     }
 
-    const row = {
+    if (DRY) {
+      console.log(`#${String(e.position).padStart(2)} ${e.title.padEnd(34)} ${e.canon ? "CANON " : ""}${watchNote ?? ""}`)
+      continue
+    }
+    const { error } = await supabase.from("guide_entries").insert({
       guide_id: guideId,
       user_id: userId,
       position: e.position,
@@ -242,34 +279,20 @@ async function main() {
       target_low_cents: dollarsToCents(e.target_low),
       target_high_cents: dollarsToCents(e.target_high),
       priority: e.priority,
+      status: e.canon ? "passed" : "candidate",
+      notes: e.note ?? (e.canon ? "Part B — The Canon: acknowledged, no capital allocated." : null),
       watch_id: watchId,
-    }
-
-    const existing = entryByPos.get(e.position)
-    if (DRY) {
-      console.log(`#${String(e.position).padStart(2)} ${e.title.padEnd(32)} ${existing ? "update" : "create"}${watchNote ? ` — ${watchNote}` : ""}`)
-      continue
-    }
-    if (existing) {
-      // Preserve an existing link/status; only fill a missing link.
-      const patch = { ...row }
-      if (existing.watch_id) delete patch.watch_id
-      const { error } = await supabase.from("guide_entries").update(patch).eq("id", existing.id)
-      if (error) throw new Error(`update entry ${e.title}: ${error.message}`)
-      updated++
-      if (!existing.watch_id && watchId) linked++
-    } else {
-      const { error } = await supabase.from("guide_entries").insert(row)
-      if (error) throw new Error(`insert entry ${e.title}: ${error.message}`)
-      created++
-      if (watchId) linked++
-    }
+    })
+    if (error) throw new Error(`insert entry ${e.title}: ${error.message}`)
+    created++
+    if (watchId) linked++
     if (watchNote) console.log(`#${String(e.position).padStart(2)} ${e.title}: ${watchNote}`)
   }
 
   console.log(`\nDone${DRY ? " (dry run — nothing written)" : ""}.`)
   if (!DRY) {
-    console.log(`Entries created: ${created}, updated: ${updated}, linked: ${linked}`)
+    console.log(`Wish-list watches deleted: ${deleted}`)
+    console.log(`Entries inserted: ${created} (15 Part A + 4 Canon), linked: ${linked}`)
     console.log(`Wish-list watches created: ${watchesCreated}`)
     console.log("Cost: $0 (deterministic, no AI)")
   }
