@@ -14,6 +14,8 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"]
 export type PhotoActionState = {
   error?: string
   success?: boolean
+  /** The created watch_photos row (uploadWatchPhoto) — used for undo (D3). */
+  photoId?: string
 }
 
 /**
@@ -87,23 +89,27 @@ export async function uploadWatchPhoto(
   const isFirstPhoto = (count ?? 0) === 0
 
   // Create photo record
-  const { error: insertError } = await supabase.from("watch_photos").insert({
-    watch_id: watchId,
-    user_id: user.id,
-    storage_path: storagePath,
-    thumb_path: thumbPath,
-    display_order: count ?? 0,
-    is_cover: isFirstPhoto,
-  })
+  const { data: inserted, error: insertError } = await supabase
+    .from("watch_photos")
+    .insert({
+      watch_id: watchId,
+      user_id: user.id,
+      storage_path: storagePath,
+      thumb_path: thumbPath,
+      display_order: count ?? 0,
+      is_cover: isFirstPhoto,
+    })
+    .select("id")
+    .single()
 
-  if (insertError) {
+  if (insertError || !inserted) {
     // Clean up uploaded files if DB insert fails
     await supabase.storage.from(BUCKET).remove([storagePath, thumbPathFor(storagePath)])
-    return { error: `Failed to save photo: ${insertError.message}` }
+    return { error: `Failed to save photo: ${insertError?.message ?? "unknown error"}` }
   }
 
   revalidatePath(`/watch/${watchId}`); revalidatePath(`/watch/${watchId}/edit`)
-  return { success: true }
+  return { success: true, photoId: (inserted as { id: string }).id }
 }
 
 /**

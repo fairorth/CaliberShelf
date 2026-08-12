@@ -1,15 +1,16 @@
 "use client"
 
-import { Camera, CheckCircle2, Watch } from "lucide-react"
-
-import { useRef, useState, useTransition } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { Camera, ImageOff, Undo2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { uploadWatchPhoto } from "@/lib/actions/photo-actions"
-import { downscaleImage } from "@/lib/images"
+import { PhotoDrop } from "@/components/photo-drop"
+import { deleteWatchPhoto, uploadWatchPhoto } from "@/lib/actions/photo-actions"
+import { downscaleImage, PHOTO_ACCEPT } from "@/lib/images"
+import { SESSION_WATCH_KEY } from "@/app/(dashboard)/photo-lab/session/_components/session-view"
+import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import type { WatchWithCover } from "@/lib/types/watch"
 
@@ -17,82 +18,97 @@ interface QuickCaptureProps {
   watches: WatchWithCover[]
 }
 
-type Step = "capture" | "select" | "confirm"
+type StripStatus = "uploading" | "done" | "error" | "removed"
 
+interface StripFrame {
+  localId: string
+  previewUrl: string
+  status: StripStatus
+  photoId?: string
+}
+
+/**
+ * Quick Capture, watch-first (D3): choose the watch once — or inherit the
+ * Photo Lab session watch — then shoot repeatedly. Every frame lands in the
+ * filmstrip immediately with an undo; uploads run in the background.
+ */
 export function QuickCapture({ watches }: QuickCaptureProps) {
-  const cameraInputRef = useRef<HTMLInputElement>(null)
-  const galleryInputRef = useRef<HTMLInputElement>(null)
-  const [step, setStep] = useState<Step>("capture")
-  const [capturedFile, setCapturedFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [selectedWatch, setSelectedWatch] = useState<WatchWithCover | null>(null)
+  const owned = watches
+  const [watchId, setWatchId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [isPending, startTransition] = useTransition()
-  const [uploadedWatchId, setUploadedWatchId] = useState<string | null>(null)
+  const [strip, setStrip] = useState<StripFrame[]>([])
+  const [changing, setChanging] = useState(false)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
-  async function handleFileCapture(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+  // Inherit the Photo Lab's active session watch (D1/D3).
+  useEffect(() => {
+    const stored = localStorage.getItem(SESSION_WATCH_KEY)
+    if (stored && owned.some((w) => w.id === stored)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from a client-only store
+      setWatchId((prev) => prev ?? stored)
+    }
+  }, [owned])
 
-    // Every upload path downscales client-side (A3). The full PhotoDrop
-    // component lands here with the watch-first rework (D3, Phase 3).
-    const prepared = await downscaleImage(file)
-    setCapturedFile(prepared)
-    setPreviewUrl(URL.createObjectURL(prepared))
-    setStep("select")
+  const watch = watchId ? (owned.find((w) => w.id === watchId) ?? null) : null
+
+  function selectWatch(id: string) {
+    setWatchId(id)
+    setChanging(false)
+    localStorage.setItem(SESSION_WATCH_KEY, id)
   }
 
-  function handleSelectWatch(watch: WatchWithCover) {
-    setSelectedWatch(watch)
-    setStep("confirm")
+  function updateFrame(localId: string, patch: Partial<StripFrame>) {
+    setStrip((prev) => prev.map((f) => (f.localId === localId ? { ...f, ...patch } : f)))
   }
 
-  function handleBack() {
-    if (step === "confirm") {
-      setSelectedWatch(null)
-      setStep("select")
-    } else if (step === "select") {
-      setCapturedFile(null)
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
-      setPreviewUrl(null)
-      setStep("capture")
+  /** Frames appear in the strip immediately; uploads run behind them. */
+  function handleFiles(files: File[]) {
+    if (!watch) return
+    for (const file of files) {
+      const localId = crypto.randomUUID()
+      const previewUrl = URL.createObjectURL(file)
+      setStrip((prev) => [{ localId, previewUrl, status: "uploading" }, ...prev])
+      void (async () => {
+        const fd = new FormData()
+        fd.set("photo", file)
+        try {
+          const result = await uploadWatchPhoto(watch.id, fd)
+          if (result.error || !result.photoId) {
+            updateFrame(localId, { status: "error" })
+            toast.error(result.error ?? "Upload failed.")
+          } else {
+            updateFrame(localId, { status: "done", photoId: result.photoId })
+          }
+        } catch {
+          updateFrame(localId, { status: "error" })
+          toast.error("Upload failed — the photo may be too large.")
+        }
+      })()
     }
   }
 
-  function handleUpload() {
-    if (!capturedFile || !selectedWatch) return
+  /** Camera input (the shutter) bypasses the dropzone for speed. */
+  async function handleShutter(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    const prepared = await downscaleImage(file)
+    handleFiles([prepared])
+  }
 
-    const formData = new FormData()
-    formData.set("photo", capturedFile)
-
-    startTransition(async () => {
-      try {
-        const result = await uploadWatchPhoto(selectedWatch.id, formData)
-        if (result.error) {
-          toast.error(result.error)
-        } else {
-          toast.success("Photo uploaded!")
-          setUploadedWatchId(selectedWatch.id)
-          // Clean up
-          if (previewUrl) URL.revokeObjectURL(previewUrl)
-          setCapturedFile(null)
-          setPreviewUrl(null)
-          setSelectedWatch(null)
-          setStep("capture")
-        }
-      } catch {
-        toast.error("Upload failed. The photo may be too large — try a smaller image.")
+  function undo(frame: StripFrame) {
+    if (!watch || !frame.photoId) return
+    updateFrame(frame.localId, { status: "removed" })
+    void (async () => {
+      const result = await deleteWatchPhoto(frame.photoId!, watch.id)
+      if (result.error) {
+        toast.error(result.error)
+        updateFrame(frame.localId, { status: "done" })
       }
-    })
+    })()
   }
 
-  function handleTakeAnother() {
-    setUploadedWatchId(null)
-    setStep("capture")
-  }
-
-  // Filter watches by search query
-  const filteredWatches = watches.filter((w) => {
+  const filteredWatches = owned.filter((w) => {
     if (!searchQuery) return true
     const q = searchQuery.toLowerCase()
     return (
@@ -102,209 +118,148 @@ export function QuickCapture({ watches }: QuickCaptureProps) {
     )
   })
 
-  // Success state after upload
-  if (uploadedWatchId) {
+  // ── Step 0 (once): choose the watch ─────────────────────────────
+  if (!watch || changing) {
     return (
-      <div className="flex flex-col items-center gap-4 py-12">
-        <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-500" aria-hidden="true" />
-        <p className="text-lg font-medium">Photo uploaded successfully!</p>
-        <div className="flex gap-3">
-          <Button onClick={handleTakeAnother}>Take Another</Button>
-          <Button variant="outline" render={<Link href={`/watch/${uploadedWatchId}`} />}>
-            View Watch
-          </Button>
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Choose the watch first — then shoot as many frames as the session needs.
+        </p>
+        <Input
+          placeholder="Search by brand, model, or reference…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-11"
+        />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {filteredWatches.map((w) => (
+            <button
+              key={w.id}
+              type="button"
+              onClick={() => selectWatch(w.id)}
+              className="flex min-h-[88px] flex-col items-center gap-2 rounded-lg border p-3 text-left transition-colors hover:bg-accent active:bg-accent"
+            >
+              {w.cover_photo_url ? (
+                <span className="relative h-12 w-12 overflow-hidden rounded-lg">
+                  <Image src={w.cover_photo_url} alt={w.model} fill className="object-cover" sizes="48px" unoptimized />
+                </span>
+              ) : (
+                <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <ImageOff className="h-5 w-5" aria-hidden="true" />
+                </span>
+              )}
+              <span className="text-center">
+                <span className="line-clamp-1 block text-xs font-medium leading-tight">
+                  {w.brand.name}
+                </span>
+                <span className="line-clamp-1 block text-xs leading-tight text-muted-foreground">
+                  {w.model}
+                </span>
+              </span>
+            </button>
+          ))}
         </div>
+        {filteredWatches.length === 0 && (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No watches match your search.
+          </p>
+        )}
       </div>
     )
   }
 
+  const activeFrames = strip.filter((f) => f.status !== "removed")
+
   return (
     <div className="space-y-4">
-      {/* Hidden inputs */}
+      {/* Persistent session-watch header */}
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
+        <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-muted">
+          {watch.cover_photo_url ? (
+            <Image src={watch.cover_photo_url} alt="" fill className="object-cover" sizes="44px" unoptimized />
+          ) : (
+            <span className="flex h-full items-center justify-center text-muted-foreground">
+              <ImageOff className="h-4 w-4" aria-hidden="true" />
+            </span>
+          )}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">{watch.brand.name}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {watch.nickname || watch.model}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setChanging(true)}>
+          Change
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          render={<Link href={`/photo-lab/session?watch=${watch.id}`} />}
+        >
+          Session
+        </Button>
+      </div>
+
+      {/* The shutter — a real control, camera-first on touch devices. */}
       <input
         ref={cameraInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic"
+        accept={PHOTO_ACCEPT}
         capture="environment"
-        onChange={handleFileCapture}
+        onChange={(e) => void handleShutter(e)}
         className="hidden"
       />
-      <input
-        ref={galleryInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic"
-        onChange={handleFileCapture}
-        className="hidden"
-      />
-
-      {/* Step indicator */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className={step === "capture" ? "font-bold text-foreground" : ""}>
-          1. Capture
-        </span>
-        <span>→</span>
-        <span className={step === "select" ? "font-bold text-foreground" : ""}>
-          2. Select Watch
-        </span>
-        <span>→</span>
-        <span className={step === "confirm" ? "font-bold text-foreground" : ""}>
-          3. Upload
-        </span>
+      <div className="flex flex-col items-center gap-3 py-2">
+        <button
+          type="button"
+          onClick={() => cameraInputRef.current?.click()}
+          aria-label="Take photo"
+          className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-brass bg-brass/10 text-brass transition-transform active:scale-95"
+        >
+          <Camera className="h-9 w-9" aria-hidden="true" />
+        </button>
+        <p className="font-mono text-2xs uppercase tracking-[0.1em] text-muted-foreground">
+          Shutter · frames upload in the background
+        </p>
       </div>
 
-      {/* Step 1: Capture */}
-      {step === "capture" && (
-        <div className="flex flex-col items-center gap-4 py-8">
-          <button
-            type="button"
-            onClick={() => cameraInputRef.current?.click()}
-            className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-primary bg-primary/10 text-5xl transition-transform active:scale-95"
-            aria-label="Take photo"
-          >
-            <Camera className="h-10 w-10" aria-hidden="true" />
-          </button>
-          <p className="text-sm text-muted-foreground">
-            Tap to take a photo with your camera
-          </p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => galleryInputRef.current?.click()}
-          >
-            Or choose from gallery
-          </Button>
-        </div>
-      )}
-
-      {/* Step 2: Select Watch */}
-      {step === "select" && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleBack}>
-              ← Back
-            </Button>
-            <span className="text-sm font-medium">Select a watch for this photo</span>
-          </div>
-
-          {/* Preview thumbnail */}
-          {previewUrl && (
-            <div className="flex justify-center">
-              <div className="relative h-24 w-24 overflow-hidden rounded-lg border">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={previewUrl}
-                  alt="Captured"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Search */}
-          <Input
-            placeholder="Search by brand, model, or reference..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-11"
-          />
-
-          {/* Watch grid */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {filteredWatches.map((watch) => (
-              <button
-                key={watch.id}
-                type="button"
-                onClick={() => handleSelectWatch(watch)}
-                className="flex flex-col items-center gap-2 rounded-lg border p-3 text-left transition-colors hover:bg-accent active:bg-accent min-h-[88px]"
-              >
-                {watch.cover_photo_url ? (
-                  <div className="relative h-12 w-12 overflow-hidden rounded-md">
-                    <Image
-                      src={watch.cover_photo_url}
-                      alt={watch.model}
-                      fill
-                      className="object-cover"
-                      sizes="48px"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-md bg-muted text-md">
-                    <Watch className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                )}
-                <div className="text-center">
-                  <p className="text-xs font-medium leading-tight line-clamp-1">
-                    {watch.brand.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-tight line-clamp-1">
-                    {watch.model}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {filteredWatches.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No watches match your search.
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Step 3: Confirm & Upload */}
-      {step === "confirm" && selectedWatch && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleBack}>
-              ← Back
-            </Button>
-            <span className="text-sm font-medium">Confirm upload</span>
-          </div>
-
-          <Card>
-            <CardContent className="flex items-center gap-4 p-4">
-              {/* Photo preview */}
-              {previewUrl && (
-                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={previewUrl}
-                    alt="Captured"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
+      {/* Filmstrip — instant feedback, undo per frame (D3). */}
+      {activeFrames.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {activeFrames.map((f) => (
+            <div
+              key={f.localId}
+              className={cn(
+                "relative h-[72px] w-[96px] shrink-0 overflow-hidden rounded-lg border bg-surface-photo",
+                f.status === "error" ? "border-destructive" : "border-border"
               )}
-
-              {/* Watch info */}
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">{selectedWatch.brand.name}</p>
-                <p className="text-sm text-muted-foreground truncate">
-                  {selectedWatch.model}
-                </p>
-                {selectedWatch.reference_number && (
-                  <p className="text-xs text-muted-foreground">
-                    Ref: {selectedWatch.reference_number}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex gap-3">
-            <Button
-              onClick={handleUpload}
-              disabled={isPending}
-              className="flex-1"
             >
-              {isPending ? "Uploading..." : "Upload Photo"}
-            </Button>
-            <Button variant="outline" onClick={handleBack} disabled={isPending}>
-              Change Watch
-            </Button>
-          </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={f.previewUrl} alt="" className="h-full w-full object-cover" />
+              {f.status === "uploading" && (
+                <span className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                </span>
+              )}
+              {f.status === "done" && (
+                <button
+                  type="button"
+                  onClick={() => undo(f)}
+                  aria-label="Undo upload"
+                  title="Undo"
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white transition-colors hover:bg-destructive"
+                >
+                  <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       )}
+
+      {/* Multi-select from the gallery — the shared component (A3/D3). */}
+      <PhotoDrop multiple capture={false} onFiles={handleFiles} />
     </div>
   )
 }
