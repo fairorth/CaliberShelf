@@ -68,13 +68,15 @@ export function ReviewSession({ frames, lastRun }: PhotoLabReview) {
   )
   const current: ReviewFrame | undefined = queue[Math.min(index, Math.max(0, queue.length - 1))]
 
-  // Seed the angle pills from the scorer's classification per frame.
+  // Seed the angle pills from the scorer's classification whenever the
+  // frame changes (the adjust-state-during-render idiom — no effect needed).
   const currentId = current?.id ?? null
-  const currentClass = current?.angle_class ?? null
-  useEffect(() => {
-    setAngleChoice(currentId ? angleFromScoreClass(currentClass) : null)
+  const [seededFor, setSeededFor] = useState<string | null>(null)
+  if (currentId !== seededFor) {
+    setSeededFor(currentId)
+    setAngleChoice(current ? angleFromScoreClass(current.angle_class) : null)
     setZoomed(false)
-  }, [currentId, currentClass])
+  }
 
   const scoredCount = frames.filter((f) => f.composite_score != null).length
 
@@ -129,7 +131,6 @@ export function ReviewSession({ frames, lastRun }: PhotoLabReview) {
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers read fresh state via closures re-bound each render
   })
 
   if (queue.length === 0 || !current) {
