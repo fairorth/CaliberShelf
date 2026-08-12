@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { buildStoragePath } from "@/lib/storage"
 import { generateThumbnail, thumbPathFor } from "@/lib/thumbnails"
+import { PHOTO_ANGLES } from "@/lib/photo-lab"
+import type { PhotoAngle } from "@/lib/types/watch"
 
 const BUCKET = "watch-photos"
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB — iPhone photos can be large
@@ -209,5 +211,74 @@ export async function setCoverPhoto(
 
   revalidatePath(`/watch/${watchId}`); revalidatePath(`/watch/${watchId}/edit`)
   revalidatePath("/dashboard")
+  return { success: true }
+}
+
+/**
+ * Tag a photo with one of the five angle classes (or clear it) — the data
+ * the Photo Lab coverage matrix reads (D1/D2, migration 00041).
+ */
+export async function setPhotoAngle(
+  photoId: string,
+  watchId: string,
+  angle: PhotoAngle | null
+): Promise<PhotoActionState> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: "You must be logged in." }
+  }
+  if (angle !== null && !PHOTO_ANGLES.includes(angle)) {
+    return { error: "Unknown angle." }
+  }
+
+  const { error } = await supabase
+    .from("watch_photos")
+    .update({ angle })
+    .eq("id", photoId)
+    .eq("user_id", user.id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath(`/watch/${watchId}`); revalidatePath(`/watch/${watchId}/edit`)
+  revalidatePath("/photo-lab")
+  return { success: true }
+}
+
+/**
+ * Persist a filmstrip drag-reorder (D2, migration 00041). `orderedIds` is
+ * the full photo list in its new order; sort_order is written 0..n-1.
+ */
+export async function reorderWatchPhotos(
+  watchId: string,
+  orderedIds: string[]
+): Promise<PhotoActionState> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: "You must be logged in." }
+  }
+
+  for (let i = 0; i < orderedIds.length; i++) {
+    const { error } = await supabase
+      .from("watch_photos")
+      .update({ sort_order: i })
+      .eq("id", orderedIds[i])
+      .eq("watch_id", watchId)
+      .eq("user_id", user.id)
+    if (error) {
+      return { error: error.message }
+    }
+  }
+
+  revalidatePath(`/watch/${watchId}`); revalidatePath(`/watch/${watchId}/edit`)
   return { success: true }
 }
