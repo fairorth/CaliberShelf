@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Check, Images, X } from "lucide-react"
+import { Check, X } from "lucide-react"
+import { PhotoDrop } from "@/components/photo-drop"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -19,7 +20,6 @@ import {
   finalizeBatchImport,
 } from "@/lib/actions/batch-import-actions"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
 import type { Category } from "@/lib/types/watch"
 
 interface BatchImportFormProps {
@@ -38,22 +38,18 @@ interface ImportResult {
 }
 
 export function BatchImportForm({ categories }: BatchImportFormProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [images, setImages] = useState<PreviewImage[]>([])
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "")
-  const [isDragging, setIsDragging] = useState(false)
   const [importing, setImporting] = useState(false)
   const [progress, setProgress] = useState({ current: 0, total: 0 })
   const [result, setResult] = useState<ImportResult | null>(null)
 
-  const addFiles = useCallback((files: FileList | File[]) => {
-    const newImages: PreviewImage[] = []
-    for (const file of Array.from(files)) {
-      if (file.type.startsWith("image/")) {
-        newImages.push({ file, url: URL.createObjectURL(file) })
-      }
-    }
-    setImages((prev) => [...prev, ...newImages])
+  // Files arrive already downscaled from PhotoDrop (A3).
+  const addFiles = useCallback((files: File[]) => {
+    setImages((prev) => [
+      ...prev,
+      ...files.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    ])
     setResult(null)
   }, [])
 
@@ -71,14 +67,6 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
     }
     setImages([])
     setResult(null)
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
-    if (e.dataTransfer.files.length > 0) {
-      addFiles(e.dataTransfer.files)
-    }
   }
 
   async function handleImport() {
@@ -198,43 +186,13 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
         </CardContent>
       </Card>
 
-      {/* Drop zone */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        accept="image/jpeg,image/png,image/webp,image/heic"
-        onChange={(e) => {
-          if (e.target.files) addFiles(e.target.files)
-          e.target.value = "" // reset so same files can be re-selected
-        }}
-        className="hidden"
-      />
-
+      {/* Drop zone — the shared upload surface, downscales every file (A3). */}
       {!importing && (
-        <div
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-          onDragEnter={(e) => { e.preventDefault(); setIsDragging(true) }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={cn(
-            "flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors",
-            isDragging
-              ? "border-primary bg-primary/5"
-              : "border-border hover:border-primary/50 hover:bg-muted/30"
-          )}
-        >
-          <Images className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
-          <div className="text-center">
-            <p className="text-sm font-medium">
-              {isDragging ? "Drop images here" : "Drag & drop watch photos here"}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              or click to browse · JPEG, PNG, WebP, HEIC · max 10MB each
-            </p>
-          </div>
-        </div>
+        <PhotoDrop
+          multiple
+          onFiles={addFiles}
+          label={<>Drag &amp; drop watch photos here, or <span className="font-medium">browse</span></>}
+        />
       )}
 
       {/* Preview grid */}
@@ -275,15 +233,6 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
                 </div>
               ))}
 
-              {/* Add more button */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-border text-md text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/30"
-                title="Add more images"
-              >
-                +
-              </button>
             </div>
           </CardContent>
         </Card>

@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { deleteWatchPhoto, setCoverPhoto, uploadWatchPhoto } from "@/lib/actions/photo-actions"
+import { downscaleImage } from "@/lib/images"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { WatchPhoto } from "@/lib/types/watch"
@@ -52,9 +53,11 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
 
   function upload(file: File | undefined | null) {
     if (!file) return
-    const formData = new FormData()
-    formData.set("photo", file)
     startTransition(async () => {
+      // Every upload path downscales client-side (A3).
+      const prepared = await downscaleImage(file)
+      const formData = new FormData()
+      formData.set("photo", prepared)
       try {
         const result = await uploadWatchPhoto(watchId, formData)
         if (result.error) toast.error(result.error)

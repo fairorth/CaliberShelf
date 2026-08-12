@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { uploadWatchPhoto } from "@/lib/actions/photo-actions"
+import { downscaleImage } from "@/lib/images"
 import { toast } from "sonner"
 import type { WatchWithCover } from "@/lib/types/watch"
 
@@ -29,12 +30,15 @@ export function QuickCapture({ watches }: QuickCaptureProps) {
   const [isPending, startTransition] = useTransition()
   const [uploadedWatchId, setUploadedWatchId] = useState<string | null>(null)
 
-  function handleFileCapture(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileCapture(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    setCapturedFile(file)
-    setPreviewUrl(URL.createObjectURL(file))
+    // Every upload path downscales client-side (A3). The full PhotoDrop
+    // component lands here with the watch-first rework (D3, Phase 3).
+    const prepared = await downscaleImage(file)
+    setCapturedFile(prepared)
+    setPreviewUrl(URL.createObjectURL(prepared))
     setStep("select")
   }
 

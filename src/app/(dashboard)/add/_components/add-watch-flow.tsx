@@ -1,9 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react"
+import { useRef, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,8 +13,8 @@ import {
   SelectTrigger,
 } from "@/components/ui/select"
 import { BrandCombobox } from "@/components/brand-combobox"
+import { PhotoDrop } from "@/components/photo-drop"
 import { createWatchWithPhoto } from "@/lib/actions/watch-actions"
-import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import type { Brand, Category } from "@/lib/types/watch"
 
@@ -24,66 +23,18 @@ interface AddWatchFlowProps {
   categories: Category[]
 }
 
-const ACCEPT = "image/jpeg,image/png,image/webp,image/heic"
-
 function formatSize(bytes: number): string {
   const mb = bytes / 1024 / 1024
   return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
 }
 
-/**
- * Downscale a captured/selected image in the browser before upload: caps the
- * long edge at 2000px and re-encodes to JPEG. This keeps phone-camera photos
- * (large HEIC/48MP JPEGs) well under the server-action body limit and the
- * storage size cap, and converts HEIC→JPEG so the thumbnail step works too.
- * Falls back to the original file if the image can't be decoded (e.g. HEIC on
- * a browser that can't render it).
- */
-async function downscaleImage(file: File, maxEdge = 2000, quality = 0.85): Promise<File> {
-  try {
-    const url = URL.createObjectURL(file)
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const el = new Image()
-      el.onload = () => resolve(el)
-      el.onerror = reject
-      el.src = url
-    })
-    URL.revokeObjectURL(url)
-
-    const longest = Math.max(img.naturalWidth, img.naturalHeight)
-    const scale = longest > maxEdge ? maxEdge / longest : 1
-    // Skip work only when it's already a small JPEG.
-    if (scale === 1 && file.type === "image/jpeg") return file
-
-    const canvas = document.createElement("canvas")
-    canvas.width = Math.round(img.naturalWidth * scale)
-    canvas.height = Math.round(img.naturalHeight * scale)
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return file
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", quality)
-    )
-    if (!blob) return file
-
-    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg"
-    return new File([blob], name, { type: "image/jpeg" })
-  } catch {
-    return file
-  }
-}
-
 export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
   const router = useRouter()
-  const fileInputRef = useRef<HTMLInputElement>(null)
   // Which CTA was pressed — read by the form action to choose the redirect.
   const destRef = useRef<"view" | "another">("view")
 
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [dragging, setDragging] = useState(false)
-  const [processing, setProcessing] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState("")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -91,47 +42,20 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
   // the comboboxes' internal state, which form.reset() can't reach).
   const [formKey, setFormKey] = useState(0)
 
-  const attachFile = useCallback(async (f: File | undefined | null) => {
+  // PhotoDrop delivers the file already downscaled (A3).
+  function attachFile(f: File | undefined) {
     if (!f) return
-    setProcessing(true)
-    const prepared = await downscaleImage(f)
-    setFile(prepared)
+    setFile(f)
     setPreviewUrl((old) => {
       if (old) URL.revokeObjectURL(old)
-      return URL.createObjectURL(prepared)
+      return URL.createObjectURL(f)
     })
-    setProcessing(false)
-  }, [])
-
-  // Let a copied image (e.g. from a web page, for wish-list watches) be pasted
-  // anywhere on the page. Only image pastes are intercepted — text pastes into
-  // the Brand/Model inputs behave normally.
-  useEffect(() => {
-    function onPaste(e: ClipboardEvent) {
-      const item = Array.from(e.clipboardData?.items ?? []).find((i) =>
-        i.type.startsWith("image/")
-      )
-      const pasted = item?.getAsFile()
-      if (pasted) {
-        e.preventDefault()
-        attachFile(pasted)
-      }
-    }
-    window.addEventListener("paste", onPaste)
-    return () => window.removeEventListener("paste", onPaste)
-  }, [attachFile])
+  }
 
   function removeFile() {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setFile(null)
     setPreviewUrl(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setDragging(false)
-    attachFile(e.dataTransfer.files?.[0])
   }
 
   function handleSubmit(formData: FormData) {
@@ -192,13 +116,6 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
 
       <form key={formKey} action={handleSubmit}>
         <input type="hidden" name="category_id" value={selectedCategoryId} />
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ACCEPT}
-          onChange={(e) => attachFile(e.target.files?.[0])}
-          className="hidden"
-        />
 
         <div className="rounded-xl border border-border bg-card p-6">
           {/* Photo — optional */}
@@ -225,36 +142,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
               </Button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => {
-                e.preventDefault()
-                setDragging(true)
-              }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={handleDrop}
-              className={cn(
-                "flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-5 py-7 text-center transition-colors hover:border-brass/50",
-                dragging && "border-brass/60"
-              )}
-            >
-              <span className="grid h-11 w-11 place-items-center rounded-lg bg-muted text-muted-foreground">
-                <Upload className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <span className="text-sm text-foreground sm:text-sm">
-                {processing ? (
-                  "Optimizing photo…"
-                ) : (
-                  <>
-                    <span className="font-medium">Browse</span>, drag, or paste a photo here
-                  </>
-                )}
-              </span>
-              <span className="font-mono text-2xs text-muted-foreground">
-                JPG, PNG, HEIC or WebP
-              </span>
-            </button>
+            <PhotoDrop paste onFiles={([f]) => attachFile(f)} disabled={isPending} />
           )}
 
           {/* Brand */}
@@ -369,7 +257,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
           <Button
             type="submit"
             size="lg"
-            disabled={isPending || processing}
+            disabled={isPending}
             onClick={() => (destRef.current = "view")}
             className="bg-brass text-brass-foreground hover:bg-brass/90"
           >
@@ -379,7 +267,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
             type="submit"
             size="lg"
             variant="ghost"
-            disabled={isPending || processing}
+            disabled={isPending}
             onClick={() => (destRef.current = "another")}
             className="text-muted-foreground hover:text-foreground"
           >
