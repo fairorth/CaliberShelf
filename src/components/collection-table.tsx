@@ -159,7 +159,7 @@ function SortableHeader({
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          "flex items-center gap-1 truncate text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground/80 transition-colors hover:text-foreground",
+          "flex items-center gap-1 truncate text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground transition-colors hover:text-foreground",
           isActive && "text-foreground",
           alignRight ? "w-full justify-end" : "text-left"
         )}
@@ -389,7 +389,7 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
             </colgroup>
             <TableHeader>
               <TableRow>
-                <TableHead className="relative text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground/80">
+                <TableHead className="relative text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                   Photo
                   <ResizeHandle onPointerDown={(e) => handleResizeStart(e, "photo")} />
                 </TableHead>

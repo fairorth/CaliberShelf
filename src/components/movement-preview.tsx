@@ -46,7 +46,7 @@ export function MovementPreview({ movement }: MovementPreviewProps) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <span className="inline-flex items-baseline gap-1 text-xs">
-      <span className="text-muted-foreground/70">{label}</span>
+      <span className="text-muted-foreground">{label}</span>
       <span className="font-mono font-medium text-foreground/90">{value}</span>
     </span>
   )

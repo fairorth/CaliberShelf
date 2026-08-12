@@ -74,7 +74,7 @@ function Kpi({ label, value, hint }: { label: string; value: string; hint?: stri
       <CardContent className="pt-5">
         <div className="text-md font-semibold tabular-nums">{value}</div>
         <div className="mt-0.5 text-sm text-muted-foreground">{label}</div>
-        {hint && <div className="mt-1 text-xs text-muted-foreground/70">{hint}</div>}
+        {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
       </CardContent>
     </Card>
   )

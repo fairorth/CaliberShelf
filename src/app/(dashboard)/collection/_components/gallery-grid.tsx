@@ -126,7 +126,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
             {watch.box && (
               <p
                 title={`Stored in ${watch.box}`}
-                className="mt-1 truncate font-mono text-2xs uppercase tracking-[0.06em] text-muted-foreground/70"
+                className="mt-1 truncate font-mono text-2xs uppercase tracking-[0.06em] text-muted-foreground"
               >
                 <Archive className="h-3 w-3" aria-hidden="true" /> {watch.box}
               </p>
@@ -136,7 +136,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
                 {/* Caliber name wraps up to 3 lines (then ellipsis) so long
                     movement names aren't clipped to a few characters when the
                     price shares the row. */}
-                <span className="min-w-0 flex-1 font-mono text-2xs leading-snug text-muted-foreground/80 [overflow-wrap:anywhere] line-clamp-3">
+                <span className="min-w-0 flex-1 font-mono text-2xs leading-snug text-muted-foreground [overflow-wrap:anywhere] line-clamp-3">
                   {caliberLine ?? ""}
                 </span>
                 {priceLabel && (

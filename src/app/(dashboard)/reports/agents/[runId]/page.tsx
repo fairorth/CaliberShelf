@@ -50,7 +50,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="font-mono text-sm tabular-nums">{value}</div>
-      <div className="text-2xs uppercase tracking-wide text-muted-foreground/70">{label}</div>
+      <div className="text-2xs uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
   )
 }

@@ -44,7 +44,7 @@ function StatusBadge({ status }: { status: GuideEntryDisplayStatus }) {
       return <WishlistBadge />
     case "passed":
       return (
-        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-muted-foreground/60">
+        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
           Passed
         </span>
       )
@@ -180,7 +180,7 @@ export default async function GuideDetailPage({
                         <p className="mt-0.5 text-xs text-muted-foreground">{e.historical_role}</p>
                       )}
                       {e.recommended_variant && status !== "owned" && (
-                        <p className="mt-0.5 text-2xs italic text-muted-foreground/80">
+                        <p className="mt-0.5 text-2xs italic text-muted-foreground">
                           {e.recommended_variant}
                         </p>
                       )}

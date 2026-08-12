@@ -193,7 +193,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
         <div className="rounded-xl border border-border bg-card p-6">
           {/* Photo — optional */}
           <Label className="mb-2.5 block text-xs text-muted-foreground">
-            Photo <span className="font-normal text-muted-foreground/70">— optional</span>
+            Photo <span className="font-normal text-muted-foreground">— optional</span>
           </Label>
 
           {file ? (
@@ -305,7 +305,7 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
           <div className="mt-[18px] space-y-2">
             <Label htmlFor="purchase_price">
               Purchase price{" "}
-              <span className="font-normal text-muted-foreground/70">— optional</span>
+              <span className="font-normal text-muted-foreground">— optional</span>
             </Label>
             <div className="relative">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">

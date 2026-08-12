@@ -226,7 +226,7 @@ export function TimegrapherPanel({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/60 text-left text-2xs font-bold uppercase tracking-widest text-muted-foreground/60">
+                <tr className="border-b border-border/60 text-left text-2xs font-bold uppercase tracking-widest text-muted-foreground">
                   <th className="py-2 pr-3 font-bold">Date</th>
                   <th className="py-2 pr-3 text-right font-bold">Rate</th>
                   <th className="py-2 pr-3 text-right font-bold">Ampl.</th>
@@ -259,7 +259,7 @@ export function TimegrapherPanel({
                         type="button"
                         onClick={() => handleDelete(run.id)}
                         disabled={isDeleting}
-                        className="text-xs text-muted-foreground/50 opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 disabled:opacity-30"
+                        className="text-xs text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 disabled:opacity-30"
                         title="Delete run"
                       >
                         <X className="h-4 w-4" aria-hidden="true" />

@@ -87,7 +87,7 @@ function GalleryTile({
           maxLength={INSPIRATION_NOTE_MAX}
           placeholder="Add a note…"
           disabled={disabled || isPending}
-          className="h-7 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 hover:border-border focus:border-ring"
+          className="h-7 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground hover:border-border focus:border-ring"
         />
         <button
           type="button"

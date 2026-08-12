@@ -817,8 +817,8 @@ export function WatchForm({
           )}
           {/* Movement subsection */}
           <div className="flex items-center gap-2 pt-1">
-            <Cog className="h-4 w-4 text-muted-foreground/60" aria-hidden="true" />
-            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground/60">Movement</h4>
+            <Cog className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">Movement</h4>
             <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
           <div className="space-y-2">
@@ -840,8 +840,8 @@ export function WatchForm({
 
           {/* Case subsection */}
           <div className="flex items-center gap-2">
-            <Ruler className="h-4 w-4 text-muted-foreground/60" aria-hidden="true" />
-            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground/60">Case</h4>
+            <Ruler className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">Case</h4>
             <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
           {/* Selects submit via hidden inputs (controlled value + name prop
@@ -1042,8 +1042,8 @@ export function WatchForm({
 
           {/* Complications subsection */}
           <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-muted-foreground/60" aria-hidden="true" />
-            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground/60">Complications</h4>
+            <Layers className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">Complications</h4>
             <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
           </div>
           <div className="space-y-3">
