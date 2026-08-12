@@ -2,7 +2,7 @@
 
 import { Archive, ArrowDown, ArrowUp, ChevronsUpDown, CircleDollarSign, Watch } from "lucide-react"
 
-import { useEffect, useRef, useState, useMemo } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -23,6 +23,7 @@ import type { WatchWithCover, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
 
 interface CollectionTableProps {
+  /** Already sorted by the collection view — the single sort owner (B3). */
   watches: WatchWithCover[]
   /** Show each watch's purchase price (driven by the Config → Settings toggle). */
   showCost?: boolean
@@ -30,6 +31,11 @@ interface CollectionTableProps {
   guideNames?: Record<string, string>
   /** Brand cell click → filter by that brand (mirrors the category link). */
   onBrandClick?: (brandId: string) => void
+  /** Current sort, owned by the collection view (B3). */
+  sortKey: TableSortKey | null
+  sortDir: TableSortDir
+  /** Header click — the view toggles direction / switches key. */
+  onSortChange: (key: TableSortKey) => void
 }
 
 function priceLabel(watch: WatchWithCover): string {
@@ -46,44 +52,21 @@ function movementTypeLabel(watch: WatchWithCover): string {
 }
 
 // ── Sorting ────────────────────────────────────────────────────────
+// The table renders headers only; sort state and the actual ordering live
+// in the collection view — one sort owner (B3).
 
-type SortKey = "category" | "brand" | "model" | "nickname" | "reference" | "movementType" | "caliber" | "box" | "wearCount" | "price"
-type SortDir = "asc" | "desc"
-
-const SORT_KEYS: SortKey[] = ["category", "brand", "model", "nickname", "reference", "movementType", "caliber", "box", "wearCount", "price"]
-
-/** Header-click sort persists per device so it survives an edit round-trip.
- *  The collection view clears this key when the toolbar Sort dropdown changes,
- *  so an explicit dropdown choice wins on the next mount. */
-export const TABLE_SORT_KEY = "collection-table-sort"
-
-function getSortValue(watch: WatchWithCover, key: SortKey): string {
-  switch (key) {
-    case "category":
-      return (watch.category?.name ?? "zzz").toLowerCase()
-    case "brand":
-      return watch.brand.name.toLowerCase()
-    case "model":
-      return watch.model.toLowerCase()
-    case "nickname":
-      return watch.nickname ? watch.nickname.toLowerCase() : "zzz" // push empty to bottom
-    case "reference":
-      return watch.reference_number ? watch.reference_number.toLowerCase() : "zzz"
-    case "movementType":
-      return watch.movement
-        ? (watch.movement.caliber_type ? (caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type) : "—").toLowerCase()
-        : "zzz" // push empty to bottom
-    case "box":
-      return watch.box ? watch.box.toLowerCase() : "zzz" // unassigned to the bottom
-    case "caliber":
-      return watch.movement
-        ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim().toLowerCase()
-        : "zzz"
-    case "wearCount":
-    case "price":
-      return "" // these sort numerically in the comparator below
-  }
-}
+export type TableSortKey =
+  | "category"
+  | "brand"
+  | "model"
+  | "nickname"
+  | "reference"
+  | "movementType"
+  | "caliber"
+  | "box"
+  | "wearCount"
+  | "price"
+export type TableSortDir = "asc" | "desc"
 
 // ── Column widths (resizable, persisted) ───────────────────────────
 
@@ -164,11 +147,11 @@ function SortableHeader({
   alignRight,
 }: {
   label: string
-  sortKey: SortKey
+  sortKey: TableSortKey
   colId: ColumnId
-  currentKey: SortKey | null
-  currentDir: SortDir
-  onSort: (key: SortKey) => void
+  currentKey: TableSortKey | null
+  currentDir: TableSortDir
+  onSort: (key: TableSortKey) => void
   onResizeStart: (e: React.PointerEvent, col: ColumnId) => void
   onKeyResize: (col: ColumnId, delta: number) => void
   className?: string
@@ -268,27 +251,18 @@ function HoverPhoto({
 
 // ── Main Component ─────────────────────────────────────────────────
 
-export function CollectionTable({ watches, showCost = false, guideNames, onBrandClick }: CollectionTableProps) {
-  const [sortKey, setSortKey] = useState<SortKey | null>(null)
-  const [sortDir, setSortDir] = useState<SortDir>("asc")
-
+export function CollectionTable({
+  watches,
+  showCost = false,
+  guideNames,
+  onBrandClick,
+  sortKey,
+  sortDir,
+  onSortChange,
+}: CollectionTableProps) {
   // Selected row (click anywhere in a row that isn't a link/button). Distinct
   // from hover — the future hook for bulk actions (B4).
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
-
-  // Restore the header sort (localStorage is unreachable during SSR).
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(TABLE_SORT_KEY)
-      if (!saved) return
-      const parsed = JSON.parse(saved) as { key?: SortKey; dir?: SortDir }
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (parsed.key && SORT_KEYS.includes(parsed.key)) setSortKey(parsed.key)
-      if (parsed.dir === "asc" || parsed.dir === "desc") setSortDir(parsed.dir)
-    } catch {
-      // ignore malformed stored value
-    }
-  }, [])
 
   // Column widths — user-resizable via header drag handles, persisted per device.
   const [colWidths, setColWidths] = useState<Record<ColumnId, number>>(DEFAULT_WIDTHS)
@@ -367,44 +341,9 @@ export function CollectionTable({ watches, showCost = false, guideNames, onBrand
     ...(showCost ? (["price"] as ColumnId[]) : []),
   ]
 
-  // Sort watches
-  const sorted = useMemo(() => {
-    if (!sortKey) return watches
-    return [...watches].sort((a, b) => {
-      if (sortKey === "price") {
-        const pa = a.purchase_price_cents
-        const pb = b.purchase_price_cents
-        // Watches without a price always sort to the bottom.
-        if (pa === null && pb === null) return 0
-        if (pa === null) return 1
-        if (pb === null) return -1
-        return sortDir === "asc" ? pa - pb : pb - pa
-      }
-      if (sortKey === "wearCount") {
-        const wa = a.wear_count ?? 0
-        const wb = b.wear_count ?? 0
-        return sortDir === "asc" ? wa - wb : wb - wa
-      }
-      const va = getSortValue(a, sortKey)
-      const vb = getSortValue(b, sortKey)
-      const cmp = va.localeCompare(vb)
-      return sortDir === "asc" ? cmp : -cmp
-    })
-  }, [watches, sortKey, sortDir])
-
-  function handleSort(key: SortKey) {
-    let nextKey = key
-    let nextDir: SortDir = "asc"
-    if (sortKey === key) {
-      nextKey = sortKey
-      nextDir = sortDir === "asc" ? "desc" : "asc"
-      setSortDir(nextDir)
-    } else {
-      setSortKey(key)
-      setSortDir("asc")
-    }
-    localStorage.setItem(TABLE_SORT_KEY, JSON.stringify({ key: nextKey, dir: nextDir }))
-  }
+  // Sorting happens in the collection view (B3) — render as given.
+  const sorted = watches
+  const handleSort = onSortChange
 
   if (watches.length === 0) {
     return (

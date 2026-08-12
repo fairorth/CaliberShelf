@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowDown, ArrowUp, LayoutGrid, Table as TableIcon } from "lucide-react"
-import { CollectionTable, TABLE_SORT_KEY } from "@/components/collection-table"
+import { CollectionTable, type TableSortKey } from "@/components/collection-table"
 import { SearchInput } from "@/components/search-input"
 import {
   Select,
@@ -52,9 +52,23 @@ const TILE_DENSITIES = [
   { label: "L", title: "Large", size: 280 },
 ] as const
 
-type SortKey = "default" | "brand" | "price" | "purchaseDate" | "caseDiameter" | "wearCount"
+// One sort owner (B3): a single {key, dir} lives here and covers both the
+// tile-view dropdown keys and every table header key.
+type SortKey = "default" | "purchaseDate" | "caseDiameter" | TableSortKey
 type SortDir = "asc" | "desc"
 
+// The tile-view dropdown offers this curated subset…
+const DROPDOWN_SORT_KEYS: SortKey[] = [
+  "default",
+  "brand",
+  "price",
+  "purchaseDate",
+  "caseDiameter",
+  "wearCount",
+]
+
+// …while labels cover every key so the trigger stays readable even when a
+// table-header sort carries over into tile view.
 const SORT_LABELS: Record<SortKey, string> = {
   default: "Sort: Default",
   brand: "Sort: Brand",
@@ -62,7 +76,16 @@ const SORT_LABELS: Record<SortKey, string> = {
   purchaseDate: "Sort: Purchase date",
   caseDiameter: "Sort: Case size",
   wearCount: "Sort: Wear count",
+  category: "Sort: Category",
+  model: "Sort: Model",
+  nickname: "Sort: Nickname",
+  reference: "Sort: Reference",
+  movementType: "Sort: Movement type",
+  caliber: "Sort: Caliber",
+  box: "Sort: Box",
 }
+
+const ALL_SORT_KEYS = Object.keys(SORT_LABELS) as SortKey[]
 
 /** Labelled mono stat for the toolbar's identity band (B1). */
 function Stat({
@@ -164,6 +187,22 @@ function sortValue(w: WatchWithCover, key: SortKey): string | number | null {
       return w.case_diameter_mm
     case "wearCount":
       return w.wear_count ?? 0
+    case "category":
+      return w.category?.name.toLowerCase() ?? null
+    case "model":
+      return w.model.toLowerCase()
+    case "nickname":
+      return w.nickname?.toLowerCase() ?? null
+    case "reference":
+      return w.reference_number?.toLowerCase() ?? null
+    case "movementType":
+      return w.movement?.caliber_type?.toLowerCase() ?? null
+    case "caliber":
+      return w.movement
+        ? `${w.movement.manufacturer ?? ""} ${w.movement.caliber_name}`.trim().toLowerCase()
+        : null
+    case "box":
+      return w.box?.toLowerCase() ?? null
     default:
       return null
   }
@@ -227,9 +266,15 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
       const savedSort = localStorage.getItem(SORT_KEY)
       if (savedSort) {
         const parsed = JSON.parse(savedSort) as { key?: SortKey; dir?: SortDir }
-        if (parsed.key && parsed.key in SORT_LABELS) setSortKey(parsed.key)
+        if (parsed.key && ALL_SORT_KEYS.includes(parsed.key)) setSortKey(parsed.key)
         if (parsed.dir === "asc" || parsed.dir === "desc") setSortDir(parsed.dir)
       }
+    } catch {
+      // ignore malformed stored value
+    }
+    // One sort owner now (B3) — drop the legacy table-sort key.
+    try {
+      localStorage.removeItem("collection-table-sort")
     } catch {
       // ignore malformed stored value
     }
@@ -270,16 +315,24 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   function updateSortKey(key: SortKey) {
     setSortKey(key)
     persistSort(key, sortDir)
-    // An explicit dropdown choice discards any saved header-click sort, which
-    // would otherwise override it again on the next mount.
-    localStorage.removeItem(TABLE_SORT_KEY)
   }
 
   function toggleSortDir() {
     const next = sortDir === "asc" ? "desc" : "asc"
     setSortDir(next)
     persistSort(sortKey, next)
-    localStorage.removeItem(TABLE_SORT_KEY)
+  }
+
+  // Table headers are the only sort control in table view (B3): clicking a
+  // header switches to that key, or flips direction when already active.
+  function handleTableSort(key: TableSortKey) {
+    if (sortKey === key) {
+      toggleSortDir()
+    } else {
+      setSortKey(key)
+      setSortDir("asc")
+      persistSort(key, "asc")
+    }
   }
 
   // URL is the source of truth for the category filter.
@@ -457,36 +510,38 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           matchCount={afterFilters.length}
         />
 
-        {/* Sort */}
-        <div className="flex items-center gap-1">
-          <Select
-            value={sortKey}
-            onValueChange={(val) => {
-              if (val) updateSortKey(val as SortKey)
-            }}
-          >
-            <SelectTrigger aria-label="Sort by" className="h-9 w-[180px]">
-              <span className="text-sm">{SORT_LABELS[sortKey]}</span>
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
-                <SelectItem key={k} value={k}>
-                  {SORT_LABELS[k]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <button
-            type="button"
-            onClick={toggleSortDir}
-            disabled={sortKey === "default"}
-            aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
-            title={sortDir === "asc" ? "Ascending" : "Descending"}
-            className="flex h-9 w-9 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-          >
-            {sortDir === "asc" ? <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" /> : <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />}
-          </button>
-        </div>
+        {/* Sort — only in tile view; table headers own sorting there (B3). */}
+        {view === "gallery" && (
+          <div className="flex items-center gap-1">
+            <Select
+              value={sortKey}
+              onValueChange={(val) => {
+                if (val) updateSortKey(val as SortKey)
+              }}
+            >
+              <SelectTrigger aria-label="Sort by" className="h-9 w-[180px]">
+                <span className="text-sm">{SORT_LABELS[sortKey]}</span>
+              </SelectTrigger>
+              <SelectContent>
+                {DROPDOWN_SORT_KEYS.map((k) => (
+                  <SelectItem key={k} value={k}>
+                    {SORT_LABELS[k]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <button
+              type="button"
+              onClick={toggleSortDir}
+              disabled={sortKey === "default"}
+              aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
+              title={sortDir === "asc" ? "Ascending" : "Descending"}
+              className="flex h-9 w-9 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+            >
+              {sortDir === "asc" ? <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" /> : <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />}
+            </button>
+          </div>
+        )}
 
         {/* View controls pinned right */}
         <div className="ml-auto flex flex-wrap items-center gap-3">
@@ -585,6 +640,9 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           showCost={showCost}
           guideNames={guideNames}
           onBrandClick={(brandId) => updateFilters({ ...filters, brandId })}
+          sortKey={sortKey === "default" || sortKey === "purchaseDate" || sortKey === "caseDiameter" ? null : sortKey}
+          sortDir={sortDir}
+          onSortChange={handleTableSort}
         />
       ) : (
         <GalleryGrid watches={displayed} itemSize={size} showCost={showCost} guideNames={guideNames} />
