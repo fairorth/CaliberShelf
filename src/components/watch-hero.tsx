@@ -131,6 +131,26 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
     setDwellSeconds(readHeroDwellSeconds())
   }, [])
 
+  // Hover pauses the auto-advance (D4); a ref so the interval callback reads
+  // the live value without re-creating the timer.
+  const pausedRef = useRef(false)
+  const [paused, setPaused] = useState(false)
+  useEffect(() => {
+    pausedRef.current = paused
+  }, [paused])
+
+  // prefers-reduced-motion freezes the stage entirely (D4): no auto-advance,
+  // no ring sweep, no cross-fade. Read after mount (SSR can't know).
+  const [reducedMotion, setReducedMotion] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to a client-only media query
+    setReducedMotion(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
   // Read the live list length from a ref so the swap interval only re-creates on
   // a genuine dwell change — never stacked by re-renders / Strict Mode / Fast
   // Refresh, which would swap too fast.
@@ -140,12 +160,19 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
   }, [order.length])
 
   useEffect(() => {
+    if (reducedMotion) return
     const id = setInterval(() => {
       const n = orderLenRef.current
-      if (n > 1) setIdx((i) => (i + 1) % n)
+      if (n > 1 && !pausedRef.current) setIdx((i) => (i + 1) % n)
     }, dwellSeconds * 1000)
     return () => clearInterval(id)
-  }, [dwellSeconds])
+  }, [dwellSeconds, reducedMotion])
+
+  // Manual stepping (D4): arrow keys while the stage has focus.
+  function step(delta: number) {
+    const n = orderLenRef.current
+    if (n > 1) setIdx((i) => (i + delta + n) % n)
+  }
 
   const current = order.length ? order[idx % order.length] : null
 
@@ -175,6 +202,19 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
   const hourPos = now ? polar((now.getHours() % 12) * 30 + now.getMinutes() * 0.5, BEZEL_R) : null
   const minPos = now ? polar(now.getMinutes() * 6 + now.getSeconds() * 0.1, BEZEL_R) : null
 
+  // One line of context the stage was missing (D4): days since last worn.
+  // Computed only after the clock mounts, so SSR and hydration agree.
+  const daysSinceWorn =
+    now && current?.last_worn_date
+      ? Math.max(
+          0,
+          Math.floor(
+            (now.getTime() - new Date(current.last_worn_date + "T00:00:00").getTime()) /
+              86400000
+          )
+        )
+      : null
+
   if (!current) {
     return (
       <div className="flex flex-col items-center">
@@ -187,8 +227,27 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
 
   return (
     <div className="flex flex-col items-center">
-      {/* Case + lugs + crown */}
-      <div className="relative mx-auto aspect-square w-[88vw] max-w-[560px]">
+      {/* Case + lugs + crown. Hover pauses the auto-advance; arrow keys step
+          manually (D4). */}
+      <div
+        role="group"
+        aria-label="Featured watch — hover to pause, arrow keys to step"
+        tabIndex={0}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={() => setPaused(false)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault()
+            step(-1)
+          } else if (e.key === "ArrowRight") {
+            e.preventDefault()
+            step(1)
+          }
+        }}
+        className="relative mx-auto aspect-square w-[88vw] max-w-[560px] rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+      >
         <Lug position="top" />
         <Lug position="bottom" />
 
@@ -232,7 +291,7 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
         >
           {/* Dial interior — the featured watch photo */}
           <Link
-            href={`/watch/${current.id}/edit`}
+            href={`/watch/${current.id}`}
             aria-label={`${current.brand.name} ${current.model}`}
             className="group absolute overflow-hidden rounded-full"
             style={{
@@ -244,7 +303,7 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
 
             {/* Outgoing (previous) photo sits underneath the incoming fade. */}
             {previous && previous.id !== current.id && <PhotoLayer key={`prev-${previous.id}`} watch={previous} />}
-            <PhotoLayer key={`cur-${current.id}`} watch={current} fade />
+            <PhotoLayer key={`cur-${current.id}`} watch={current} fade={!reducedMotion} />
 
             {/* Domed-crystal reflection + inner vignette */}
             <div
@@ -277,7 +336,7 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
                 // Empty until the clock mounts; the animation then overrides this.
                 strokeDashoffset={RING_LEN}
                 style={
-                  ringDelay != null
+                  ringDelay != null && !reducedMotion
                     ? {
                         animation: `cshero-ring ${RING_SECONDS}s linear infinite`,
                         animationDelay: `-${ringDelay}s`,
@@ -307,7 +366,11 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
       </div>
 
       {/* Caption — "now showing" */}
-      <div key={current.id} className="mt-[88px] text-center sm:mt-[112px]" style={{ animation: "csfade .5s ease" }}>
+      <div
+        key={current.id}
+        className="mt-[88px] text-center sm:mt-[112px]"
+        style={reducedMotion ? undefined : { animation: "csfade .5s ease" }}
+      >
         <div className="font-display text-md font-bold leading-[1.15]">
           {current.brand.name}
         </div>
@@ -317,7 +380,11 @@ export function WatchHero({ watches, seed, stats }: WatchHeroProps) {
         {metaLine(current) && (
           <div className="mt-3 font-mono text-xs text-muted-foreground">{metaLine(current)}</div>
         )}
-        <div className="mt-1.5 font-mono text-xs text-muted-foreground">{wearLine(current)}</div>
+        <div className="mt-1.5 font-mono text-xs text-muted-foreground">
+          {wearLine(current)}
+          {daysSinceWorn != null &&
+            ` · ${daysSinceWorn === 0 ? "today" : `${daysSinceWorn} day${daysSinceWorn === 1 ? "" : "s"} ago`}`}
+        </div>
         <Link
           href={`/watch/${current.id}/edit`}
           className="mt-5 inline-block rounded-[10px] border border-primary px-5 py-2 text-xs text-primary transition-colors hover:bg-primary/10"

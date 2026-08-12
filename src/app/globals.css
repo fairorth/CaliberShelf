@@ -332,4 +332,14 @@ select optgroup {
   .dial-sunburst {
     background: oklch(0.4 0.08 238);
   }
+  /* Freeze everything the design system animates (D4): the hero ring sweep,
+     caption/photo cross-fades, and tile hover scales. The hero's JS swap
+     interval is also disabled in-component. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
