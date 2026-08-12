@@ -25,7 +25,7 @@ export function GuideSpine({ entries }: { entries: GuideEntryWithWatch[] }) {
 
   return (
     <div className="space-y-2">
-      <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card/50 py-2">
+      <div className="overflow-x-auto rounded-xl border border-border/70 bg-card/50 py-2">
         <svg
           width={width}
           height={H}

@@ -104,7 +104,7 @@ export default async function AgentRunPage({
       </div>
 
       {/* Metrics */}
-      <Card className="max-w-3xl overflow-hidden rounded-2xl">
+      <Card className="max-w-3xl overflow-hidden rounded-xl">
         <CardContent className="grid grid-cols-2 gap-4 pt-6 sm:grid-cols-4">
           <Stat label="Duration" value={fmtDuration(run.duration_ms)} />
           <Stat
@@ -134,7 +134,7 @@ export default async function AgentRunPage({
       {run.notes && <p className="text-sm text-muted-foreground">{run.notes}</p>}
 
       {/* Audit trail */}
-      <Card className="overflow-hidden rounded-2xl">
+      <Card className="overflow-hidden rounded-xl">
         <CardHeader>
           <CardTitle className="text-sm">
             Audit trail{items.length > 0 ? ` · ${items.length} item${items.length === 1 ? "" : "s"}` : ""}

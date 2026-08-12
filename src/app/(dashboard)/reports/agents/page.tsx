@@ -65,7 +65,7 @@ function StatusBadge({ status, dryRun }: { status: AgentRun["status"]; dryRun: b
 
 function Kpi({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-xl">
       <CardContent className="pt-5">
         <div className="text-md font-semibold tabular-nums">{value}</div>
         <div className="mt-0.5 text-sm text-muted-foreground">{label}</div>
@@ -116,7 +116,7 @@ export default async function AgentReviewPage() {
           </div>
 
           {/* Per-agent rollup */}
-          <Card className="overflow-hidden rounded-2xl">
+          <Card className="overflow-hidden rounded-xl">
             <CardHeader>
               <CardTitle className="font-display text-md font-semibold">By agent</CardTitle>
             </CardHeader>
@@ -153,7 +153,7 @@ export default async function AgentReviewPage() {
           </Card>
 
           {/* Run history */}
-          <Card className="overflow-hidden rounded-2xl">
+          <Card className="overflow-hidden rounded-xl">
             <CardHeader>
               <CardTitle className="text-sm">Recent runs</CardTitle>
             </CardHeader>

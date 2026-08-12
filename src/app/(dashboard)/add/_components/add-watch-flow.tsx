@@ -189,15 +189,15 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
           className="hidden"
         />
 
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-xl border border-border bg-card p-6">
           {/* Photo — optional */}
           <Label className="mb-2.5 block text-xs text-muted-foreground">
             Photo <span className="font-normal text-muted-foreground/70">— optional</span>
           </Label>
 
           {file ? (
-            <div className="flex items-center gap-3.5 rounded-[13px] border border-border bg-white/[0.03] p-3.5">
-              <div className="relative h-[60px] w-[60px] shrink-0 overflow-hidden rounded-[10px] border border-border bg-muted">
+            <div className="flex items-center gap-3.5 rounded-xl border border-border bg-white/[0.03] p-3.5">
+              <div className="relative h-[60px] w-[60px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
                 {previewUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={previewUrl} alt="Selected" className="h-full w-full object-cover" />
@@ -224,11 +224,11 @@ export function AddWatchFlow({ brands, categories }: AddWatchFlowProps) {
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
               className={cn(
-                "flex w-full flex-col items-center gap-2 rounded-[13px] border border-dashed border-border bg-white/[0.02] px-5 py-7 text-center transition-colors hover:border-brass/50",
+                "flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-white/[0.02] px-5 py-7 text-center transition-colors hover:border-brass/50",
                 dragging && "border-brass/60"
               )}
             >
-              <span className="grid h-11 w-11 place-items-center rounded-[11px] bg-muted text-md text-muted-foreground">
+              <span className="grid h-11 w-11 place-items-center rounded-lg bg-muted text-md text-muted-foreground">
                 ⬆
               </span>
               <span className="text-sm text-foreground sm:text-sm">

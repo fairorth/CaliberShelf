@@ -26,7 +26,7 @@ export function CollapsibleReportGroup({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <Card className="overflow-hidden rounded-2xl">
+    <Card className="overflow-hidden rounded-xl">
       <CardHeader
         role="button"
         tabIndex={0}

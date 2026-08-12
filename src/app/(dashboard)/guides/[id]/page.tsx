@@ -116,7 +116,7 @@ export default async function GuideDetailPage({
 
       {/* High-value gaps */}
       {topGaps.length > 0 && (
-        <div className="max-w-2xl rounded-2xl border border-border bg-card px-4 py-3">
+        <div className="max-w-2xl rounded-xl border border-border bg-card px-4 py-3">
           <h2 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             High-value gaps to fill first
           </h2>

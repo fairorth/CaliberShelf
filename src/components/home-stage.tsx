@@ -58,7 +58,7 @@ export function HomeStage({ watches, seed, stats, displayBox }: HomeStageProps) 
         displayBox && displayBox.watches.length > 0 ? (
           <DisplayBoxHome box={displayBox} />
         ) : (
-          <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border px-6 py-10 text-center">
+          <div className="mx-auto max-w-md rounded-xl border border-dashed border-border px-6 py-10 text-center">
             <p className="text-sm text-muted-foreground">
               No display box yet. Head to the{" "}
               <Link href="/wear-log" className="font-medium text-primary underline">

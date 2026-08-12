@@ -36,7 +36,7 @@ function AttentionSection({
   emptyText: string
 }) {
   return (
-    <Card className="overflow-hidden rounded-2xl">
+    <Card className="overflow-hidden rounded-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2.5 font-display text-md font-semibold">
           <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-brass/15 text-sm">

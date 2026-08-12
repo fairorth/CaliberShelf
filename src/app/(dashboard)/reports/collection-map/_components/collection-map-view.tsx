@@ -53,7 +53,7 @@ function BarList({ bars, colored }: { bars: DistBar[]; colored?: boolean }) {
 
 function DistCard({ title, bars, colored }: { title: string; bars: DistBar[]; colored?: boolean }) {
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-xl">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
       </CardHeader>
@@ -296,7 +296,7 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
 
       {/* Gap / overload insights */}
       {map.insights.length > 0 && (
-        <Card className="overflow-hidden rounded-2xl">
+        <Card className="overflow-hidden rounded-xl">
           <CardHeader className="pb-2">
             <CardTitle className="font-display text-md font-semibold">What the map shows</CardTitle>
           </CardHeader>
@@ -314,7 +314,7 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
       )}
 
       {/* Size × Color matrix — the headline */}
-      <Card className="overflow-hidden rounded-2xl">
+      <Card className="overflow-hidden rounded-xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Size × dial color</CardTitle>
         </CardHeader>
@@ -338,7 +338,7 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
 
       {/* Scatters — widget-sized, two across */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <Card className="overflow-hidden rounded-2xl">
+        <Card className="overflow-hidden rounded-xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Diameter × thickness</CardTitle>
           </CardHeader>
@@ -349,7 +349,7 @@ export function CollectionMapView({ map }: { map: CollectionMap }) {
             </p>
           </CardContent>
         </Card>
-        <Card className="overflow-hidden rounded-2xl">
+        <Card className="overflow-hidden rounded-xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Price × category</CardTitle>
           </CardHeader>

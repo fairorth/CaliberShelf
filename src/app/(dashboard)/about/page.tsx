@@ -185,9 +185,9 @@ export default async function AboutPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-10 pb-16">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-border px-6 py-12 text-center sm:py-16">
+      <section className="relative overflow-hidden rounded-xl border border-border px-6 py-12 text-center sm:py-16">
         <div className="mx-auto mb-5 w-fit">
-          <CaliberShelfMark size={64} className="rounded-2xl" />
+          <CaliberShelfMark size={64} className="rounded-xl" />
         </div>
         <h1 className="font-display text-xl font-semibold tracking-tight">
           CaliberShelf
@@ -224,7 +224,7 @@ export default async function AboutPage() {
             {section.features.map((f) => (
               <div
                 key={f.title}
-                className="flex gap-3.5 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-brass/40"
+                className="flex gap-3.5 rounded-xl border border-border bg-card p-4 transition-colors hover:border-brass/40"
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-md">
                   {f.icon}
@@ -242,7 +242,7 @@ export default async function AboutPage() {
       ))}
 
       {/* Footer note */}
-      <section className="rounded-2xl border border-dashed border-border px-6 py-6 text-center">
+      <section className="rounded-xl border border-dashed border-border px-6 py-6 text-center">
         <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground">
           Built with care for the details: transparent methods over black-box scores, agents
           that flag rather than guess, and every cost shown. A collection, properly kept.

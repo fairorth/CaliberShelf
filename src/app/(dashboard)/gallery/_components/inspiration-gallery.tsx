@@ -53,7 +53,7 @@ function GalleryTile({
   }
 
   return (
-    <figure className="group mb-4 break-inside-avoid overflow-hidden rounded-[13px] border border-border bg-card">
+    <figure className="group mb-4 break-inside-avoid overflow-hidden rounded-xl border border-border bg-card">
       <button
         type="button"
         onClick={onOpen}
@@ -169,7 +169,7 @@ export function InspirationGallery({ images }: InspirationGalleryProps) {
       </div>
 
       {images.length === 0 && !preview ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-16 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
           <span className="text-5xl">📸</span>
           <h3 className="mt-4 text-md font-semibold">Nothing pinned yet</h3>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
@@ -180,7 +180,7 @@ export function InspirationGallery({ images }: InspirationGalleryProps) {
       ) : (
         <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
           {preview && (
-            <figure className="relative mb-4 break-inside-avoid overflow-hidden rounded-[13px] border">
+            <figure className="relative mb-4 break-inside-avoid overflow-hidden rounded-xl border">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={preview} alt="Upload preview" className="w-full opacity-50" />
               <div className="absolute inset-0 flex items-center justify-center">

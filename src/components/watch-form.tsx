@@ -78,7 +78,7 @@ const FIELD = "bg-[#1b212a] border-white/12 focus-visible:border-brass/55 focus-
 
 // Neutral spec card — identity comes from icon + title, not a colored edge
 // (E1: brass is never decoration).
-const CARD = "overflow-hidden rounded-2xl"
+const CARD = "overflow-hidden rounded-xl"
 const CARD_HEADER = ""
 const CARD_TITLE = "flex items-center gap-2.5 font-display text-md font-semibold"
 const CHIP = "flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground"

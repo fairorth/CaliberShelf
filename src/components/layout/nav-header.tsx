@@ -89,7 +89,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
       <div className="relative flex h-14 items-center justify-between px-4">
         {/* Centered Home / Collection segmented nav (desktop only — the
             hamburger covers navigation on mobile and the extra routes). */}
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-[11px] border border-border bg-white/[0.04] p-1 sm:flex">
+        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-lg border border-border bg-white/[0.04] p-1 sm:flex">
           <Link
             href="/dashboard"
             onClick={guardClick("/dashboard")}
@@ -147,7 +147,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             </svg>
           </button>
           <Link href="/dashboard" onClick={guardClick("/dashboard")} className="flex items-center gap-2">
-            <CaliberShelfMark size={26} className="rounded-[7px]" />
+            <CaliberShelfMark size={26} className="rounded-lg" />
             <span className="flex items-baseline gap-1.5">
               <span className="font-display text-md font-medium tracking-tight">
                 CaliberShelf
