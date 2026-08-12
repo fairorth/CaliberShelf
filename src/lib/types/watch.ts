@@ -133,6 +133,9 @@ export interface Watch {
   updated_at: string
 }
 
+// The five angle classes from docs/photo-lab.md (migration 00041).
+export type PhotoAngle = "flat" | "hero" | "profile" | "caseback" | "macro"
+
 // Database row type for watch_photos table
 export interface WatchPhoto {
   id: string
@@ -143,6 +146,10 @@ export interface WatchPhoto {
   display_order: number
   caption: string | null
   is_cover: boolean
+  /** Angle tag (00041) — set from the lightbox or Photo Lab Review. */
+  angle: PhotoAngle | null
+  /** Filmstrip order (00041); falls back to display_order when null. */
+  sort_order: number | null
   created_at: string
 }
 
@@ -266,6 +273,56 @@ export interface WearStats {
   neverWorn: WatchWithCover[]
   currentStreak: number
   longestStreak: number
+}
+
+// ── Photo Lab: scored frames (migrations 00040/00042) ───────────
+
+export type ScoreAngleClass =
+  | "flat_dial_on"
+  | "angled_hero"
+  | "side_profile"
+  | "caseback_clasp"
+  | "macro_detail"
+  | "other"
+
+export type ReviewState = "unreviewed" | "accepted" | "rejected"
+
+/** One scored capture-folder frame (photo-score.mjs → watch_image_scores). */
+export interface WatchImageScore {
+  id: string
+  watch_id: string
+  user_id: string
+  watch_photo_id: string | null
+  source_kind: "cr3" | "jpeg" | "heif" | "export"
+  rel_path: string
+  content_hash: string
+  stack_seq: number | null
+  stack_role: "source" | "composite" | "unstacked" | null
+  sharpness_roi: number | null
+  brightness: number | null
+  glare_fraction: number | null
+  phash: string | null
+  dup_group: number | null
+  dup_best: boolean
+  shot_card: string | null
+  card_pass: boolean | null
+  angle_class: ScoreAngleClass | null
+  ai_dial_focus: number | null
+  ai_framing: number | null
+  ai_reflections: number | null
+  ai_background: number | null
+  ai_lighting: number | null
+  ai_color: number | null
+  ai_detail: number | null
+  ai_primary_defect: string | null
+  ai_unusable: boolean
+  ai_model: string | null
+  composite_score: number | null
+  hero_for_class: boolean
+  scored_at: string | null
+  review_state: ReviewState
+  reviewed_at: string | null
+  created_at: string
 }
 
 // ── Agent execution audit (migration 00028) ─────────────────────

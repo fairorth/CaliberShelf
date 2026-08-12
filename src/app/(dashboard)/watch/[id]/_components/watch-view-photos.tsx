@@ -15,14 +15,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { deleteWatchPhoto, setCoverPhoto, uploadWatchPhoto } from "@/lib/actions/photo-actions"
+import {
+  deleteWatchPhoto,
+  reorderWatchPhotos,
+  setCoverPhoto,
+  setPhotoAngle,
+  uploadWatchPhoto,
+} from "@/lib/actions/photo-actions"
 import { downscaleImage } from "@/lib/images"
+import { photoSortKey } from "@/lib/photo-lab"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import type { WatchPhoto } from "@/lib/types/watch"
-
-// TODO(D1/Phase 3): drag-reorder (sort_order) and per-photo angle tags land
-// with the Photo Lab migrations; the filmstrip then shows each tile's angle.
+import type { PhotoAngle, WatchPhoto } from "@/lib/types/watch"
 
 interface WatchViewPhotosProps {
   photos: WatchPhoto[]
@@ -41,15 +45,49 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
 
-  // Cover first — the cover is the hero, always (D2).
-  const ordered = useMemo(
-    () => [...photos].sort((a, b) => (b.is_cover ? 1 : 0) - (a.is_cover ? 1 : 0)),
-    [photos]
-  )
-  const cover = ordered[0]
+  // Drag-reorder (D2/00041): optimistic id order until the server round-trips.
+  const [pendingOrder, setPendingOrder] = useState<string[] | null>(null)
+  const dragFrom = useRef<number | null>(null)
+
+  // Filmstrip order = sort_order (falling back to display_order); the cover
+  // always occupies the big frame regardless of its strip position (D2).
+  const ordered = useMemo(() => {
+    const base = [...photos].sort((a, b) => photoSortKey(a) - photoSortKey(b))
+    if (!pendingOrder) return base
+    const rank = new Map(pendingOrder.map((id, i) => [id, i]))
+    return base.sort(
+      (a, b) => (rank.get(a.id) ?? base.indexOf(a)) - (rank.get(b.id) ?? base.indexOf(b))
+    )
+  }, [photos, pendingOrder])
+  const cover = ordered.find((p) => p.is_cover) ?? ordered[0]
+  const coverIndex = ordered.findIndex((p) => p.id === cover?.id)
   const orderedUrls = ordered.map(
     (p) => fullPhotoUrls?.[p.storage_path] ?? photoUrls[p.storage_path] ?? ""
   )
+
+  function handleTileDrop(toIndex: number) {
+    const fromIndex = dragFrom.current
+    dragFrom.current = null
+    if (fromIndex === null || fromIndex === toIndex) return
+    const ids = ordered.map((p) => p.id)
+    const [moved] = ids.splice(fromIndex, 1)
+    ids.splice(toIndex, 0, moved)
+    setPendingOrder(ids)
+    startTransition(async () => {
+      const result = await reorderWatchPhotos(watchId, ids)
+      if (result.error) {
+        toast.error(result.error)
+        setPendingOrder(null)
+      }
+    })
+  }
+
+  function handleSetAngle(photoId: string, angle: PhotoAngle | null) {
+    startTransition(async () => {
+      const result = await setPhotoAngle(photoId, watchId, angle)
+      if (result.error) toast.error(result.error)
+    })
+  }
 
   function upload(file: File | undefined | null) {
     if (!file) return
@@ -144,7 +182,7 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
       <div className="group/cover relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-surface-photo">
         <button
           type="button"
-          onClick={() => coverUrl && setLightboxIndex(0)}
+          onClick={() => coverUrl && setLightboxIndex(coverIndex)}
           aria-label="View cover photo full size"
           className="absolute inset-0 block h-full w-full cursor-zoom-in"
         >
@@ -161,11 +199,11 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
           )}
         </button>
         <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-brass/16 px-2.5 py-0.5 font-mono text-2xs uppercase tracking-[0.1em] text-brass">
-          Cover
+          Cover{cover?.angle ? ` · ${cover.angle}` : ""}
         </span>
         <button
           type="button"
-          onClick={() => coverUrl && setLightboxIndex(0)}
+          onClick={() => coverUrl && setLightboxIndex(coverIndex)}
           aria-label="Open lightbox"
           className="absolute right-3 top-3 flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-black/45 text-white transition-colors hover:bg-black/60"
         >
@@ -173,8 +211,7 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
         </button>
       </div>
 
-      {/* Filmstrip: every frame + a dashed add tile (A3 uploader arrives in
-          Phase 2/A3; the tile uses the shared upload action meanwhile). */}
+      {/* Filmstrip: drag to reorder (sort_order); angle tag bottom-left. */}
       <div className="grid grid-cols-6 gap-2">
         {ordered.map((photo, index) => {
           const url = photoUrls[photo.storage_path]
@@ -182,8 +219,17 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
             <button
               key={photo.id}
               type="button"
+              draggable
+              onDragStart={() => {
+                dragFrom.current = index
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault()
+                handleTileDrop(index)
+              }}
               onClick={() => url && setLightboxIndex(index)}
-              aria-label={`View photo ${index + 1}`}
+              aria-label={`View photo ${index + 1}${photo.angle ? ` (${photo.angle})` : ""}`}
               className={cn(
                 "relative aspect-square overflow-hidden rounded-lg bg-surface-photo transition-colors duration-150",
                 photo.is_cover
@@ -200,6 +246,11 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
                   sizes="120px"
                   unoptimized
                 />
+              )}
+              {photo.angle && (
+                <span className="absolute bottom-1 left-1 rounded bg-black/55 px-1 py-px font-mono text-2xs uppercase text-white/90">
+                  {photo.angle}
+                </span>
               )}
             </button>
           )
@@ -251,6 +302,8 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
           isCover={lightboxPhoto.is_cover}
           onSetCover={() => handleSetCover(lightboxPhoto.id)}
           onDelete={() => setConfirmDeleteId(lightboxPhoto.id)}
+          angle={lightboxPhoto.angle}
+          onSetAngle={(angle) => handleSetAngle(lightboxPhoto.id, angle)}
           keysDisabled={confirmDeleteId !== null}
         />
       )}

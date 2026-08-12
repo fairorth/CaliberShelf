@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Star, Trash2, X } from "lucide-react"
+import { ANGLE_LABELS, PHOTO_ANGLES } from "@/lib/photo-lab"
+import { cn } from "@/lib/utils"
+import type { PhotoAngle } from "@/lib/types/watch"
 
 interface PhotoLightboxProps {
   /** Ordered signed URLs for the watch's photos. */
@@ -16,6 +19,10 @@ interface PhotoLightboxProps {
   onSetCover?: () => void
   /** Request deletion of the current photo (X). Omit to hide the action. */
   onDelete?: () => void
+  /** Current photo's angle tag; shown as a pill row when onSetAngle given. */
+  angle?: PhotoAngle | null
+  /** Tag the current photo's angle (keys 1–5; press again to clear). */
+  onSetAngle?: (angle: PhotoAngle | null) => void
   /** Suspend keyboard shortcuts (e.g. while a confirm dialog is open). */
   keysDisabled?: boolean
 }
@@ -35,6 +42,8 @@ export function PhotoLightbox({
   isCover,
   onSetCover,
   onDelete,
+  angle,
+  onSetAngle,
   keysDisabled,
 }: PhotoLightboxProps) {
   const [zoom, setZoom] = useState(1)
@@ -85,6 +94,10 @@ export function PhotoLightbox({
       else if (e.key === "-") setZoom((z) => clampZoom(z - 0.5))
       else if ((e.key === "c" || e.key === "C") && onSetCover && !isCover) onSetCover()
       else if ((e.key === "x" || e.key === "X") && onDelete) onDelete()
+      else if (onSetAngle && e.key >= "1" && e.key <= "5") {
+        const next = PHOTO_ANGLES[Number(e.key) - 1]
+        onSetAngle(next === angle ? null : next)
+      }
     }
     window.addEventListener("keydown", onKey)
     const prevOverflow = document.body.style.overflow
@@ -93,7 +106,7 @@ export function PhotoLightbox({
       window.removeEventListener("keydown", onKey)
       document.body.style.overflow = prevOverflow
     }
-  }, [onClose, goPrev, goNext, onSetCover, onDelete, isCover, keysDisabled])
+  }, [onClose, goPrev, goNext, onSetCover, onDelete, isCover, keysDisabled, onSetAngle, angle])
 
   // Wheel zoom (non-passive listener so we can preventDefault the page scroll).
   useEffect(() => {
@@ -205,10 +218,32 @@ export function PhotoLightbox({
         )}
       </div>
 
+      {/* Angle tagging (D2/D1): pills mirror keys 1–5; tap again to clear. */}
+      {onSetAngle && (
+        <div className="flex flex-wrap items-center justify-center gap-1.5 px-3 pb-2">
+          {PHOTO_ANGLES.map((a, i) => (
+            <button
+              key={a}
+              type="button"
+              onClick={() => onSetAngle(a === angle ? null : a)}
+              aria-pressed={angle === a}
+              className={cn(
+                "rounded-full px-2.5 py-1 font-mono text-2xs uppercase tracking-[0.08em] transition-colors",
+                angle === a
+                  ? "bg-brass text-brass-foreground"
+                  : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
+              )}
+            >
+              {i + 1} · {ANGLE_LABELS[a]}
+            </button>
+          ))}
+        </div>
+      )}
       <p className="pb-3 text-center text-xs text-white/40">
         {hasMultiple && "← → navigate · "}
         {onSetCover && "C set cover · "}
         {onDelete && "X delete · "}
+        {onSetAngle && "1–5 tag angle · "}
         Double-click to zoom · drag or scroll to pan · Esc to close
       </p>
     </div>
