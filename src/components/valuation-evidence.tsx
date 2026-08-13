@@ -5,10 +5,12 @@ interface ValuationEvidenceProps {
   valuation: WatchValuation
 }
 
+// Confidence is a three-step ladder, so it reads as weight within one hue
+// rather than three competing ones (was emerald / amber / rose).
 const CONFIDENCE_STYLES: Record<WatchValuation["confidence"], string> = {
-  high: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  medium: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-  low: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+  high: "bg-brass/15 text-brass ring-1 ring-brass/35",
+  medium: "text-brass ring-1 ring-brass/45",
+  low: "bg-muted text-muted-foreground ring-1 ring-border",
 }
 
 export function ConfidenceBadge({
@@ -76,8 +78,8 @@ export function ValuationEvidence({ valuation: v }: ValuationEvidenceProps) {
                     <span
                       className={
                         dp.type === "sold"
-                          ? "rounded-full bg-emerald-500/15 px-2 py-0.5 text-2xs font-medium text-emerald-600 dark:text-emerald-400"
-                          : "rounded-full bg-sky-500/15 px-2 py-0.5 text-2xs font-medium text-sky-600 dark:text-sky-400"
+                          ? "rounded-full bg-brass/15 px-2 py-0.5 text-2xs font-medium text-brass"
+                          : "rounded-full bg-muted px-2 py-0.5 text-2xs font-medium text-muted-foreground"
                       }
                     >
                       {dp.type}

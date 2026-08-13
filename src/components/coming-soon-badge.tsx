@@ -1,15 +1,14 @@
-import { cn } from "@/lib/utils"
+import { StatusPill } from "@/components/ui/status-pill"
 
-/** Pill marking a watch that's been ordered but hasn't arrived yet. */
+/** Pill marking a watch that's been ordered but hasn't arrived yet.
+ *
+ *  Brass filled — the stronger of the two status treatments, because this is
+ *  the one that is actually in motion. It read as brass before but was
+ *  amber-500, a literal that merely resembled the accent. */
 export function ComingSoonBadge({ className }: { className?: string }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-amber-700 ring-1 ring-amber-500/30 dark:text-amber-400",
-        className
-      )}
-    >
+    <StatusPill tone="solid" className={className}>
       Coming Soon
-    </span>
+    </StatusPill>
   )
 }

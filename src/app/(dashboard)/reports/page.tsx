@@ -41,7 +41,7 @@ function ReportCard({ report }: { report: ReportLink }) {
         <CardTitle className="flex items-center justify-between gap-2 text-sm">
           {report.title}
           {!report.available && (
-            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-2xs font-medium text-amber-400">
+            <span className="rounded-full px-2 py-0.5 text-2xs font-medium text-brass ring-1 ring-brass/45">
               Coming soon
             </span>
           )}

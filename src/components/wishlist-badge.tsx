@@ -1,15 +1,15 @@
-import { cn } from "@/lib/utils"
+import { StatusPill } from "@/components/ui/status-pill"
 
-/** Pill marking a watch that's on the wish list (not owned yet). */
+/** Pill marking a watch that's on the wish list (not owned yet).
+ *
+ *  Brass outlined, against Coming Soon's brass fill: the two are differentiated
+ *  by treatment, not by a second hue. This was sky-500 — the E1 violation that
+ *  survived four sweeps because it was a colour literal with nothing to sweep
+ *  it to. */
 export function WishlistBadge({ className }: { className?: string }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full bg-sky-500/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-sky-700 ring-1 ring-sky-500/30 dark:text-sky-400",
-        className
-      )}
-    >
+    <StatusPill tone="outline" className={className}>
       Wish List
-    </span>
+    </StatusPill>
   )
 }

@@ -46,7 +46,7 @@ export default async function EditStrapPage({
           <span className="font-mono text-xs text-muted-foreground">{strap.width_mm}mm</span>
         </h1>
         {strap.current_watch && (
-          <p className="mt-1 text-sm text-emerald-600 dark:text-emerald-400">
+          <p className="mt-1 text-sm text-brass">
             Currently on {strap.current_watch.brand_name} {strap.current_watch.nickname || strap.current_watch.model}
           </p>
         )}

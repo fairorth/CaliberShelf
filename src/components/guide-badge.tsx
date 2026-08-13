@@ -1,17 +1,15 @@
-import { cn } from "@/lib/utils"
+import { StatusPill } from "@/components/ui/status-pill"
 
 /** Pill marking a watch that belongs to a Master Collection Guide — shows the
- *  guide's name so the strategic tier is visible at a glance. */
+ *  guide's name so the strategic tier is visible at a glance.
+ *
+ *  Neutral, not brass: guide membership is a classification, not a status, and
+ *  it sits directly beside the two status pills in the Model cell. Was
+ *  violet-500. */
 export function GuideBadge({ name, className }: { name: string; className?: string }) {
   return (
-    <span
-      title={`In the ${name} collection guide`}
-      className={cn(
-        "inline-flex items-center rounded-full bg-violet-500/15 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-violet-700 ring-1 ring-violet-500/30 dark:text-violet-400",
-        className
-      )}
-    >
+    <StatusPill tone="neutral" title={`In the ${name} collection guide`} className={className}>
       {name}
-    </span>
+    </StatusPill>
   )
 }

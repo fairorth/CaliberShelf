@@ -13,19 +13,22 @@ const AVAILABILITY_BADGE: Record<
   DealAvailability,
   { label: string; className: string }
 > = {
+  // Brass marks the two states worth acting on; everything else is neutral.
+  // Was emerald / sky / amber literals — four hues for six states, none from
+  // the palette (E1).
   available: {
     label: "Available now!",
-    className: "bg-emerald-500/15 text-emerald-400",
+    className: "bg-brass/15 text-brass ring-1 ring-brass/35",
   },
-  preorder: { label: "Pre-order", className: "bg-sky-500/15 text-sky-400" },
+  preorder: { label: "Pre-order", className: "text-brass ring-1 ring-brass/45" },
   sold_out: { label: "Sold out", className: "bg-muted text-muted-foreground" },
   not_found: {
     label: "Not found",
-    className: "bg-amber-500/15 text-amber-400",
+    className: "bg-muted text-muted-foreground",
   },
   no_store: {
     label: "No store URL",
-    className: "bg-amber-500/10 text-amber-500/80",
+    className: "bg-muted text-muted-foreground",
   },
   unknown: { label: "Unknown", className: "bg-muted text-muted-foreground" },
 }
@@ -54,7 +57,7 @@ export default async function DealsPage() {
         <p className="text-sm text-muted-foreground">
           {listings.length} watch{listings.length === 1 ? "" : "es"} tracked
           {availableCount > 0 && (
-            <span className="text-emerald-400">
+            <span className="text-brass">
               {" "}
               · {availableCount} available now
             </span>
@@ -109,7 +112,7 @@ export default async function DealsPage() {
                         </div>
                       )}
                       {deal?.notes && (
-                        <div className="mt-0.5 text-xs text-amber-500/80">
+                        <div className="mt-0.5 text-xs text-muted-foreground">
                           {deal.notes}
                         </div>
                       )}
