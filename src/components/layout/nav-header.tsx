@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -160,17 +161,21 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
               {userEmail.charAt(0) || "?"}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel className="max-w-[220px] truncate font-normal text-muted-foreground">
-                {userEmail}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  void signOut()
-                }}
-              >
-                Sign Out
-              </DropdownMenuItem>
+              {/* GroupLabel requires a Group ancestor in Base UI (see the
+                  Columns menu) — without it this crashes when opened. */}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="max-w-[220px] truncate font-normal text-muted-foreground">
+                  {userEmail}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    void signOut()
+                  }}
+                >
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

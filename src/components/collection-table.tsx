@@ -11,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -193,19 +194,23 @@ export function ColumnsMenu({
         Columns
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {COLUMN_ORDER.filter((id) => id !== "photo").map((id) => (
-          <DropdownMenuCheckboxItem
-            key={id}
-            checked={chosenColumns.includes(id)}
-            onCheckedChange={() => toggleColumn(id)}
-            disabled={id === "price" && !showCost}
-          >
-            {COLUMN_LABELS[id]}
-            {id === "price" && !showCost && " (enable in Config)"}
-          </DropdownMenuCheckboxItem>
-        ))}
+        {/* GroupLabel requires a Group ancestor in Base UI — without it the
+            menu throws MenuGroupRootContext is missing the moment it opens. */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {COLUMN_ORDER.filter((id) => id !== "photo").map((id) => (
+            <DropdownMenuCheckboxItem
+              key={id}
+              checked={chosenColumns.includes(id)}
+              onCheckedChange={() => toggleColumn(id)}
+              disabled={id === "price" && !showCost}
+            >
+              {COLUMN_LABELS[id]}
+              {id === "price" && !showCost && " (enable in Config)"}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )
