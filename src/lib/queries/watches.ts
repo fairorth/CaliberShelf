@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { getSignedUrls, getSignedUrl, getTransformedSignedUrls } from "@/lib/storage"
+import { getSignedUrl, getTransformedSignedUrls } from "@/lib/storage"
 import type {
   Watch,
   WatchWithCover,
@@ -63,9 +63,24 @@ export async function getWatches(): Promise<WatchWithCover[]> {
     }
   }
 
-  // Generate signed URLs for all cover photos
+  // Cover photos were served as the untransformed originals — multi-megabyte,
+  // several thousand pixels wide — and then squeezed into a 64px table cell by
+  // the browser. That is both why the table thumbnails looked mushy (a ~50:1
+  // downscale is where browser resampling falls apart) and why the collection
+  // page pulled hundreds of megabytes.
+  //
+  // 720 on the long edge is the smallest size that still serves every consumer
+  // of this URL: the home hero at 560px, gallery tiles at 280px, and the
+  // table's 64px thumbnail with pixels to spare on a HiDPI screen. `contain`
+  // caps the long edge without cropping, so callers that frame the image
+  // themselves (object-cover, dial_focal_*) still get the whole frame.
   const storagePaths = Array.from(coverMap.values())
-  const signedUrlMap = await getSignedUrls(storagePaths)
+  const signedUrlMap = await getTransformedSignedUrls(storagePaths, {
+    width: 720,
+    height: 720,
+    resize: "contain",
+    quality: 80,
+  })
 
   // Tally wear-log entries per watch (count + most-recent date). worn_date is
   // "YYYY-MM-DD", so lexical comparison finds the latest.
