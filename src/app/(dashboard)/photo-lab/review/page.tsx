@@ -4,7 +4,7 @@ import { PhotoLabTabs } from "../_components/photo-lab-tabs"
 import { ReviewSession } from "./_components/review-session"
 
 export const metadata: Metadata = {
-  title: "Photo Lab · Review | CaliberShelf",
+  title: "Photo Lab · Review | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

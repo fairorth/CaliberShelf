@@ -198,7 +198,7 @@ export function WatchDial({ watches, seed, stats }: WatchDialProps) {
                 className="font-display text-[8px] sm:text-[10px]"
                 style={{ letterSpacing: "4px", color: "rgba(220,232,248,.55)" }}
               >
-                CALIBERSHELF
+                TENTENLOUPE
               </div>
             </div>
 

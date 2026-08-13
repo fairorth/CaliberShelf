@@ -1,6 +1,6 @@
 ---
 name: add-feature
-description: Plan and implement a new feature end-to-end following CaliberShelf conventions
+description: Plan and implement a new feature end-to-end following TenTenLoupe conventions
 user-invocable: true
 argument-hint: [feature-description]
 ---

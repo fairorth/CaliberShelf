@@ -148,7 +148,7 @@ async function researchBrand(brand) {
 async function verifyStore(url) {
   try {
     const res = await fetch(`${url}/products.json?limit=1`, {
-      headers: { "User-Agent": "CaliberShelf deal-check (personal collection app)" },
+      headers: { "User-Agent": "TenTenLoupe deal-check (personal collection app)" },
       redirect: "follow",
       signal: AbortSignal.timeout(15000),
     })

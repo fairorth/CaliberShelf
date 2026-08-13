@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { ReportPlaceholder } from "../_components/report-placeholder"
 
 export const metadata: Metadata = {
-  title: "Wear Summary | CaliberShelf",
+  title: "Wear Summary | TenTenLoupe",
 }
 
 export default function WearSummaryPage() {

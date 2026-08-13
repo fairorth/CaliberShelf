@@ -3,6 +3,7 @@ import { Geist, Fraunces, JetBrains_Mono } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar"
 import { ThemeProvider } from "@/components/theme-provider"
+import { StorageMigration } from "@/components/storage-migration"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -33,12 +34,21 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "CaliberShelf",
+  title: "TenTenLoupe",
   description: "Track and showcase your watch collection",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "CaliberShelf",
+    title: "TenTenLoupe",
+  },
+  // Declared here rather than via app/favicon.ico so the tab, the iOS home
+  // screen and the manifest all point at the same brand PNGs in public/.
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon-180.png", sizes: "180x180", type: "image/png" }],
   },
 }
 
@@ -48,10 +58,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
+    // No hand-written <head>: the apple-touch-icon link used to be pinned there
+    // to a file under /icons that the rebrand deleted. metadata.icons above
+    // emits it now, so there is one source of truth.
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-      </head>
       <body
         className={`${geistSans.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased`}
       >
@@ -70,6 +80,8 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
+        {/* Rebrand storage shim — must be in the tree so its module evaluates. */}
+        <StorageMigration />
         <ServiceWorkerRegistrar />
       </body>
     </html>

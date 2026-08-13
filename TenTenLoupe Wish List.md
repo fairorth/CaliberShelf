@@ -1,4 +1,4 @@
-# CaliberShelf — Wish List
+# TenTenLoupe — Wish List
 
 A running list of design/feature ideas to mull over and prioritize. Not committed work — a menu. Grouped by theme, with a rough impact-vs-effort read and why each fits a *watch* app specifically.
 
@@ -7,7 +7,7 @@ Legend — **Impact**: ★ (nice) → ★★★ (signature). **Effort**: ◷ (sm
 ---
 
 ## 1. Lean into the dial as the app's soul
-The Home dial is CaliberShelf's signature. Make it a daily ritual, not just decoration.
+The Home dial is TenTenLoupe's signature. Make it a daily ritual, not just decoration.
 
 - **Watch of the Day + one-tap "Wore this today"** — the "now showing" watch becomes a daily prompt; a single tap on the dial logs a wear to the wear-log without leaving Home.
   - Impact ★★★ · Effort ◷◷ · Ties to: Home dial, wear-log.
@@ -51,4 +51,4 @@ Turn stored fields into insight — this is what separates a watch app from gene
 2. **Insurance PDF export** — selection → print-ready valuation schedule.
 3. **Wear heatmap** — contribution-style wear calendar with streaks + neglected list.
 
-> When ready, pick any of these and I'll mock them up in the CaliberShelf brass system so you can feel them before committing.
+> When ready, pick any of these and I'll mock them up in the TenTenLoupe brass system so you can feel them before committing.

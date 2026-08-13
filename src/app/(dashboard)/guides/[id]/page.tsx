@@ -17,8 +17,8 @@ export async function generateMetadata({
 }) {
   const { id } = await params
   const result = await getGuideById(id)
-  if (!result) return { title: "Guide Not Found | CaliberShelf" }
-  return { title: `${result.guide.name} Guide | CaliberShelf` }
+  if (!result) return { title: "Guide Not Found | TenTenLoupe" }
+  return { title: `${result.guide.name} Guide | TenTenLoupe` }
 }
 
 export const dynamic = "force-dynamic"

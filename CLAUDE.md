@@ -1,4 +1,4 @@
-# CaliberShelf
+# TenTenLoupe
 
 A personal watch collection tracking app built with Next.js 16 (App Router), Supabase, Tailwind CSS, and shadcn/ui.
 

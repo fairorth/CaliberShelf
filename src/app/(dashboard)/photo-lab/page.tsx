@@ -7,7 +7,7 @@ import { PhotoLabTabs } from "./_components/photo-lab-tabs"
 import { CoverageMatrix } from "./_components/coverage-matrix"
 
 export const metadata: Metadata = {
-  title: "Photo Lab | CaliberShelf",
+  title: "Photo Lab | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

@@ -5,7 +5,7 @@ import { getCategories } from "@/lib/queries/categories"
 import { BatchImportForm } from "./_components/batch-import-form"
 
 export const metadata: Metadata = {
-  title: "Batch Import | CaliberShelf",
+  title: "Batch Import | TenTenLoupe",
 }
 
 export default async function BatchImportPage() {

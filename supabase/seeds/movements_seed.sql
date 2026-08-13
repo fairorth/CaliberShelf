@@ -1,5 +1,5 @@
 -- ======================================================================
--- CaliberShelf — Popular Movements Seed
+-- TenTenLoupe — Popular Movements Seed
 -- ======================================================================
 --
 -- Loads ~200 popular commercial watch movements into your personal

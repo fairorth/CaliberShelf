@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 
-interface CaliberShelfLogoProps {
+interface TenTenLoupeLogoProps {
   className?: string
   /** Size in pixels — the SVG viewBox is square */
   size?: number
@@ -9,7 +9,7 @@ interface CaliberShelfLogoProps {
 }
 
 /**
- * CaliberShelf logo — a stylized balance wheel with integrated "CS" monogram.
+ * TenTenLoupe logo — a stylized balance wheel with integrated "CS" monogram.
  *
  * The balance wheel is the beating heart of every mechanical watch.
  * Four spokes radiate from the center, with a hairspring-inspired
@@ -17,11 +17,11 @@ interface CaliberShelfLogoProps {
  *
  * Designed to sit on the watch dial below 12 o'clock.
  */
-export function CaliberShelfLogo({
+export function TenTenLoupeLogo({
   className,
   size = 48,
   color = "oklch(0.85 0.03 85)",
-}: CaliberShelfLogoProps) {
+}: TenTenLoupeLogoProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -30,7 +30,7 @@ export function CaliberShelfLogo({
       height={size}
       fill="none"
       className={cn("shrink-0", className)}
-      aria-label="CaliberShelf logo"
+      aria-label="TenTenLoupe logo"
       role="img"
     >
       {/* Outer balance wheel rim */}

@@ -9,7 +9,7 @@ import { strapDisplayName } from "@/lib/types/strap"
 import type { StrapWatchRef } from "@/lib/types/strap"
 
 export const metadata: Metadata = {
-  title: "Straps | CaliberShelf",
+  title: "Straps | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

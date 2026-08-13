@@ -1,4 +1,4 @@
-# CaliberShelf Agent Fleet
+# TenTenLoupe Agent Fleet
 
 Reference for every automated agent/script in the app: what it does, how it
 runs, what it costs, and the safety rules around it. For the line-by-line

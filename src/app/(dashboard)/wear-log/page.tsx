@@ -10,7 +10,7 @@ import { WearStatsView } from "./_components/wear-stats"
 import { DisplayBoxPanel } from "./_components/display-box-panel"
 
 export const metadata: Metadata = {
-  title: "Wear Log | CaliberShelf",
+  title: "Wear Log | TenTenLoupe",
 }
 
 export default async function WearLogPage() {

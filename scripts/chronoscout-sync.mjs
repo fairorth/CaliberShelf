@@ -128,7 +128,7 @@ async function apiGet(path, params = {}) {
       res = await fetch(url, {
         headers: {
           Authorization: `Bearer ${API_KEY}`,
-          "User-Agent": "CaliberShelf chronoscout-sync (personal collection app)",
+          "User-Agent": "TenTenLoupe chronoscout-sync (personal collection app)",
           Accept: "application/json",
         },
       })

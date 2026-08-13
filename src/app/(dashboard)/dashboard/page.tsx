@@ -5,7 +5,7 @@ import { getCurrentDisplayBox } from "@/lib/queries/display-box"
 import { HomeStage } from "@/components/home-stage"
 
 export const metadata: Metadata = {
-  title: "Home | CaliberShelf",
+  title: "Home | TenTenLoupe",
 }
 
 export default async function HomePage() {

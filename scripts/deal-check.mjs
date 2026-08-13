@@ -81,7 +81,7 @@ async function fetchStoreProducts(storeUrl) {
     let res
     try {
       res = await fetch(url, {
-        headers: { "User-Agent": "CaliberShelf deal-check (personal collection app)" },
+        headers: { "User-Agent": "TenTenLoupe deal-check (personal collection app)" },
         redirect: "follow",
       })
     } catch (err) {

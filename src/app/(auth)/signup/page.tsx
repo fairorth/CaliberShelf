@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { AuthForm } from "../_components/auth-form"
 
 export const metadata: Metadata = {
-  title: "Sign Up | CaliberShelf",
+  title: "Sign Up | TenTenLoupe",
 }
 
 export default function SignupPage() {

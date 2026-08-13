@@ -2,9 +2,9 @@ import { useId } from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * CaliberShelf brand mark — two meshing brass gears with a ruby jewel on a navy
+ * TenTenLoupe brand mark — two meshing brass gears with a ruby jewel on a navy
  * gradient. Vector twin of the app/home-screen icon (see public/icons/* and the
- * memory note "calibershelf-icon"). Self-contained SVG; gradient ids are scoped
+ * memory note "tentenloupe-icon"). Self-contained SVG; gradient ids are scoped
  * per instance via useId so multiple marks can render on one page.
  */
 
@@ -48,13 +48,13 @@ const BIG_SPOKES = spokePaths(BIG.cx, BIG.cy, 5, 34, 108, 17, -Math.PI / 2)
 const SMALL_GEAR = gearPath(SMALL.cx, SMALL.cy, 9, 104, 84, 0.42, Math.PI / 9)
 const SMALL_SPOKES = spokePaths(SMALL.cx, SMALL.cy, 4, 24, 70, 13, 0)
 
-interface CaliberShelfMarkProps {
+interface TenTenLoupeMarkProps {
   /** Rendered px size (square). */
   size?: number
   className?: string
 }
 
-export function CaliberShelfMark({ size = 512, className }: CaliberShelfMarkProps) {
+export function TenTenLoupeMark({ size = 512, className }: TenTenLoupeMarkProps) {
   const uid = useId()
   const id = (n: string) => `${n}-${uid}`
   const url = (n: string) => `url(#${id(n)})`
@@ -67,7 +67,7 @@ export function CaliberShelfMark({ size = 512, className }: CaliberShelfMarkProp
       height={size}
       className={cn("shrink-0", className)}
       role="img"
-      aria-label="CaliberShelf"
+      aria-label="TenTenLoupe"
     >
       <defs>
         <linearGradient id={id("bg")} x1="0" y1="0" x2="0" y2="1">

@@ -1,6 +1,6 @@
-# Using CaliberShelf
+# Using TenTenLoupe
 
-A quick tour of what CaliberShelf does. The collection basics — adding watches,
+A quick tour of what TenTenLoupe does. The collection basics — adding watches,
 photos, categories, labels, wear logging, and timegrapher records — are meant to
 be self-explanatory as you click around. This guide focuses on the parts that
 work *for* you in the background: the automated agents and the reports that
@@ -39,7 +39,7 @@ them under **Collection → Filters**.
 
 ## The automated agents
 
-CaliberShelf runs a small fleet of agents so you don't have to hunt down specs,
+TenTenLoupe runs a small fleet of agents so you don't have to hunt down specs,
 values, or deals by hand. Some are free and deterministic; some use AI web
 search and cost a few cents. You're always in control — the AI agents fill only
 empty fields and flag anything uncertain for you to confirm.

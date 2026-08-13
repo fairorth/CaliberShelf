@@ -1,4 +1,4 @@
-// CaliberShelf — minimal service worker
+// TenTenLoupe — minimal service worker
 // Satisfies PWA installability criteria without offline caching.
 
 self.addEventListener("install", () => {

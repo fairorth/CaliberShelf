@@ -9,7 +9,7 @@ import { CollapsibleReportGroup } from "@/components/collapsible-report-group"
 import type { WatchWithCover } from "@/lib/types/watch"
 
 export const metadata: Metadata = {
-  title: "Watches by Box | CaliberShelf",
+  title: "Watches by Box | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

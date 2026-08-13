@@ -3,7 +3,7 @@ import { getAttentionReport } from "@/lib/queries/attention"
 import { AttentionReportView } from "./_components/attention-report"
 
 export const metadata: Metadata = {
-  title: "Attention Needed | CaliberShelf",
+  title: "Attention Needed | TenTenLoupe",
 }
 
 // Server-rendered on every visit so fixes disappear from the list immediately.

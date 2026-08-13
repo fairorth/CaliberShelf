@@ -4,7 +4,7 @@ import { getWatchOptions } from "@/lib/queries/straps"
 import { StrapForm } from "../_components/strap-form"
 
 export const metadata: Metadata = {
-  title: "Add Strap | CaliberShelf",
+  title: "Add Strap | TenTenLoupe",
 }
 
 export default async function NewStrapPage() {

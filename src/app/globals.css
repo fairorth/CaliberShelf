@@ -102,7 +102,7 @@
   /* Render native controls (selects, date pickers, scrollbars) in dark mode so
      <option> popups are light-on-dark, not the illegible light-on-light default. */
   color-scheme: dark;
-  /* Steel & Navy — dark theme matching the CaliberShelf redesign hand-off.
+  /* Steel & Navy — dark theme matching the TenTenLoupe redesign hand-off.
      Navy-black surfaces. Brass is the action/brand accent; steel blue
      (--primary) is data only (charts, links, info chips). Prices render in
      --foreground mono, never colored (design system §1). */

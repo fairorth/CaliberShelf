@@ -12,7 +12,7 @@ import {
 import { formatCurrency } from "@/lib/utils"
 
 export const metadata: Metadata = {
-  title: "Valuation Run | CaliberShelf",
+  title: "Valuation Run | TenTenLoupe",
 }
 
 function formatRunDate(date: string): string {

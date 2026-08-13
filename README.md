@@ -1,4 +1,4 @@
-# CaliberShelf
+# TenTenLoupe
 
 A personal watch-collection tracker built with Next.js 16, Supabase, Tailwind
 CSS v4, and shadcn/ui — collection management, photos, wear logging,
@@ -6,7 +6,7 @@ timegrapher records, reports, and a fleet of automation agents (AI
 market-valuation, spec autofill, deal scanning, and a mirrored ChronoScout
 catalog for spec lookups).
 
-Production: https://caliber-shelf.vercel.app (auto-deploys from `master`).
+Production: https://tentenloupe.vercel.app (auto-deploys from `master`).
 An in-app **About** page (`/about`) gives the short, shareable tour.
 
 Every code change bumps `package.json` "version" — it renders next to the
@@ -15,7 +15,7 @@ deployed.
 
 ## Documentation
 
-- [Using CaliberShelf](docs/using-calibershelf.md) — a user-facing tour of the
+- [Using TenTenLoupe](docs/using-tentenloupe.md) — a user-facing tour of the
   features, with an emphasis on the automated agents and reports.
 - [The Agent Fleet](docs/agents.md) — every AI agent and automated script:
   what it does, how it's initiated, observed costs, cost levers, and run

@@ -23,7 +23,7 @@ import {
   ZoomIn,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
-import { CaliberShelfMark } from "@/components/calibershelf-mark"
+import { TenTenLoupeMark } from "@/components/calibershelf-mark"
 import { APP_VERSION } from "@/lib/version"
 import { getWatches } from "@/lib/queries/watches"
 import { createClient } from "@/lib/supabase/server"
@@ -31,7 +31,7 @@ import { formatCurrency } from "@/lib/utils"
 import { AboutStats } from "./_components/about-stats"
 
 export const metadata: Metadata = {
-  title: "About CaliberShelf",
+  title: "About TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"
@@ -211,10 +211,10 @@ export default async function AboutPage() {
       {/* Hero */}
       <section className="relative overflow-hidden rounded-xl border border-border px-6 py-12 text-center sm:py-16">
         <div className="mx-auto mb-5 w-fit">
-          <CaliberShelfMark size={64} className="rounded-xl" />
+          <TenTenLoupeMark size={64} className="rounded-xl" />
         </div>
         <h1 className="font-display text-xl font-semibold tracking-tight">
-          CaliberShelf
+          TenTenLoupe
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-sm">
           Part collection manager, part private research lab — a personal horology platform

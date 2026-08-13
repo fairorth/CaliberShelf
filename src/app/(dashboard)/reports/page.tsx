@@ -6,7 +6,7 @@ import { getAgentReview, formatUsdMicros } from "@/lib/queries/agent-runs"
 import { getAllValuations, valuationRunDate } from "@/lib/queries/valuations"
 
 export const metadata: Metadata = {
-  title: "Reports | CaliberShelf",
+  title: "Reports | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

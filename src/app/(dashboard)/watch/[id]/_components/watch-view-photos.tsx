@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, useTransition } from "react"
 import Image from "next/image"
 import { Maximize2, Plus } from "lucide-react"
-import { CaliberShelfMark } from "@/components/calibershelf-mark"
+import { TenTenLoupeMark } from "@/components/calibershelf-mark"
 import { PhotoLightbox } from "./photo-lightbox"
 import {
   AlertDialog,
@@ -162,7 +162,7 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
             dragging ? "border-brass/60" : "border-border hover:border-brass/50"
           )}
         >
-          <CaliberShelfMark size={32} className="rounded-lg opacity-70" />
+          <TenTenLoupeMark size={32} className="rounded-lg opacity-70" />
           <span className="text-sm text-muted-foreground">
             {isPending ? "Uploading…" : "Drop the first frame"}
           </span>

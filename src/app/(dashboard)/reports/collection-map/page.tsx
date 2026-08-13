@@ -7,7 +7,7 @@ import { buildCollectionMap } from "@/lib/collection-map"
 import { CollectionMapView } from "./_components/collection-map-view"
 
 export const metadata: Metadata = {
-  title: "Collection Map | CaliberShelf",
+  title: "Collection Map | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

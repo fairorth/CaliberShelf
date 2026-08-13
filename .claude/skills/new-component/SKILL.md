@@ -1,6 +1,6 @@
 ---
 name: new-component
-description: Create a new React component following CaliberShelf conventions
+description: Create a new React component following TenTenLoupe conventions
 user-invocable: true
 argument-hint: [ComponentName] [client|server]
 ---

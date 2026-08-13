@@ -17,7 +17,7 @@ import {
 import { SearchInput } from "@/components/search-input"
 import { signOut } from "@/lib/actions/auth-actions"
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider"
-import { CaliberShelfMark } from "@/components/calibershelf-mark"
+import { TenTenLoupeMark } from "@/components/calibershelf-mark"
 import { NAV_GROUPS, NAV_HOME, isNavItemActive } from "@/components/layout/nav-items"
 import { cn } from "@/lib/utils"
 import { APP_VERSION } from "@/lib/version"
@@ -114,10 +114,10 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             onClick={guardClick("/dashboard")}
             className="flex items-center gap-2 lg:hidden"
           >
-            <CaliberShelfMark size={26} className="rounded-lg" />
+            <TenTenLoupeMark size={26} className="rounded-lg" />
             <span className="hidden items-baseline gap-1.5 sm:flex">
               <span className="font-display text-md font-medium tracking-tight">
-                CaliberShelf
+                TenTenLoupe
               </span>
               <span className="font-mono text-2xs text-muted-foreground">
                 v{APP_VERSION}

@@ -15,9 +15,9 @@ export async function generateMetadata({
 }) {
   const { id } = await params
   const strap = await getStrapById(id)
-  if (!strap) return { title: "Strap Not Found | CaliberShelf" }
+  if (!strap) return { title: "Strap Not Found | TenTenLoupe" }
   return {
-    title: `Edit ${strapDisplayName(strap, strapMaterialLabels[strap.material])} | CaliberShelf`,
+    title: `Edit ${strapDisplayName(strap, strapMaterialLabels[strap.material])} | TenTenLoupe`,
   }
 }
 

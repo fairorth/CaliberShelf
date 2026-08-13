@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { CaliberShelfMark } from "@/components/calibershelf-mark"
+import { TenTenLoupeMark } from "@/components/calibershelf-mark"
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider"
 import { NAV_GROUPS, NAV_HOME, isNavItemActive } from "@/components/layout/nav-items"
 import type { NavItem } from "@/components/layout/nav-items"
@@ -105,10 +105,10 @@ export function NavRail() {
           onClick={guardClick("/dashboard")}
           className="flex items-center gap-2.5 px-1.5 pt-1"
         >
-          <CaliberShelfMark size={26} className="rounded-lg" />
+          <TenTenLoupeMark size={26} className="rounded-lg" />
           <span className="flex flex-col leading-tight">
             <span className="font-display text-md font-semibold tracking-tight">
-              CaliberShelf
+              TenTenLoupe
             </span>
             <span className="font-mono text-2xs text-muted-foreground">v{APP_VERSION}</span>
           </span>
@@ -141,7 +141,7 @@ export function NavRail() {
           aria-label="Home"
           className="mb-1"
         >
-          <CaliberShelfMark size={32} className="rounded-lg" />
+          <TenTenLoupeMark size={32} className="rounded-lg" />
         </Link>
         <IconItem item={NAV_HOME} pathname={pathname} guardClick={guardClick} />
         {NAV_GROUPS.slice(0, -1).map((group) => (

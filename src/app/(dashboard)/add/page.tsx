@@ -4,7 +4,7 @@ import { getCategories } from "@/lib/queries/categories"
 import { AddWatchFlow } from "./_components/add-watch-flow"
 
 export const metadata: Metadata = {
-  title: "Add Watch | CaliberShelf",
+  title: "Add Watch | TenTenLoupe",
 }
 
 export default async function AddWatchPage() {
