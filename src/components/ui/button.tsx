@@ -10,7 +10,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        // Brass is the action accent (design system §1): buttons, active nav,
+        // focus, selection. --primary (steel blue) is data only — charts,
+        // links, info chips — so it must never fill a button (E1).
+        default: "bg-brass text-brass-foreground hover:bg-brass/90",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

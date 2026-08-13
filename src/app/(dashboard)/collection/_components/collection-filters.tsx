@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Label as FormLabel } from "@/components/ui/label"
 import { caseMaterialLabels } from "@/lib/validations/watch"
 import { caliberTypeLabels } from "@/lib/validations/movement"
@@ -121,8 +122,11 @@ interface CollectionFiltersDialogProps {
   matchCount: number
 }
 
+// Token surface + token border + brass focus ring. Native selects do not
+// reliably match :focus-visible on pointer interaction, so :focus carries the
+// same ring — the browser's own accent must never show through (E1).
 const SELECT_CLASS =
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs accent-brass transition-[color,box-shadow] outline-none focus:border-ring focus:ring-[3px] focus:ring-ring/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
 
 export function CollectionFiltersDialog({
   filters,
@@ -207,9 +211,7 @@ export function CollectionFiltersDialog({
                 ] as const
               ).map(([key, label]) => (
                 <label key={key} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-border accent-primary"
+                  <Checkbox
                     checked={filters[key]}
                     onChange={(e) => set(key, e.target.checked)}
                   />
@@ -238,7 +240,7 @@ export function CollectionFiltersDialog({
                         className={cn(
                           "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
                           selected
-                            ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                            ? "bg-brass/15 text-brass ring-1 ring-brass/40"
                             : "bg-muted text-muted-foreground hover:text-foreground"
                         )}
                       >
@@ -278,7 +280,7 @@ export function CollectionFiltersDialog({
                       className={cn(
                         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
                         selected
-                          ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                          ? "bg-brass/15 text-brass ring-1 ring-brass/40"
                           : "bg-muted text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -317,7 +319,7 @@ export function CollectionFiltersDialog({
                       className={cn(
                         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
                         selected
-                          ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                          ? "bg-brass/15 text-brass ring-1 ring-brass/40"
                           : "bg-muted text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -503,7 +505,7 @@ export function CollectionFiltersDialog({
                       className={cn(
                         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
                         selected
-                          ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                          ? "bg-brass/15 text-brass ring-1 ring-brass/40"
                           : "bg-muted text-muted-foreground hover:text-foreground"
                       )}
                     >

@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import {
@@ -58,11 +59,10 @@ export function SettingsTab({
         </CardHeader>
         <CardContent className="space-y-4">
           <label className="flex items-start gap-3">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={showCost}
               onChange={(e) => toggle(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+              className="mt-0.5"
             />
             <span className="space-y-0.5">
               <span className="block text-sm font-medium">Include Cost in Category Listing</span>

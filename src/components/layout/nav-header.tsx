@@ -141,7 +141,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             size="sm"
             render={<Link href="/add" onClick={guardClick("/add")} />}
             title="Add a watch"
-            className="gap-1.5 bg-brass text-brass-foreground hover:bg-brass/90"
+            className="gap-1.5"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Add Watch</span>
