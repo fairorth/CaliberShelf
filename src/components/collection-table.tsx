@@ -383,10 +383,14 @@ function LabelBadge({ label }: { label: Label }) {
 
 function HoverPhoto({
   url,
+  thumbUrl,
   alt,
   size,
 }: {
+  /** Full-size cover — the hover preview only. */
   url: string | null
+  /** ~192px cover — the thumbnail. Falls back to the full one if absent. */
+  thumbUrl?: string | null
   alt: string
   size: "sm" | "md"
 }) {
@@ -422,7 +426,14 @@ function HoverPhoto({
           on the column width at all. */}
       <div className={`${thumbClass} relative shrink-0 overflow-hidden rounded-md bg-muted`}>
         {url ? (
-          <Image src={url} alt={alt} fill className="object-cover" sizes={thumbPx} unoptimized />
+          <Image
+            src={thumbUrl ?? url}
+            alt={alt}
+            fill
+            className="object-cover"
+            sizes={thumbPx}
+            unoptimized
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground"><Watch className="h-5 w-5" aria-hidden="true" /></div>
         )}
@@ -722,6 +733,7 @@ export function CollectionTable({
                   <TableCell className="py-2">
                     <HoverPhoto
                       url={watch.cover_photo_url}
+                      thumbUrl={watch.cover_thumb_url}
                       alt={`${watch.brand.name} ${watch.model}`}
                       size="sm"
                     />
@@ -848,7 +860,7 @@ export function CollectionTable({
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
                 {watch.cover_photo_url ? (
                   <Image
-                    src={watch.cover_photo_url}
+                    src={watch.cover_thumb_url ?? watch.cover_photo_url}
                     alt={`${watch.brand.name} ${watch.model}`}
                     fill
                     className="object-cover"

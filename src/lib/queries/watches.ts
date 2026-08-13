@@ -74,13 +74,27 @@ export async function getWatches(): Promise<WatchWithCover[]> {
   // table's 64px thumbnail with pixels to spare on a HiDPI screen. `contain`
   // caps the long edge without cropping, so callers that frame the image
   // themselves (object-cover, dial_focal_*) still get the whole frame.
+  //
+  // Two sizes, because one cannot serve both ends: the 720px cover is right
+  // for a 560px hero and wrong for a 64px table cell, where a ~9:1 downscale
+  // is exactly the artefacting the hover preview does not show at ~2:1. The
+  // transform is baked into the signing token, so a second size means a second
+  // signed URL — there is no way to vary width on an already-signed one.
   const storagePaths = Array.from(coverMap.values())
-  const signedUrlMap = await getTransformedSignedUrls(storagePaths, {
-    width: 720,
-    height: 720,
-    resize: "contain",
-    quality: 80,
-  })
+  const [signedUrlMap, thumbUrlMap] = await Promise.all([
+    getTransformedSignedUrls(storagePaths, {
+      width: 720,
+      height: 720,
+      resize: "contain",
+      quality: 80,
+    }),
+    getTransformedSignedUrls(storagePaths, {
+      width: 192,
+      height: 192,
+      resize: "contain",
+      quality: 82,
+    }),
+  ])
 
   // Tally wear-log entries per watch (count + most-recent date). worn_date is
   // "YYYY-MM-DD", so lexical comparison finds the latest.
@@ -103,9 +117,11 @@ export async function getWatches(): Promise<WatchWithCover[]> {
     (watch: Watch & { brands: Brand; movements: Movement | null; categories: Category }) => {
       const coverPath = coverMap.get(watch.id)
       const coverUrl = coverPath ? signedUrlMap.get(coverPath) ?? null : null
+      const thumbUrl = coverPath ? thumbUrlMap.get(coverPath) ?? null : null
       return {
         ...watch,
         cover_photo_url: coverUrl,
+        cover_thumb_url: thumbUrl,
         brand: watch.brands,
         movement: watch.movements,
         category: watch.categories,
