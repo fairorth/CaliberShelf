@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { TenTenLoupeMark } from "@/components/calibershelf-mark"
+import { Logo, Mark } from "@/components/brand/logo"
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider"
 import { NAV_GROUPS, NAV_HOME, isNavItemActive } from "@/components/layout/nav-items"
 import type { NavItem } from "@/components/layout/nav-items"
@@ -103,15 +103,13 @@ export function NavRail() {
         <Link
           href="/dashboard"
           onClick={guardClick("/dashboard")}
-          className="flex items-center gap-2.5 px-1.5 pt-1"
+          className="flex flex-col gap-1 px-1.5 pt-1"
         >
-          <TenTenLoupeMark size={26} className="rounded-lg" />
-          <span className="flex flex-col leading-tight">
-            <span className="font-display text-md font-semibold tracking-tight">
-              TenTenLoupe
-            </span>
-            <span className="font-mono text-2xs text-muted-foreground">v{APP_VERSION}</span>
-          </span>
+          {/* Expanded rail gets the horizontal lockup (RENAME §4). The version
+              sits under it rather than beside it: the lockup plus a version
+              string does not fit the 200px rail without wrapping. */}
+          <Logo markSize={26} />
+          <span className="font-mono text-2xs text-muted-foreground">v{APP_VERSION}</span>
         </Link>
 
         <div className="flex flex-col gap-0.5">
@@ -141,7 +139,8 @@ export function NavRail() {
           aria-label="Home"
           className="mb-1"
         >
-          <TenTenLoupeMark size={32} className="rounded-lg" />
+          {/* Collapsed 56px rail: the mark alone at 32px (RENAME §4). */}
+          <Mark size={32} />
         </Link>
         <IconItem item={NAV_HOME} pathname={pathname} guardClick={guardClick} />
         {NAV_GROUPS.slice(0, -1).map((group) => (

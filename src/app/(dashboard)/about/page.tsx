@@ -23,7 +23,7 @@ import {
   ZoomIn,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
-import { TenTenLoupeMark } from "@/components/calibershelf-mark"
+import { Mark } from "@/components/brand/logo"
 import { APP_VERSION } from "@/lib/version"
 import { getWatches } from "@/lib/queries/watches"
 import { createClient } from "@/lib/supabase/server"
@@ -211,7 +211,7 @@ export default async function AboutPage() {
       {/* Hero */}
       <section className="relative overflow-hidden rounded-xl border border-border px-6 py-12 text-center sm:py-16">
         <div className="mx-auto mb-5 w-fit">
-          <TenTenLoupeMark size={64} className="rounded-xl" />
+          <Mark size={64} className="rounded-xl" />
         </div>
         <h1 className="font-display text-xl font-semibold tracking-tight">
           TenTenLoupe

@@ -4,7 +4,7 @@ import { Share } from "lucide-react"
 
 import { useState, useSyncExternalStore, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { TenTenLoupeMark } from "@/components/calibershelf-mark"
+import { Mark } from "@/components/brand/logo"
 
 const STORAGE_KEY = "tentenloupe-ios-install-dismissed"
 
@@ -47,7 +47,7 @@ export function IosInstallPrompt() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background p-4 shadow-lg md:hidden">
       <div className="flex items-start gap-3">
-        <TenTenLoupeMark size={24} className="shrink-0 rounded-md" />
+        <Mark size={24} className="shrink-0 rounded-md" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium">Install TenTenLoupe</p>
           <p className="text-xs text-muted-foreground">
