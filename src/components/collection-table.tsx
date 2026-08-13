@@ -362,8 +362,8 @@ function HoverPhoto({
   alt: string
   size: "sm" | "md"
 }) {
-  const thumbClass = size === "sm" ? "h-12 w-12" : "h-14 w-14"
-  const thumbPx = size === "sm" ? "48px" : "56px"
+  const thumbClass = size === "sm" ? "h-14 w-14" : "h-16 w-16"
+  const thumbPx = size === "sm" ? "56px" : "64px"
   const containerRef = useRef<HTMLDivElement>(null)
   const [showAbove, setShowAbove] = useState(false)
 
@@ -379,7 +379,14 @@ function HoverPhoto({
       className="group/photo relative"
       onMouseEnter={handleMouseEnter}
     >
-      <div className={`${thumbClass} overflow-hidden rounded-md bg-muted`}>
+      {/* `relative` is load-bearing: next/image `fill` positions against the
+          nearest positioned ancestor, and without it here the image escaped
+          this square and sized itself to the outer wrapper — i.e. to the whole
+          PHOTO column. At a wide column that produced a ~290x48 letterbox
+          strip through the middle of the watch, which is exactly the reported
+          bug. Square, object-cover, fixed size: the thumbnail must not depend
+          on the column width at all. */}
+      <div className={`${thumbClass} relative shrink-0 overflow-hidden rounded-md bg-muted`}>
         {url ? (
           <Image src={url} alt={alt} fill className="object-cover" sizes={thumbPx} unoptimized />
         ) : (
