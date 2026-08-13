@@ -187,42 +187,13 @@ Structure every evaluation as:
 
 ## 5. Session kickoff prompts
 
-### 5.1 Guide lifecycle session (review · creation · ingestion)
+Copy-paste-ready prompt files (the canonical versions — edit them there, not
+here):
 
-> TenTenLoupe Master Collection Guides. Read `docs/master-guides.md` first —
-> it is the complete methodology — plus `docs/data-model.md` for the
-> guides schema. The live guides are in `collection_guides`/`guide_entries`;
-> archived guide PDFs and past review reports are in `docs/Watch Guides/`.
->
-> Today's job: [pick one]
-> (a) **Ingest** the new Master Guide PDF at `docs/Watch Guides/<NAME>.pdf` —
-> extract it, walk me through your proposed entry list (chapters, bands,
-> priorities, foundation links) before seeding, then follow §2 of the
-> methodology end-to-end including card images.
-> (b) **Review** the "<NAME>" guide — run the §3 adversarial method (5
-> market-pricing agents by venue, solds over asks; 2 critics: architecture +
-> investment), produce the review report in `docs/Watch Guides/`, and propose
-> the band/priority corrections before applying anything.
-> (c) **Create** a new guide with me on <TOPIC> — interview me §1-style
-> (thesis first, one story; chapters not models; solds not asks; Canon
-> separated from plan), then draft the card list for my review.
->
-> House rules apply: migrations are run BY ME in the SQL Editor (tell me the
-> file), dry-run before any live seeding, and remind me to git push when done.
-
-### 5.2 Listing evaluation (works in any session)
-
-> Evaluate this listing against my Master Collection Guides (read
-> `docs/master-guides.md` §4 for the protocol if this is a fresh session;
-> guide data is in `collection_guides`/`guide_entries`, and check
-> `docs/Watch Guides/` for a review report with validated bands):
->
-> [paste: reference / asking price / link / photos / seller description]
->
-> I want: nearest guide entry and the variant delta, the chapter test,
-> a photo-based condition read with your confidence stated, a fair-buy range
-> for this specific example vs the ask (use sold comps, not askings), and a
-> Buy / Negotiate / Pass / Watch verdict argued from the guide's thesis.
+- **Guide lifecycle session** (ingest · review · create — keep one mode block,
+  delete the others): [`docs/prompts/guide-lifecycle-prompt.txt`](prompts/guide-lifecycle-prompt.txt)
+- **Listing evaluation** (any session; fill the template, paste photos
+  directly): [`docs/prompts/listing-evaluation-prompt.txt`](prompts/listing-evaluation-prompt.txt)
 
 ---
 
