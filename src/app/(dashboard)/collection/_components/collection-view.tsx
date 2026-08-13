@@ -20,8 +20,9 @@ import { GalleryGrid } from "./gallery-grid"
 import { ActiveFilterChips } from "./active-filter-chips"
 import {
   CollectionFiltersDialog,
-  EMPTY_FILTERS,
   activeFilterCount,
+  filtersFromParams,
+  filtersToParams,
   type CollectionFilters,
 } from "./collection-filters"
 import { cn, formatCurrency } from "@/lib/utils"
@@ -41,7 +42,6 @@ interface CollectionViewProps {
   guideNames?: Record<string, string>
 }
 
-const ALL = "all"
 type ViewMode = "table" | "gallery"
 const VIEW_KEY = "collection-view"
 const SIZE_KEY = "collection-gallery-size"
@@ -242,10 +242,11 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   const [size, setSize] = useState<number>(DEFAULT_SIZE)
   const [showCost, setShowCost] = useState(false)
 
-  // Advanced filters are session state only — deliberately NOT persisted
-  // (B2, DECISIONS.md §3): a fresh mount always shows the whole collection.
-  // The category filter stays URL-driven so it remains linkable.
-  const [filters, setFilters] = useState<CollectionFilters>(EMPTY_FILTERS)
+  // The URL owns the whole filter set — read it, never mirror it into state
+  // (CLAUDE.md: a soft navigation re-renders without re-mounting, so seeded
+  // useState would go stale). This is what makes a filtered collection
+  // survive a trip out to a watch and back, and what makes it linkable.
+  const filters = useMemo(() => filtersFromParams(searchParams), [searchParams])
   const [sortKey, setSortKey] = useState<SortKey>("default")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
@@ -269,8 +270,8 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     }
     setShowCost(localStorage.getItem(SHOW_COST_KEY) === "1")
 
-    // Filters no longer persist across sessions (B2); drop any stale value
-    // a previous version left behind. Sort is a preference and does restore.
+    // Filters live in the URL now, never localStorage — drop any stale value
+    // an older version left behind. Sort is a preference and does restore.
     localStorage.removeItem(FILTERS_KEY)
     try {
       const savedSort = localStorage.getItem(SORT_KEY)
@@ -314,8 +315,15 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     localStorage.setItem(SIZE_KEY, String(next))
   }
 
+  // Filter edits rewrite the query string in place. `replace`, not `push`:
+  // eleven controls would otherwise bury the page under history entries, and
+  // replace still leaves the filtered URL in history — so Back from a watch
+  // returns to the filtered list, which is the whole point.
   function updateFilters(next: CollectionFilters) {
-    setFilters(next)
+    const qs = filtersToParams(next, searchParams).toString()
+    startTransition(() => {
+      router.replace(qs ? `/collection?${qs}` : "/collection", { scroll: false })
+    })
   }
 
   function persistSort(key: SortKey, dir: SortDir) {
@@ -344,13 +352,6 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
       persistSort(key, "asc")
     }
   }
-
-  // URL is the source of truth for the category filter.
-  const rawCategoryId = searchParams.get("category")
-  const selectedId =
-    rawCategoryId && categories.some((c) => c.id === rawCategoryId)
-      ? rawCategoryId
-      : ALL
 
   // Filter options derived from the actual collection.
   const { brandOptions, movementOptions, caliberTypes, caseMaterials, boxOptions, labelOptions } = useMemo(() => {
@@ -414,13 +415,9 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     [watches, filters]
   )
 
-  const afterCategory = useMemo(
-    () => (selectedId === ALL ? watches : watches.filter((w) => w.category_id === selectedId)),
-    [watches, selectedId]
-  )
   const afterFilters = useMemo(
-    () => applyFilters(afterCategory, filters, tierBands, guideNames ?? {}),
-    [afterCategory, filters, tierBands, guideNames]
+    () => applyFilters(watches, filters, tierBands, guideNames ?? {}),
+    [watches, filters, tierBands, guideNames]
   )
   const afterSearch = useMemo(
     () => (query.trim() ? afterFilters.filter((w) => matchesQuery(w, query)) : afterFilters),
@@ -452,26 +449,11 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
       ? ((displayedValueCents - displayedTotalCents) / displayedTotalCents) * 100
       : null
 
-  // Clearing the URL-driven category preserves the rest of the query (?q).
-  function clearUrlCategory() {
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete("category")
-    const qs = params.toString()
-    startTransition(() => {
-      router.replace(qs ? `/collection?${qs}` : "/collection", { scroll: false })
-    })
-  }
-
-  const urlCategoryName =
-    selectedId === ALL
-      ? null
-      : categories.find((c) => c.id === selectedId)?.name ?? null
-
   // Band 2 carries the chips and the view-specific controls. It renders only
   // when it has something to hold — never an empty band, never a lone
   // floating button (FIXES §3). Columns is table view's only such control;
   // tiles view's sort and density sit in band 1.
-  const hasChips = activeFilterCount(filters) > 0 || urlCategoryName !== null
+  const hasChips = activeFilterCount(filters) > 0
   const hasViewControls = view === "table"
 
   return (
@@ -635,8 +617,6 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
             <ActiveFilterChips
               filters={filters}
               onChange={updateFilters}
-              urlCategoryName={urlCategoryName}
-              onClearUrlCategory={clearUrlCategory}
               brands={brandOptions}
               movements={movementOptions}
               labels={labelOptions}

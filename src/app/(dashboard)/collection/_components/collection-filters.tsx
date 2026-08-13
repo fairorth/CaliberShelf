@@ -63,6 +63,104 @@ export const EMPTY_FILTERS: CollectionFilters = {
   complications: [],
 }
 
+// ── URL codec ──────────────────────────────────────────────────────
+//
+// The filter set lives in the query string rather than component state. The
+// collection is a list view: a filtered list has to survive a trip out to a
+// watch and back, be linkable, and be restorable by the Back button. Holding
+// it in `useState` meant any remount silently emptied it.
+//
+// Multi-value filters repeat their key (`?category=a&category=b`) instead of
+// comma-joining, so `?category=<id>` — already emitted by /category/[id], the
+// by-category report and the table's category cell — keeps working unchanged.
+//
+// Absent `status` means "all three shown", which is the default; `status=none`
+// is the explicit empty selection (distinct from absent).
+const PARAM = {
+  status: "status",
+  wishlistSource: "wlsrc",
+  brandId: "brand",
+  movementId: "movement",
+  caliberType: "movtype",
+  caseMaterial: "material",
+  box: "box",
+  priceTracking: "price",
+  tierKeys: "tier",
+  labelIds: "label",
+  categoryIds: "category",
+  complications: "comp",
+} as const
+
+/** Params the filter codec owns. Everything else (?q) is left untouched. */
+export const FILTER_PARAM_KEYS: string[] = Object.values(PARAM)
+
+interface ReadableParams {
+  get(key: string): string | null
+  getAll(key: string): string[]
+}
+
+export function filtersFromParams(params: ReadableParams): CollectionFilters {
+  const status = params.getAll(PARAM.status)
+  const allShown = status.length === 0
+  const price = params.get(PARAM.priceTracking)
+  return {
+    showOwned: allShown || status.includes("owned"),
+    showComingSoon: allShown || status.includes("coming"),
+    showWishlist: allShown || status.includes("wish"),
+    wishlistSource: params.get(PARAM.wishlistSource) ?? "",
+    brandId: params.get(PARAM.brandId) ?? "",
+    movementId: params.get(PARAM.movementId) ?? "",
+    caliberType: params.get(PARAM.caliberType) ?? "",
+    caseMaterial: params.get(PARAM.caseMaterial) ?? "",
+    box: params.get(PARAM.box) ?? "",
+    // Anything else in ?price is not a filter we understand — ignore it.
+    priceTracking: price === "tracked" || price === "untracked" ? price : "",
+    tierKeys: params.getAll(PARAM.tierKeys).filter(Boolean),
+    labelIds: params.getAll(PARAM.labelIds).filter(Boolean),
+    categoryIds: params.getAll(PARAM.categoryIds).filter(Boolean),
+    complications: params.getAll(PARAM.complications).filter(Boolean),
+  }
+}
+
+/** Writes `f` onto a copy of `base`, leaving params it doesn't own (?q) alone. */
+export function filtersToParams(
+  f: CollectionFilters,
+  base: ReadableParams & { toString(): string }
+): URLSearchParams {
+  const p = new URLSearchParams(base.toString())
+
+  const one = (key: string, value: string) => {
+    if (value) p.set(key, value)
+    else p.delete(key)
+  }
+  const many = (key: string, values: string[]) => {
+    p.delete(key)
+    for (const v of values) p.append(key, v)
+  }
+
+  const shown = [
+    f.showOwned && "owned",
+    f.showComingSoon && "coming",
+    f.showWishlist && "wish",
+  ].filter((v): v is string => Boolean(v))
+  if (shown.length === 3) p.delete(PARAM.status)
+  else many(PARAM.status, shown.length > 0 ? shown : ["none"])
+
+  one(PARAM.wishlistSource, f.wishlistSource)
+  one(PARAM.brandId, f.brandId)
+  one(PARAM.movementId, f.movementId)
+  one(PARAM.caliberType, f.caliberType)
+  one(PARAM.caseMaterial, f.caseMaterial)
+  one(PARAM.box, f.box)
+  one(PARAM.priceTracking, f.priceTracking)
+  many(PARAM.tierKeys, f.tierKeys)
+  many(PARAM.labelIds, f.labelIds)
+  many(PARAM.categoryIds, f.categoryIds)
+  many(PARAM.complications, f.complications)
+
+  return p
+}
+
 export function activeFilterCount(f: CollectionFilters): number {
   let n = 0
   if (!f.showOwned || !f.showComingSoon || !f.showWishlist) n++
