@@ -232,16 +232,22 @@ export function ColumnsMenu({
 const DEFAULT_WIDTHS: Record<ColumnId, number> = {
   // 64px image + 8px cell padding each side.
   photo: PHOTO_COL_WIDTH,
-  category: 96,
-  brand: 148,
+  // Sized to their longest real values plus the filter funnel, which reserves
+  // its width at rest so revealing it on hover cannot shove the text sideways.
+  // 96 clipped "Chronograph" in 19 rows; 148 clipped "Vacheron Constantin" in
+  // 11. Both are the longest value in their column, not outliers.
+  category: 116,
+  brand: 168,
   // Model carries the status badges (WISH LIST + the guide name), which cost
   // ~160px before the name gets a pixel. At 200 the name truncated to a single
   // letter, so it takes the lion's share and Movement Type — whose values are
   // one short word — gives most of it back. Widened again in round 3: the name
-  // was still truncating to "Historiqu…" against its badges. 420 now that the
-  // table shrink-wraps: Model gets a real width instead of absorbing whatever
-  // the viewport left over, which is what pinned Price to the far right.
-  model: 420,
+  // was still truncating to "Historiqu…" against its badges. Now that the table
+  // shrink-wraps, Model gets a real width instead of absorbing whatever the
+  // viewport left over, which is what pinned Price to the far right. 400 rather
+  // than 420 so widening Category and Brand keeps the default set inside a
+  // 1400px viewport without a horizontal scrollbar.
+  model: 400,
   nickname: 136,
   reference: 152,
   // 104 was too tight for the "Movement Type" header itself, which ran into
@@ -295,12 +301,14 @@ function ResizeHandle({
         }
       }}
       title={`Drag to resize the ${label} column`}
-      // Straddles the boundary rather than sitting inside the cell: 11px wide,
-      // half either side, so the grab area is where the eye says the divider is
-      // and the last column's handle is reachable instead of flush against the
-      // table edge. The visible rule thickens on hover and turns brass, so you
-      // can see what you have hold of before you start dragging.
-      className="absolute -right-[5px] top-0 z-20 h-full w-[11px] cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:left-1/2 after:w-px after:-translate-x-1/2 after:rounded-full after:bg-border/70 after:transition-all hover:after:inset-y-0 hover:after:w-0.5 hover:after:bg-brass focus-visible:outline-none focus-visible:after:inset-y-0 focus-visible:after:w-0.5 focus-visible:after:bg-brass active:after:inset-y-0 active:after:w-0.5 active:after:bg-brass"
+      // 11px of grab area immediately left of the divider, with the visible
+      // rule sitting on the boundary itself — so you aim at the line you can
+      // see, with a target wide enough to hit. It stays inside the cell rather
+      // than straddling: an overhanging handle on the last column widens the
+      // table's scroll area and leaves the container permanently scrolled by a
+      // few pixels. The rule thickens to brass on hover, so you can tell what
+      // you have hold of before you start dragging.
+      className="absolute right-0 top-0 z-20 h-full w-[11px] cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-0 after:w-px after:rounded-full after:bg-border/70 after:transition-all hover:after:inset-y-0 hover:after:w-0.5 hover:after:bg-brass focus-visible:outline-none focus-visible:after:inset-y-0 focus-visible:after:w-0.5 focus-visible:after:bg-brass active:after:inset-y-0 active:after:w-0.5 active:after:bg-brass"
     />
   )
 }
@@ -645,7 +653,10 @@ export function CollectionTable({
             pushing the page sideways. */}
         <div
           className="max-w-full overflow-x-auto rounded-lg border"
-          style={{ width: tableWidth }}
+          // +2 for the wrapper's own 1px borders: box-sizing is border-box, so
+          // without it the content box is 2px narrower than the table and the
+          // container scrolls by those 2px at every viewport.
+          style={{ width: tableWidth + 2 }}
         >
           {/* w-auto, not w-full: a fixed-layout table that is told to fill its
               container treats the colgroup widths as proportions and inflates
