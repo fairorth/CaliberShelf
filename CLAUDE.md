@@ -32,10 +32,22 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - One component per file; import directly (no barrel exports)
 
 ## Design System — see docs/design-system.md
-- **Accent:** brass (`--brass`) = action/brand (buttons, active nav, focus, selection).
-  Steel-blue (`--primary`) = data only (charts, links, info chips). Prices and totals are
-  `--foreground` + `font-mono tabular-nums` — never colored. Brass is NEVER decoration
-  (no colored card borders or header washes).
+- **Light is the only theme.** `forcedTheme="light"` in the root layout; there is
+  deliberately no switcher. The `.dark` tokens remain in globals.css but are unreachable —
+  do not add `dark:` variants to new work, and do not reason about dark mode.
+- **Accent:** brass (`--brass`, `#8a6a2f` on light = BRAND.md brass-deep) = action/brand
+  (buttons, active nav, focus, selection). Steel-blue (`--primary`) = data only (charts,
+  links, info chips). Prices and totals are `--foreground` + `font-mono tabular-nums` —
+  never colored. Brass is NEVER decoration (no colored card borders or header washes).
+- **Badges, pills, chips and status dots go through `<StatusPill>`** (`ui/status-pill.tsx`):
+  solid brass, outline brass, neutral, and `--destructive` for failure only. Never a Tailwind
+  colour literal — that is how a non-brass accent survived four sweeps. The user-chosen label
+  palette in `validations/label.ts` is the one deliberate exception (it is data, not accent).
+- **Neutral tokens must stay neutral.** `--muted-foreground`, `--accent` and
+  `--accent-foreground` once carried enough blue chroma to read as system blue at 11px, which
+  is why "remove the blue" kept finding new instances. Sweep the token, not the instance.
+- Global `a` / `a:hover` are defined from the palette so an unstyled link cannot inherit
+  browser blue.
 - **Type:** six steps only — 11 / 13 / 15 / 19 / 26 / 38px. Every page `h1` is 26px.
   `font-display` (Fraunces) only at ≥19px. Mono only at 11px and 13px. Never write an
   arbitrary `text-[Npx]`.
@@ -46,7 +58,13 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - **Icons:** lucide-react only, `currentColor`, `aria-hidden`. No emoji in UI — the two
   exceptions are ✨ (AI autofill) and ⚠ (unverified reference).
 - **Images:** `object-contain` where the photo is the subject; `object-cover` only in
-  dense grids, framed by `dial_focal_x/y/zoom`.
+  dense grids, framed by `dial_focal_x/y/zoom`. `getWatches` returns TWO cover URLs —
+  `cover_photo_url` (~720px, heroes/tiles/previews) and `cover_thumb_url` (~192px, dense
+  thumbnails). Use the thumb in any cell under ~100px: squeezing the big one into a 64px
+  box is a ~9:1 downscale and it visibly mushes. Never serve the untransformed original.
+- **Brand mark:** `components/brand/logo.tsx`. Geometry and per-ground fills come from
+  `design_handoff_v2_design_remediation/brand/BRAND.md`; theme tokens only, no hex in the
+  component. Hard rule: the dial indices are omitted below 26px and present at 26px and up.
 - **Motion:** 150ms color / 200ms transform, ease-out. `prefers-reduced-motion` must stop
   the hero auto-advance, the ring sweep and hover scales.
 - **Text hierarchy:** exactly one full-`--foreground` value per surface; everything else
@@ -71,6 +89,13 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - URL-as-state for client filters: use `useSearchParams()` directly in the client component, not `useState(initialFromProps)`. Soft navigation re-renders but doesn't re-mount, so useState ignores new prop values from the server.
 - `react-hooks/set-state-in-effect` lint rule fires only on the **first** setState in an effect. One `eslint-disable-next-line` above the first call covers all subsequent ones — directives on later calls trigger "unused" warnings.
 - localStorage hydration: read in `useEffect` (server can't access it). The first setState triggers the lint rule above; this is a legitimate exception worth disabling.
+- `next/image` with `fill` positions against the nearest **positioned** ancestor. A sized box without `relative` lets the image size itself to whatever ancestor happens to be positioned — in the collection table that was the whole column, producing a letterbox strip through the middle of the watch. Always pair `fill` with `relative` on the box that defines the size.
+- `table-layout: fixed` treats `<colgroup>` widths as **ratios, not pixels**, whenever the table is wider than their sum: the surplus is shared out proportionally and every column inflates together. For literal widths, size the table explicitly (`width: sum-of-columns`) rather than letting it fill. Don't "fix" this with one `width: auto` flex column — a flex column absorbs width released by any other column, which silently inverts the drag direction of every resize handle to its right.
+
+## Collection table conventions (`components/collection-table.tsx`)
+- Filters, search and sort live in the **URL**, not component state, so a filtered list survives a trip out to a watch and back and is linkable. Multi-value filters repeat their key (`?category=a&category=b`). View mode, tile size and column choice are per-device preferences and stay in localStorage.
+- The Brand and Category **cells** filter the collection; the rest of the row opens the watch. This deliberately narrows "one row, one destination" — see DECISIONS.md §8.
+- Column widths are explicit pixels, resizable, persisted per device. Any column may be resized; the table sizes itself to their sum.
 
 ## Agents — see docs/agents.md
 Full fleet reference (what each agent does, how it's initiated, observed
