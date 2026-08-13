@@ -130,13 +130,18 @@ const COLUMN_ORDER: ColumnId[] = [
   "worn",
   "price",
 ]
+// Seven by default. Movement Type was the eighth (DECISIONS §7) but is empty
+// in 101 of 161 rows — nine of the first twelve on screen — so it read as a
+// blank column sitting between Model and Price. It stays one click away in the
+// Columns menu for anyone who wants it; it is not worth ~130px of the default
+// table to show an em-dash. Reference is nearly as sparse (103/161) but is an
+// identifier people scan for, so it stays.
 const DEFAULT_VISIBLE: ColumnId[] = [
   "photo",
   "brand",
   "model",
   "category",
   "reference",
-  "movementType",
   "box",
   "worn",
 ]
