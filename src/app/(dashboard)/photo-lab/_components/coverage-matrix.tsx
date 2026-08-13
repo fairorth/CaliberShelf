@@ -105,14 +105,17 @@ export function CoverageMatrix({ rows, initialNeverShot = false }: CoverageMatri
           Never shot only
         </button>
 
+        {/* Three states: brass (scored), neutral (unscored), outline (empty).
+            The scored swatch was --chart-2, a vivid system blue — chart colours
+            are for data series, not UI state (E1). */}
         <div className="ml-auto flex items-center gap-4 font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className="h-[11px] w-[11px] rounded-sm bg-chart-2/60" aria-hidden="true" />
+            <span className="h-[11px] w-[11px] rounded-sm bg-brass" aria-hidden="true" />
             Scored
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-[11px] w-[11px] rounded-sm bg-secondary" aria-hidden="true" />
-            Frames, unscored
+            Unscored
           </span>
           <span className="flex items-center gap-1.5">
             <span
@@ -240,7 +243,7 @@ function CoverageCellView({
           type="button"
           onClick={open}
           title={`Shoot ${angle} — best ${gradeForScore(cell.bestScore)}`}
-          className="flex h-[26px] items-center rounded-full bg-chart-2/18 px-2.5 font-mono text-2xs text-chart-2 transition-colors hover:bg-chart-2/28"
+          className="flex h-[26px] items-center rounded-full bg-brass/18 px-2.5 font-mono text-2xs text-brass transition-colors hover:bg-brass/28"
         >
           {gradeForScore(cell.bestScore)} · {total}
         </button>
@@ -260,11 +263,12 @@ function CoverageCellView({
           aria-label={`Start a session for this ${angle} shot`}
           title={`Shoot ${angle}`}
           className={cn(
-            "flex h-[26px] w-[26px] items-center justify-center rounded-full border border-dashed transition-colors",
-            // Brass marks the action — this cell is what needs shooting (§1).
-            reshoot
-              ? "border-brass/60 text-brass hover:bg-brass/10"
-              : "border-border text-muted-foreground hover:border-brass/60 hover:text-brass"
+            "flex h-[26px] w-[26px] items-center justify-center rounded-full border border-dashed text-muted-foreground transition-colors hover:border-brass/60 hover:text-brass",
+            // Brass now means "scored" in the legend, so an empty cell cannot
+            // also rest on brass — it would read as done. Never-shot rows keep
+            // a stronger border instead, and brass returns on hover, where it
+            // means the action (start a session for this angle).
+            reshoot ? "border-foreground/30" : "border-border"
           )}
         >
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
