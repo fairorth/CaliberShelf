@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import {
-  ChevronLeft,
   ChevronRight,
   Pencil,
   Receipt,
@@ -26,6 +25,7 @@ import { strapMaterialLabels } from "@/lib/validations/strap"
 import { strapDisplayName } from "@/lib/types/strap"
 import { WatchViewPhotos } from "./_components/watch-view-photos"
 import { WearTodayButton } from "./_components/wear-today-button"
+import { CollectionBackLink } from "./_components/collection-back-link"
 
 export async function generateMetadata({
   params,
@@ -185,14 +185,8 @@ export default async function WatchViewPage({
 
   return (
     <div className="mx-auto max-w-[1180px] space-y-5 pb-8">
-      {/* Back link */}
-      <Link
-        href="/collection"
-        className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-        Collection
-      </Link>
+      {/* Back link — returns to the collection as it was left (filters + search). */}
+      <CollectionBackLink />
 
       {/* Title row */}
       <div className="flex flex-wrap items-start justify-between gap-6">
@@ -255,6 +249,7 @@ export default async function WatchViewPage({
 
         <div className="space-y-3.5">
           <SpecCard title="Specifications" icon={Settings2}>
+            {watch.category && <SpecRow label="Category">{watch.category.name}</SpecRow>}
             {movementLine && <SpecRow label="Movement">{movementLine}</SpecRow>}
             {watch.case_material && (
               <SpecRow label="Case material">

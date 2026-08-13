@@ -26,7 +26,7 @@ import {
   type CollectionFilters,
 } from "./collection-filters"
 import { cn, formatCurrency } from "@/lib/utils"
-import { SHOW_COST_KEY } from "@/lib/preferences"
+import { COLLECTION_RETURN_KEY, SHOW_COST_KEY } from "@/lib/preferences"
 import { KNOWN_COMPLICATIONS } from "@/lib/validations/watch"
 import { tierBandForCents, type TierBand } from "@/lib/tiers"
 import type { Category, WatchWithCover } from "@/lib/types/watch"
@@ -304,6 +304,16 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     }, 300)
     return () => clearTimeout(t)
   }, [query, searchParams, router])
+
+  // Record the list as it currently stands so the watch view's breadcrumb can
+  // return to this exact collection — filters, search and all.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(COLLECTION_RETURN_KEY, searchParams.toString())
+    } catch {
+      // Storage unavailable — the breadcrumb falls back to a bare collection.
+    }
+  }, [searchParams])
 
   function updateView(next: ViewMode) {
     setView(next)

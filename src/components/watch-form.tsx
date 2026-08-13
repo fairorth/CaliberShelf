@@ -585,6 +585,41 @@ export function WatchForm({
               className={FIELD}
             />
           </div>
+          {/* Category sits with identity, not with Labels: it is what the
+              watch *is* (a design archetype), while a label is something you
+              stuck on it. Placed just before Reference Number so the two share
+              a row on wide screens. */}
+          <div className="space-y-2">
+            <FormLabel htmlFor="category_select">Category <span className="text-brass">*</span></FormLabel>
+            <Select
+              value={selectedCategoryId}
+              onValueChange={(val) => {
+                markDirty()
+                setSelectedCategoryId(val ?? "")
+              }}
+            >
+              <SelectTrigger id="category_select" className={FIELD}>
+                <span>
+                  {selectedCategoryId
+                    ? categories.find((c) => c.id === selectedCategoryId)?.name ?? "Select a category"
+                    : "Select a category"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {categories.length === 0 ? (
+                  <SelectItem value="" disabled>
+                    No categories — create one in Config first
+                  </SelectItem>
+                ) : (
+                  categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <FormLabel htmlFor="reference_number">Reference Number</FormLabel>
@@ -1137,52 +1172,19 @@ export function WatchForm({
         </CardContent>
       </Card>
 
-      {/* ── Card 3: Category & Labels ───────────────────────────── */}
+      {/* ── Card 3: Labels ──────────────────────────────────────── */}
+      {/* Category moved up to Identity & Ownership; with nothing else to hold,
+          this card is absent entirely when there are no labels to show. */}
+      {labels.length > 0 && (
       <Card className={CARD}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className={CARD_TITLE}>
             <span className={CHIP}><FolderOpen className="h-4 w-4" aria-hidden="true" /></span>
-            Category & Labels
+            Labels
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Category */}
-          <div className="max-w-sm space-y-2">
-            <FormLabel htmlFor="category_select">Category <span className="text-brass">*</span></FormLabel>
-            <Select
-              value={selectedCategoryId}
-              onValueChange={(val) => {
-                markDirty()
-                setSelectedCategoryId(val ?? "")
-              }}
-            >
-              <SelectTrigger id="category_select" className={FIELD}>
-                <span>
-                  {selectedCategoryId
-                    ? categories.find((c) => c.id === selectedCategoryId)?.name ?? "Select a category"
-                    : "Select a category"}
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                {categories.length === 0 ? (
-                  <SelectItem value="" disabled>
-                    No categories — create one in Config first
-                  </SelectItem>
-                ) : (
-                  categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Labels */}
-          {labels.length > 0 && (
             <div className="space-y-2">
-              <FormLabel>Labels</FormLabel>
               <div className="flex flex-wrap gap-2">
                 {labels.map((label) => {
                   const isSelected = selectedLabelIds.has(label.id)
@@ -1208,9 +1210,9 @@ export function WatchForm({
                 Click to toggle labels. Labels can be managed in Config.
               </p>
             </div>
-          )}
         </CardContent>
       </Card>
+      )}
 
       {stickyBar ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 py-3 backdrop-blur">
