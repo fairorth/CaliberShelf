@@ -28,9 +28,9 @@ export async function generateMetadata({
 }) {
   const { id } = await params
   const watch = await getWatchById(id)
-  if (!watch) return { title: "Watch Not Found | CaliberShelf" }
+  if (!watch) return { title: "Watch Not Found | TenTenLoupe" }
   return {
-    title: `Edit ${watch.brand.name} ${watch.model} | CaliberShelf`,
+    title: `Edit ${watch.brand.name} ${watch.model} | TenTenLoupe`,
   }
 }
 

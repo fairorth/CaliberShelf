@@ -7,7 +7,7 @@ import { getGuideMembership } from "@/lib/queries/guides"
 import { CollectionView } from "./_components/collection-view"
 
 export const metadata: Metadata = {
-  title: "Collection | CaliberShelf",
+  title: "Collection | TenTenLoupe",
 }
 
 export default async function CollectionPage() {

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getGuides } from "@/lib/queries/guides"
 
 export const metadata: Metadata = {
-  title: "Collection Guides | CaliberShelf",
+  title: "Collection Guides | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

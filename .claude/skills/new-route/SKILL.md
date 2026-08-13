@@ -18,7 +18,7 @@ Create a new route at the specified path under `src/app/(dashboard)/`.
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Page Title | CaliberShelf",
+  title: "Page Title | TenTenLoupe",
 }
 
 export default async function PageName() {

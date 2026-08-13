@@ -15,7 +15,7 @@ import { BoxesTab } from "./_components/boxes-tab"
 import { SettingsTab } from "./_components/settings-tab"
 
 export const metadata: Metadata = {
-  title: "Config | CaliberShelf",
+  title: "Config | TenTenLoupe",
 }
 
 // Brands graduated to its own top-level page (/brands) — no longer a tab here.

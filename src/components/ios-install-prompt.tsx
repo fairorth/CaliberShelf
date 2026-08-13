@@ -4,9 +4,9 @@ import { Share } from "lucide-react"
 
 import { useState, useSyncExternalStore, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { CaliberShelfMark } from "@/components/calibershelf-mark"
+import { Mark } from "@/components/brand/logo"
 
-const STORAGE_KEY = "calibershelf-ios-install-dismissed"
+const STORAGE_KEY = "tentenloupe-ios-install-dismissed"
 
 function shouldShowPrompt(): boolean {
   if (typeof window === "undefined") return false
@@ -24,7 +24,7 @@ function shouldShowPrompt(): boolean {
 const noop = () => () => {}
 
 /**
- * Dismissible banner prompting iOS Safari users to add CaliberShelf
+ * Dismissible banner prompting iOS Safari users to add TenTenLoupe
  * to their Home Screen. Only shown on iOS Safari in browser mode
  * (not standalone). Persists dismissal in localStorage.
  */
@@ -47,9 +47,9 @@ export function IosInstallPrompt() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background p-4 shadow-lg md:hidden">
       <div className="flex items-start gap-3">
-        <CaliberShelfMark size={24} className="shrink-0 rounded-md" />
+        <Mark size={24} className="shrink-0 rounded-md" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">Install CaliberShelf</p>
+          <p className="text-sm font-medium">Install TenTenLoupe</p>
           <p className="text-xs text-muted-foreground">
             Tap the share button{" "}
             <Share className="inline h-3.5 w-3.5" aria-hidden="true" />{" "}

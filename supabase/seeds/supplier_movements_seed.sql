@@ -1,5 +1,5 @@
 -- ======================================================================
--- CaliberShelf — Supplier / Ebauche Movements Seed (v2)
+-- TenTenLoupe — Supplier / Ebauche Movements Seed (v2)
 -- ======================================================================
 --
 -- Companion to movements_seed.sql. This file focuses specifically on

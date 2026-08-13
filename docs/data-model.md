@@ -1,4 +1,4 @@
-# CaliberShelf Data Model
+# TenTenLoupe Data Model
 
 The database is Postgres (hosted Supabase). Migrations in `supabase/migrations/`
 are the source of truth; this doc is the map. Money is stored as integer

@@ -7,7 +7,7 @@ import { SessionView, type SessionFrame } from "./_components/session-view"
 import type { PhotoAngle, WatchImageScore } from "@/lib/types/watch"
 
 export const metadata: Metadata = {
-  title: "Photo Lab · Session | CaliberShelf",
+  title: "Photo Lab · Session | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

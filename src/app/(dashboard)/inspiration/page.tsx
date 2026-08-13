@@ -3,7 +3,7 @@ import { getInspirationImages } from "@/lib/queries/inspiration"
 import { InspirationGallery } from "./_components/inspiration-gallery"
 
 export const metadata: Metadata = {
-  title: "Inspiration | CaliberShelf",
+  title: "Inspiration | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

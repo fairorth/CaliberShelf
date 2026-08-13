@@ -1,6 +1,6 @@
 # Price Check — the Market Valuation Agent
 
-CaliberShelf's valuation system researches the current secondary-market value
+TenTenLoupe's valuation system researches the current secondary-market value
 of selected watches using a Claude AI agent with live web search, stores each
 estimate with its full evidence trail, and surfaces the results throughout the
 app. It runs automatically once a month via GitHub Actions and can be run

@@ -139,7 +139,7 @@ the hero caption, frequently with an extra `/70` or `/80` opacity on top.
 - **Two deliberate exceptions:** `✨` on the AI spec-autofill button (an established
   convention for AI actions, and the review endorses keeping it), and `⚠` in the
   unverified-reference warning pill.
-- Empty states use `CaliberShelfMark` (already a component) or a lucide outline glyph
+- Empty states use `TenTenLoupeMark` (already a component) or a lucide outline glyph
   at 32px in `--muted-foreground`, never a 5xl emoji.
 
 Suggested nav mapping: Collection `List`, Brands `Tag`, Straps `Minus`/`Link2`,

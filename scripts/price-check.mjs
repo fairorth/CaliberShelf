@@ -1,4 +1,4 @@
-// Market-valuation agent for CaliberShelf (Phase 4).
+// Market-valuation agent for TenTenLoupe (Phase 4).
 //
 // For every watch with price_check_enabled = true, runs a Claude agent with
 // web search + web fetch to research the current secondary-market value, then

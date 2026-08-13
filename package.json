@@ -1,6 +1,6 @@
 {
-  "name": "caliber-shelf",
-  "version": "1.7.52",
+  "name": "tentenloupe",
+  "version": "1.8.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

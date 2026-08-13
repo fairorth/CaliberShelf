@@ -4,7 +4,7 @@ import { getWatches } from "@/lib/queries/watches"
 import { BrandsTab } from "./_components/brands-tab"
 
 export const metadata: Metadata = {
-  title: "Brands | CaliberShelf",
+  title: "Brands | TenTenLoupe",
 }
 
 export default async function BrandsPage() {

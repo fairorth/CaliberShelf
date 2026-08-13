@@ -15,7 +15,7 @@ import { brandTypeLabels } from "@/lib/validations/brand"
 import type { Brand, WatchWithCover } from "@/lib/types/watch"
 
 export const metadata: Metadata = {
-  title: "Brand Wish List | CaliberShelf",
+  title: "Brand Wish List | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

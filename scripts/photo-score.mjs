@@ -1,4 +1,4 @@
-// Photo-scoring agent for CaliberShelf.
+// Photo-scoring agent for TenTenLoupe.
 //   Layer 1 — CV triage (free, deterministic): stack collapse, dial-ROI
 //     sharpness / brightness / glare, perceptual-hash duplicate clustering.
 //   Layer 2, Track A — shot-card evaluation (Haiku vision): matches each CV

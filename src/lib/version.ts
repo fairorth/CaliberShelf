@@ -1,5 +1,5 @@
 /**
- * Human-facing app version shown next to the CaliberShelf wordmark.
+ * Human-facing app version shown next to the TenTenLoupe wordmark.
  *
  * Single source of truth is package.json's "version" field, injected at build
  * time via NEXT_PUBLIC_APP_VERSION (see next.config.ts). Bump it with:

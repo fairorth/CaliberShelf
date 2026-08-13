@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { AuthForm } from "../_components/auth-form"
 
 export const metadata: Metadata = {
-  title: "Sign In | CaliberShelf",
+  title: "Sign In | TenTenLoupe",
 }
 
 export default function LoginPage() {

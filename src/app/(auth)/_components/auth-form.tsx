@@ -35,7 +35,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         </CardTitle>
         <CardDescription>
           {mode === "login"
-            ? "Sign in to your CaliberShelf account"
+            ? "Sign in to your TenTenLoupe account"
             : "Start tracking your watch collection"}
         </CardDescription>
       </CardHeader>

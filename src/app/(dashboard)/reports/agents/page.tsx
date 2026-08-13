@@ -7,7 +7,7 @@ import { getAgentReview, formatUsdMicros } from "@/lib/queries/agent-runs"
 import type { AgentRun } from "@/lib/types/watch"
 
 export const metadata: Metadata = {
-  title: "Agent Execution Review | CaliberShelf",
+  title: "Agent Execution Review | TenTenLoupe",
 }
 
 // Reflect new runs immediately.

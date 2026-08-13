@@ -5,7 +5,7 @@ import { formatCurrency, cn } from "@/lib/utils"
 import type { DealAvailability } from "@/lib/types/watch"
 
 export const metadata: Metadata = {
-  title: "Deals | CaliberShelf",
+  title: "Deals | TenTenLoupe",
 }
 
 // Badge treatment per availability state

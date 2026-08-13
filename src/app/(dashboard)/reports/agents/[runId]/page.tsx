@@ -7,7 +7,7 @@ import { getAgentRunWithItems, formatUsdMicros } from "@/lib/queries/agent-runs"
 import type { AgentRunItem } from "@/lib/types/watch"
 
 export const metadata: Metadata = {
-  title: "Agent Run | CaliberShelf",
+  title: "Agent Run | TenTenLoupe",
 }
 
 export const dynamic = "force-dynamic"

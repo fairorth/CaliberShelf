@@ -4,7 +4,7 @@
 // so renaming the readable part won't create duplicates).
 //
 // The web app cannot touch the local filesystem, so this local utility is how
-// CaliberShelf keeps the photo-lab folders in sync with the collection.
+// TenTenLoupe keeps the photo-lab folders in sync with the collection.
 //
 // Usage:
 //   npm run sync-watch-folders                 # create missing folders

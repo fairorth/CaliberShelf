@@ -1,6 +1,6 @@
 # Watch Photography Lab
 
-**This is the living, single source of truth for the CaliberShelf photo lab.**
+**This is the living, single source of truth for the TenTenLoupe photo lab.**
 
 How this document is maintained:
 
@@ -90,7 +90,7 @@ The EOS Utility PC destination is the per-watch folder under the
 `npm run sync-watch-folders`; parent path in Config → Settings /
 `profiles.watch_images_path`, migration 00035). **Point the destination at the
 session watch's folder at the start of each session** — the folder-per-watch
-routing is the CaliberShelf linkage.
+routing is the TenTenLoupe linkage.
 
 A session folder typically contains: `.CR3` frames (singles + stack sources),
 `.JPG`/`.HEIF` in-camera composites (stacked shots), and finished Luminar Neo

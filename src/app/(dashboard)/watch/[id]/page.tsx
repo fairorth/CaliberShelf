@@ -34,8 +34,8 @@ export async function generateMetadata({
 }) {
   const { id } = await params
   const watch = await getWatchById(id)
-  if (!watch) return { title: "Watch Not Found | CaliberShelf" }
-  return { title: `${watch.brand.name} ${watch.model} | CaliberShelf` }
+  if (!watch) return { title: "Watch Not Found | TenTenLoupe" }
+  return { title: `${watch.brand.name} ${watch.model} | TenTenLoupe` }
 }
 
 function formatDate(iso: string): string {

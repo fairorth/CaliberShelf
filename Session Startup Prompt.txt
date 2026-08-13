@@ -1,8 +1,8 @@
-CaliberShelf. My project folder is C:\Projects\CaliberShelf on this machine.
+TenTenLoupe. My project folder is C:\Projects\TenTenLoupe on this machine.
 This is a LOCAL session — your Read/Edit/shell tools act directly on my files.
 No cloud workspace, no device mount, no staging: just edit in place.
 
-I run CaliberShelf on TWO Windows 11 workstations: "ms-02-ultra" (office, my
+I run TenTenLoupe on TWO Windows 11 workstations: "ms-02-ultra" (office, my
 main dev machine) and the PhotoLab workstation (upstairs — where the tethered
 Canon rig and the real \WatchImages captures live). I may be on either one.
 Claude Code sessions and your memory directory are PER-MACHINE and do not
@@ -23,7 +23,7 @@ Before doing anything else, initialize:
    initialization.
 2. Read CLAUDE.md at the repo root, plus the scoped ones (supabase/CLAUDE.md,
    src/app/CLAUDE.md, src/components/CLAUDE.md).
-3. Skim docs/ as needed — especially data-model.md and using-calibershelf.md.
+3. Skim docs/ as needed — especially data-model.md and using-tentenloupe.md.
 4. Run `git fetch`, then `git log --oneline -10` and `git status --short` so
    you know where the tree actually stands.
    * If local is BEHIND origin/master, I probably switched machines without

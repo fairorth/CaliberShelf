@@ -5,7 +5,7 @@ import { getWatches } from "@/lib/queries/watches"
 import { formatCurrency } from "@/lib/utils"
 
 export const metadata: Metadata = {
-  title: "Collection Summary | CaliberShelf",
+  title: "Collection Summary | TenTenLoupe",
 }
 
 /** A watch still needs initial editing if its brand is missing or a placeholder. */

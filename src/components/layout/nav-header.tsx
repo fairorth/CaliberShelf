@@ -17,7 +17,7 @@ import {
 import { SearchInput } from "@/components/search-input"
 import { signOut } from "@/lib/actions/auth-actions"
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider"
-import { CaliberShelfMark } from "@/components/calibershelf-mark"
+import { Mark } from "@/components/brand/logo"
 import { NAV_GROUPS, NAV_HOME, isNavItemActive } from "@/components/layout/nav-items"
 import { cn } from "@/lib/utils"
 import { APP_VERSION } from "@/lib/version"
@@ -114,10 +114,16 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             onClick={guardClick("/dashboard")}
             className="flex items-center gap-2 lg:hidden"
           >
-            <CaliberShelfMark size={26} className="rounded-lg" />
+            {/* The 56px header cannot hold the three-line lockup, so this is
+                the mark plus a single-line wordmark. Below sm the mark stands
+                alone — the rail carries the full lockup at lg. */}
+            <Mark size={26} decorative />
             <span className="hidden items-baseline gap-1.5 sm:flex">
-              <span className="font-display text-md font-medium tracking-tight">
-                CaliberShelf
+              <span className="font-display text-md font-medium tracking-[-0.02em]">
+                Ten<span className="text-brass">:</span>Ten
+              </span>
+              <span className="font-mono text-2xs tracking-[0.24em] text-brass">
+                LOUPE
               </span>
               <span className="font-mono text-2xs text-muted-foreground">
                 v{APP_VERSION}

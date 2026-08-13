@@ -3,9 +3,9 @@
 **Status:** Phases 1–2 BUILT (v1.7.0–1.7.1): CV triage + Track A shot-card grading (Haiku 4.5), coverage matrix + reshoot list in the folder report and DB. CR3 embedded-preview resolution verified full-res on a real R10 file (plan 3.1 → option b confirmed, no LibRaw fallback needed). The four-card starter set (3.6) ships as the `SHOT_CARDS` constant in `scripts/photo-score.mjs` — edit there to confirm/extend. Next: Phase 3 (Track B rubric + comparative hero ranking). Plan v1.1.
 **v1.1 (2026-08-09):** joint review pass — adds the two-track shot-card/creative design, stack-sequence collapse, ROI and glare corrections, the local HTML culling report, and comparative ranking as the hero mechanism. v1.0 was authored in the VacationRecap project.
 **Purpose:** Automatically grade the images of each watch so the best shots can be *kept* (cull the capture folder), *highlighted* (nominate a cover/hero), and *audited for coverage* (every watch has its standard shots, or a reshoot list says what's missing) — realizing the "AI image-selection agent (planned)" section of [photo-lab.md](photo-lab.md).
-**Reference implementation:** VacationRecap's image-quality evaluation (CV triage + AI vision). See that project's `docs/Image-Quality-Evaluation.md` for the technique breakdown; this document adapts it to CaliberShelf's schema, storage, agent framework, and the watch-photography domain.
+**Reference implementation:** VacationRecap's image-quality evaluation (CV triage + AI vision). See that project's `docs/Image-Quality-Evaluation.md` for the technique breakdown; this document adapts it to TenTenLoupe's schema, storage, agent framework, and the watch-photography domain.
 
-**Why this matters (product direction):** to date CaliberShelf is a watch *tracker* — arguably a very good one, but one of many. A first-class watch *imaging* pipeline — standard shot lists with automated pass/reshoot verdicts, AI-assisted culling and hero selection, tethered-lab integration — is something no tracker offers. This agent is the first step of that pivot: images stop being attachments and become a managed asset class of their own.
+**Why this matters (product direction):** to date TenTenLoupe is a watch *tracker* — arguably a very good one, but one of many. A first-class watch *imaging* pipeline — standard shot lists with automated pass/reshoot verdicts, AI-assisted culling and hero selection, tethered-lab integration — is something no tracker offers. This agent is the first step of that pivot: images stop being attachments and become a managed asset class of their own.
 
 ---
 
@@ -18,15 +18,15 @@ The lab produces two kinds of shots, and they need different treatment:
 - **Track A — Standard shots (pass/fail, no human cull).** A fixed shot list every watch gets: the straight overhead dial shot, caseback, crown-side, low-angle lug/case, … (the "shot cards", §3.6). These have a *known correct answer* — the evaluator checks each candidate against its card's spec and returns **pass** (keep the best passing frame) or **fail → reshoot** (with the defect named). Output per watch is a **coverage matrix**: every card → best passing frame, or "needs reshoot: <reason>". No aesthetic judgment, no human culling required.
 - **Track B — Creative shots (cull + full evaluation).** Props, flat-lay sets, colored backgrounds, artistic angles — whatever the session inspired. These go through CV culling, duplicate collapse, full aesthetic grading (focus, lighting, composition, artistic merit), and comparative hero ranking, with a human review step.
 
-Non-goals for v1: automatic deletion (we *suggest*, mirroring VacationRecap's "suggest, don't auto-act" and CaliberShelf's fill-empty/human-verify norms), and RAW *development* (Luminar Neo stays the developer).
+Non-goals for v1: automatic deletion (we *suggest*, mirroring VacationRecap's "suggest, don't auto-act" and TenTenLoupe's fill-empty/human-verify norms), and RAW *development* (Luminar Neo stays the developer).
 
 ---
 
-## 2. Architecture — three layers, mapped to CaliberShelf conventions
+## 2. Architecture — three layers, mapped to TenTenLoupe conventions
 
-The reference design splits into a free deterministic layer and a paid AI layer. CaliberShelf has precedent for both: `deal-check.mjs` is the "$0, no model" proof, and `price-check.mjs` is the LLM-agent template. The scoring agent is a **local batch script** (like `chronoscout-sync` and `sync-watch-folders`) because the CV layer needs raw pixel access to local capture files, which the web app cannot touch.
+The reference design splits into a free deterministic layer and a paid AI layer. TenTenLoupe has precedent for both: `deal-check.mjs` is the "$0, no model" proof, and `price-check.mjs` is the LLM-agent template. The scoring agent is a **local batch script** (like `chronoscout-sync` and `sync-watch-folders`) because the CV layer needs raw pixel access to local capture files, which the web app cannot touch.
 
-| Layer | Role | Model? | CaliberShelf precedent |
+| Layer | Role | Model? | TenTenLoupe precedent |
 |---|---|---|---|
 | **1. CV triage** | Stack-sequence collapse, sharpness (ROI), exposure, glare, near-duplicate clustering | No — deterministic, free | `deal-check.mjs` (deterministic, $0) |
 | **2. AI evaluation** | Card matching + pass/fail (Track A); angle class + rubric + comparative ranking (Track B) | Yes — Claude vision, structured outputs | `spec-fetch` (structured outputs), `price-check.mjs` (batch + agent_runs) |
@@ -243,4 +243,4 @@ Still open:
 
 ---
 
-*Companion reference: VacationRecap `docs/Image-Quality-Evaluation.md` (the technique source). v1.0 of this plan was authored in that project; v1.1 is the CaliberShelf-side joint review.*
+*Companion reference: VacationRecap `docs/Image-Quality-Evaluation.md` (the technique source). v1.0 of this plan was authored in that project; v1.1 is the TenTenLoupe-side joint review.*

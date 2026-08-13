@@ -5,7 +5,7 @@ import { getAllValuations, groupValuationRuns } from "@/lib/queries/valuations"
 import { formatCurrency } from "@/lib/utils"
 
 export const metadata: Metadata = {
-  title: "Watch Valuations | CaliberShelf",
+  title: "Watch Valuations | TenTenLoupe",
 }
 
 function formatRunDate(date: string): string {
