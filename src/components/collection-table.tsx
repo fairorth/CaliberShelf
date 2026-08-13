@@ -103,6 +103,16 @@ const COLUMN_WIDTHS_KEY = "collection-col-widths"
 const MIN_COL_WIDTH = 56
 /** 56px thumbnail + 8px cell padding a side. Not user-adjustable — see below. */
 const PHOTO_COL_WIDTH = 72
+/**
+ * The single column left at `width: auto`, so it absorbs all the slack when the
+ * table is wider than its fixed columns instead of every column inflating.
+ * Model is the right one: it holds the longest values and its badges, and it
+ * was the column truncating to "Historiques Chronom…" while PHOTO sat on
+ * hundreds of pixels of empty space.
+ */
+const FLEX_COLUMN: ColumnId = "model"
+/** Floor for the flex column, so it scrolls rather than collapsing. */
+const FLEX_MIN_WIDTH = 260
 
 // Column visibility (B5): eight on by default; Nickname, Caliber and Price
 // are opt-in via the Columns dropdown, persisted per device.
@@ -318,8 +328,9 @@ function SortableHeader({
   currentKey: TableSortKey | null
   currentDir: TableSortDir
   onSort: (key: TableSortKey) => void
-  onResizeStart: (e: React.PointerEvent, col: ColumnId) => void
-  onKeyResize: (col: ColumnId, delta: number) => void
+  /** Omitted for the flex column, whose width is not the user's to set. */
+  onResizeStart?: (e: React.PointerEvent, col: ColumnId) => void
+  onKeyResize?: (col: ColumnId, delta: number) => void
   className?: string
   alignRight?: boolean
 }) {
@@ -343,11 +354,13 @@ function SortableHeader({
           {isActive ? (currentDir === "asc" ? <ArrowUp className="h-3 w-3" aria-hidden="true" /> : <ArrowDown className="h-3 w-3" aria-hidden="true" />) : <ChevronsUpDown className="h-3 w-3 opacity-60" aria-hidden="true" />}
         </span>
       </button>
-      <ResizeHandle
-        label={label}
-        onPointerDown={(e) => onResizeStart(e, colId)}
-        onKeyResize={(delta) => onKeyResize(colId, delta)}
-      />
+      {onResizeStart && onKeyResize && (
+        <ResizeHandle
+          label={label}
+          onPointerDown={(e) => onResizeStart(e, colId)}
+          onKeyResize={(delta) => onKeyResize(colId, delta)}
+        />
+      )}
     </TableHead>
   )
 }
@@ -599,6 +612,15 @@ export function CollectionTable({
   const sorted = watches
   const handleSort = onSortChange
 
+  // Floor for the table: the fixed columns at their set widths plus the flex
+  // column's minimum. Past this the container scrolls, so opting several extra
+  // columns in can never squeeze Model to nothing.
+  const tableMinWidth =
+    visibleColumns.reduce(
+      (sum, id) => sum + (id === FLEX_COLUMN ? FLEX_MIN_WIDTH : colWidths[id]),
+      0
+    ) + 2
+
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -622,10 +644,22 @@ export function CollectionTable({
             default column set there is nothing to scroll; it only engages
             once the user opts extra columns in. */}
         <div className="overflow-x-auto rounded-lg border">
-          <Table className="table-fixed">
+          <Table className="table-fixed" style={{ minWidth: tableMinWidth }}>
+            {/* Model's column is deliberately `auto` while every other column
+                is a fixed pixel width. In a fixed table layout the colgroup
+                widths are a *ratio*, not a pin: when they sum to less than the
+                table, the surplus is shared out proportionally, so on a wide
+                monitor a 72px PHOTO inflated to 138px at 2400px and further
+                still beyond that — a 56px thumbnail marooned in a wide empty
+                cell. Leaving exactly one column auto sends the entire surplus
+                there instead, which is both the fix and where the width was
+                wanted. */}
             <colgroup>
               {visibleColumns.map((id) => (
-                <col key={id} style={{ width: colWidths[id] }} />
+                <col
+                  key={id}
+                  style={id === FLEX_COLUMN ? undefined : { width: colWidths[id] }}
+                />
               ))}
             </colgroup>
             <TableHeader>
@@ -637,7 +671,10 @@ export function CollectionTable({
                 </TableHead>
                 {isVisible("category") && <SortableHeader label="Category" sortKey="category" colId="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("brand") && <SortableHeader label="Brand" sortKey="brand" colId="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
-                {isVisible("model") && <SortableHeader label="Model" sortKey="model" colId="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
+                {/* Model has no resize handle: it is the flex column, so its
+                    width is whatever the other columns leave it. Narrow another
+                    column and Model grows to match. */}
+                {isVisible("model") && <SortableHeader label="Model" sortKey="model" colId="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />}
                 {isVisible("nickname") && <SortableHeader label="Nickname" sortKey="nickname" colId="nickname" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("reference") && <SortableHeader label="Ref #" sortKey="reference" colId="reference" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("movementType") && <SortableHeader label="Movement Type" sortKey="movementType" colId="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
