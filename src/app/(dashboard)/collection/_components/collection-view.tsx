@@ -650,7 +650,12 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           watches={displayed}
           showCost={showCost}
           guideNames={guideNames}
+          // Clicking a value focuses the list on it — it replaces that filter
+          // rather than adding to it, which is what "show me the Omegas" means.
           onBrandClick={(brandId) => updateFilters({ ...filters, brandId })}
+          onCategoryClick={(categoryId) =>
+            updateFilters({ ...filters, categoryIds: [categoryId] })
+          }
           sortKey={sortKey === "default" || sortKey === "purchaseDate" || sortKey === "caseDiameter" ? null : sortKey}
           sortDir={sortDir}
           onSortChange={handleTableSort}

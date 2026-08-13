@@ -40,8 +40,10 @@ interface CollectionTableProps {
   showCost?: boolean
   /** watch_id → collection-guide name, for badging guide members. */
   guideNames?: Record<string, string>
-  /** Brand cell click → filter by that brand (mirrors the category link). */
+  /** Brand cell click → filter the collection by that brand. */
   onBrandClick?: (brandId: string) => void
+  /** Category cell click → filter the collection by that category. */
+  onCategoryClick?: (categoryId: string) => void
   /** Current sort, owned by the collection view (B3). */
   sortKey: TableSortKey | null
   sortDir: TableSortDir
@@ -401,6 +403,63 @@ function HoverPhoto({
   )
 }
 
+/**
+ * A cell whose whole area filters the collection instead of opening the watch.
+ *
+ * This used to be a 16px funnel that only existed on hover, sitting beside a
+ * value that navigated — so the obvious click (the brand name) did the one
+ * thing the icon promised it wouldn't. The funnel is now decoration marking
+ * the cell as filterable; the button underneath is the entire cell.
+ *
+ * That is a deliberate narrowing of B5's "one row, one destination": the row
+ * still opens the watch everywhere else, but these two columns belong to the
+ * filter.
+ */
+function FilterCell({
+  label,
+  title,
+  ariaLabel,
+  onFilter,
+  className,
+}: {
+  label: string
+  title: string
+  ariaLabel: string
+  /** Omitted when there is nothing to filter on (no category) — renders plain. */
+  onFilter?: () => void
+  className?: string
+}) {
+  if (!onFilter) {
+    return (
+      <TableCell className={className}>
+        <span className="truncate">{label}</span>
+      </TableCell>
+    )
+  }
+  return (
+    // p-0 on the cell, p-2 on the button: the button inherits the padding it
+    // replaces, so its hit area is the cell rather than just the text.
+    <TableCell className={cn("p-0", className)}>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onFilter()
+        }}
+        title={title}
+        aria-label={ariaLabel}
+        className="flex h-full w-full min-w-0 items-center gap-1 p-2 text-left transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brass/50"
+      >
+        <span className="truncate">{label}</span>
+        <Filter
+          className="h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-60"
+          aria-hidden="true"
+        />
+      </button>
+    </TableCell>
+  )
+}
+
 // ── Main Component ─────────────────────────────────────────────────
 
 export function CollectionTable({
@@ -408,6 +467,7 @@ export function CollectionTable({
   showCost = false,
   guideNames,
   onBrandClick,
+  onCategoryClick,
   sortKey,
   sortDir,
   onSortChange,
@@ -598,45 +658,28 @@ export function CollectionTable({
                     />
                   </TableCell>
                   {isVisible("category") && (
-                    <TableCell className="text-muted-foreground">
-                      {watch.category ? (
-                        <span className="flex items-center gap-1">
-                          <span className="truncate">{watch.category.name}</span>
-                          <Link
-                            href={`/collection?category=${watch.category.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            title={`Show all ${watch.category.name}`}
-                            aria-label={`Filter by category ${watch.category.name}`}
-                            className="rounded p-0.5 opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
-                          >
-                            <Filter className="h-3 w-3" aria-hidden="true" />
-                          </Link>
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
+                    <FilterCell
+                      className="text-muted-foreground"
+                      label={watch.category?.name ?? "—"}
+                      onFilter={
+                        watch.category && onCategoryClick
+                          ? () => onCategoryClick(watch.category!.id)
+                          : undefined
+                      }
+                      title={`Show all ${watch.category?.name}`}
+                      ariaLabel={`Filter by category ${watch.category?.name}`}
+                    />
                   )}
                   {isVisible("brand") && (
-                    <TableCell>
-                      <span className="flex items-center gap-1">
-                        <span className="truncate text-sm font-medium">{watch.brand.name}</span>
-                        {onBrandClick && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onBrandClick(watch.brand_id)
-                            }}
-                            title={`Show all ${watch.brand.name}`}
-                            aria-label={`Filter by brand ${watch.brand.name}`}
-                            className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
-                          >
-                            <Filter className="h-3 w-3" aria-hidden="true" />
-                          </button>
-                        )}
-                      </span>
-                    </TableCell>
+                    <FilterCell
+                      className="text-sm font-medium"
+                      label={watch.brand.name}
+                      onFilter={
+                        onBrandClick ? () => onBrandClick(watch.brand_id) : undefined
+                      }
+                      title={`Show all ${watch.brand.name}`}
+                      ariaLabel={`Filter by brand ${watch.brand.name}`}
+                    />
                   )}
                   {isVisible("model") && (
                     // The cell must clip: model name + status badges routinely
