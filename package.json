@@ -1,6 +1,6 @@
 {
   "name": "caliber-shelf",
-  "version": "1.7.47",
+  "version": "1.7.48",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

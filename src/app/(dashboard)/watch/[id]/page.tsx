@@ -235,7 +235,7 @@ export default async function WatchViewPage({
         <div className="flex shrink-0 items-center gap-2.5">
           {!watch.is_wishlist && <WearTodayButton watchId={watch.id} wearInfo={wearInfo} />}
           <Button
-            render={<Link href={`/watch/${watch.id}/edit`} />}
+            render={<Link href={`/watch/${watch.id}/edit?from=watch`} />}
             className="gap-1.5 bg-brass text-brass-foreground hover:bg-brass/90"
           >
             <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -377,7 +377,7 @@ export default async function WatchViewPage({
           }
         />
         <Strip
-          href={`/watch/${watch.id}/edit`}
+          href={`/watch/${watch.id}/edit?from=watch`}
           eyebrow="Timegrapher"
           value={
             latestRun?.rate_sec_per_day != null
