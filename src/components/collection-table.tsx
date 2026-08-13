@@ -290,7 +290,12 @@ function ResizeHandle({
           onKeyResize(16)
         }
       }}
-      className="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-[3px] after:w-px after:bg-border/70 hover:after:bg-brass/70 focus-visible:outline-none focus-visible:after:bg-brass active:after:bg-brass"
+      title={`Drag to resize the ${label} column`}
+      // The handle is a keyboard stop, so its focus state has to be visible.
+      // It was outline-none plus a 1px hairline that only changed colour —
+      // indistinguishable from the resting state, which is what makes a
+      // focused handle read as an unexplained mark in a header cell.
+      className="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-[3px] after:w-px after:rounded-full after:bg-border/70 after:transition-all hover:after:bg-brass/70 focus-visible:outline-none focus-visible:after:inset-y-0 focus-visible:after:right-[2px] focus-visible:after:w-0.5 focus-visible:after:bg-brass active:after:bg-brass"
     />
   )
 }
