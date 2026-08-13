@@ -101,6 +101,8 @@ export type ColumnId =
 
 const COLUMN_WIDTHS_KEY = "collection-col-widths"
 const MIN_COL_WIDTH = 56
+/** 56px thumbnail + 8px cell padding a side. Not user-adjustable — see below. */
+const PHOTO_COL_WIDTH = 72
 
 // Column visibility (B5): eight on by default; Nickname, Caliber and Price
 // are opt-in via the Columns dropdown, persisted per device.
@@ -223,14 +225,19 @@ export function ColumnsMenu({
 // room to spare. Photo and Category were over-wide; Ref, Box and Worn were
 // starved enough to clip their own headers — "WORN" was cut off (FIXES §4).
 const DEFAULT_WIDTHS: Record<ColumnId, number> = {
-  photo: 52,
+  // 56px image + 8px cell padding each side. Fixed and NOT resizable: the
+  // photo cell has exactly one job at exactly one size, so any other width can
+  // only add dead space. A stored width from a previous build is ignored for
+  // this column — that is how the review ended up with a ~300px photo column.
+  photo: PHOTO_COL_WIDTH,
   category: 96,
   brand: 148,
   // Model carries the status badges (WISH LIST + the guide name), which cost
   // ~160px before the name gets a pixel. At 200 the name truncated to a single
   // letter, so it takes the lion's share and Movement Type — whose values are
-  // one short word — gives most of it back.
-  model: 276,
+  // one short word — gives most of it back. Widened again in round 3: the name
+  // was still truncating to "Historiqu…" against its badges.
+  model: 320,
   nickname: 136,
   reference: 152,
   // 104 was too tight for the "Movement Type" header itself, which ran into
@@ -508,6 +515,10 @@ export function CollectionTable({
       const parsed = JSON.parse(saved) as Partial<Record<ColumnId, number>>
       const next = { ...DEFAULT_WIDTHS }
       for (const id of Object.keys(DEFAULT_WIDTHS) as ColumnId[]) {
+        // Photo is fixed. Skipping it here is what retires a stored width from
+        // an older build, which is how a ~300px photo column outlived the
+        // default that replaced it.
+        if (id === "photo") continue
         const w = parsed[id]
         if (typeof w === "number" && Number.isFinite(w)) {
           next[id] = Math.max(MIN_COL_WIDTH, Math.round(w))
@@ -614,13 +625,10 @@ export function CollectionTable({
             </colgroup>
             <TableHeader>
               <TableRow>
-                <TableHead className="relative text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                {/* No resize handle: the column is a fixed 72px around a fixed
+                    56px thumbnail, so dragging it could only add dead space. */}
+                <TableHead className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                   Photo
-                  <ResizeHandle
-                    label="Photo"
-                    onPointerDown={(e) => handleResizeStart(e, "photo")}
-                    onKeyResize={(delta) => handleKeyResize("photo", delta)}
-                  />
                 </TableHead>
                 {isVisible("category") && <SortableHeader label="Category" sortKey="category" colId="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("brand") && <SortableHeader label="Brand" sortKey="brand" colId="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
