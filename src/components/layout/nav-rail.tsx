@@ -103,13 +103,13 @@ export function NavRail() {
         <Link
           href="/dashboard"
           onClick={guardClick("/dashboard")}
-          className="flex flex-col gap-1 px-1.5 pt-1"
+          className="px-1.5 pt-1"
         >
-          {/* Expanded rail gets the horizontal lockup (RENAME §4). The version
-              sits under it rather than beside it: the lockup plus a version
-              string does not fit the 200px rail without wrapping. */}
+          {/* Expanded rail gets the horizontal lockup (RENAME §4). Nothing else
+              goes in this Link: BRAND.md reserves clear space equal to the
+              height of the T in Ten on all sides, and the version string was
+              sitting inside it, reading as part of the wordmark. */}
           <Logo markSize={26} />
-          <span className="font-mono text-2xs text-muted-foreground">v{APP_VERSION}</span>
         </Link>
 
         <div className="flex flex-col gap-0.5">
@@ -126,6 +126,12 @@ export function NavRail() {
             ))}
           </div>
         ))}
+
+        {/* Version lives at the foot of the rail, well clear of the lockup —
+            it is build metadata, not part of the name. /about carries it too. */}
+        <span className="mt-auto px-2.5 pt-3 font-mono text-2xs text-muted-foreground">
+          v{APP_VERSION}
+        </span>
       </nav>
 
       {/* md — 56px icon-only, Config's group pinned to the bottom */}
