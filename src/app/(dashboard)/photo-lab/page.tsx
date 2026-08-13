@@ -58,7 +58,11 @@ export default async function PhotoLabPage({
 
       <PhotoLabTabs reviewCount={coverage.awaitingReview} />
 
-      <CoverageMatrix rows={coverage.rows} initialNeverShot={filter === "never-shot"} />
+      <CoverageMatrix
+        rows={coverage.rows}
+        initialNeverShot={filter === "never-shot"}
+        awaitingReview={coverage.awaitingReview}
+      />
     </div>
   )
 }

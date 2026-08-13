@@ -17,10 +17,9 @@ import {
 import { SearchInput } from "@/components/search-input"
 import { signOut } from "@/lib/actions/auth-actions"
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider"
-import { Mark } from "@/components/brand/logo"
+import { Mark, Wordmark } from "@/components/brand/logo"
 import { NAV_GROUPS, NAV_HOME, isNavItemActive } from "@/components/layout/nav-items"
 import { cn } from "@/lib/utils"
-import { APP_VERSION } from "@/lib/version"
 
 interface NavHeaderProps {
   userEmail: string
@@ -108,27 +107,21 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             )}
           </button>
 
-          {/* Brand — below lg only; the expanded rail carries it at lg+. */}
+          {/* Brand — below md only. The rail appears at md and carries the
+              mark from there up, so anything here would be a second logo
+              within 80px of it. The rail mark is the persistent anchor; this
+              exists only for the drawer breakpoint, where there is no rail. */}
           <Link
             href="/dashboard"
             onClick={guardClick("/dashboard")}
-            className="flex items-center gap-2 lg:hidden"
+            className="flex items-center gap-2 md:hidden"
           >
-            {/* The 56px header cannot hold the three-line lockup, so this is
-                the mark plus a single-line wordmark. Below sm the mark stands
-                alone — the rail carries the full lockup at lg. */}
+            {/* The 56px header cannot hold the three-line lockup, so this uses
+                the shared wordmark's inline form rather than a local copy —
+                one definition means the colon cannot render differently here
+                than it does in the rail. Below sm the mark stands alone. */}
             <Mark size={26} decorative />
-            <span className="hidden items-baseline gap-1.5 sm:flex">
-              <span className="font-display text-md font-medium tracking-[-0.02em]">
-                Ten<span className="text-brass">:</span>Ten
-              </span>
-              <span className="font-mono text-2xs tracking-[0.24em] text-brass">
-                LOUPE
-              </span>
-              <span className="font-mono text-2xs text-muted-foreground">
-                v{APP_VERSION}
-              </span>
-            </span>
+            <Wordmark inline className="hidden sm:flex" />
           </Link>
 
           {showSearch && (

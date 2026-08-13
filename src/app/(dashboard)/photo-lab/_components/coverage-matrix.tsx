@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { ImageOff, Plus } from "lucide-react"
+import Link from "next/link"
+import { Camera, ImageOff, Plus, Tags } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -21,12 +23,18 @@ interface CoverageMatrixProps {
   rows: CoverageRow[]
   /** Seed the "never shot only" toggle (the Reshoot list button). */
   initialNeverShot?: boolean
+  /** Unreviewed frames — decides which way out the empty state offers. */
+  awaitingReview?: number
 }
 
 /** The watch × angle coverage matrix (D1, 04-screen-specs §3): every cell is
  *  a to-do state — scored / frames-unscored / empty. Cell click starts a
  *  Session pre-set to that angle; row click opens the watch page. */
-export function CoverageMatrix({ rows, initialNeverShot = false }: CoverageMatrixProps) {
+export function CoverageMatrix({
+  rows,
+  initialNeverShot = false,
+  awaitingReview = 0,
+}: CoverageMatrixProps) {
   const router = useRouter()
   const [sortMode, setSortMode] = useState<SortMode>("worst")
   const [boxFilter, setBoxFilter] = useState<string>("")
@@ -60,6 +68,55 @@ export function CoverageMatrix({ rows, initialNeverShot = false }: CoverageMatri
     worst: "Sort: worst coverage first",
     best: "Sort: best coverage first",
     brand: "Sort: brand",
+  }
+
+  // Nothing anywhere carries an angle, so every cell would be empty and every
+  // row would read 0/5. A matrix of 119 identical zero rows is technically
+  // accurate and practically useless — it tells you nothing you cannot read
+  // off the summary line, and it buries the one thing you need, which is how
+  // to get an angle onto a photo. Show the way out instead, and bring the
+  // matrix back the moment a single angle exists.
+  const anyAngleTagged = rows.some((r) => r.coveredCount > 0)
+
+  if (rows.length > 0 && !anyAngleTagged) {
+    return (
+      <div className="rounded-xl border border-dashed border-border bg-card px-6 py-14 text-center">
+        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <Tags className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <h2 className="mt-4 font-display text-md font-semibold">
+          No photos have been tagged with an angle yet
+        </h2>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+          Coverage plots which of the five angles each watch already has. Until
+          at least one photo carries an angle there is nothing to plot —{" "}
+          {rows.length} watches, all reading 0/5.
+        </p>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+          {awaitingReview > 0 ? (
+            <Button render={<Link href="/photo-lab/review" />} className="gap-1.5">
+              <Tags className="h-4 w-4" aria-hidden="true" />
+              Tag angles in Review
+              <span className="font-mono text-xs tabular-nums opacity-80">
+                {awaitingReview}
+              </span>
+            </Button>
+          ) : (
+            <Button render={<Link href="/photo-lab/session" />} className="gap-1.5">
+              <Camera className="h-4 w-4" aria-hidden="true" />
+              Start a session
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            render={<Link href="/photo-lab/review" />}
+            className="gap-1.5"
+          >
+            Open Review
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -105,14 +162,17 @@ export function CoverageMatrix({ rows, initialNeverShot = false }: CoverageMatri
           Never shot only
         </button>
 
+        {/* Three states: brass (scored), neutral (unscored), outline (empty).
+            The scored swatch was --chart-2, a vivid system blue — chart colours
+            are for data series, not UI state (E1). */}
         <div className="ml-auto flex items-center gap-4 font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className="h-[11px] w-[11px] rounded-sm bg-chart-2/60" aria-hidden="true" />
+            <span className="h-[11px] w-[11px] rounded-sm bg-brass" aria-hidden="true" />
             Scored
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-[11px] w-[11px] rounded-sm bg-secondary" aria-hidden="true" />
-            Frames, unscored
+            Unscored
           </span>
           <span className="flex items-center gap-1.5">
             <span
@@ -240,7 +300,7 @@ function CoverageCellView({
           type="button"
           onClick={open}
           title={`Shoot ${angle} — best ${gradeForScore(cell.bestScore)}`}
-          className="flex h-[26px] items-center rounded-full bg-chart-2/18 px-2.5 font-mono text-2xs text-chart-2 transition-colors hover:bg-chart-2/28"
+          className="flex h-[26px] items-center rounded-full bg-brass/18 px-2.5 font-mono text-2xs text-brass transition-colors hover:bg-brass/28"
         >
           {gradeForScore(cell.bestScore)} · {total}
         </button>
@@ -260,11 +320,12 @@ function CoverageCellView({
           aria-label={`Start a session for this ${angle} shot`}
           title={`Shoot ${angle}`}
           className={cn(
-            "flex h-[26px] w-[26px] items-center justify-center rounded-full border border-dashed transition-colors",
-            // Brass marks the action — this cell is what needs shooting (§1).
-            reshoot
-              ? "border-brass/60 text-brass hover:bg-brass/10"
-              : "border-border text-muted-foreground hover:border-brass/60 hover:text-brass"
+            "flex h-[26px] w-[26px] items-center justify-center rounded-full border border-dashed text-muted-foreground transition-colors hover:border-brass/60 hover:text-brass",
+            // Brass now means "scored" in the legend, so an empty cell cannot
+            // also rest on brass — it would read as done. Never-shot rows keep
+            // a stronger border instead, and brass returns on hover, where it
+            // means the action (start a session for this angle).
+            reshoot ? "border-foreground/30" : "border-border"
           )}
         >
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />

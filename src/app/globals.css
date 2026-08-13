@@ -74,19 +74,38 @@
   --secondary: oklch(0.94 0.008 235);
   --secondary-foreground: oklch(0.28 0.02 245);
   --muted: oklch(0.94 0.008 235);
-  --muted-foreground: oklch(0.48 0.02 240);
-  --accent: oklch(0.92 0.04 250);
-  --accent-foreground: oklch(0.34 0.09 252);
+  /* Secondary text and hover surfaces are NEUTRAL slate, not blue. These three
+     carried enough chroma at a blue hue to read as system blue wherever they
+     landed on small text — the version string, the nav group headings — which
+     is why "remove the blue" kept finding new instances. Steel-blue belongs to
+     --primary (data) and nowhere else. */
+  --muted-foreground: oklch(0.48 0.008 245);
+  --accent: oklch(0.93 0.008 235);
+  --accent-foreground: oklch(0.3 0.015 245);
   --destructive: oklch(0.55 0.2 27);
   --border: oklch(0.87 0.01 235);
   --input: oklch(0.89 0.01 235);
   /* Focus rings are brass — the single action accent (design system §1). */
-  --ring: oklch(0.52 0.07 75);
+  --ring: #8a6a2f;
   /* Brass — the action & brand accent (buttons, active nav, focus, selection).
-     Darker in light mode for contrast; do not unify with the dark value. */
-  --brass: oklch(0.52 0.07 75);
+     Darker in light mode for contrast; do not unify with the dark value.
+     This is BRAND.md's brass-deep exactly. The previous oklch(0.52 0.07 75)
+     resolved to #816339, which had drifted past brass into a dull chocolate:
+     enough lightness for contrast but not enough chroma to still read as
+     metal. Stated as the brand hex so it cannot drift again. */
+  --brass: #8a6a2f;
   /* Text on a brass fill: light in light mode (brass is dark here). */
   --brass-foreground: oklch(0.99 0.01 90);
+  /* Mark facets. The dark ground alternates one brass at two alphas; over a
+     light surface 28% brass is nearly white and 72% is barely tinted, so the
+     six blades vanish. Light therefore uses two OPAQUE brass tones instead
+     (BRAND.md "Fills by ground", FIXES-ROUND-2 §1). */
+  --mark-facet-deep: #8a6a2f;
+  --mark-facet-light: #b08c46;
+  /* The pinion stays bright brass in both grounds (BRAND.md). Scoped to the
+     mark on purpose: bright brass fails contrast as text on a light surface,
+     so it must not become a general-purpose accent. */
+  --mark-pinion: #c9a25e;
   /* Nav rail sits a step below the page; photo fields a step below that. */
   --surface-rail: oklch(0.955 0.006 235);
   --surface-photo: oklch(0.94 0.007 235);
@@ -130,6 +149,10 @@
   --brass: #c9a25e;
   /* Text on a brass fill: near-black in dark mode (brass is light here). */
   --brass-foreground: #1a1206;
+  /* Dark ground: one brass at two alphas reads correctly over navy. */
+  --mark-facet-deep: rgba(201, 162, 94, 0.72);
+  --mark-facet-light: rgba(201, 162, 94, 0.28);
+  --mark-pinion: #c9a25e;
   /* Nav rail sits a step below the page; photo fields a step below that. */
   --surface-rail: #0c1015;
   --surface-photo: #0b0e12;
@@ -149,6 +172,17 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Anchors get palette colours by default so a link written without a colour
+     utility cannot fall back to the user agent's blue. This is the fourth time
+     system blue has been swept out; sweeping instances never fixed it because
+     nothing defined what an unstyled link should be. Utilities still win —
+     `hover:text-foreground` (0,2,0) outranks `a:hover` (0,1,1). */
+  a {
+    color: var(--foreground);
+  }
+  a:hover {
+    color: var(--brass);
   }
 }
 

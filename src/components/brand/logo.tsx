@@ -63,12 +63,15 @@ export function Mark({ size = 32, className, decorative = false }: MarkProps) {
       aria-label={decorative ? undefined : "TenTenLoupe"}
       aria-hidden={decorative ? "true" : undefined}
     >
+      {/* Opaque, never alpha. Alpha blades were authored against the navy
+          ground; over a light surface they collapse to a grey disc with a
+          white centre. The two facet tokens carry the per-ground values —
+          BRAND.md "Fills by ground". */}
       {BLADES.map((blade, i) => (
         <path
           key={i}
           d={blade.d}
-          fill="var(--brass)"
-          fillOpacity={blade.heavy ? 0.72 : 0.28}
+          fill={blade.heavy ? "var(--mark-facet-deep)" : "var(--mark-facet-light)"}
         />
       ))}
 
@@ -98,9 +101,58 @@ export function Mark({ size = 32, className, decorative = false }: MarkProps) {
         stroke="var(--foreground)" strokeWidth="2" strokeLinecap="round"
       />
 
-      <circle cx="50" cy="50" r="3.4" fill="var(--brass)" />
+      <circle cx="50" cy="50" r="3.4" fill="var(--mark-pinion)" />
       <circle cx="50" cy="50" r="48" fill="none" stroke="var(--brass)" strokeWidth="2" />
     </svg>
+  )
+}
+
+/**
+ * The wordmark alone, in the one place it is defined.
+ *
+ * The colon and LOUPE are the only two brass elements in the wordmark, and
+ * they carry the whole 10:10 reference — so they must never be a copy that can
+ * drift. `inline` lays Ten:Ten and LOUPE on one line for height-constrained
+ * surfaces like the 56px header, where the three-line stack does not fit.
+ */
+export function Wordmark({
+  inline = false,
+  className,
+}: {
+  inline?: boolean
+  className?: string
+}) {
+  const tenTen = (
+    <span className="font-display text-md font-semibold tracking-[-0.02em] text-foreground">
+      Ten<span className="text-brass">:</span>Ten
+    </span>
+  )
+
+  if (inline) {
+    return (
+      <span className={cn("flex items-baseline gap-1.5", className)}>
+        {tenTen}
+        <span className="font-mono text-2xs font-medium tracking-[0.24em] text-brass">
+          LOUPE
+        </span>
+      </span>
+    )
+  }
+
+  return (
+    <span className={cn("flex flex-col leading-none", className)}>
+      {tenTen}
+      {/* Hairline: transparent → brass → transparent, per the lockup spec. */}
+      <span
+        aria-hidden="true"
+        className="my-1 h-px w-full bg-gradient-to-r from-transparent via-brass/75 to-transparent"
+      />
+      {/* pad-left matches the tracking so the word optically centres — mono
+          tracking adds a trailing gap after the final E that nothing balances. */}
+      <span className="pl-[0.46em] font-mono text-2xs font-medium tracking-[0.46em] text-brass">
+        LOUPE
+      </span>
+    </span>
   )
 }
 
@@ -123,23 +175,7 @@ export function Logo({
   markSize = 32,
   className,
 }: LogoProps) {
-  const wordmark = (
-    <span className="flex flex-col leading-none">
-      <span className="font-display text-md font-semibold tracking-[-0.02em] text-foreground">
-        Ten<span className="text-brass">:</span>Ten
-      </span>
-      {/* Hairline: transparent → brass → transparent, per the lockup spec. */}
-      <span
-        aria-hidden="true"
-        className="my-1 h-px w-full bg-gradient-to-r from-transparent via-brass/75 to-transparent"
-      />
-      {/* pad-left matches the tracking so the word optically centres — mono
-          tracking adds a trailing gap after the final E that nothing balances. */}
-      <span className="pl-[0.46em] font-mono text-2xs font-medium tracking-[0.46em] text-brass">
-        LOUPE
-      </span>
-    </span>
-  )
+  const wordmark = <Wordmark />
 
   if (orientation === "stacked") {
     return (
