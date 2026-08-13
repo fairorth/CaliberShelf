@@ -1,26 +1,29 @@
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Logo } from "@/components/brand/logo"
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
-      <div className="text-center space-y-6">
-        <h1 className="text-xl font-bold tracking-tight">TenTenLoupe</h1>
-        <p className="text-md text-muted-foreground max-w-md">
+      <div className="space-y-6 text-center">
+        {/* The signed-out door to the product showed the name as plain bold
+            text — no mark, no colon, no brass. aria-label carries the product
+            name because BRAND.md forbids "Ten:Ten Loupe" in alt text. */}
+        <h1 className="mx-auto w-fit" aria-label="TenTenLoupe">
+          <Logo orientation="stacked" markSize={72} />
+        </h1>
+        <p className="text-md max-w-md text-muted-foreground">
           Track, manage, and showcase your watch collection.
         </p>
-        <div className="flex gap-4 justify-center">
-          <Link
-            href="/login"
-            className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-          >
+        <div className="flex justify-center gap-4">
+          {/* Was a hand-rolled bg-primary button — steel blue is data, never
+              action (E1). Using Button gets the brass fill by default. */}
+          <Button size="lg" render={<Link href="/login" />}>
             Sign In
-          </Link>
-          <Link
-            href="/signup"
-            className="inline-flex h-11 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
+          </Button>
+          <Button variant="outline" size="lg" render={<Link href="/signup" />}>
             Sign Up
-          </Link>
+          </Button>
         </div>
       </div>
     </div>

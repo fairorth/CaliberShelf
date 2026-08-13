@@ -23,7 +23,7 @@ import {
   ZoomIn,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
-import { Mark } from "@/components/brand/logo"
+import { Logo } from "@/components/brand/logo"
 import { APP_VERSION } from "@/lib/version"
 import { getWatches } from "@/lib/queries/watches"
 import { createClient } from "@/lib/supabase/server"
@@ -210,11 +210,11 @@ export default async function AboutPage() {
     <div className="mx-auto max-w-5xl space-y-10 pb-16">
       {/* Hero */}
       <section className="relative overflow-hidden rounded-xl border border-border px-6 py-12 text-center sm:py-16">
-        <div className="mx-auto mb-5 w-fit">
-          <Mark size={64} className="rounded-xl" />
-        </div>
-        <h1 className="font-display text-xl font-semibold tracking-tight">
-          TenTenLoupe
+        {/* The real lockup, not the mark beside plain text — this is the one
+            screen that is purely about the brand. aria-label carries the
+            product name: BRAND.md forbids "Ten:Ten Loupe" in alt text. */}
+        <h1 className="mx-auto mb-5 w-fit" aria-label="TenTenLoupe">
+          <Logo orientation="stacked" markSize={64} />
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-sm">
           Part collection manager, part private research lab — a personal horology platform
