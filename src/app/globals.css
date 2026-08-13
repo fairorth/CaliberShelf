@@ -74,9 +74,14 @@
   --secondary: oklch(0.94 0.008 235);
   --secondary-foreground: oklch(0.28 0.02 245);
   --muted: oklch(0.94 0.008 235);
-  --muted-foreground: oklch(0.48 0.02 240);
-  --accent: oklch(0.92 0.04 250);
-  --accent-foreground: oklch(0.34 0.09 252);
+  /* Secondary text and hover surfaces are NEUTRAL slate, not blue. These three
+     carried enough chroma at a blue hue to read as system blue wherever they
+     landed on small text — the version string, the nav group headings — which
+     is why "remove the blue" kept finding new instances. Steel-blue belongs to
+     --primary (data) and nowhere else. */
+  --muted-foreground: oklch(0.48 0.008 245);
+  --accent: oklch(0.93 0.008 235);
+  --accent-foreground: oklch(0.3 0.015 245);
   --destructive: oklch(0.55 0.2 27);
   --border: oklch(0.87 0.01 235);
   --input: oklch(0.89 0.01 235);
@@ -163,6 +168,17 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Anchors get palette colours by default so a link written without a colour
+     utility cannot fall back to the user agent's blue. This is the fourth time
+     system blue has been swept out; sweeping instances never fixed it because
+     nothing defined what an unstyled link should be. Utilities still win —
+     `hover:text-foreground` (0,2,0) outranks `a:hover` (0,1,1). */
+  a {
+    color: var(--foreground);
+  }
+  a:hover {
+    color: var(--brass);
   }
 }
 
