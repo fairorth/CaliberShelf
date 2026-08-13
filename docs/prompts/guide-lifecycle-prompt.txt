@@ -1,0 +1,23 @@
+TenTenLoupe Master Collection Guides. Read docs/master-guides.md first — it is
+the complete methodology — plus docs/data-model.md for the guides schema. The
+live guides are in collection_guides/guide_entries; archived guide PDFs and
+past review reports are in docs/Watch Guides/.
+
+Today's job: [KEEP ONE OF THE THREE BLOCKS BELOW, DELETE THE OTHERS]
+
+(a) INGEST the new Master Guide PDF at docs/Watch Guides/<NAME>.pdf — extract
+it, walk me through your proposed entry list (chapters, bands, priorities,
+foundation links) before seeding, then follow §2 of the methodology end-to-end
+including card images.
+
+(b) REVIEW the "<NAME>" guide — run the §3 adversarial method (5
+market-pricing agents by venue, solds over asks; 2 critics: architecture +
+investment), produce the review report in docs/Watch Guides/, and propose the
+band/priority corrections before applying anything.
+
+(c) CREATE a new guide with me on <TOPIC> — interview me §1-style (thesis
+first, one story; chapters not models; solds not asks; Canon separated from
+plan), then draft the card list for my review.
+
+House rules apply: migrations are run BY ME in the SQL Editor (tell me the
+file), dry-run before any live seeding, and remind me to git push when done.

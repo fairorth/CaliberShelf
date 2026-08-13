@@ -11,10 +11,14 @@ const PAD = 40
 const LINE_Y = 62
 const H = 132
 
+// The three "in the collection" states are one brass ladder — owned solid,
+// then coming soon, then wish list — and the two "not yet" states stay neutral.
+// Coming soon and wish list were raw #fbbf24 / #38bdf8, the same amber and sky
+// literals the status badges used (E1).
 const NODE_CLASS: Record<string, { fill: string; r: number; opacity?: number }> = {
   owned: { fill: "var(--brass, #c9a25e)", r: 8 },
-  coming_soon: { fill: "#fbbf24", r: 6.5 },
-  wishlist: { fill: "#38bdf8", r: 6.5 },
+  coming_soon: { fill: "var(--brass, #c9a25e)", r: 6.5, opacity: 0.6 },
+  wishlist: { fill: "var(--brass, #c9a25e)", r: 6.5, opacity: 0.3 },
   candidate: { fill: "currentColor", r: 5, opacity: 0.35 },
   passed: { fill: "currentColor", r: 4, opacity: 0.15 },
 }
@@ -114,8 +118,8 @@ export function GuideSpine({ entries }: { entries: GuideEntryWithWatch[] }) {
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted-foreground">
         <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-brass align-middle" /> Owned</span>
-        <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-amber-400 align-middle" /> Coming soon</span>
-        <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-sky-400 align-middle" /> Wish list</span>
+        <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-brass/60 align-middle" /> Coming soon</span>
+        <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-brass/30 align-middle" /> Wish list</span>
         <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-muted-foreground/40 align-middle" /> Candidate</span>
         <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-muted-foreground/20 align-middle" /> Passed</span>
         <span className="text-brass">★ top-priority gap</span>

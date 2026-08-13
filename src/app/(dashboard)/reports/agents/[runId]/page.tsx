@@ -31,14 +31,16 @@ function fmtDuration(ms: number | null): string {
 }
 
 function ActionBadge({ action }: { action: AgentRunItem["action"] }) {
+  // Matches the run-status ladder on the index: brass, brass outline,
+  // --destructive for failure, neutral otherwise.
   const color =
     action === "updated"
-      ? "bg-emerald-500/15 text-emerald-400"
+      ? "bg-brass/15 text-brass ring-1 ring-brass/35"
       : action === "flagged"
-        ? "bg-amber-500/15 text-amber-400"
+        ? "text-brass ring-1 ring-brass/45"
         : action === "failed"
-          ? "bg-rose-500/15 text-rose-400"
-          : "bg-foreground/10 text-muted-foreground"
+          ? "bg-destructive/12 text-destructive ring-1 ring-destructive/30"
+          : "bg-muted text-muted-foreground"
   return (
     <span className={`rounded-full px-2 py-0.5 text-2xs font-medium ${color}`}>
       {action}
@@ -85,7 +87,7 @@ export default async function AgentRunPage({
         <h1 className="font-display text-lg font-semibold tracking-tight">
           {AGENT_LABEL[run.agent] ?? run.agent}
           {run.dry_run && (
-            <span className="ml-2 rounded-full bg-sky-500/15 px-2 py-0.5 align-middle text-2xs font-medium text-sky-400">
+            <span className="ml-2 rounded-full bg-muted px-2 py-0.5 align-middle text-2xs font-medium text-muted-foreground">
               dry run
             </span>
           )}

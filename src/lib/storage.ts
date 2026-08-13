@@ -43,23 +43,46 @@ export interface ImageTransform {
 }
 
 /**
- * Generate signed URLs that resize images on the fly via Supabase's transform
- * endpoint (Pro feature). Signs each path individually since the batch API
- * doesn't accept a transform. Returns a map from storage_path to signed URL.
+ * Signed transform URLs, memoised per (path + transform).
+ *
+ * The batch signing API does not accept a transform, so a transformed cover
+ * costs one round trip per photo — 160 of them to draw the collection, and
+ * twice that once the table asks for a thumbnail size as well. The URLs are
+ * deterministic for an hour, so signing them again on every render is pure
+ * waste; caching turns the second and subsequent loads into no network at all.
+ *
+ * Held for half the expiry so a cached URL always has ~30 minutes of life left
+ * when it is handed out — a URL must never expire in a page the user is still
+ * looking at. Keyed by storage path, which is already scoped to the owning
+ * user, so one user's URL can never be served to another.
  */
+const signedUrlCache = new Map<string, { url: string; expiresAt: number }>()
+const CACHE_TTL_MS = (SIGNED_URL_EXPIRY / 2) * 1000
+
+function transformKey(path: string, t: ImageTransform): string {
+  return `${path}|${t.width ?? ""}x${t.height ?? ""}|${t.resize ?? ""}|${t.quality ?? ""}`
+}
+
 export async function getTransformedSignedUrls(
   storagePaths: string[],
   transform: ImageTransform
 ): Promise<Map<string, string>> {
   if (storagePaths.length === 0) return new Map()
 
+  const now = Date.now()
   const supabase = await createClient()
   const entries = await Promise.all(
     storagePaths.map(async (path) => {
+      const key = transformKey(path, transform)
+      const hit = signedUrlCache.get(key)
+      if (hit && hit.expiresAt > now) return [path, hit.url] as const
+
       const { data, error } = await supabase.storage
         .from(BUCKET)
         .createSignedUrl(path, SIGNED_URL_EXPIRY, { transform })
-      return [path, error || !data ? null : data.signedUrl] as const
+      if (error || !data) return [path, null] as const
+      signedUrlCache.set(key, { url: data.signedUrl, expiresAt: now + CACHE_TTL_MS })
+      return [path, data.signedUrl] as const
     })
   )
 

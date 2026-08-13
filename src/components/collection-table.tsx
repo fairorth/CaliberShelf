@@ -101,6 +101,8 @@ export type ColumnId =
 
 const COLUMN_WIDTHS_KEY = "collection-col-widths"
 const MIN_COL_WIDTH = 56
+/** 64px thumbnail + 8px cell padding a side. */
+const PHOTO_COL_WIDTH = 80
 
 // Column visibility (B5): eight on by default; Nickname, Caliber and Price
 // are opt-in via the Columns dropdown, persisted per device.
@@ -118,13 +120,18 @@ const COLUMN_ORDER: ColumnId[] = [
   "worn",
   "price",
 ]
+// Seven by default. Movement Type was the eighth (DECISIONS §7) but is empty
+// in 101 of 161 rows — nine of the first twelve on screen — so it read as a
+// blank column sitting between Model and Price. It stays one click away in the
+// Columns menu for anyone who wants it; it is not worth ~130px of the default
+// table to show an em-dash. Reference is nearly as sparse (103/161) but is an
+// identifier people scan for, so it stays.
 const DEFAULT_VISIBLE: ColumnId[] = [
   "photo",
   "brand",
   "model",
   "category",
   "reference",
-  "movementType",
   "box",
   "worn",
 ]
@@ -223,14 +230,24 @@ export function ColumnsMenu({
 // room to spare. Photo and Category were over-wide; Ref, Box and Worn were
 // starved enough to clip their own headers — "WORN" was cut off (FIXES §4).
 const DEFAULT_WIDTHS: Record<ColumnId, number> = {
-  photo: 52,
-  category: 96,
-  brand: 148,
+  // 64px image + 8px cell padding each side.
+  photo: PHOTO_COL_WIDTH,
+  // Sized to their longest real values plus the filter funnel, which reserves
+  // its width at rest so revealing it on hover cannot shove the text sideways.
+  // 96 clipped "Chronograph" in 19 rows; 148 clipped "Vacheron Constantin" in
+  // 11. Both are the longest value in their column, not outliers.
+  category: 116,
+  brand: 168,
   // Model carries the status badges (WISH LIST + the guide name), which cost
   // ~160px before the name gets a pixel. At 200 the name truncated to a single
   // letter, so it takes the lion's share and Movement Type — whose values are
-  // one short word — gives most of it back.
-  model: 276,
+  // one short word — gives most of it back. Widened again in round 3: the name
+  // was still truncating to "Historiqu…" against its badges. Now that the table
+  // shrink-wraps, Model gets a real width instead of absorbing whatever the
+  // viewport left over, which is what pinned Price to the far right. 400 rather
+  // than 420 so widening Category and Brand keeps the default set inside a
+  // 1400px viewport without a horizontal scrollbar.
+  model: 400,
   nickname: 136,
   reference: 152,
   // 104 was too tight for the "Movement Type" header itself, which ran into
@@ -283,7 +300,15 @@ function ResizeHandle({
           onKeyResize(16)
         }
       }}
-      className="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-[3px] after:w-px after:bg-border/70 hover:after:bg-brass/70 focus-visible:outline-none focus-visible:after:bg-brass active:after:bg-brass"
+      title={`Drag to resize the ${label} column`}
+      // 11px of grab area immediately left of the divider, with the visible
+      // rule sitting on the boundary itself — so you aim at the line you can
+      // see, with a target wide enough to hit. It stays inside the cell rather
+      // than straddling: an overhanging handle on the last column widens the
+      // table's scroll area and leaves the container permanently scrolled by a
+      // few pixels. The rule thickens to brass on hover, so you can tell what
+      // you have hold of before you start dragging.
+      className="absolute right-0 top-0 z-20 h-full w-[11px] cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-0 after:w-px after:rounded-full after:bg-border/70 after:transition-all hover:after:inset-y-0 hover:after:w-0.5 hover:after:bg-brass focus-visible:outline-none focus-visible:after:inset-y-0 focus-visible:after:w-0.5 focus-visible:after:bg-brass active:after:inset-y-0 active:after:w-0.5 active:after:bg-brass"
     />
   )
 }
@@ -306,8 +331,9 @@ function SortableHeader({
   currentKey: TableSortKey | null
   currentDir: TableSortDir
   onSort: (key: TableSortKey) => void
-  onResizeStart: (e: React.PointerEvent, col: ColumnId) => void
-  onKeyResize: (col: ColumnId, delta: number) => void
+  /** Omitted for the flex column, whose width is not the user's to set. */
+  onResizeStart?: (e: React.PointerEvent, col: ColumnId) => void
+  onKeyResize?: (col: ColumnId, delta: number) => void
   className?: string
   alignRight?: boolean
 }) {
@@ -331,11 +357,13 @@ function SortableHeader({
           {isActive ? (currentDir === "asc" ? <ArrowUp className="h-3 w-3" aria-hidden="true" /> : <ArrowDown className="h-3 w-3" aria-hidden="true" />) : <ChevronsUpDown className="h-3 w-3 opacity-60" aria-hidden="true" />}
         </span>
       </button>
-      <ResizeHandle
-        label={label}
-        onPointerDown={(e) => onResizeStart(e, colId)}
-        onKeyResize={(delta) => onKeyResize(colId, delta)}
-      />
+      {onResizeStart && onKeyResize && (
+        <ResizeHandle
+          label={label}
+          onPointerDown={(e) => onResizeStart(e, colId)}
+          onKeyResize={(delta) => onKeyResize(colId, delta)}
+        />
+      )}
     </TableHead>
   )
 }
@@ -355,19 +383,29 @@ function LabelBadge({ label }: { label: Label }) {
 
 function HoverPhoto({
   url,
+  thumbUrl,
   alt,
   size,
 }: {
+  /** Full-size cover — the hover preview only. */
   url: string | null
+  /** ~192px cover — the thumbnail. Falls back to the full one if absent. */
+  thumbUrl?: string | null
   alt: string
   size: "sm" | "md"
 }) {
-  const thumbClass = size === "sm" ? "h-12 w-12" : "h-14 w-14"
-  const thumbPx = size === "sm" ? "48px" : "56px"
+  const thumbClass = size === "sm" ? "h-16 w-16" : "h-20 w-20"
+  const thumbPx = size === "sm" ? "64px" : "80px"
   const containerRef = useRef<HTMLDivElement>(null)
   const [showAbove, setShowAbove] = useState(false)
+  // The preview used to be mounted for every row and merely hidden, so the
+  // table requested two images per watch — 312 of them on a 161-watch
+  // collection. It now mounts on first hover and stays mounted, so the zoom
+  // is instant on every subsequent hover of that row.
+  const [everHovered, setEverHovered] = useState(false)
 
   function handleMouseEnter() {
+    setEverHovered(true)
     if (!containerRef.current) return
     const rect = containerRef.current.getBoundingClientRect()
     setShowAbove(rect.top > 300)
@@ -379,16 +417,30 @@ function HoverPhoto({
       className="group/photo relative"
       onMouseEnter={handleMouseEnter}
     >
-      <div className={`${thumbClass} overflow-hidden rounded-md bg-muted`}>
+      {/* `relative` is load-bearing: next/image `fill` positions against the
+          nearest positioned ancestor, and without it here the image escaped
+          this square and sized itself to the outer wrapper — i.e. to the whole
+          PHOTO column. At a wide column that produced a ~290x48 letterbox
+          strip through the middle of the watch, which is exactly the reported
+          bug. Square, object-cover, fixed size: the thumbnail must not depend
+          on the column width at all. */}
+      <div className={`${thumbClass} relative shrink-0 overflow-hidden rounded-md bg-muted`}>
         {url ? (
-          <Image src={url} alt={alt} fill className="object-cover" sizes={thumbPx} unoptimized />
+          <Image
+            src={thumbUrl ?? url}
+            alt={alt}
+            fill
+            className="object-cover"
+            sizes={thumbPx}
+            unoptimized
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground"><Watch className="h-5 w-5" aria-hidden="true" /></div>
         )}
       </div>
-      {url && (
+      {url && everHovered && (
         <div
-          className={`pointer-events-none invisible absolute left-14 z-50 opacity-0 transition-all duration-200 group-hover/photo:visible group-hover/photo:opacity-100 ${
+          className={`pointer-events-none invisible absolute left-20 z-50 opacity-0 transition-all duration-200 group-hover/photo:visible group-hover/photo:opacity-100 ${
             showAbove ? "bottom-0" : "top-0"
           }`}
         >
@@ -576,6 +628,15 @@ export function CollectionTable({
   const sorted = watches
   const handleSort = onSortChange
 
+  // The table is sized explicitly rather than left to shrink-to-fit. `w-fit`
+  // alone cannot work here: the Table primitive wraps itself in a `w-full`
+  // div, so the wrapper sizes to the table, the table to the wrapper, and the
+  // browser resolves the circle by taking all the width available — which is
+  // the proportional stretch we are trying to avoid. An exact pixel width on
+  // both makes each column literally its own width.
+  const tableWidth = visibleColumns.reduce((sum, id) => sum + colWidths[id], 0)
+
+
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -598,8 +659,27 @@ export function CollectionTable({
             SHOWING/COST figures at the viewport edge (FIXES §4). With the
             default column set there is nothing to scroll; it only engages
             once the user opts extra columns in. */}
-        <div className="overflow-x-auto rounded-lg border">
-          <Table className="table-fixed">
+        {/* Sized to the table so the border hugs it instead of framing a strip
+            of empty space; max-w-full so a wide column set scrolls rather than
+            pushing the page sideways. */}
+        <div
+          className="max-w-full overflow-x-auto rounded-lg border"
+          // +2 for the wrapper's own 1px borders: box-sizing is border-box, so
+          // without it the content box is 2px narrower than the table and the
+          // container scrolls by those 2px at every viewport.
+          style={{ width: tableWidth + 2 }}
+        >
+          {/* w-auto, not w-full: a fixed-layout table that is told to fill its
+              container treats the colgroup widths as proportions and inflates
+              every column to match — which is how a 72px PHOTO became 138px at
+              2400px. Shrink-wrapping makes the widths literal, so a column is
+              exactly as wide as it says and resizing one column moves only that
+              boundary. */}
+          <Table className="w-auto table-fixed" style={{ width: tableWidth }}>
+            {/* Every column carries its own pixel width. The table shrink-wraps
+                (see w-auto below) so these are honoured exactly rather than
+                treated as ratios — that is what stops PHOTO inflating on a wide
+                monitor, without needing a flex column. */}
             <colgroup>
               {visibleColumns.map((id) => (
                 <col key={id} style={{ width: colWidths[id] }} />
@@ -653,6 +733,7 @@ export function CollectionTable({
                   <TableCell className="py-2">
                     <HoverPhoto
                       url={watch.cover_photo_url}
+                      thumbUrl={watch.cover_thumb_url}
                       alt={`${watch.brand.name} ${watch.model}`}
                       size="sm"
                     />
@@ -694,11 +775,18 @@ export function CollectionTable({
                         {watch.is_wishlist && guideNames?.[watch.id] && (
                           <GuideBadge name={guideNames[watch.id]} className="shrink-0 align-middle" />
                         )}
+                        {/* title goes on the wrapper: lucide icons take no title
+                            prop, and the tooltip is the point (§5). */}
                         {watch.price_check_enabled && (
-                          <CircleDollarSign
-                            aria-label="Price checking enabled"
-                            className="inline h-3.5 w-3.5 shrink-0 align-middle text-emerald-600 dark:text-emerald-400"
-                          />
+                          <span
+                            title="Price checking enabled"
+                            className="inline-flex shrink-0 align-middle"
+                          >
+                            <CircleDollarSign
+                              aria-label="Price checking enabled"
+                              className="h-3.5 w-3.5 text-brass"
+                            />
+                          </span>
                         )}
                       </span>
                     </TableCell>
@@ -748,7 +836,7 @@ export function CollectionTable({
         {/* Visible legend — markers must not carry meaning only in a title (E2/F2). */}
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
           <span className="flex items-center gap-1">
-            <CircleDollarSign className="h-3 w-3 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            <CircleDollarSign className="h-3 w-3 text-brass" aria-hidden="true" />
             price tracked
           </span>
           <span className="flex items-center gap-1">
@@ -772,7 +860,7 @@ export function CollectionTable({
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
                 {watch.cover_photo_url ? (
                   <Image
-                    src={watch.cover_photo_url}
+                    src={watch.cover_thumb_url ?? watch.cover_photo_url}
                     alt={`${watch.brand.name} ${watch.model}`}
                     fill
                     className="object-cover"
@@ -797,10 +885,15 @@ export function CollectionTable({
                     <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
                   )}
                   {watch.price_check_enabled && (
-                    <CircleDollarSign
-                      aria-label="Price checking enabled"
-                      className="ml-2 inline h-3.5 w-3.5 align-middle text-emerald-600 dark:text-emerald-400"
-                    />
+                    <span
+                      title="Price checking enabled"
+                      className="ml-2 inline-flex align-middle"
+                    >
+                      <CircleDollarSign
+                        aria-label="Price checking enabled"
+                        className="h-3.5 w-3.5 text-brass"
+                      />
+                    </span>
                   )}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>

@@ -273,17 +273,17 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
 
       {/* Results */}
       {result && (
-        <Card className={result.errors.length > 0 ? "border-amber-500/30" : "border-emerald-500/30"}>
+        <Card className={result.errors.length > 0 ? "border-destructive/30" : "border-brass/30"}>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               {result.errors.length === 0 ? (
                 <>
-                  <Check className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                  <Check className="h-4 w-4 text-brass" aria-hidden="true" />
                   Import Complete
                 </>
               ) : (
                 <>
-                  <span className="text-amber-600">⚠</span>
+                  <span className="text-destructive">⚠</span>
                   Import Complete with Issues
                 </>
               )}
@@ -291,7 +291,7 @@ export function BatchImportForm({ categories }: BatchImportFormProps) {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm">
-              <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+              <span className="font-semibold text-brass">
                 {result.successCount}
               </span>{" "}
               of {result.totalRequested} watches imported successfully.

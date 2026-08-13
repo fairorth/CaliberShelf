@@ -86,7 +86,7 @@ export default async function StrapsPage() {
                     )}
                   </div>
                   {strap.current_watch && (
-                    <p className="truncate text-2xs text-emerald-600 dark:text-emerald-400">
+                    <p className="truncate text-2xs text-brass">
                       On: {watchLabel(strap.current_watch)}
                     </p>
                   )}

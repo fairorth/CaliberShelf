@@ -104,10 +104,13 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
                 <GuideBadge name={guideNames[watch.id]} />
               )}
               {watch.price_check_enabled && (
-                <span className="rounded-full bg-background/85 p-1 backdrop-blur">
+                <span
+                  title="Price checking enabled"
+                  className="rounded-full bg-background/85 p-1 backdrop-blur"
+                >
                   <CircleDollarSign
                     aria-label="Price checking enabled"
-                    className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400"
+                    className="h-3.5 w-3.5 text-brass"
                   />
                 </span>
               )}

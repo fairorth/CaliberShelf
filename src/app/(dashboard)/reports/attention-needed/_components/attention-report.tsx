@@ -6,24 +6,17 @@ import { Check, Settings, Tag, Watch } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import { WishlistBadge } from "@/components/wishlist-badge"
+import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import type { AttentionItem, AttentionReport } from "@/lib/queries/attention"
 import { ATTENTION_INCLUDE_WISHLIST_KEY } from "@/lib/preferences"
 
+/** Reuses the real badges. This screen had its own hand-rolled copies in
+ *  sky-500 and amber-500 — a second definition of the same two states, which
+ *  is how the literal survived every sweep of the first one. */
 function StatusBadge({ status }: { status: AttentionItem["status"] }) {
-  if (status === "wishlist") {
-    return (
-      <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-2xs font-medium text-sky-400">
-        Wish List
-      </span>
-    )
-  }
-  if (status === "coming_soon") {
-    return (
-      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-2xs font-medium text-amber-400">
-        Coming Soon
-      </span>
-    )
-  }
+  if (status === "wishlist") return <WishlistBadge />
+  if (status === "coming_soon") return <ComingSoonBadge />
   return null
 }
 
@@ -73,7 +66,7 @@ function AttentionSection({
                     {item.missing.map((m) => (
                       <span
                         key={m}
-                        className="rounded-full bg-amber-500/10 px-2 py-0.5 text-2xs font-medium text-amber-400"
+                        className="rounded-full bg-muted px-2 py-0.5 text-2xs font-medium text-muted-foreground"
                       >
                         {m}
                       </span>

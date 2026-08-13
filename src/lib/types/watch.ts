@@ -160,7 +160,17 @@ export interface WatchWithPhotos extends Watch {
 
 // Watch with cover photo URL and joined relations (for grid/list views)
 export interface WatchWithCover extends Watch {
+  /** ~720px on the long edge — heroes, tiles, the table's hover preview. */
   cover_photo_url: string | null
+  /** ~192px — the dense thumbnails (table, coverage matrix, capture, wear log).
+   *  Downscaling the 720px cover into a 64px cell is a ~9:1 reduction, which is
+   *  where browser resampling turns to mush; this gives those cells a source
+   *  close to the size they actually paint.
+   *
+   *  Optional: only getWatches pays for the second signed URL. Queries that
+   *  build this shape for other screens omit it, and every consumer falls back
+   *  to cover_photo_url, so a missing thumb is soft rather than broken. */
+  cover_thumb_url?: string | null
   brand: Brand
   movement: Movement | null
   category?: Category

@@ -625,7 +625,7 @@ export function WatchForm({
               <FormLabel htmlFor="reference_number">Reference Number</FormLabel>
               {refUnverified && (
                 <>
-                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-2xs font-medium text-amber-400">
+                  <span className="rounded-full px-2 py-0.5 text-2xs font-medium text-brass ring-1 ring-brass/45">
                     ⚠ needs verification
                   </span>
                   <button
@@ -662,7 +662,7 @@ export function WatchForm({
                 FIELD,
                 "font-mono text-xs",
                 (refAutofilled || refUnverified) &&
-                  "border-amber-500/60 ring-1 ring-amber-500/30"
+                  "border-brass/60 ring-1 ring-brass/30"
               )}
             />
           </div>

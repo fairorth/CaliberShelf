@@ -49,7 +49,11 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    heading: "Acquisition & Imagery",
+    // "Acquisition & Imagery" needed 191px of the rail's 175px, so it wrapped
+    // to two lines and closed to within 2px of the item below it. This covers
+    // the same two halves — Deals and Batch Import acquire, Photo Lab and
+    // Inspiration shoot — and clears the rail by 33px.
+    heading: "Acquire & Shoot",
     items: [
       { href: "/deals", label: "Deals", icon: BadgeDollarSign },
       { href: "/photo-lab", label: "Photo Lab", icon: Camera },

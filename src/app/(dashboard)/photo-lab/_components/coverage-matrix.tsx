@@ -220,7 +220,7 @@ export function CoverageMatrix({
                 <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted">
                   {row.watch.cover_photo_url ? (
                     <Image
-                      src={row.watch.cover_photo_url}
+                      src={row.watch.cover_thumb_url ?? row.watch.cover_photo_url}
                       alt=""
                       fill
                       className="object-cover"

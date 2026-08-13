@@ -46,21 +46,23 @@ function fmtDuration(ms: number | null): string {
 }
 
 function StatusBadge({ status, dryRun }: { status: AgentRun["status"]; dryRun: boolean }) {
+  // Failure is the one state that earns a semantic colour (--destructive);
+  // the rest are brass or neutral. Was emerald / amber / rose / sky.
   const color =
     status === "success"
-      ? "bg-emerald-500/15 text-emerald-400"
+      ? "bg-brass/15 text-brass ring-1 ring-brass/35"
       : status === "partial"
-        ? "bg-amber-500/15 text-amber-400"
+        ? "text-brass ring-1 ring-brass/45"
         : status === "failed"
-          ? "bg-rose-500/15 text-rose-400"
-          : "bg-foreground/10 text-muted-foreground"
+          ? "bg-destructive/12 text-destructive ring-1 ring-destructive/30"
+          : "bg-muted text-muted-foreground"
   return (
     <span className="flex items-center gap-1.5">
       <span className={`rounded-full px-2 py-0.5 text-2xs font-medium ${color}`}>
         {status}
       </span>
       {dryRun && (
-        <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-2xs font-medium text-sky-400">
+        <span className="rounded-full bg-muted px-2 py-0.5 text-2xs font-medium text-muted-foreground">
           dry run
         </span>
       )}
@@ -178,7 +180,7 @@ export default async function AgentReviewPage() {
                     <span className="text-muted-foreground">
                       {run.items_updated}/{run.items_processed} updated
                       {run.items_failed > 0 && (
-                        <span className="text-rose-400"> · {run.items_failed} failed</span>
+                        <span className="text-destructive"> · {run.items_failed} failed</span>
                       )}
                     </span>
                     <span className="font-mono text-xs tabular-nums text-foreground">
