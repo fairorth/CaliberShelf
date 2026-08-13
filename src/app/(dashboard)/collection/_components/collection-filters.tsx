@@ -128,6 +128,25 @@ interface CollectionFiltersDialogProps {
 const SELECT_CLASS =
   "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs accent-brass transition-[color,box-shadow] outline-none focus:border-ring focus:ring-[3px] focus:ring-ring/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
 
+/** One titled group of filters. Three of these carry the whole dialog, so
+ *  eleven controls no longer stack at equal weight (FIXES §6). */
+function FilterSection({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="space-y-3">
+      <h3 className="font-mono text-2xs uppercase tracking-[0.1em] text-muted-foreground">
+        {title}
+      </h3>
+      <div className="space-y-4">{children}</div>
+    </section>
+  )
+}
+
 export function CollectionFiltersDialog({
   filters,
   onChange,
@@ -193,12 +212,15 @@ export function CollectionFiltersDialog({
         )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="grid max-h-[85dvh] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Filter watches</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        {/* The body scrolls under the pinned footer, so the match count and
+            the actions stay reachable however long the list grows. */}
+        <div className="-mx-4 space-y-6 overflow-y-auto px-4">
+          <FilterSection title="Status">
           {/* Status — every watch is exactly one of these three */}
           <div className="space-y-1.5">
             <FormLabel>Show</FormLabel>
@@ -252,7 +274,9 @@ export function CollectionFiltersDialog({
               </div>
             )}
           </div>
+          </FilterSection>
 
+          <FilterSection title="Attributes">
           {/* Category — multi-select (OR); empty = all categories */}
           {categories.length > 0 && (
             <div className="space-y-1.5">
@@ -407,26 +431,6 @@ export function CollectionFiltersDialog({
             </select>
           </div>
 
-          {/* Box (storage location) */}
-          {boxes.length > 0 && (
-            <div className="space-y-1.5">
-              <FormLabel htmlFor="filter-box">Box</FormLabel>
-              <select
-                id="filter-box"
-                className={SELECT_CLASS}
-                value={filters.box}
-                onChange={(e) => set("box", e.target.value)}
-              >
-                <option value="">Any box</option>
-                {boxes.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
           {/* Movement type + Case material */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -463,6 +467,28 @@ export function CollectionFiltersDialog({
             </div>
           </div>
 
+          {/* Box (storage location) */}
+          {boxes.length > 0 && (
+            <div className="space-y-1.5">
+              <FormLabel htmlFor="filter-box">Box</FormLabel>
+              <select
+                id="filter-box"
+                className={SELECT_CLASS}
+                value={filters.box}
+                onChange={(e) => set("box", e.target.value)}
+              >
+                <option value="">Any box</option>
+                {boxes.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          </FilterSection>
+
+          <FilterSection title="Price">
           {/* Price tracking */}
           <div className="space-y-1.5">
             <FormLabel htmlFor="filter-price-tracking">Price Tracking</FormLabel>
@@ -517,6 +543,7 @@ export function CollectionFiltersDialog({
               </div>
             </div>
           )}
+          </FilterSection>
         </div>
 
         <DialogFooter className="items-center sm:justify-between">
