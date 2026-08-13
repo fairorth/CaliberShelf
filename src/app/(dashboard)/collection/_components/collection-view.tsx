@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowDown, ArrowUp, LayoutGrid, Table as TableIcon } from "lucide-react"
 import {
@@ -419,6 +419,12 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     () => applyFilters(watches, filters, tierBands, guideNames ?? {}),
     [watches, filters, tierBands, guideNames]
   )
+
+  // Lets the filter dialog preview a draft's match count without applying it.
+  const countMatches = useCallback(
+    (f: CollectionFilters) => applyFilters(watches, f, tierBands, guideNames ?? {}).length,
+    [watches, tierBands, guideNames]
+  )
   const afterSearch = useMemo(
     () => (query.trim() ? afterFilters.filter((w) => matchesQuery(w, query)) : afterFilters),
     [afterFilters, query]
@@ -506,7 +512,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           tiers={tierOptions}
           labels={labelOptions}
           categories={categories.map((c) => ({ id: c.id, name: c.name }))}
-          matchCount={afterFilters.length}
+          countMatches={countMatches}
         />
 
         {/* Sort — only in tile view; table headers own sorting there (B3). */}

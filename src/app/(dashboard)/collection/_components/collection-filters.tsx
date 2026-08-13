@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { SlidersHorizontal } from "lucide-react"
 import {
   Dialog,
@@ -161,6 +162,12 @@ export function filtersToParams(
   return p
 }
 
+/** Canonical string for a filter set — two sets are equal iff these match.
+ *  Reuses the URL codec so there is only one definition of "the same filters". */
+export function canonical(f: CollectionFilters): string {
+  return filtersToParams(f, new URLSearchParams()).toString()
+}
+
 export function activeFilterCount(f: CollectionFilters): number {
   let n = 0
   if (!f.showOwned || !f.showComingSoon || !f.showWishlist) n++
@@ -204,7 +211,9 @@ export interface TierFilterOption {
 }
 
 interface CollectionFiltersDialogProps {
+  /** The filters currently applied to the list. The dialog edits a copy. */
   filters: CollectionFilters
+  /** Called once, when the dialog closes — never per keystroke. */
   onChange: (next: CollectionFilters) => void
   /** Distinct collection-guide names with wish-list members (e.g. "Grand Seiko"). */
   guides?: string[]
@@ -217,7 +226,9 @@ interface CollectionFiltersDialogProps {
   categories: CategoryOption[]
   complications: string[]
   tiers: TierFilterOption[]
-  matchCount: number
+  /** Counts matches for a candidate filter set, so the footer can preview the
+   *  draft without applying it. Pure client-side work over the loaded rows. */
+  countMatches: (f: CollectionFilters) => number
 }
 
 // Token surface + token border + brass focus ring. Native selects do not
@@ -246,7 +257,11 @@ function FilterSection({
 }
 
 export function CollectionFiltersDialog({
-  filters,
+  // Deliberately renamed: inside this component `filters` is the *draft*, so
+  // every control below edits the copy and nothing reaches the list until the
+  // dialog closes. `applied` is the committed set, used only to seed the draft
+  // and to label the trigger.
+  filters: applied,
   onChange,
   guides = [],
   brands,
@@ -258,12 +273,25 @@ export function CollectionFiltersDialog({
   categories,
   complications,
   tiers,
-  matchCount,
+  countMatches,
 }: CollectionFiltersDialogProps) {
-  const count = activeFilterCount(filters)
+  const [open, setOpen] = useState(false)
+  const [filters, setFilters] = useState<CollectionFilters>(applied)
+
+  // Editing eleven controls used to mean eleven URL writes, each re-running the
+  // collection's server component — the dialog felt stuck. The draft is local
+  // state, so typing is instant; opening reseeds it, closing commits it once.
+  function handleOpenChange(next: boolean) {
+    if (next) {
+      setFilters(applied)
+    } else if (canonical(filters) !== canonical(applied)) {
+      onChange(filters)
+    }
+    setOpen(next)
+  }
 
   function set<K extends keyof CollectionFilters>(key: K, value: CollectionFilters[K]) {
-    onChange({ ...filters, [key]: value })
+    setFilters({ ...filters, [key]: value })
   }
 
   function toggleLabel(id: string) {
@@ -294,8 +322,13 @@ export function CollectionFiltersDialog({
     set("tierKeys", next)
   }
 
+  // The trigger reports what is actually filtering the list, not the draft.
+  const appliedCount = activeFilterCount(applied)
+  const draftCount = activeFilterCount(filters)
+  const draftMatches = countMatches(filters)
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
           <Button variant="outline" size="sm" className="h-9 gap-1.5" />
@@ -303,9 +336,9 @@ export function CollectionFiltersDialog({
       >
         <SlidersHorizontal className="h-4 w-4" />
         <span className="hidden sm:inline">Filters</span>
-        {count > 0 && (
+        {appliedCount > 0 && (
           <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 text-2xs font-semibold text-background">
-            {count}
+            {appliedCount}
           </span>
         )}
       </DialogTrigger>
@@ -645,15 +678,17 @@ export function CollectionFiltersDialog({
         </div>
 
         <DialogFooter className="items-center sm:justify-between">
+          {/* Previews the draft, so the count still moves as you tick boxes —
+              it just costs a local array filter instead of a page render. */}
           <span className="text-sm text-muted-foreground">
-            {matchCount} {matchCount === 1 ? "match" : "matches"}
+            {draftMatches} {draftMatches === 1 ? "match" : "matches"}
           </span>
           <div className="flex gap-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onChange(EMPTY_FILTERS)}
-              disabled={count === 0}
+              onClick={() => setFilters(EMPTY_FILTERS)}
+              disabled={draftCount === 0}
             >
               Clear all
             </Button>
