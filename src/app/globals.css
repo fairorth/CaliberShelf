@@ -86,10 +86,14 @@
   --border: oklch(0.87 0.01 235);
   --input: oklch(0.89 0.01 235);
   /* Focus rings are brass — the single action accent (design system §1). */
-  --ring: oklch(0.52 0.07 75);
+  --ring: #8a6a2f;
   /* Brass — the action & brand accent (buttons, active nav, focus, selection).
-     Darker in light mode for contrast; do not unify with the dark value. */
-  --brass: oklch(0.52 0.07 75);
+     Darker in light mode for contrast; do not unify with the dark value.
+     This is BRAND.md's brass-deep exactly. The previous oklch(0.52 0.07 75)
+     resolved to #816339, which had drifted past brass into a dull chocolate:
+     enough lightness for contrast but not enough chroma to still read as
+     metal. Stated as the brand hex so it cannot drift again. */
+  --brass: #8a6a2f;
   /* Text on a brass fill: light in light mode (brass is dark here). */
   --brass-foreground: oklch(0.99 0.01 90);
   /* Mark facets. The dark ground alternates one brass at two alphas; over a
