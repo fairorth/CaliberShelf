@@ -101,18 +101,8 @@ export type ColumnId =
 
 const COLUMN_WIDTHS_KEY = "collection-col-widths"
 const MIN_COL_WIDTH = 56
-/** 56px thumbnail + 8px cell padding a side. Not user-adjustable — see below. */
-const PHOTO_COL_WIDTH = 72
-/**
- * The single column left at `width: auto`, so it absorbs all the slack when the
- * table is wider than its fixed columns instead of every column inflating.
- * Model is the right one: it holds the longest values and its badges, and it
- * was the column truncating to "Historiques Chronom…" while PHOTO sat on
- * hundreds of pixels of empty space.
- */
-const FLEX_COLUMN: ColumnId = "model"
-/** Floor for the flex column, so it scrolls rather than collapsing. */
-const FLEX_MIN_WIDTH = 260
+/** 64px thumbnail + 8px cell padding a side. */
+const PHOTO_COL_WIDTH = 80
 
 // Column visibility (B5): eight on by default; Nickname, Caliber and Price
 // are opt-in via the Columns dropdown, persisted per device.
@@ -240,10 +230,7 @@ export function ColumnsMenu({
 // room to spare. Photo and Category were over-wide; Ref, Box and Worn were
 // starved enough to clip their own headers — "WORN" was cut off (FIXES §4).
 const DEFAULT_WIDTHS: Record<ColumnId, number> = {
-  // 56px image + 8px cell padding each side. Fixed and NOT resizable: the
-  // photo cell has exactly one job at exactly one size, so any other width can
-  // only add dead space. A stored width from a previous build is ignored for
-  // this column — that is how the review ended up with a ~300px photo column.
+  // 64px image + 8px cell padding each side.
   photo: PHOTO_COL_WIDTH,
   category: 96,
   brand: 148,
@@ -251,8 +238,10 @@ const DEFAULT_WIDTHS: Record<ColumnId, number> = {
   // ~160px before the name gets a pixel. At 200 the name truncated to a single
   // letter, so it takes the lion's share and Movement Type — whose values are
   // one short word — gives most of it back. Widened again in round 3: the name
-  // was still truncating to "Historiqu…" against its badges.
-  model: 320,
+  // was still truncating to "Historiqu…" against its badges. 420 now that the
+  // table shrink-wraps: Model gets a real width instead of absorbing whatever
+  // the viewport left over, which is what pinned Price to the far right.
+  model: 420,
   nickname: 136,
   reference: 152,
   // 104 was too tight for the "Movement Type" header itself, which ran into
@@ -306,11 +295,12 @@ function ResizeHandle({
         }
       }}
       title={`Drag to resize the ${label} column`}
-      // The handle is a keyboard stop, so its focus state has to be visible.
-      // It was outline-none plus a 1px hairline that only changed colour —
-      // indistinguishable from the resting state, which is what makes a
-      // focused handle read as an unexplained mark in a header cell.
-      className="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:right-[3px] after:w-px after:rounded-full after:bg-border/70 after:transition-all hover:after:bg-brass/70 focus-visible:outline-none focus-visible:after:inset-y-0 focus-visible:after:right-[2px] focus-visible:after:w-0.5 focus-visible:after:bg-brass active:after:bg-brass"
+      // Straddles the boundary rather than sitting inside the cell: 11px wide,
+      // half either side, so the grab area is where the eye says the divider is
+      // and the last column's handle is reachable instead of flush against the
+      // table edge. The visible rule thickens on hover and turns brass, so you
+      // can see what you have hold of before you start dragging.
+      className="absolute -right-[5px] top-0 z-20 h-full w-[11px] cursor-col-resize touch-none select-none after:absolute after:inset-y-1.5 after:left-1/2 after:w-px after:-translate-x-1/2 after:rounded-full after:bg-border/70 after:transition-all hover:after:inset-y-0 hover:after:w-0.5 hover:after:bg-brass focus-visible:outline-none focus-visible:after:inset-y-0 focus-visible:after:w-0.5 focus-visible:after:bg-brass active:after:inset-y-0 active:after:w-0.5 active:after:bg-brass"
     />
   )
 }
@@ -392,12 +382,18 @@ function HoverPhoto({
   alt: string
   size: "sm" | "md"
 }) {
-  const thumbClass = size === "sm" ? "h-14 w-14" : "h-16 w-16"
-  const thumbPx = size === "sm" ? "56px" : "64px"
+  const thumbClass = size === "sm" ? "h-16 w-16" : "h-20 w-20"
+  const thumbPx = size === "sm" ? "64px" : "80px"
   const containerRef = useRef<HTMLDivElement>(null)
   const [showAbove, setShowAbove] = useState(false)
+  // The preview used to be mounted for every row and merely hidden, so the
+  // table requested two images per watch — 312 of them on a 161-watch
+  // collection. It now mounts on first hover and stays mounted, so the zoom
+  // is instant on every subsequent hover of that row.
+  const [everHovered, setEverHovered] = useState(false)
 
   function handleMouseEnter() {
+    setEverHovered(true)
     if (!containerRef.current) return
     const rect = containerRef.current.getBoundingClientRect()
     setShowAbove(rect.top > 300)
@@ -423,9 +419,9 @@ function HoverPhoto({
           <div className="flex h-full items-center justify-center text-muted-foreground"><Watch className="h-5 w-5" aria-hidden="true" /></div>
         )}
       </div>
-      {url && (
+      {url && everHovered && (
         <div
-          className={`pointer-events-none invisible absolute left-14 z-50 opacity-0 transition-all duration-200 group-hover/photo:visible group-hover/photo:opacity-100 ${
+          className={`pointer-events-none invisible absolute left-20 z-50 opacity-0 transition-all duration-200 group-hover/photo:visible group-hover/photo:opacity-100 ${
             showAbove ? "bottom-0" : "top-0"
           }`}
         >
@@ -538,10 +534,6 @@ export function CollectionTable({
       const parsed = JSON.parse(saved) as Partial<Record<ColumnId, number>>
       const next = { ...DEFAULT_WIDTHS }
       for (const id of Object.keys(DEFAULT_WIDTHS) as ColumnId[]) {
-        // Photo is fixed. Skipping it here is what retires a stored width from
-        // an older build, which is how a ~300px photo column outlived the
-        // default that replaced it.
-        if (id === "photo") continue
         const w = parsed[id]
         if (typeof w === "number" && Number.isFinite(w)) {
           next[id] = Math.max(MIN_COL_WIDTH, Math.round(w))
@@ -617,14 +609,14 @@ export function CollectionTable({
   const sorted = watches
   const handleSort = onSortChange
 
-  // Floor for the table: the fixed columns at their set widths plus the flex
-  // column's minimum. Past this the container scrolls, so opting several extra
-  // columns in can never squeeze Model to nothing.
-  const tableMinWidth =
-    visibleColumns.reduce(
-      (sum, id) => sum + (id === FLEX_COLUMN ? FLEX_MIN_WIDTH : colWidths[id]),
-      0
-    ) + 2
+  // The table is sized explicitly rather than left to shrink-to-fit. `w-fit`
+  // alone cannot work here: the Table primitive wraps itself in a `w-full`
+  // div, so the wrapper sizes to the table, the table to the wrapper, and the
+  // browser resolves the circle by taking all the width available — which is
+  // the proportional stretch we are trying to avoid. An exact pixel width on
+  // both makes each column literally its own width.
+  const tableWidth = visibleColumns.reduce((sum, id) => sum + colWidths[id], 0)
+
 
   if (watches.length === 0) {
     return (
@@ -648,38 +640,42 @@ export function CollectionTable({
             SHOWING/COST figures at the viewport edge (FIXES §4). With the
             default column set there is nothing to scroll; it only engages
             once the user opts extra columns in. */}
-        <div className="overflow-x-auto rounded-lg border">
-          <Table className="table-fixed" style={{ minWidth: tableMinWidth }}>
-            {/* Model's column is deliberately `auto` while every other column
-                is a fixed pixel width. In a fixed table layout the colgroup
-                widths are a *ratio*, not a pin: when they sum to less than the
-                table, the surplus is shared out proportionally, so on a wide
-                monitor a 72px PHOTO inflated to 138px at 2400px and further
-                still beyond that — a 56px thumbnail marooned in a wide empty
-                cell. Leaving exactly one column auto sends the entire surplus
-                there instead, which is both the fix and where the width was
-                wanted. */}
+        {/* Sized to the table so the border hugs it instead of framing a strip
+            of empty space; max-w-full so a wide column set scrolls rather than
+            pushing the page sideways. */}
+        <div
+          className="max-w-full overflow-x-auto rounded-lg border"
+          style={{ width: tableWidth }}
+        >
+          {/* w-auto, not w-full: a fixed-layout table that is told to fill its
+              container treats the colgroup widths as proportions and inflates
+              every column to match — which is how a 72px PHOTO became 138px at
+              2400px. Shrink-wrapping makes the widths literal, so a column is
+              exactly as wide as it says and resizing one column moves only that
+              boundary. */}
+          <Table className="w-auto table-fixed" style={{ width: tableWidth }}>
+            {/* Every column carries its own pixel width. The table shrink-wraps
+                (see w-auto below) so these are honoured exactly rather than
+                treated as ratios — that is what stops PHOTO inflating on a wide
+                monitor, without needing a flex column. */}
             <colgroup>
               {visibleColumns.map((id) => (
-                <col
-                  key={id}
-                  style={id === FLEX_COLUMN ? undefined : { width: colWidths[id] }}
-                />
+                <col key={id} style={{ width: colWidths[id] }} />
               ))}
             </colgroup>
             <TableHeader>
               <TableRow>
-                {/* No resize handle: the column is a fixed 72px around a fixed
-                    56px thumbnail, so dragging it could only add dead space. */}
-                <TableHead className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                <TableHead className="relative text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                   Photo
+                  <ResizeHandle
+                    label="Photo"
+                    onPointerDown={(e) => handleResizeStart(e, "photo")}
+                    onKeyResize={(delta) => handleKeyResize("photo", delta)}
+                  />
                 </TableHead>
                 {isVisible("category") && <SortableHeader label="Category" sortKey="category" colId="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("brand") && <SortableHeader label="Brand" sortKey="brand" colId="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
-                {/* Model has no resize handle: it is the flex column, so its
-                    width is whatever the other columns leave it. Narrow another
-                    column and Model grows to match. */}
-                {isVisible("model") && <SortableHeader label="Model" sortKey="model" colId="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />}
+                {isVisible("model") && <SortableHeader label="Model" sortKey="model" colId="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("nickname") && <SortableHeader label="Nickname" sortKey="nickname" colId="nickname" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("reference") && <SortableHeader label="Ref #" sortKey="reference" colId="reference" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("movementType") && <SortableHeader label="Movement Type" sortKey="movementType" colId="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
