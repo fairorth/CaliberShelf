@@ -3,6 +3,12 @@
 /** When set to "1", the Collection views show each watch's purchase price. */
 export const SHOW_COST_KEY = "collection-show-cost"
 
+/** sessionStorage (not localStorage): the collection's query string as the user
+ *  last left it, so the watch view's "Collection" breadcrumb returns to that
+ *  exact list rather than a bare one. Session-scoped on purpose — a new tab
+ *  still opens the collection unfiltered. */
+export const COLLECTION_RETURN_KEY = "collection-return-query"
+
 /** Attention Needed: whether wish-list watches are included. Default true. */
 export const ATTENTION_INCLUDE_WISHLIST_KEY = "attention-include-wishlist"
 

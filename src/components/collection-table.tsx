@@ -2,7 +2,7 @@
 
 import { Archive, ArrowDown, ArrowUp, ChevronsUpDown, CircleDollarSign, Columns3, Filter, Watch } from "lucide-react"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -11,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -39,13 +40,18 @@ interface CollectionTableProps {
   showCost?: boolean
   /** watch_id → collection-guide name, for badging guide members. */
   guideNames?: Record<string, string>
-  /** Brand cell click → filter by that brand (mirrors the category link). */
+  /** Brand cell click → filter the collection by that brand. */
   onBrandClick?: (brandId: string) => void
+  /** Category cell click → filter the collection by that category. */
+  onCategoryClick?: (categoryId: string) => void
   /** Current sort, owned by the collection view (B3). */
   sortKey: TableSortKey | null
   sortDir: TableSortDir
   /** Header click — the view toggles direction / switches key. */
   onSortChange: (key: TableSortKey) => void
+  /** Visible columns, owned by the collection view so the Columns menu can
+   *  sit in the toolbar's second band rather than orphaned above the table. */
+  chosenColumns: ColumnId[]
 }
 
 function priceLabel(watch: WatchWithCover): string {
@@ -80,7 +86,7 @@ export type TableSortDir = "asc" | "desc"
 
 // ── Column widths (resizable, persisted) ───────────────────────────
 
-type ColumnId =
+export type ColumnId =
   | "photo"
   | "category"
   | "brand"
@@ -136,19 +142,117 @@ const COLUMN_LABELS: Record<ColumnId, string> = {
   price: "Price",
 }
 
+/**
+ * Column visibility (B5), persisted per device. It lives in a hook rather than
+ * inside the table so the collection view can own the state and render the
+ * Columns menu in the toolbar's second band (FIXES §3) — previously the menu
+ * was stranded on its own right-aligned line above the table.
+ */
+export function useColumnVisibility() {
+  const [chosenColumns, setChosenColumns] = useState<ColumnId[]>(DEFAULT_VISIBLE)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VISIBLE_COLUMNS_KEY)
+      if (!saved) return
+      const parsed = JSON.parse(saved) as ColumnId[]
+      if (Array.isArray(parsed)) {
+        const valid = parsed.filter((id) => COLUMN_ORDER.includes(id))
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (valid.length > 0) setChosenColumns(valid.includes("photo") ? valid : ["photo", ...valid])
+      }
+    } catch {
+      // ignore malformed stored value
+    }
+  }, [])
+
+  const toggleColumn = useCallback((id: ColumnId) => {
+    setChosenColumns((prev) => {
+      const next = prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+      localStorage.setItem(VISIBLE_COLUMNS_KEY, JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  return { chosenColumns, toggleColumn }
+}
+
+/** The Columns chooser — a view-specific control for table view only. */
+export function ColumnsMenu({
+  chosenColumns,
+  toggleColumn,
+  showCost,
+}: {
+  chosenColumns: ColumnId[]
+  toggleColumn: (id: ColumnId) => void
+  showCost: boolean
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button variant="outline" size="sm" className="h-8 gap-1.5" />}
+      >
+        <Columns3 className="h-3.5 w-3.5" aria-hidden="true" />
+        Columns
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {/* GroupLabel requires a Group ancestor in Base UI — without it the
+            menu throws MenuGroupRootContext is missing the moment it opens. */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {COLUMN_ORDER.filter((id) => id !== "photo").map((id) => (
+            <DropdownMenuCheckboxItem
+              key={id}
+              checked={chosenColumns.includes(id)}
+              onCheckedChange={() => toggleColumn(id)}
+              disabled={id === "price" && !showCost}
+            >
+              {COLUMN_LABELS[id]}
+              {id === "price" && !showCost && " (enable in Config)"}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+// Widths are re-balanced so the eight-column default fits a 1440px viewport
+// (≈1192px of table once the 200px rail and page padding are removed) with
+// room to spare. Photo and Category were over-wide; Ref, Box and Worn were
+// starved enough to clip their own headers — "WORN" was cut off (FIXES §4).
 const DEFAULT_WIDTHS: Record<ColumnId, number> = {
-  photo: 64,
-  category: 112,
-  brand: 144,
-  model: 208,
+  photo: 52,
+  category: 96,
+  brand: 148,
+  // Model carries the status badges (WISH LIST + the guide name), which cost
+  // ~160px before the name gets a pixel. At 200 the name truncated to a single
+  // letter, so it takes the lion's share and Movement Type — whose values are
+  // one short word — gives most of it back.
+  model: 276,
   nickname: 136,
-  reference: 144,
-  movementType: 152,
+  reference: 152,
+  // 104 was too tight for the "Movement Type" header itself, which ran into
+  // the Box heading. The column is sized by its label, not its values.
+  movementType: 132,
   caliber: 136,
-  box: 120,
-  worn: 64,
+  box: 112,
+  worn: 72,
   price: 104,
 }
+
+// Below 1200px the eight-column default stops fitting. Fall back to a
+// six-column set rather than introducing horizontal scroll (FIXES §4).
+const NARROW_BREAKPOINT = "(max-width: 1199px)"
+const NARROW_VISIBLE: ColumnId[] = [
+  "photo",
+  "brand",
+  "model",
+  "category",
+  "reference",
+  "worn",
+]
 
 /** Drag target on a header's right edge. Stops propagation so a resize
  *  never triggers the header's sort button. Keyboard: focus + arrow keys
@@ -299,6 +403,63 @@ function HoverPhoto({
   )
 }
 
+/**
+ * A cell whose whole area filters the collection instead of opening the watch.
+ *
+ * This used to be a 16px funnel that only existed on hover, sitting beside a
+ * value that navigated — so the obvious click (the brand name) did the one
+ * thing the icon promised it wouldn't. The funnel is now decoration marking
+ * the cell as filterable; the button underneath is the entire cell.
+ *
+ * That is a deliberate narrowing of B5's "one row, one destination": the row
+ * still opens the watch everywhere else, but these two columns belong to the
+ * filter.
+ */
+function FilterCell({
+  label,
+  title,
+  ariaLabel,
+  onFilter,
+  className,
+}: {
+  label: string
+  title: string
+  ariaLabel: string
+  /** Omitted when there is nothing to filter on (no category) — renders plain. */
+  onFilter?: () => void
+  className?: string
+}) {
+  if (!onFilter) {
+    return (
+      <TableCell className={className}>
+        <span className="truncate">{label}</span>
+      </TableCell>
+    )
+  }
+  return (
+    // p-0 on the cell, p-2 on the button: the button inherits the padding it
+    // replaces, so its hit area is the cell rather than just the text.
+    <TableCell className={cn("p-0", className)}>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onFilter()
+        }}
+        title={title}
+        aria-label={ariaLabel}
+        className="flex h-full w-full min-w-0 items-center gap-1 p-2 text-left transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brass/50"
+      >
+        <span className="truncate">{label}</span>
+        <Filter
+          className="h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-60"
+          aria-hidden="true"
+        />
+      </button>
+    </TableCell>
+  )
+}
+
 // ── Main Component ─────────────────────────────────────────────────
 
 export function CollectionTable({
@@ -306,9 +467,11 @@ export function CollectionTable({
   showCost = false,
   guideNames,
   onBrandClick,
+  onCategoryClick,
   sortKey,
   sortDir,
   onSortChange,
+  chosenColumns,
 }: CollectionTableProps) {
   const router = useRouter()
 
@@ -316,31 +479,16 @@ export function CollectionTable({
   // from hover — the future hook for bulk actions (B4).
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
 
-  // Column visibility (B5), persisted per device.
-  const [chosenColumns, setChosenColumns] = useState<ColumnId[]>(DEFAULT_VISIBLE)
-
+  // Narrow viewports drop to the six-column set (FIXES §4).
+  const [isNarrow, setIsNarrow] = useState(false)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(VISIBLE_COLUMNS_KEY)
-      if (!saved) return
-      const parsed = JSON.parse(saved) as ColumnId[]
-      if (Array.isArray(parsed)) {
-        const valid = parsed.filter((id) => COLUMN_ORDER.includes(id))
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (valid.length > 0) setChosenColumns(valid.includes("photo") ? valid : ["photo", ...valid])
-      }
-    } catch {
-      // ignore malformed stored value
-    }
+    const mq = window.matchMedia(NARROW_BREAKPOINT)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- matchMedia is unavailable during SSR
+    setIsNarrow(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setIsNarrow(e.matches)
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
   }, [])
-
-  function toggleColumn(id: ColumnId) {
-    setChosenColumns((prev) => {
-      const next = prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-      localStorage.setItem(VISIBLE_COLUMNS_KEY, JSON.stringify(next))
-      return next
-    })
-  }
 
   // Column widths — user-resizable via header drag handles, persisted per device.
   const [colWidths, setColWidths] = useState<Record<ColumnId, number>>(DEFAULT_WIDTHS)
@@ -406,9 +554,12 @@ export function CollectionTable({
   }
 
   // Price stays gated by the Config → Settings "show cost" preference on top
-  // of the column choice (B5).
+  // of the column choice (B5). Below 1200px the set narrows to six (FIXES §4).
+  const effectiveChosen = isNarrow
+    ? chosenColumns.filter((id) => NARROW_VISIBLE.includes(id))
+    : chosenColumns
   const visibleColumns: ColumnId[] = COLUMN_ORDER.filter(
-    (id) => chosenColumns.includes(id) && (id !== "price" || showCost)
+    (id) => effectiveChosen.includes(id) && (id !== "price" || showCost)
   )
   const isVisible = (id: ColumnId) => visibleColumns.includes(id)
 
@@ -439,35 +590,15 @@ export function CollectionTable({
 
   return (
     <>
-      {/* Desktop table */}
+      {/* Desktop table. The Columns chooser lives in the collection toolbar's
+          second band, not here — see ColumnsMenu (FIXES §3). */}
       <div className="hidden sm:block">
-        {/* Column chooser (B5) */}
-        <div className="mb-2 flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={<Button variant="outline" size="sm" className="h-8 gap-1.5" />}
-            >
-              <Columns3 className="h-3.5 w-3.5" aria-hidden="true" />
-              Columns
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {COLUMN_ORDER.filter((id) => id !== "photo").map((id) => (
-                <DropdownMenuCheckboxItem
-                  key={id}
-                  checked={chosenColumns.includes(id)}
-                  onCheckedChange={() => toggleColumn(id)}
-                  disabled={id === "price" && !showCost}
-                >
-                  {COLUMN_LABELS[id]}
-                  {id === "price" && !showCost && " (enable in Config)"}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="rounded-lg border">
+        {/* Scroll is confined to the table. Without this the overflow escapes
+            to <main>, which drags the page header sideways and slices the
+            SHOWING/COST figures at the viewport edge (FIXES §4). With the
+            default column set there is nothing to scroll; it only engages
+            once the user opts extra columns in. */}
+        <div className="overflow-x-auto rounded-lg border">
           <Table className="table-fixed">
             <colgroup>
               {visibleColumns.map((id) => (
@@ -499,16 +630,21 @@ export function CollectionTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sorted.map((watch) => (
+              {sorted.map((watch, i) => (
                 <TableRow
                   key={watch.id}
                   onClick={(e) => handleRowClick(e, watch.id)}
                   aria-selected={selectedRowId === watch.id}
                   className={cn(
-                    // No stripe at rest — a hairline per row reads more
-                    // instrument-like and survives light mode (B4). The whole
-                    // row is the link to the watch (B5); Ctrl/Cmd+click selects.
+                    // Quiet zebra (B4, FIXES §5): alternate rows step one
+                    // notch off the page surface — --muted at 70% is ~2% L
+                    // below --background in light mode, readable without
+                    // shouting, and it keeps plain --muted chips legible on
+                    // top. Skipped on the selected row so the two background
+                    // utilities never race in the cascade; hover: variants
+                    // are emitted after plain utilities, so hover still wins.
                     "group cursor-pointer border-b border-border/60",
+                    i % 2 === 1 && selectedRowId !== watch.id && "bg-muted/70",
                     selectedRowId === watch.id
                       ? "bg-accent/60 shadow-[inset_2px_0_0_var(--brass)] hover:bg-accent/60"
                       : "hover:bg-accent/40 hover:shadow-[inset_2px_0_0_var(--brass)]"
@@ -522,60 +658,49 @@ export function CollectionTable({
                     />
                   </TableCell>
                   {isVisible("category") && (
-                    <TableCell className="text-muted-foreground">
-                      {watch.category ? (
-                        <span className="flex items-center gap-1">
-                          <span className="truncate">{watch.category.name}</span>
-                          <Link
-                            href={`/collection?category=${watch.category.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            title={`Show all ${watch.category.name}`}
-                            aria-label={`Filter by category ${watch.category.name}`}
-                            className="rounded p-0.5 opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
-                          >
-                            <Filter className="h-3 w-3" aria-hidden="true" />
-                          </Link>
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
+                    <FilterCell
+                      className="text-muted-foreground"
+                      label={watch.category?.name ?? "—"}
+                      onFilter={
+                        watch.category && onCategoryClick
+                          ? () => onCategoryClick(watch.category!.id)
+                          : undefined
+                      }
+                      title={`Show all ${watch.category?.name}`}
+                      ariaLabel={`Filter by category ${watch.category?.name}`}
+                    />
                   )}
                   {isVisible("brand") && (
-                    <TableCell>
-                      <span className="flex items-center gap-1">
-                        <span className="truncate text-sm font-medium">{watch.brand.name}</span>
-                        {onBrandClick && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onBrandClick(watch.brand_id)
-                            }}
-                            title={`Show all ${watch.brand.name}`}
-                            aria-label={`Filter by brand ${watch.brand.name}`}
-                            className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
-                          >
-                            <Filter className="h-3 w-3" aria-hidden="true" />
-                          </button>
-                        )}
-                      </span>
-                    </TableCell>
+                    <FilterCell
+                      className="text-sm font-medium"
+                      label={watch.brand.name}
+                      onFilter={
+                        onBrandClick ? () => onBrandClick(watch.brand_id) : undefined
+                      }
+                      title={`Show all ${watch.brand.name}`}
+                      ariaLabel={`Filter by brand ${watch.brand.name}`}
+                    />
                   )}
                   {isVisible("model") && (
-                    <TableCell>
-                      <span className="text-muted-foreground">{watch.model}</span>
-                      {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
-                      {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
-                      {watch.is_wishlist && guideNames?.[watch.id] && (
-                        <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
-                      )}
-                      {watch.price_check_enabled && (
-                        <CircleDollarSign
-                          aria-label="Price checking enabled"
-                          className="ml-2 inline h-3.5 w-3.5 align-middle text-emerald-600 dark:text-emerald-400"
-                        />
-                      )}
+                    // The cell must clip: model name + status badges routinely
+                    // exceed the fixed column width, and with table-fixed the
+                    // overflow printed straight over the Ref # column. The name
+                    // truncates; the badges are status and always stay legible.
+                    <TableCell className="overflow-hidden">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="truncate text-muted-foreground">{watch.model}</span>
+                        {watch.is_coming_soon && <ComingSoonBadge className="shrink-0 align-middle" />}
+                        {watch.is_wishlist && <WishlistBadge className="shrink-0 align-middle" />}
+                        {watch.is_wishlist && guideNames?.[watch.id] && (
+                          <GuideBadge name={guideNames[watch.id]} className="shrink-0 align-middle" />
+                        )}
+                        {watch.price_check_enabled && (
+                          <CircleDollarSign
+                            aria-label="Price checking enabled"
+                            className="inline h-3.5 w-3.5 shrink-0 align-middle text-emerald-600 dark:text-emerald-400"
+                          />
+                        )}
+                      </span>
                     </TableCell>
                   )}
                   {isVisible("nickname") && (
@@ -584,7 +709,7 @@ export function CollectionTable({
                     </TableCell>
                   )}
                   {isVisible("reference") && (
-                    <TableCell className="font-mono text-xs text-muted-foreground">
+                    <TableCell className="truncate font-mono text-xs text-muted-foreground">
                       {watch.reference_number || "—"}
                     </TableCell>
                   )}

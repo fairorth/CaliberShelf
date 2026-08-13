@@ -1,9 +1,14 @@
 "use client"
 
-import { useEffect, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowDown, ArrowUp, LayoutGrid, Table as TableIcon } from "lucide-react"
-import { CollectionTable, type TableSortKey } from "@/components/collection-table"
+import {
+  CollectionTable,
+  ColumnsMenu,
+  useColumnVisibility,
+  type TableSortKey,
+} from "@/components/collection-table"
 import { SearchInput } from "@/components/search-input"
 import {
   Select,
@@ -15,11 +20,13 @@ import { GalleryGrid } from "./gallery-grid"
 import { ActiveFilterChips } from "./active-filter-chips"
 import {
   CollectionFiltersDialog,
-  EMPTY_FILTERS,
+  activeFilterCount,
+  filtersFromParams,
+  filtersToParams,
   type CollectionFilters,
 } from "./collection-filters"
 import { cn, formatCurrency } from "@/lib/utils"
-import { SHOW_COST_KEY } from "@/lib/preferences"
+import { COLLECTION_RETURN_KEY, SHOW_COST_KEY } from "@/lib/preferences"
 import { KNOWN_COMPLICATIONS } from "@/lib/validations/watch"
 import { tierBandForCents, type TierBand } from "@/lib/tiers"
 import type { Category, WatchWithCover } from "@/lib/types/watch"
@@ -35,7 +42,6 @@ interface CollectionViewProps {
   guideNames?: Record<string, string>
 }
 
-const ALL = "all"
 type ViewMode = "table" | "gallery"
 const VIEW_KEY = "collection-view"
 const SIZE_KEY = "collection-gallery-size"
@@ -227,15 +233,20 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
 
+  // Column visibility is owned here so the Columns menu can live in the
+  // toolbar's second band alongside the chips (FIXES §3).
+  const { chosenColumns, toggleColumn } = useColumnVisibility()
+
   // View + size preferences are personal, not URL-worthy → localStorage.
   const [view, setView] = useState<ViewMode>("table")
   const [size, setSize] = useState<number>(DEFAULT_SIZE)
   const [showCost, setShowCost] = useState(false)
 
-  // Advanced filters are session state only — deliberately NOT persisted
-  // (B2, DECISIONS.md §3): a fresh mount always shows the whole collection.
-  // The category filter stays URL-driven so it remains linkable.
-  const [filters, setFilters] = useState<CollectionFilters>(EMPTY_FILTERS)
+  // The URL owns the whole filter set — read it, never mirror it into state
+  // (CLAUDE.md: a soft navigation re-renders without re-mounting, so seeded
+  // useState would go stale). This is what makes a filtered collection
+  // survive a trip out to a watch and back, and what makes it linkable.
+  const filters = useMemo(() => filtersFromParams(searchParams), [searchParams])
   const [sortKey, setSortKey] = useState<SortKey>("default")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
@@ -259,8 +270,8 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     }
     setShowCost(localStorage.getItem(SHOW_COST_KEY) === "1")
 
-    // Filters no longer persist across sessions (B2); drop any stale value
-    // a previous version left behind. Sort is a preference and does restore.
+    // Filters live in the URL now, never localStorage — drop any stale value
+    // an older version left behind. Sort is a preference and does restore.
     localStorage.removeItem(FILTERS_KEY)
     try {
       const savedSort = localStorage.getItem(SORT_KEY)
@@ -294,6 +305,16 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     return () => clearTimeout(t)
   }, [query, searchParams, router])
 
+  // Record the list as it currently stands so the watch view's breadcrumb can
+  // return to this exact collection — filters, search and all.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(COLLECTION_RETURN_KEY, searchParams.toString())
+    } catch {
+      // Storage unavailable — the breadcrumb falls back to a bare collection.
+    }
+  }, [searchParams])
+
   function updateView(next: ViewMode) {
     setView(next)
     localStorage.setItem(VIEW_KEY, next)
@@ -304,8 +325,15 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     localStorage.setItem(SIZE_KEY, String(next))
   }
 
+  // Filter edits rewrite the query string in place. `replace`, not `push`:
+  // eleven controls would otherwise bury the page under history entries, and
+  // replace still leaves the filtered URL in history — so Back from a watch
+  // returns to the filtered list, which is the whole point.
   function updateFilters(next: CollectionFilters) {
-    setFilters(next)
+    const qs = filtersToParams(next, searchParams).toString()
+    startTransition(() => {
+      router.replace(qs ? `/collection?${qs}` : "/collection", { scroll: false })
+    })
   }
 
   function persistSort(key: SortKey, dir: SortDir) {
@@ -334,13 +362,6 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
       persistSort(key, "asc")
     }
   }
-
-  // URL is the source of truth for the category filter.
-  const rawCategoryId = searchParams.get("category")
-  const selectedId =
-    rawCategoryId && categories.some((c) => c.id === rawCategoryId)
-      ? rawCategoryId
-      : ALL
 
   // Filter options derived from the actual collection.
   const { brandOptions, movementOptions, caliberTypes, caseMaterials, boxOptions, labelOptions } = useMemo(() => {
@@ -404,13 +425,15 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     [watches, filters]
   )
 
-  const afterCategory = useMemo(
-    () => (selectedId === ALL ? watches : watches.filter((w) => w.category_id === selectedId)),
-    [watches, selectedId]
-  )
   const afterFilters = useMemo(
-    () => applyFilters(afterCategory, filters, tierBands, guideNames ?? {}),
-    [afterCategory, filters, tierBands, guideNames]
+    () => applyFilters(watches, filters, tierBands, guideNames ?? {}),
+    [watches, filters, tierBands, guideNames]
+  )
+
+  // Lets the filter dialog preview a draft's match count without applying it.
+  const countMatches = useCallback(
+    (f: CollectionFilters) => applyFilters(watches, f, tierBands, guideNames ?? {}).length,
+    [watches, tierBands, guideNames]
   )
   const afterSearch = useMemo(
     () => (query.trim() ? afterFilters.filter((w) => matchesQuery(w, query)) : afterFilters),
@@ -442,20 +465,12 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
       ? ((displayedValueCents - displayedTotalCents) / displayedTotalCents) * 100
       : null
 
-  // Clearing the URL-driven category preserves the rest of the query (?q).
-  function clearUrlCategory() {
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete("category")
-    const qs = params.toString()
-    startTransition(() => {
-      router.replace(qs ? `/collection?${qs}` : "/collection", { scroll: false })
-    })
-  }
-
-  const urlCategoryName =
-    selectedId === ALL
-      ? null
-      : categories.find((c) => c.id === selectedId)?.name ?? null
+  // Band 2 carries the chips and the view-specific controls. It renders only
+  // when it has something to hold — never an empty band, never a lone
+  // floating button (FIXES §3). Columns is table view's only such control;
+  // tiles view's sort and density sit in band 1.
+  const hasChips = activeFilterCount(filters) > 0
+  const hasViewControls = view === "table"
 
   return (
     <div className="space-y-4">
@@ -484,7 +499,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
         </div>
       </div>
 
-      {/* Band 2 — controls. */}
+      {/* Toolbar band 1 — search (grows), Filters, then the view control. */}
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           value={query}
@@ -507,7 +522,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           tiers={tierOptions}
           labels={labelOptions}
           categories={categories.map((c) => ({ id: c.id, name: c.name }))}
-          matchCount={afterFilters.length}
+          countMatches={countMatches}
         />
 
         {/* Sort — only in tile view; table headers own sorting there (B3). */}
@@ -610,18 +625,30 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
         </div>
       </div>
 
-      {/* Active-filter chips — the page states what is filtering it (B2). */}
-      <ActiveFilterChips
-        filters={filters}
-        onChange={updateFilters}
-        urlCategoryName={urlCategoryName}
-        onClearUrlCategory={clearUrlCategory}
-        brands={brandOptions}
-        movements={movementOptions}
-        labels={labelOptions}
-        categories={categories.map((c) => ({ id: c.id, name: c.name }))}
-        tiers={tierOptions}
-      />
+      {/* Toolbar band 2 — chips left (the page states what is filtering it,
+          B2), view-specific controls right. Absent entirely when empty. */}
+      {(hasChips || hasViewControls) && (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <ActiveFilterChips
+              filters={filters}
+              onChange={updateFilters}
+              brands={brandOptions}
+              movements={movementOptions}
+              labels={labelOptions}
+              categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+              tiers={tierOptions}
+            />
+          </div>
+          {view === "table" && (
+            <ColumnsMenu
+              chosenColumns={chosenColumns}
+              toggleColumn={toggleColumn}
+              showCost={showCost}
+            />
+          )}
+        </div>
+      )}
 
       {displayed.length === 0 ? (
         <div className="rounded-lg border border-dashed py-16 text-center text-sm text-muted-foreground">
@@ -639,10 +666,16 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           watches={displayed}
           showCost={showCost}
           guideNames={guideNames}
+          // Clicking a value focuses the list on it — it replaces that filter
+          // rather than adding to it, which is what "show me the Omegas" means.
           onBrandClick={(brandId) => updateFilters({ ...filters, brandId })}
+          onCategoryClick={(categoryId) =>
+            updateFilters({ ...filters, categoryIds: [categoryId] })
+          }
           sortKey={sortKey === "default" || sortKey === "purchaseDate" || sortKey === "caseDiameter" ? null : sortKey}
           sortDir={sortDir}
           onSortChange={handleTableSort}
+          chosenColumns={chosenColumns}
         />
       ) : (
         <GalleryGrid watches={displayed} itemSize={size} showCost={showCost} guideNames={guideNames} />

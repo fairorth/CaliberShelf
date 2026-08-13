@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { SlidersHorizontal } from "lucide-react"
 import {
   Dialog,
@@ -11,6 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Label as FormLabel } from "@/components/ui/label"
 import { caseMaterialLabels } from "@/lib/validations/watch"
 import { caliberTypeLabels } from "@/lib/validations/movement"
@@ -62,6 +64,110 @@ export const EMPTY_FILTERS: CollectionFilters = {
   complications: [],
 }
 
+// ── URL codec ──────────────────────────────────────────────────────
+//
+// The filter set lives in the query string rather than component state. The
+// collection is a list view: a filtered list has to survive a trip out to a
+// watch and back, be linkable, and be restorable by the Back button. Holding
+// it in `useState` meant any remount silently emptied it.
+//
+// Multi-value filters repeat their key (`?category=a&category=b`) instead of
+// comma-joining, so `?category=<id>` — already emitted by /category/[id], the
+// by-category report and the table's category cell — keeps working unchanged.
+//
+// Absent `status` means "all three shown", which is the default; `status=none`
+// is the explicit empty selection (distinct from absent).
+const PARAM = {
+  status: "status",
+  wishlistSource: "wlsrc",
+  brandId: "brand",
+  movementId: "movement",
+  caliberType: "movtype",
+  caseMaterial: "material",
+  box: "box",
+  priceTracking: "price",
+  tierKeys: "tier",
+  labelIds: "label",
+  categoryIds: "category",
+  complications: "comp",
+} as const
+
+/** Params the filter codec owns. Everything else (?q) is left untouched. */
+export const FILTER_PARAM_KEYS: string[] = Object.values(PARAM)
+
+interface ReadableParams {
+  get(key: string): string | null
+  getAll(key: string): string[]
+}
+
+export function filtersFromParams(params: ReadableParams): CollectionFilters {
+  const status = params.getAll(PARAM.status)
+  const allShown = status.length === 0
+  const price = params.get(PARAM.priceTracking)
+  return {
+    showOwned: allShown || status.includes("owned"),
+    showComingSoon: allShown || status.includes("coming"),
+    showWishlist: allShown || status.includes("wish"),
+    wishlistSource: params.get(PARAM.wishlistSource) ?? "",
+    brandId: params.get(PARAM.brandId) ?? "",
+    movementId: params.get(PARAM.movementId) ?? "",
+    caliberType: params.get(PARAM.caliberType) ?? "",
+    caseMaterial: params.get(PARAM.caseMaterial) ?? "",
+    box: params.get(PARAM.box) ?? "",
+    // Anything else in ?price is not a filter we understand — ignore it.
+    priceTracking: price === "tracked" || price === "untracked" ? price : "",
+    tierKeys: params.getAll(PARAM.tierKeys).filter(Boolean),
+    labelIds: params.getAll(PARAM.labelIds).filter(Boolean),
+    categoryIds: params.getAll(PARAM.categoryIds).filter(Boolean),
+    complications: params.getAll(PARAM.complications).filter(Boolean),
+  }
+}
+
+/** Writes `f` onto a copy of `base`, leaving params it doesn't own (?q) alone. */
+export function filtersToParams(
+  f: CollectionFilters,
+  base: ReadableParams & { toString(): string }
+): URLSearchParams {
+  const p = new URLSearchParams(base.toString())
+
+  const one = (key: string, value: string) => {
+    if (value) p.set(key, value)
+    else p.delete(key)
+  }
+  const many = (key: string, values: string[]) => {
+    p.delete(key)
+    for (const v of values) p.append(key, v)
+  }
+
+  const shown = [
+    f.showOwned && "owned",
+    f.showComingSoon && "coming",
+    f.showWishlist && "wish",
+  ].filter((v): v is string => Boolean(v))
+  if (shown.length === 3) p.delete(PARAM.status)
+  else many(PARAM.status, shown.length > 0 ? shown : ["none"])
+
+  one(PARAM.wishlistSource, f.wishlistSource)
+  one(PARAM.brandId, f.brandId)
+  one(PARAM.movementId, f.movementId)
+  one(PARAM.caliberType, f.caliberType)
+  one(PARAM.caseMaterial, f.caseMaterial)
+  one(PARAM.box, f.box)
+  one(PARAM.priceTracking, f.priceTracking)
+  many(PARAM.tierKeys, f.tierKeys)
+  many(PARAM.labelIds, f.labelIds)
+  many(PARAM.categoryIds, f.categoryIds)
+  many(PARAM.complications, f.complications)
+
+  return p
+}
+
+/** Canonical string for a filter set — two sets are equal iff these match.
+ *  Reuses the URL codec so there is only one definition of "the same filters". */
+export function canonical(f: CollectionFilters): string {
+  return filtersToParams(f, new URLSearchParams()).toString()
+}
+
 export function activeFilterCount(f: CollectionFilters): number {
   let n = 0
   if (!f.showOwned || !f.showComingSoon || !f.showWishlist) n++
@@ -105,7 +211,9 @@ export interface TierFilterOption {
 }
 
 interface CollectionFiltersDialogProps {
+  /** The filters currently applied to the list. The dialog edits a copy. */
   filters: CollectionFilters
+  /** Called once, when the dialog closes — never per keystroke. */
   onChange: (next: CollectionFilters) => void
   /** Distinct collection-guide names with wish-list members (e.g. "Grand Seiko"). */
   guides?: string[]
@@ -118,14 +226,42 @@ interface CollectionFiltersDialogProps {
   categories: CategoryOption[]
   complications: string[]
   tiers: TierFilterOption[]
-  matchCount: number
+  /** Counts matches for a candidate filter set, so the footer can preview the
+   *  draft without applying it. Pure client-side work over the loaded rows. */
+  countMatches: (f: CollectionFilters) => number
 }
 
+// Token surface + token border + brass focus ring. Native selects do not
+// reliably match :focus-visible on pointer interaction, so :focus carries the
+// same ring — the browser's own accent must never show through (E1).
 const SELECT_CLASS =
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs accent-brass transition-[color,box-shadow] outline-none focus:border-ring focus:ring-[3px] focus:ring-ring/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+
+/** One titled group of filters. Three of these carry the whole dialog, so
+ *  eleven controls no longer stack at equal weight (FIXES §6). */
+function FilterSection({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="space-y-3">
+      <h3 className="font-mono text-2xs uppercase tracking-[0.1em] text-muted-foreground">
+        {title}
+      </h3>
+      <div className="space-y-4">{children}</div>
+    </section>
+  )
+}
 
 export function CollectionFiltersDialog({
-  filters,
+  // Deliberately renamed: inside this component `filters` is the *draft*, so
+  // every control below edits the copy and nothing reaches the list until the
+  // dialog closes. `applied` is the committed set, used only to seed the draft
+  // and to label the trigger.
+  filters: applied,
   onChange,
   guides = [],
   brands,
@@ -137,12 +273,25 @@ export function CollectionFiltersDialog({
   categories,
   complications,
   tiers,
-  matchCount,
+  countMatches,
 }: CollectionFiltersDialogProps) {
-  const count = activeFilterCount(filters)
+  const [open, setOpen] = useState(false)
+  const [filters, setFilters] = useState<CollectionFilters>(applied)
+
+  // Editing eleven controls used to mean eleven URL writes, each re-running the
+  // collection's server component — the dialog felt stuck. The draft is local
+  // state, so typing is instant; opening reseeds it, closing commits it once.
+  function handleOpenChange(next: boolean) {
+    if (next) {
+      setFilters(applied)
+    } else if (canonical(filters) !== canonical(applied)) {
+      onChange(filters)
+    }
+    setOpen(next)
+  }
 
   function set<K extends keyof CollectionFilters>(key: K, value: CollectionFilters[K]) {
-    onChange({ ...filters, [key]: value })
+    setFilters({ ...filters, [key]: value })
   }
 
   function toggleLabel(id: string) {
@@ -173,8 +322,13 @@ export function CollectionFiltersDialog({
     set("tierKeys", next)
   }
 
+  // The trigger reports what is actually filtering the list, not the draft.
+  const appliedCount = activeFilterCount(applied)
+  const draftCount = activeFilterCount(filters)
+  const draftMatches = countMatches(filters)
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
           <Button variant="outline" size="sm" className="h-9 gap-1.5" />
@@ -182,19 +336,22 @@ export function CollectionFiltersDialog({
       >
         <SlidersHorizontal className="h-4 w-4" />
         <span className="hidden sm:inline">Filters</span>
-        {count > 0 && (
+        {appliedCount > 0 && (
           <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 text-2xs font-semibold text-background">
-            {count}
+            {appliedCount}
           </span>
         )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="grid max-h-[85dvh] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Filter watches</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        {/* The body scrolls under the pinned footer, so the match count and
+            the actions stay reachable however long the list grows. */}
+        <div className="-mx-4 space-y-6 overflow-y-auto px-4">
+          <FilterSection title="Status">
           {/* Status — every watch is exactly one of these three */}
           <div className="space-y-1.5">
             <FormLabel>Show</FormLabel>
@@ -207,9 +364,7 @@ export function CollectionFiltersDialog({
                 ] as const
               ).map(([key, label]) => (
                 <label key={key} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-border accent-primary"
+                  <Checkbox
                     checked={filters[key]}
                     onChange={(e) => set(key, e.target.checked)}
                   />
@@ -238,7 +393,7 @@ export function CollectionFiltersDialog({
                         className={cn(
                           "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
                           selected
-                            ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                            ? "bg-brass/15 text-brass ring-1 ring-brass/40"
                             : "bg-muted text-muted-foreground hover:text-foreground"
                         )}
                       >
@@ -250,7 +405,9 @@ export function CollectionFiltersDialog({
               </div>
             )}
           </div>
+          </FilterSection>
 
+          <FilterSection title="Attributes">
           {/* Category — multi-select (OR); empty = all categories */}
           {categories.length > 0 && (
             <div className="space-y-1.5">
@@ -278,7 +435,7 @@ export function CollectionFiltersDialog({
                       className={cn(
                         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
                         selected
-                          ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                          ? "bg-brass/15 text-brass ring-1 ring-brass/40"
                           : "bg-muted text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -317,7 +474,7 @@ export function CollectionFiltersDialog({
                       className={cn(
                         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
                         selected
-                          ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                          ? "bg-brass/15 text-brass ring-1 ring-brass/40"
                           : "bg-muted text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -405,26 +562,6 @@ export function CollectionFiltersDialog({
             </select>
           </div>
 
-          {/* Box (storage location) */}
-          {boxes.length > 0 && (
-            <div className="space-y-1.5">
-              <FormLabel htmlFor="filter-box">Box</FormLabel>
-              <select
-                id="filter-box"
-                className={SELECT_CLASS}
-                value={filters.box}
-                onChange={(e) => set("box", e.target.value)}
-              >
-                <option value="">Any box</option>
-                {boxes.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
           {/* Movement type + Case material */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -461,6 +598,28 @@ export function CollectionFiltersDialog({
             </div>
           </div>
 
+          {/* Box (storage location) */}
+          {boxes.length > 0 && (
+            <div className="space-y-1.5">
+              <FormLabel htmlFor="filter-box">Box</FormLabel>
+              <select
+                id="filter-box"
+                className={SELECT_CLASS}
+                value={filters.box}
+                onChange={(e) => set("box", e.target.value)}
+              >
+                <option value="">Any box</option>
+                {boxes.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          </FilterSection>
+
+          <FilterSection title="Price">
           {/* Price tracking */}
           <div className="space-y-1.5">
             <FormLabel htmlFor="filter-price-tracking">Price Tracking</FormLabel>
@@ -503,7 +662,7 @@ export function CollectionFiltersDialog({
                       className={cn(
                         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
                         selected
-                          ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                          ? "bg-brass/15 text-brass ring-1 ring-brass/40"
                           : "bg-muted text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -515,18 +674,21 @@ export function CollectionFiltersDialog({
               </div>
             </div>
           )}
+          </FilterSection>
         </div>
 
         <DialogFooter className="items-center sm:justify-between">
+          {/* Previews the draft, so the count still moves as you tick boxes —
+              it just costs a local array filter instead of a page render. */}
           <span className="text-sm text-muted-foreground">
-            {matchCount} {matchCount === 1 ? "match" : "matches"}
+            {draftMatches} {draftMatches === 1 ? "match" : "matches"}
           </span>
           <div className="flex gap-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onChange(EMPTY_FILTERS)}
-              disabled={count === 0}
+              onClick={() => setFilters(EMPTY_FILTERS)}
+              disabled={draftCount === 0}
             >
               Clear all
             </Button>

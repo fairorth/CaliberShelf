@@ -47,6 +47,7 @@ export default async function EditWatchPage({
   // paths (never a raw URL — that would be an open redirect); everything else
   // falls back to the collection.
   const RETURN_TARGETS: Record<string, string> = {
+    watch: `/watch/${id}`,
     attention: "/reports/attention-needed",
     box: "/reports/box",
     category: "/reports/by-category",

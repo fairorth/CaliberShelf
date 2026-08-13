@@ -115,6 +115,7 @@ export async function getWatchById(
       full_photo_urls: Map<string, string>
       brand: Brand
       movement: Movement | null
+      category: Category | null
     })
   | null
 > {
@@ -122,7 +123,7 @@ export async function getWatchById(
 
   const { data: watch, error } = await supabase
     .from("watches")
-    .select("*, watch_photos(*), brands(*), movements(*)")
+    .select("*, watch_photos(*), brands(*), movements(*), categories(*)")
     .eq("id", id)
     .order("display_order", { referencedTable: "watch_photos", ascending: true })
     .single()
@@ -131,7 +132,11 @@ export async function getWatchById(
     return null
   }
 
-  const typedWatch = watch as WatchWithPhotos & { brands: Brand; movements: Movement | null }
+  const typedWatch = watch as WatchWithPhotos & {
+    brands: Brand
+    movements: Movement | null
+    categories: Category | null
+  }
 
   // Serve right-sized images via Supabase transforms (Pro): a display size for
   // the gallery/hero and a larger capped size for the zoom lightbox — both far
@@ -149,6 +154,7 @@ export async function getWatchById(
     full_photo_urls: fullPhotoUrls,
     brand: typedWatch.brands,
     movement: typedWatch.movements,
+    category: typedWatch.categories,
   }
 }
 

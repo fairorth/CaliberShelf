@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Check, Settings, Tag, Watch } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { AttentionItem, AttentionReport } from "@/lib/queries/attention"
 import { ATTENTION_INCLUDE_WISHLIST_KEY } from "@/lib/preferences"
 
@@ -129,11 +130,9 @@ export function AttentionReportView({ report }: { report: AttentionReport }) {
 
       {wishlistCount > 0 && (
         <label className="flex w-fit items-center gap-2 text-sm">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={includeWishlist}
             onChange={(e) => toggleWishlist(e.target.checked)}
-            className="h-4 w-4 rounded border-border accent-primary"
           />
           Include wish-list watches
           <span className="text-xs text-muted-foreground">

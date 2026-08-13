@@ -55,9 +55,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased`}
       >
+        {/* Light is the product's only theme (FIXES-ROUND-1 §1). forcedTheme
+            pins it: a fresh profile gets light, and a stale `theme: dark` left
+            in localStorage from the pre-fix build cannot resurrect the dark
+            palette. The .dark tokens stay in globals.css but are unreachable —
+            there is deliberately no theme switcher. */}
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
+          forcedTheme="light"
           enableSystem={false}
           disableTransitionOnChange
         >

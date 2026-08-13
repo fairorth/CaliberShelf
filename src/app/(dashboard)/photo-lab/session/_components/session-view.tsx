@@ -122,8 +122,8 @@ export function SessionView({
     return (
       <div className="max-w-2xl space-y-4">
         <p className="text-sm text-muted-foreground">
-          Pick the session watch. One watch, many frames — the folder-per-watch
-          routing is the CaliberShelf linkage.
+          Choose the watch for this session. Every frame you shoot files to it
+          automatically.
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {watches.map((w) => (

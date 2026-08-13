@@ -16,9 +16,6 @@ import {
 interface ActiveFilterChipsProps {
   filters: CollectionFilters
   onChange: (next: CollectionFilters) => void
-  /** Name of the URL-driven category filter (?category=…), when active. */
-  urlCategoryName?: string | null
-  onClearUrlCategory: () => void
   brands: BrandOption[]
   movements: MovementOption[]
   labels: LabelOption[]
@@ -40,8 +37,6 @@ interface Chip {
 export function ActiveFilterChips({
   filters,
   onChange,
-  urlCategoryName,
-  onClearUrlCategory,
   brands,
   movements,
   labels,
@@ -50,14 +45,6 @@ export function ActiveFilterChips({
 }: ActiveFilterChipsProps) {
   const chips: Chip[] = []
   const f = filters
-
-  if (urlCategoryName) {
-    chips.push({
-      key: "url-category",
-      label: `Category: ${urlCategoryName}`,
-      onClear: onClearUrlCategory,
-    })
-  }
 
   if (!f.showOwned || !f.showComingSoon || !f.showWishlist) {
     const shown = [
@@ -167,7 +154,6 @@ export function ActiveFilterChips({
 
   function clearAll() {
     onChange(EMPTY_FILTERS)
-    if (urlCategoryName) onClearUrlCategory()
   }
 
   return (
