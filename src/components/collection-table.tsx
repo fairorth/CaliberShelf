@@ -714,11 +714,18 @@ export function CollectionTable({
                         {watch.is_wishlist && guideNames?.[watch.id] && (
                           <GuideBadge name={guideNames[watch.id]} className="shrink-0 align-middle" />
                         )}
+                        {/* title goes on the wrapper: lucide icons take no title
+                            prop, and the tooltip is the point (§5). */}
                         {watch.price_check_enabled && (
-                          <CircleDollarSign
-                            aria-label="Price checking enabled"
-                            className="inline h-3.5 w-3.5 shrink-0 align-middle text-emerald-600 dark:text-emerald-400"
-                          />
+                          <span
+                            title="Price checking enabled"
+                            className="inline-flex shrink-0 align-middle"
+                          >
+                            <CircleDollarSign
+                              aria-label="Price checking enabled"
+                              className="h-3.5 w-3.5 text-brass"
+                            />
+                          </span>
                         )}
                       </span>
                     </TableCell>
@@ -768,7 +775,7 @@ export function CollectionTable({
         {/* Visible legend — markers must not carry meaning only in a title (E2/F2). */}
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
           <span className="flex items-center gap-1">
-            <CircleDollarSign className="h-3 w-3 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            <CircleDollarSign className="h-3 w-3 text-brass" aria-hidden="true" />
             price tracked
           </span>
           <span className="flex items-center gap-1">
@@ -817,10 +824,15 @@ export function CollectionTable({
                     <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
                   )}
                   {watch.price_check_enabled && (
-                    <CircleDollarSign
-                      aria-label="Price checking enabled"
-                      className="ml-2 inline h-3.5 w-3.5 align-middle text-emerald-600 dark:text-emerald-400"
-                    />
+                    <span
+                      title="Price checking enabled"
+                      className="ml-2 inline-flex align-middle"
+                    >
+                      <CircleDollarSign
+                        aria-label="Price checking enabled"
+                        className="h-3.5 w-3.5 text-brass"
+                      />
+                    </span>
                   )}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">{watch.model}</p>
