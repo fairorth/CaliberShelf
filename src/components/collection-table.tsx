@@ -222,15 +222,21 @@ export function ColumnsMenu({
 // starved enough to clip their own headers — "WORN" was cut off (FIXES §4).
 const DEFAULT_WIDTHS: Record<ColumnId, number> = {
   photo: 52,
-  category: 100,
+  category: 96,
   brand: 148,
-  model: 200,
+  // Model carries the status badges (WISH LIST + the guide name), which cost
+  // ~160px before the name gets a pixel. At 200 the name truncated to a single
+  // letter, so it takes the lion's share and Movement Type — whose values are
+  // one short word — gives most of it back.
+  model: 276,
   nickname: 136,
-  reference: 156,
-  movementType: 148,
+  reference: 152,
+  // 104 was too tight for the "Movement Type" header itself, which ran into
+  // the Box heading. The column is sized by its label, not its values.
+  movementType: 132,
   caliber: 136,
-  box: 124,
-  worn: 76,
+  box: 112,
+  worn: 72,
   price: 104,
 }
 
@@ -633,19 +639,25 @@ export function CollectionTable({
                     </TableCell>
                   )}
                   {isVisible("model") && (
-                    <TableCell>
-                      <span className="text-muted-foreground">{watch.model}</span>
-                      {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
-                      {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
-                      {watch.is_wishlist && guideNames?.[watch.id] && (
-                        <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
-                      )}
-                      {watch.price_check_enabled && (
-                        <CircleDollarSign
-                          aria-label="Price checking enabled"
-                          className="ml-2 inline h-3.5 w-3.5 align-middle text-emerald-600 dark:text-emerald-400"
-                        />
-                      )}
+                    // The cell must clip: model name + status badges routinely
+                    // exceed the fixed column width, and with table-fixed the
+                    // overflow printed straight over the Ref # column. The name
+                    // truncates; the badges are status and always stay legible.
+                    <TableCell className="overflow-hidden">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="truncate text-muted-foreground">{watch.model}</span>
+                        {watch.is_coming_soon && <ComingSoonBadge className="shrink-0 align-middle" />}
+                        {watch.is_wishlist && <WishlistBadge className="shrink-0 align-middle" />}
+                        {watch.is_wishlist && guideNames?.[watch.id] && (
+                          <GuideBadge name={guideNames[watch.id]} className="shrink-0 align-middle" />
+                        )}
+                        {watch.price_check_enabled && (
+                          <CircleDollarSign
+                            aria-label="Price checking enabled"
+                            className="inline h-3.5 w-3.5 shrink-0 align-middle text-emerald-600 dark:text-emerald-400"
+                          />
+                        )}
+                      </span>
                     </TableCell>
                   )}
                   {isVisible("nickname") && (
@@ -654,7 +666,7 @@ export function CollectionTable({
                     </TableCell>
                   )}
                   {isVisible("reference") && (
-                    <TableCell className="font-mono text-xs text-muted-foreground">
+                    <TableCell className="truncate font-mono text-xs text-muted-foreground">
                       {watch.reference_number || "—"}
                     </TableCell>
                   )}
