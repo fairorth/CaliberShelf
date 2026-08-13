@@ -1,6 +1,6 @@
 {
   "name": "tentenloupe",
-  "version": "1.8.21",
+  "version": "1.8.22",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -16,6 +16,7 @@
     "backfill-agent-runs": "node scripts/backfill-agent-runs.mjs",
     "sync-watch-folders": "node scripts/sync-watch-folders.mjs",
     "photo-score": "node scripts/photo-score.mjs",
+    "timestamp-probe": "node scripts/timestamp-probe.mjs",
     "seed-gs-guide": "node scripts/seed-gs-guide.mjs",
     "seed-swiss-guide": "node scripts/seed-swiss-guide.mjs"
   },
