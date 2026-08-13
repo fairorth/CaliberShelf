@@ -118,7 +118,9 @@ export function NavRail() {
 
         {NAV_GROUPS.map((group) => (
           <div key={group.heading} className="flex flex-col gap-0.5">
-            <div className="px-2.5 pb-1.5 font-mono text-2xs uppercase tracking-[0.14em] text-muted-foreground">
+            {/* leading + pb so that a heading which does wrap still clears the
+                item beneath it rather than closing to 2px (FIXES-3 §3). */}
+            <div className="px-2.5 pb-2 font-mono text-2xs uppercase leading-[1.5] tracking-[0.14em] text-muted-foreground">
               {group.heading}
             </div>
             {group.items.map((item) => (

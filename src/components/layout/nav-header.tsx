@@ -216,7 +216,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             />
             {NAV_GROUPS.map((group) => (
               <div key={group.heading} className="mt-4">
-                <div className="px-2.5 pb-1.5 font-mono text-2xs uppercase tracking-[0.14em] text-muted-foreground">
+                <div className="px-2.5 pb-2 font-mono text-2xs uppercase leading-[1.5] tracking-[0.14em] text-muted-foreground">
                   {group.heading}
                 </div>
                 {group.items.map((item) => (
