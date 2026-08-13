@@ -107,11 +107,14 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             )}
           </button>
 
-          {/* Brand — below lg only; the expanded rail carries it at lg+. */}
+          {/* Brand — below md only. The rail appears at md and carries the
+              mark from there up, so anything here would be a second logo
+              within 80px of it. The rail mark is the persistent anchor; this
+              exists only for the drawer breakpoint, where there is no rail. */}
           <Link
             href="/dashboard"
             onClick={guardClick("/dashboard")}
-            className="flex items-center gap-2 lg:hidden"
+            className="flex items-center gap-2 md:hidden"
           >
             {/* The 56px header cannot hold the three-line lockup, so this uses
                 the shared wordmark's inline form rather than a local copy —
