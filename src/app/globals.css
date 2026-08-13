@@ -87,6 +87,16 @@
   --brass: oklch(0.52 0.07 75);
   /* Text on a brass fill: light in light mode (brass is dark here). */
   --brass-foreground: oklch(0.99 0.01 90);
+  /* Mark facets. The dark ground alternates one brass at two alphas; over a
+     light surface 28% brass is nearly white and 72% is barely tinted, so the
+     six blades vanish. Light therefore uses two OPAQUE brass tones instead
+     (BRAND.md "Fills by ground", FIXES-ROUND-2 §1). */
+  --mark-facet-deep: #8a6a2f;
+  --mark-facet-light: #b08c46;
+  /* The pinion stays bright brass in both grounds (BRAND.md). Scoped to the
+     mark on purpose: bright brass fails contrast as text on a light surface,
+     so it must not become a general-purpose accent. */
+  --mark-pinion: #c9a25e;
   /* Nav rail sits a step below the page; photo fields a step below that. */
   --surface-rail: oklch(0.955 0.006 235);
   --surface-photo: oklch(0.94 0.007 235);
@@ -130,6 +140,10 @@
   --brass: #c9a25e;
   /* Text on a brass fill: near-black in dark mode (brass is light here). */
   --brass-foreground: #1a1206;
+  /* Dark ground: one brass at two alphas reads correctly over navy. */
+  --mark-facet-deep: rgba(201, 162, 94, 0.72);
+  --mark-facet-light: rgba(201, 162, 94, 0.28);
+  --mark-pinion: #c9a25e;
   /* Nav rail sits a step below the page; photo fields a step below that. */
   --surface-rail: #0c1015;
   --surface-photo: #0b0e12;

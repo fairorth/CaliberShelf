@@ -63,12 +63,15 @@ export function Mark({ size = 32, className, decorative = false }: MarkProps) {
       aria-label={decorative ? undefined : "TenTenLoupe"}
       aria-hidden={decorative ? "true" : undefined}
     >
+      {/* Opaque, never alpha. Alpha blades were authored against the navy
+          ground; over a light surface they collapse to a grey disc with a
+          white centre. The two facet tokens carry the per-ground values —
+          BRAND.md "Fills by ground". */}
       {BLADES.map((blade, i) => (
         <path
           key={i}
           d={blade.d}
-          fill="var(--brass)"
-          fillOpacity={blade.heavy ? 0.72 : 0.28}
+          fill={blade.heavy ? "var(--mark-facet-deep)" : "var(--mark-facet-light)"}
         />
       ))}
 
@@ -98,7 +101,7 @@ export function Mark({ size = 32, className, decorative = false }: MarkProps) {
         stroke="var(--foreground)" strokeWidth="2" strokeLinecap="round"
       />
 
-      <circle cx="50" cy="50" r="3.4" fill="var(--brass)" />
+      <circle cx="50" cy="50" r="3.4" fill="var(--mark-pinion)" />
       <circle cx="50" cy="50" r="48" fill="none" stroke="var(--brass)" strokeWidth="2" />
     </svg>
   )
