@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
-import { Menu, Moon, Plus, Sun, X } from "lucide-react"
+import { Menu, Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -28,10 +27,11 @@ interface NavHeaderProps {
 
 /**
  * The 56px app header (A2): mobile drawer trigger + brand (below lg, where
- * the rail carries the brand), global search, Add Watch, theme toggle, and
- * the account menu. The old centered Home/Collection segmented control and
- * the layout-pushing dropdown menu are gone — small screens get an overlay
- * drawer that never moves the page.
+ * the rail carries the brand), global search, Add Watch, and the account
+ * menu. The old centered Home/Collection segmented control and the
+ * layout-pushing dropdown menu are gone — small screens get an overlay
+ * drawer that never moves the page. There is no theme control: the product
+ * is light-only (FIXES-ROUND-1 §1).
  */
 export function NavHeader({ userEmail }: NavHeaderProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -39,14 +39,7 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { interceptNavigation } = useUnsavedChanges()
-  const { resolvedTheme, setTheme } = useTheme()
   const drawerRef = useRef<HTMLDivElement>(null)
-
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- next-themes needs a mounted guard to avoid SSR theme mismatch
-    setMounted(true)
-  }, [])
 
   // Consult the unsaved-changes guard before following any nav link (C1).
   const guardClick = (href: string) => (e: React.MouseEvent) => {
@@ -153,20 +146,6 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             <Plus className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Add Watch</span>
           </Button>
-          <button
-            type="button"
-            aria-label="Toggle light/dark theme"
-            title="Toggle theme"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            {mounted && resolvedTheme === "dark" ? (
-              <Sun className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <Moon className="h-4 w-4" aria-hidden="true" />
-            )}
-          </button>
-
           {/* Account menu — avatar circle with the account actions. */}
           <DropdownMenu>
             <DropdownMenuTrigger
