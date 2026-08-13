@@ -559,16 +559,21 @@ export function CollectionTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sorted.map((watch) => (
+              {sorted.map((watch, i) => (
                 <TableRow
                   key={watch.id}
                   onClick={(e) => handleRowClick(e, watch.id)}
                   aria-selected={selectedRowId === watch.id}
                   className={cn(
-                    // No stripe at rest — a hairline per row reads more
-                    // instrument-like and survives light mode (B4). The whole
-                    // row is the link to the watch (B5); Ctrl/Cmd+click selects.
+                    // Quiet zebra (B4, FIXES §5): alternate rows step one
+                    // notch off the page surface — --muted at 70% is ~2% L
+                    // below --background in light mode, readable without
+                    // shouting, and it keeps plain --muted chips legible on
+                    // top. Skipped on the selected row so the two background
+                    // utilities never race in the cascade; hover: variants
+                    // are emitted after plain utilities, so hover still wins.
                     "group cursor-pointer border-b border-border/60",
+                    i % 2 === 1 && selectedRowId !== watch.id && "bg-muted/70",
                     selectedRowId === watch.id
                       ? "bg-accent/60 shadow-[inset_2px_0_0_var(--brass)] hover:bg-accent/60"
                       : "hover:bg-accent/40 hover:shadow-[inset_2px_0_0_var(--brass)]"
