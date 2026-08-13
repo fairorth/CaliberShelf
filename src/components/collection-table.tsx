@@ -211,19 +211,35 @@ export function ColumnsMenu({
   )
 }
 
+// Widths are re-balanced so the eight-column default fits a 1440px viewport
+// (≈1192px of table once the 200px rail and page padding are removed) with
+// room to spare. Photo and Category were over-wide; Ref, Box and Worn were
+// starved enough to clip their own headers — "WORN" was cut off (FIXES §4).
 const DEFAULT_WIDTHS: Record<ColumnId, number> = {
-  photo: 64,
-  category: 112,
-  brand: 144,
-  model: 208,
+  photo: 52,
+  category: 100,
+  brand: 148,
+  model: 200,
   nickname: 136,
-  reference: 144,
-  movementType: 152,
+  reference: 156,
+  movementType: 148,
   caliber: 136,
-  box: 120,
-  worn: 64,
+  box: 124,
+  worn: 76,
   price: 104,
 }
+
+// Below 1200px the eight-column default stops fitting. Fall back to a
+// six-column set rather than introducing horizontal scroll (FIXES §4).
+const NARROW_BREAKPOINT = "(max-width: 1199px)"
+const NARROW_VISIBLE: ColumnId[] = [
+  "photo",
+  "brand",
+  "model",
+  "category",
+  "reference",
+  "worn",
+]
 
 /** Drag target on a header's right edge. Stops propagation so a resize
  *  never triggers the header's sort button. Keyboard: focus + arrow keys
@@ -392,6 +408,17 @@ export function CollectionTable({
   // from hover — the future hook for bulk actions (B4).
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
 
+  // Narrow viewports drop to the six-column set (FIXES §4).
+  const [isNarrow, setIsNarrow] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_BREAKPOINT)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- matchMedia is unavailable during SSR
+    setIsNarrow(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setIsNarrow(e.matches)
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
   // Column widths — user-resizable via header drag handles, persisted per device.
   const [colWidths, setColWidths] = useState<Record<ColumnId, number>>(DEFAULT_WIDTHS)
   const widthsRef = useRef(colWidths)
@@ -456,9 +483,12 @@ export function CollectionTable({
   }
 
   // Price stays gated by the Config → Settings "show cost" preference on top
-  // of the column choice (B5).
+  // of the column choice (B5). Below 1200px the set narrows to six (FIXES §4).
+  const effectiveChosen = isNarrow
+    ? chosenColumns.filter((id) => NARROW_VISIBLE.includes(id))
+    : chosenColumns
   const visibleColumns: ColumnId[] = COLUMN_ORDER.filter(
-    (id) => chosenColumns.includes(id) && (id !== "price" || showCost)
+    (id) => effectiveChosen.includes(id) && (id !== "price" || showCost)
   )
   const isVisible = (id: ColumnId) => visibleColumns.includes(id)
 
@@ -492,7 +522,12 @@ export function CollectionTable({
       {/* Desktop table. The Columns chooser lives in the collection toolbar's
           second band, not here — see ColumnsMenu (FIXES §3). */}
       <div className="hidden sm:block">
-        <div className="rounded-lg border">
+        {/* Scroll is confined to the table. Without this the overflow escapes
+            to <main>, which drags the page header sideways and slices the
+            SHOWING/COST figures at the viewport edge (FIXES §4). With the
+            default column set there is nothing to scroll; it only engages
+            once the user opts extra columns in. */}
+        <div className="overflow-x-auto rounded-lg border">
           <Table className="table-fixed">
             <colgroup>
               {visibleColumns.map((id) => (
