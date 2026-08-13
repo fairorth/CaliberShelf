@@ -2,7 +2,7 @@
 
 import { Archive, ArrowDown, ArrowUp, ChevronsUpDown, CircleDollarSign, Columns3, Filter, Watch } from "lucide-react"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -46,6 +46,9 @@ interface CollectionTableProps {
   sortDir: TableSortDir
   /** Header click — the view toggles direction / switches key. */
   onSortChange: (key: TableSortKey) => void
+  /** Visible columns, owned by the collection view so the Columns menu can
+   *  sit in the toolbar's second band rather than orphaned above the table. */
+  chosenColumns: ColumnId[]
 }
 
 function priceLabel(watch: WatchWithCover): string {
@@ -80,7 +83,7 @@ export type TableSortDir = "asc" | "desc"
 
 // ── Column widths (resizable, persisted) ───────────────────────────
 
-type ColumnId =
+export type ColumnId =
   | "photo"
   | "category"
   | "brand"
@@ -134,6 +137,78 @@ const COLUMN_LABELS: Record<ColumnId, string> = {
   box: "Box",
   worn: "Worn",
   price: "Price",
+}
+
+/**
+ * Column visibility (B5), persisted per device. It lives in a hook rather than
+ * inside the table so the collection view can own the state and render the
+ * Columns menu in the toolbar's second band (FIXES §3) — previously the menu
+ * was stranded on its own right-aligned line above the table.
+ */
+export function useColumnVisibility() {
+  const [chosenColumns, setChosenColumns] = useState<ColumnId[]>(DEFAULT_VISIBLE)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VISIBLE_COLUMNS_KEY)
+      if (!saved) return
+      const parsed = JSON.parse(saved) as ColumnId[]
+      if (Array.isArray(parsed)) {
+        const valid = parsed.filter((id) => COLUMN_ORDER.includes(id))
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (valid.length > 0) setChosenColumns(valid.includes("photo") ? valid : ["photo", ...valid])
+      }
+    } catch {
+      // ignore malformed stored value
+    }
+  }, [])
+
+  const toggleColumn = useCallback((id: ColumnId) => {
+    setChosenColumns((prev) => {
+      const next = prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+      localStorage.setItem(VISIBLE_COLUMNS_KEY, JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  return { chosenColumns, toggleColumn }
+}
+
+/** The Columns chooser — a view-specific control for table view only. */
+export function ColumnsMenu({
+  chosenColumns,
+  toggleColumn,
+  showCost,
+}: {
+  chosenColumns: ColumnId[]
+  toggleColumn: (id: ColumnId) => void
+  showCost: boolean
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button variant="outline" size="sm" className="h-8 gap-1.5" />}
+      >
+        <Columns3 className="h-3.5 w-3.5" aria-hidden="true" />
+        Columns
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {COLUMN_ORDER.filter((id) => id !== "photo").map((id) => (
+          <DropdownMenuCheckboxItem
+            key={id}
+            checked={chosenColumns.includes(id)}
+            onCheckedChange={() => toggleColumn(id)}
+            disabled={id === "price" && !showCost}
+          >
+            {COLUMN_LABELS[id]}
+            {id === "price" && !showCost && " (enable in Config)"}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }
 
 const DEFAULT_WIDTHS: Record<ColumnId, number> = {
@@ -309,38 +384,13 @@ export function CollectionTable({
   sortKey,
   sortDir,
   onSortChange,
+  chosenColumns,
 }: CollectionTableProps) {
   const router = useRouter()
 
   // Selected row (Ctrl/Cmd+click — plain click navigates, B5). Distinct
   // from hover — the future hook for bulk actions (B4).
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
-
-  // Column visibility (B5), persisted per device.
-  const [chosenColumns, setChosenColumns] = useState<ColumnId[]>(DEFAULT_VISIBLE)
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(VISIBLE_COLUMNS_KEY)
-      if (!saved) return
-      const parsed = JSON.parse(saved) as ColumnId[]
-      if (Array.isArray(parsed)) {
-        const valid = parsed.filter((id) => COLUMN_ORDER.includes(id))
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (valid.length > 0) setChosenColumns(valid.includes("photo") ? valid : ["photo", ...valid])
-      }
-    } catch {
-      // ignore malformed stored value
-    }
-  }, [])
-
-  function toggleColumn(id: ColumnId) {
-    setChosenColumns((prev) => {
-      const next = prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-      localStorage.setItem(VISIBLE_COLUMNS_KEY, JSON.stringify(next))
-      return next
-    })
-  }
 
   // Column widths — user-resizable via header drag handles, persisted per device.
   const [colWidths, setColWidths] = useState<Record<ColumnId, number>>(DEFAULT_WIDTHS)
@@ -439,34 +489,9 @@ export function CollectionTable({
 
   return (
     <>
-      {/* Desktop table */}
+      {/* Desktop table. The Columns chooser lives in the collection toolbar's
+          second band, not here — see ColumnsMenu (FIXES §3). */}
       <div className="hidden sm:block">
-        {/* Column chooser (B5) */}
-        <div className="mb-2 flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={<Button variant="outline" size="sm" className="h-8 gap-1.5" />}
-            >
-              <Columns3 className="h-3.5 w-3.5" aria-hidden="true" />
-              Columns
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {COLUMN_ORDER.filter((id) => id !== "photo").map((id) => (
-                <DropdownMenuCheckboxItem
-                  key={id}
-                  checked={chosenColumns.includes(id)}
-                  onCheckedChange={() => toggleColumn(id)}
-                  disabled={id === "price" && !showCost}
-                >
-                  {COLUMN_LABELS[id]}
-                  {id === "price" && !showCost && " (enable in Config)"}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
         <div className="rounded-lg border">
           <Table className="table-fixed">
             <colgroup>

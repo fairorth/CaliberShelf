@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowDown, ArrowUp, LayoutGrid, Table as TableIcon } from "lucide-react"
-import { CollectionTable, type TableSortKey } from "@/components/collection-table"
+import {
+  CollectionTable,
+  ColumnsMenu,
+  useColumnVisibility,
+  type TableSortKey,
+} from "@/components/collection-table"
 import { SearchInput } from "@/components/search-input"
 import {
   Select,
@@ -16,6 +21,7 @@ import { ActiveFilterChips } from "./active-filter-chips"
 import {
   CollectionFiltersDialog,
   EMPTY_FILTERS,
+  activeFilterCount,
   type CollectionFilters,
 } from "./collection-filters"
 import { cn, formatCurrency } from "@/lib/utils"
@@ -226,6 +232,10 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
+
+  // Column visibility is owned here so the Columns menu can live in the
+  // toolbar's second band alongside the chips (FIXES §3).
+  const { chosenColumns, toggleColumn } = useColumnVisibility()
 
   // View + size preferences are personal, not URL-worthy → localStorage.
   const [view, setView] = useState<ViewMode>("table")
@@ -457,6 +467,13 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
       ? null
       : categories.find((c) => c.id === selectedId)?.name ?? null
 
+  // Band 2 carries the chips and the view-specific controls. It renders only
+  // when it has something to hold — never an empty band, never a lone
+  // floating button (FIXES §3). Columns is table view's only such control;
+  // tiles view's sort and density sit in band 1.
+  const hasChips = activeFilterCount(filters) > 0 || urlCategoryName !== null
+  const hasViewControls = view === "table"
+
   return (
     <div className="space-y-4">
       {/* Band 1 — identity + labelled stats (B1). */}
@@ -484,7 +501,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
         </div>
       </div>
 
-      {/* Band 2 — controls. */}
+      {/* Toolbar band 1 — search (grows), Filters, then the view control. */}
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           value={query}
@@ -610,18 +627,32 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
         </div>
       </div>
 
-      {/* Active-filter chips — the page states what is filtering it (B2). */}
-      <ActiveFilterChips
-        filters={filters}
-        onChange={updateFilters}
-        urlCategoryName={urlCategoryName}
-        onClearUrlCategory={clearUrlCategory}
-        brands={brandOptions}
-        movements={movementOptions}
-        labels={labelOptions}
-        categories={categories.map((c) => ({ id: c.id, name: c.name }))}
-        tiers={tierOptions}
-      />
+      {/* Toolbar band 2 — chips left (the page states what is filtering it,
+          B2), view-specific controls right. Absent entirely when empty. */}
+      {(hasChips || hasViewControls) && (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <ActiveFilterChips
+              filters={filters}
+              onChange={updateFilters}
+              urlCategoryName={urlCategoryName}
+              onClearUrlCategory={clearUrlCategory}
+              brands={brandOptions}
+              movements={movementOptions}
+              labels={labelOptions}
+              categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+              tiers={tierOptions}
+            />
+          </div>
+          {view === "table" && (
+            <ColumnsMenu
+              chosenColumns={chosenColumns}
+              toggleColumn={toggleColumn}
+              showCost={showCost}
+            />
+          )}
+        </div>
+      )}
 
       {displayed.length === 0 ? (
         <div className="rounded-lg border border-dashed py-16 text-center text-sm text-muted-foreground">
@@ -643,6 +674,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           sortKey={sortKey === "default" || sortKey === "purchaseDate" || sortKey === "caseDiameter" ? null : sortKey}
           sortDir={sortDir}
           onSortChange={handleTableSort}
+          chosenColumns={chosenColumns}
         />
       ) : (
         <GalleryGrid watches={displayed} itemSize={size} showCost={showCost} guideNames={guideNames} />
