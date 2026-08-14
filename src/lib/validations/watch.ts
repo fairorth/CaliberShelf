@@ -140,6 +140,35 @@ export const watchFormSchema = z.object({
     .transform((val) => (val === "" ? null : parseFloat(val)))
     .pipe(z.number().min(0).nullable()),
   purchase_currency: z.string().min(3).max(3).default("USD"),
+
+  // Acquisition costs (00043) — cost basis = purchase + these three. The DB
+  // derives cost_basis_cents in a generated column; these are inputs only.
+  acq_shipping: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val === "" ? null : parseFloat(val)))
+    .pipe(z.number().min(0).nullable()),
+  acq_tax: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val === "" ? null : parseFloat(val)))
+    .pipe(z.number().min(0).nullable()),
+  acq_duty: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val === "" ? null : parseFloat(val)))
+    .pipe(z.number().min(0).nullable()),
+
+  // Target ask (V10) — the number the market has to cross.
+  target_ask: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val === "" ? null : parseFloat(val)))
+    .pipe(z.number().min(0).nullable()),
 }).refine(
   // Status is exactly one of owned / coming soon / wish list (C3): the form's
   // segmented control guarantees it, and the schema enforces it server-side.

@@ -23,6 +23,28 @@ import { cn } from "@/lib/utils"
 
 export type PriceTracking = "" | "tracked" | "untracked" // "" = all watches
 
+/**
+ * Sale-lifecycle filter (§3.6). "" is *unset*, not "all": the two views have
+ * different defaults (tiles hide sold, the table shows everything), so an
+ * absent param resolves against the view. "all" is the explicit everything
+ * choice, which is what removing the chip sets — otherwise clearing the chip
+ * would just re-apply the view's default and the sold rows would stay hidden.
+ */
+export type SaleStatusFilter = "" | "all" | "unsold" | "candidate" | "listed" | "sold"
+
+export const SALE_STATUS_OPTIONS: { value: Exclude<SaleStatusFilter, "">; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "unsold", label: "Owned only" },
+  { value: "candidate", label: "Candidates" },
+  { value: "listed", label: "Listed" },
+  { value: "sold", label: "Sold" },
+]
+
+/** Tiles browse what you have; the table is the two-sided ledger (§3.6). */
+export function defaultSaleStatus(view: "table" | "gallery"): SaleStatusFilter {
+  return view === "gallery" ? "unsold" : "all"
+}
+
 // Every watch is exactly one status: wish-list beats coming-soon beats owned.
 export interface CollectionFilters {
   showOwned: boolean
@@ -37,6 +59,8 @@ export interface CollectionFilters {
   caseMaterial: string
   box: string
   priceTracking: PriceTracking
+  /** Sale lifecycle. "" = unset → the view's default (see defaultSaleStatus). */
+  saleStatus: SaleStatusFilter
   // Selected price-tier keys (OR): "t{n}" per tier, "unpriced" for no price.
   tierKeys: string[]
   // Selected label ids. A watch matches if it carries ANY of them (OR).
@@ -58,6 +82,7 @@ export const EMPTY_FILTERS: CollectionFilters = {
   caseMaterial: "",
   box: "",
   priceTracking: "",
+  saleStatus: "",
   tierKeys: [],
   labelIds: [],
   categoryIds: [],
@@ -86,6 +111,7 @@ const PARAM = {
   caseMaterial: "material",
   box: "box",
   priceTracking: "price",
+  saleStatus: "sale",
   tierKeys: "tier",
   labelIds: "label",
   categoryIds: "category",
@@ -104,6 +130,8 @@ export function filtersFromParams(params: ReadableParams): CollectionFilters {
   const status = params.getAll(PARAM.status)
   const allShown = status.length === 0
   const price = params.get(PARAM.priceTracking)
+  const sale = params.get(PARAM.saleStatus)
+  const saleValid = SALE_STATUS_OPTIONS.some((o) => o.value === sale)
   return {
     showOwned: allShown || status.includes("owned"),
     showComingSoon: allShown || status.includes("coming"),
@@ -116,6 +144,7 @@ export function filtersFromParams(params: ReadableParams): CollectionFilters {
     box: params.get(PARAM.box) ?? "",
     // Anything else in ?price is not a filter we understand — ignore it.
     priceTracking: price === "tracked" || price === "untracked" ? price : "",
+    saleStatus: saleValid ? (sale as SaleStatusFilter) : "",
     tierKeys: params.getAll(PARAM.tierKeys).filter(Boolean),
     labelIds: params.getAll(PARAM.labelIds).filter(Boolean),
     categoryIds: params.getAll(PARAM.categoryIds).filter(Boolean),
@@ -154,6 +183,7 @@ export function filtersToParams(
   one(PARAM.caseMaterial, f.caseMaterial)
   one(PARAM.box, f.box)
   one(PARAM.priceTracking, f.priceTracking)
+  one(PARAM.saleStatus, f.saleStatus)
   many(PARAM.tierKeys, f.tierKeys)
   many(PARAM.labelIds, f.labelIds)
   many(PARAM.categoryIds, f.categoryIds)
@@ -178,6 +208,9 @@ export function activeFilterCount(f: CollectionFilters): number {
   if (f.caseMaterial) n++
   if (f.box) n++
   if (f.priceTracking) n++
+  // Only an explicit choice counts — the view's own default is not a filter
+  // the user set, and "all" is the absence of one.
+  if (f.saleStatus && f.saleStatus !== "all") n++
   if (f.tierKeys.length > 0) n++
   if (f.labelIds.length > 0) n++
   if (f.categoryIds.length > 0) n++
@@ -226,6 +259,9 @@ interface CollectionFiltersDialogProps {
   categories: CategoryOption[]
   complications: string[]
   tiers: TierFilterOption[]
+  /** What an unset sale-status filter resolves to in the current view, so the
+   *  control shows what is actually applied rather than a hollow "All". */
+  viewDefaultSaleStatus: SaleStatusFilter
   /** Counts matches for a candidate filter set, so the footer can preview the
    *  draft without applying it. Pure client-side work over the loaded rows. */
   countMatches: (f: CollectionFilters) => number
@@ -273,6 +309,7 @@ export function CollectionFiltersDialog({
   categories,
   complications,
   tiers,
+  viewDefaultSaleStatus,
   countMatches,
 }: CollectionFiltersDialogProps) {
   const [open, setOpen] = useState(false)
@@ -404,6 +441,33 @@ export function CollectionFiltersDialog({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Sale status (§3.6) — the lifecycle, independent of the three
+              ownership states above. Sold watches stay in the collection. */}
+          <div className="space-y-1.5 pt-1">
+            <FormLabel>Sale status</FormLabel>
+            <div className="flex flex-wrap gap-1.5">
+              {SALE_STATUS_OPTIONS.map((opt) => {
+                const selected = (filters.saleStatus || viewDefaultSaleStatus) === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => set("saleStatus", opt.value)}
+                    aria-pressed={selected}
+                    className={cn(
+                      "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
+                      selected
+                        ? "bg-brass/15 text-brass ring-1 ring-brass/40"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
           </FilterSection>
 

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; background: #07090c; color: #eef1f5; font-family: Geist, "Helvetica Neue", Helvetica, sans-serif; }
+  a { color: #6ea2dd; text-decoration: none; }
+  a:hover { color: #9cc2ea; }
+</style>
+</helmet>
+
+<div style="background:#07090c;min-height:100vh;padding:48px 40px 140px;display:flex;flex-direction:column;gap:64px;align-items:flex-start;">
+
+  <div style="max-width:920px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#c9a25e;">TEN:TEN LOUPE · PHASE 5 · WATCHES AS INVESTMENTS</div>
+    <h1 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;letter-spacing:-0.02em;">Market &amp; Sales</h1>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#a8b0bb;text-wrap:pretty;">Six screens for the sales lifecycle and the upgraded price tracking. Linear status (owned → candidate → listed → sold), cost basis including acquisition costs, net-proceeds ledger, and two investment reports. Spec: <code style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8c95a0;">07-phase-5-sales-investment.md</code>. Prices are neutral mono; only gain/loss carries colour.</p>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#c9a25e;">01</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Market landing</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">/market · portfolio + pipeline · 1440×</span>
+    </div>
+
+    <div style="width:1440px;background:#0f1318;border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;display:flex;">
+
+      <div style="width:200px;flex:none;background:#0c1015;border-right:1px solid rgba(255,255,255,0.07);padding:14px 12px;display:flex;flex-direction:column;gap:18px;">
+        <div style="display:flex;align-items:center;gap:9px;padding:4px 8px 8px;">
+          <div style="position:relative;width:26px;height:26px;border-radius:50%;border:1.5px solid #c9a25e;flex:none;">
+            <div style="position:absolute;inset:1.5px;border-radius:50%;background:conic-gradient(from 30deg,rgba(201,162,94,0.72) 0deg 60deg,rgba(201,162,94,0.28) 60deg 120deg,rgba(201,162,94,0.72) 120deg 180deg,rgba(201,162,94,0.28) 180deg 240deg,rgba(201,162,94,0.72) 240deg 300deg,rgba(201,162,94,0.28) 300deg 360deg);"></div>
+            <div style="position:absolute;inset:4px;background:#0c1015;clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);"></div>
+            <div style="position:absolute;left:50%;top:50%;width:1px;height:6px;background:#eef1f5;transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(-60deg);border-radius:1px;"></div>
+            <div style="position:absolute;left:50%;top:50%;width:1px;height:8px;background:#eef1f5;transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(60deg);border-radius:1px;"></div>
+            <div style="position:absolute;left:50%;top:50%;width:3px;height:3px;background:#c9a25e;border-radius:50%;transform:translate(-50%,-50%);"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;">
+            <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;line-height:1;">Ten<span style="color:#c9a25e;">:</span>Ten</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.34em;color:#c9a25e;margin-top:3px;">LOUPE</span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 10px 6px;">COLLECTION</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="list"></i></span>Collection</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="tag"></i></span>Brands</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="link-2"></i></span>Straps</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 10px 6px;">ANALYSIS</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="calendar-days"></i></span>Wear Log</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="chart-column"></i></span>Reports</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="compass"></i></span>Guides</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#c9a25e;padding:0 10px 6px;">MARKET</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(201,162,94,0.14);color:#c9a25e;font-size:15px;font-weight:500;"><span style="display:flex;"><i data-lucide="trending-up"></i></span>Market</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="archive"></i></span>Sold Archive</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="badge-dollar-sign"></i></span>Deals</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 10px 6px;">IMAGERY</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="camera"></i></span>Photo Lab</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="images"></i></span>Inspiration</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="package-plus"></i></span>Batch Import</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#6c757f;padding:0 10px 6px;">SYSTEM</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="settings"></i></span>Config</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#8c95a0;font-size:15px;"><span style="display:flex;"><i data-lucide="info"></i></span>About</div>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+        <div style="height:56px;flex:none;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:14px;padding:0 22px;">
+          <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid rgba(255,255,255,0.10);border-radius:8px;width:280px;color:#6c757f;">
+            <span style="display:flex;"><i data-lucide="search"></i></span><span style="font-size:13px;">Search collection…</span>
+          </div>
+          <div style="flex:1;"></div>
+          <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:8px;background:#c9a25e;color:#14181d;font-size:13px;font-weight:600;"><span style="display:flex;"><i data-lucide="plus"></i></span>Add watch</div>
+        </div>
+
+        <div style="padding:26px 30px 40px;display:flex;flex-direction:column;gap:26px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;">
+            <div>
+              <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;letter-spacing:-0.01em;">Market</h3>
+              <p style="margin:6px 0 0;font-size:15px;color:#8c95a0;">42 owned · 3 on the block · 5 sold lifetime</p>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">VALUES AS OF 1 AUG 2026 RUN</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+            <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">COST BASIS</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-variant-numeric:tabular-nums;">$41,860</span>
+              <span style="font-size:13px;color:#8c95a0;">purchase + shipping, tax, duty</span>
+            </div>
+            <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">CURRENT VALUE</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-variant-numeric:tabular-nums;">$47,320</span>
+              <span style="font-size:13px;color:#8c95a0;">28 of 42 tracked</span>
+            </div>
+            <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">UNREALIZED</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-variant-numeric:tabular-nums;color:#5aa37a;">+$5,460</span>
+              <span style="font-size:13px;color:#8c95a0;">+13.0% on tracked basis</span>
+            </div>
+            <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">REALIZED</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-variant-numeric:tabular-nums;color:#5aa37a;">+$196</span>
+              <span style="font-size:13px;color:#8c95a0;">5 sales · net of all fees</span>
+            </div>
+          </div>
+
+          <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:18px 20px 12px;display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;">Portfolio value over time</span>
+              <div style="display:flex;align-items:center;gap:18px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;">
+                <span style="display:flex;align-items:center;gap:7px;"><span style="width:16px;height:2px;background:#6ea2dd;border-radius:2px;"></span>MARKET VALUE</span>
+                <span style="display:flex;align-items:center;gap:7px;"><span style="width:16px;height:0;border-top:1px dashed #6c757f;"></span>COST BASIS</span>
+              </div>
+            </div>
+            <svg viewBox="0 0 1020 190" style="width:100%;height:190px;display:block;overflow:visible;">
+              <line x1="40" y1="165" x2="1000" y2="165" stroke="rgba(255,255,255,0.08)" stroke-width="1"></line>
+              <line x1="40" y1="105" x2="1000" y2="105" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+              <line x1="40" y1="45" x2="1000" y2="45" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+              <line x1="40" y1="148" x2="1000" y2="148" stroke="#6c757f" stroke-width="1" stroke-dasharray="4 4"></line>
+              <text x="1006" y="151" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11">41.9k</text>
+              <path d="M40,123 L197,107 L354,93 L511,81 L668,64 L825,51 L982,39" fill="none" stroke="#6ea2dd" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+              <path d="M40,123 L197,107 L354,93 L511,81 L668,64 L825,51 L982,39 L982,165 L40,165 Z" fill="#6ea2dd" opacity="0.09"></path>
+              <circle cx="982" cy="39" r="4" fill="#6ea2dd"></circle>
+              <text x="964" y="26" fill="#eef1f5" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">47.3k</text>
+              <text x="40" y="184" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11">FEB</text>
+              <text x="197" y="184" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11">MAR</text>
+              <text x="354" y="184" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11">APR</text>
+              <text x="511" y="184" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11">MAY</text>
+              <text x="668" y="184" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11">JUN</text>
+              <text x="825" y="184" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11">JUL</text>
+              <text x="982" y="184" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="end">AUG</text>
+            </svg>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">CANDIDATES</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">2</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:10px 12px;">
+                <div style="width:44px;height:52px;border-radius:8px;flex:none;background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 8px,rgba(255,255,255,0.015) 8px 16px);"></div>
+                <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:3px;">
+                  <span style="font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Seiko Presage Cocktail</span>
+                  <span style="font-size:13px;color:#8c95a0;">since 2 Jul · thinning the dress end</span>
+                </div>
+                <div style="text-align:right;flex:none;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">$380</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">TARGET</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:10px 12px;">
+                <div style="width:44px;height:52px;border-radius:8px;flex:none;background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 8px,rgba(255,255,255,0.015) 8px 16px);"></div>
+                <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:3px;">
+                  <span style="font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Longines Spirit 40</span>
+                  <span style="font-size:13px;color:#8c95a0;">since 28 Jul · duplicate of the BB58</span>
+                </div>
+                <div style="text-align:right;flex:none;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">$1,650</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">TARGET</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">LISTED</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">2</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:10px 12px;">
+                <div style="width:44px;height:52px;border-radius:8px;flex:none;background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 8px,rgba(255,255,255,0.015) 8px 16px);"></div>
+                <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:4px;">
+                  <span style="font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Tudor Black Bay 58</span>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:13px;color:#8c95a0;">r/WatchExchange</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;border:1px solid rgba(255,255,255,0.12);border-radius:9999px;padding:1px 7px;">DAY 14</span>
+                  </div>
+                </div>
+                <div style="text-align:right;flex:none;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">$4,300</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">ASK</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:10px 12px;">
+                <div style="width:44px;height:52px;border-radius:8px;flex:none;background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 8px,rgba(255,255,255,0.015) 8px 16px);"></div>
+                <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:4px;">
+                  <span style="font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Oris Aquis Date</span>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:13px;color:#8c95a0;">RedBar Austin</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#d9a13a;border:1px solid rgba(217,161,58,0.45);border-radius:9999px;padding:1px 7px;">DAY 52</span>
+                  </div>
+                </div>
+                <div style="text-align:right;flex:none;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">$1,450</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">ASK</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">RECENTLY SOLD</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">90 DAYS</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:10px 12px;">
+                <div style="width:44px;height:52px;border-radius:8px;flex:none;filter:grayscale(0.7);background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 8px,rgba(255,255,255,0.015) 8px 16px);"></div>
+                <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:3px;">
+                  <span style="font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Seiko SPB143</span>
+                  <span style="font-size:13px;color:#8c95a0;">4 Jun · r/WatchExchange</span>
+                </div>
+                <div style="text-align:right;flex:none;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">$937.70</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#c85046;">−$242.30</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:10px 12px;">
+                <div style="width:44px;height:52px;border-radius:8px;flex:none;filter:grayscale(0.7);background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 8px,rgba(255,255,255,0.015) 8px 16px);"></div>
+                <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:3px;">
+                  <span style="font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Hamilton Khaki Field</span>
+                  <span style="font-size:13px;color:#8c95a0;">8 Feb · RedBar Austin</span>
+                </div>
+                <div style="text-align:right;flex:none;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">$495.90</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5aa37a;">+$35.90</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <sc-if value="{{ showAttention }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:9px;border-top:1px solid rgba(255,255,255,0.07);padding-top:18px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">NEEDS ATTENTION</span>
+            <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:#a8b0bb;">
+              <span style="display:flex;color:#d9a13a;"><i data-lucide="clock"></i></span>
+              Oris Aquis has been listed 52 days on RedBar Austin — <a href="#">drop the ask</a> or <a href="#">withdraw</a>.
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:#a8b0bb;">
+              <span style="display:flex;color:#d9a13a;"><i data-lucide="clock"></i></span>
+              4 tracked watches last valued over 90 days ago — <a href="#">run a check</a>.
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:#a8b0bb;">
+              <span style="display:flex;color:#8c95a0;"><i data-lucide="circle-alert"></i></span>
+              Hamilton Khaki sale has no fee data, so its net is overstated — <a href="#">add fees</a>.
+            </div>
+          </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#c9a25e;">02</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Watch page — Market panel</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">/watch/[id] · replaces valuation-panel.tsx · findings V1–V3, V5–V7, V10</span>
+    </div>
+
+    <div style="width:680px;border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;overflow:hidden;">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;">
+        <span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#1b212a;color:#8c95a0;"><i data-lucide="trending-up"></i></span>
+        <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;">Market</span>
+        <span style="flex:1;"></span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;border:1px solid rgba(255,255,255,0.12);border-radius:9999px;padding:2px 9px;">LISTED · DAY 14</span>
+      </div>
+
+      <div style="padding:18px 20px;display:flex;flex-direction:column;gap:18px;">
+        <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;">$4,150</span>
+          <span style="font-size:13px;color:#8c95a0;">range $3,900 – $4,400</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#c9a25e;background:rgba(201,162,94,0.15);border:1px solid rgba(201,162,94,0.35);border-radius:9999px;padding:2px 9px;">HIGH CONFIDENCE</span>
+          <span style="font-size:13px;color:#8c95a0;">as of 1 Aug 2026</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <svg viewBox="0 0 600 200" style="width:100%;height:200px;display:block;overflow:visible;">
+            <sc-if value="{{ showValuationBand }}" hint-placeholder-val="{{ true }}">
+            <path d="M40,153 L165,142 L290,127 L415,112 L540,112 L540,44 L415,57 L290,76 L165,91 L40,105 Z" fill="#6ea2dd" opacity="0.12"></path>
+            </sc-if>
+            <line x1="40" y1="166" x2="540" y2="166" stroke="#6c757f" stroke-width="1" stroke-dasharray="4 4"></line>
+            <text x="548" y="169" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11">BASIS 3,504</text>
+            <line x1="40" y1="57" x2="540" y2="57" stroke="#c9a25e" stroke-width="1" stroke-dasharray="5 4"></line>
+            <text x="548" y="60" fill="#c9a25e" font-family="JetBrains Mono, monospace" font-size="11">ASK 4,300</text>
+            <path d="M40,128 L165,117 L290,102 L415,86 L540,78" fill="none" stroke="#6ea2dd" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+            <circle cx="40" cy="128" r="3.5" fill="#6ea2dd"></circle>
+            <circle cx="165" cy="117" r="3.5" fill="#6ea2dd"></circle>
+            <circle cx="290" cy="102" r="3.5" fill="#6ea2dd"></circle>
+            <circle cx="415" cy="86" r="3.5" fill="#6ea2dd"></circle>
+            <circle cx="540" cy="78" r="4.5" fill="#6ea2dd"></circle>
+            <circle cx="478" cy="71" r="4" fill="#161b21" stroke="#eef1f5" stroke-width="1.5"></circle>
+            <text x="478" y="88" fill="#8c95a0" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">YOURS</text>
+            <text x="40" y="188" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">APR</text>
+            <text x="165" y="188" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">MAY</text>
+            <text x="290" y="188" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">JUN</text>
+            <text x="415" y="188" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">JUL</text>
+            <text x="540" y="188" fill="#6c757f" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">AUG</text>
+          </svg>
+          <div style="display:flex;align-items:center;gap:18px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;">
+            <span style="display:flex;align-items:center;gap:7px;"><span style="width:16px;height:2px;background:#6ea2dd;border-radius:2px;"></span>AGENT ESTIMATE</span>
+            <span style="display:flex;align-items:center;gap:7px;"><span style="width:9px;height:9px;border-radius:50%;border:1.5px solid #eef1f5;"></span>LOGGED BY YOU</span>
+            <span style="display:flex;align-items:center;gap:7px;"><span style="width:16px;height:9px;background:rgba(110,162,221,0.18);border-radius:2px;"></span>LOW–HIGH BAND</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:8px;background:#c9a25e;color:#14181d;font-size:13px;font-weight:600;"><span style="display:flex;"><i data-lucide="refresh-cw"></i></span>Check price now</div>
+          <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;font-size:13px;"><span style="display:flex;"><i data-lucide="pencil-line"></i></span>Log a value</div>
+          <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;font-size:13px;"><span style="display:flex;"><i data-lucide="chevron-down"></i></span>Evidence &amp; sources</div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">LAST RUN COST $0.84</span>
+        </div>
+
+        <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:16px;display:flex;gap:24px;align-items:flex-start;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">COST BASIS</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-variant-numeric:tabular-nums;">$3,504.00</span>
+            <span style="font-size:13px;color:#8c95a0;">purchase 3,200 · shipping 40 · tax 264</span>
+            <span style="font-size:13px;"><span style="color:#5aa37a;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">+$646.00 (+18.4%)</span> <span style="color:#8c95a0;">unrealized vs basis</span></span>
+          </div>
+          <div style="width:1px;align-self:stretch;background:rgba(255,255,255,0.07);"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">LIFECYCLE</span>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8c95a0;">
+              <span style="color:#6c757f;">Owned</span><span style="color:#6c757f;">→</span>
+              <span style="color:#6c757f;">Candidate</span><span style="color:#6c757f;">→</span>
+              <span style="color:#eef1f5;font-weight:500;">Listed</span><span style="color:#6c757f;">→</span>
+              <span style="color:#6c757f;">Sold</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:8px;background:#c9a25e;color:#14181d;font-size:13px;font-weight:600;align-self:flex-start;"><span style="display:flex;"><i data-lucide="handshake"></i></span>Record sale…</div>
+            <div style="display:flex;align-items:center;gap:14px;font-size:13px;color:#8c95a0;">
+              <a href="#">Edit listing</a>
+              <a href="#">Withdraw listing</a>
+            </div>
+            <span style="font-size:13px;color:#8c95a0;">Listed 30 Jul on r/WatchExchange at $4,300 — 3.6% above the latest mid.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#c9a25e;">03</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">List for sale · Record sale</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">dialogs · the net-proceeds ledger is the point</span>
+    </div>
+
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+
+      <div style="width:460px;border:1px solid rgba(255,255,255,0.10);border-radius:14px;background:#161b21;box-shadow:0 24px 60px rgba(0,0,0,0.5);overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;">
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;">List for sale</span>
+            <span style="font-size:13px;color:#8c95a0;">Tudor Black Bay 58 · M79030N-0001</span>
+          </div>
+          <span style="flex:1;"></span>
+          <span style="display:flex;color:#6c757f;"><i data-lucide="x"></i></span>
+        </div>
+        <div style="padding:18px 20px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <span style="font-size:13px;color:#8c95a0;">Venue <span style="color:#c9a25e;">*</span></span>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <span style="font-size:13px;padding:6px 11px;border-radius:9999px;background:rgba(201,162,94,0.16);border:1px solid rgba(201,162,94,0.5);color:#c9a25e;">r/WatchExchange</span>
+              <span style="font-size:13px;padding:6px 11px;border-radius:9999px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;">RedBar Austin</span>
+              <span style="font-size:13px;padding:6px 11px;border-radius:9999px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;">eBay</span>
+              <span style="font-size:13px;padding:6px 11px;border-radius:9999px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;">Chrono24</span>
+              <span style="font-size:13px;padding:6px 11px;border-radius:9999px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;">Local</span>
+              <span style="font-size:13px;padding:6px 11px;border-radius:9999px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;">Other…</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="display:flex;flex-direction:column;gap:7px;">
+              <span style="font-size:13px;color:#8c95a0;">Listed date <span style="color:#c9a25e;">*</span></span>
+              <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-size:15px;">30 Jul 2026</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:7px;">
+              <span style="font-size:13px;color:#8c95a0;">Ask price <span style="color:#c9a25e;">*</span></span>
+              <div style="height:36px;border:1px solid rgba(201,162,94,0.55);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-family:'JetBrains Mono',monospace;font-size:15px;font-variant-numeric:tabular-nums;">4,300.00</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:9px;background:#12171d;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 12px;">
+            <span style="display:flex;color:#6ea2dd;margin-top:1px;"><i data-lucide="info"></i></span>
+            <span style="font-size:13px;color:#a8b0bb;line-height:1.5;">Latest estimate <span style="font-family:'JetBrains Mono',monospace;color:#eef1f5;">$4,150</span> (range 3,900–4,400). Your ask is <span style="font-family:'JetBrains Mono',monospace;color:#eef1f5;">3.6%</span> above mid and inside the high bound.</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <span style="font-size:13px;color:#8c95a0;">Listing URL</span>
+            <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-size:13px;color:#6c757f;">reddit.com/r/Watchexchange/comments/…</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,0.07);padding-top:14px;">
+            <span style="font-size:13px;color:#8c95a0;flex:1;">Sets status to Listed. Price checks keep running.</span>
+            <span style="font-size:13px;color:#a8b0bb;padding:0 12px;">Cancel</span>
+            <span style="height:34px;display:flex;align-items:center;padding:0 16px;border-radius:8px;background:#c9a25e;color:#14181d;font-size:13px;font-weight:600;">List it</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:640px;border:1px solid rgba(255,255,255,0.10);border-radius:14px;background:#161b21;box-shadow:0 24px 60px rgba(0,0,0,0.5);overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;">
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;">Record sale</span>
+            <span style="font-size:13px;color:#8c95a0;">Tudor Black Bay 58 · listed 14 days on r/WatchExchange</span>
+          </div>
+          <span style="flex:1;"></span>
+          <span style="display:flex;color:#6c757f;"><i data-lucide="x"></i></span>
+        </div>
+        <div style="padding:18px 20px;display:flex;gap:22px;align-items:flex-start;">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:13px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;color:#8c95a0;">Sold date <span style="color:#c9a25e;">*</span></span>
+                <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-size:15px;">12 Aug 2026</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;color:#8c95a0;">Sale price <span style="color:#c9a25e;">*</span></span>
+                <div style="height:36px;border:1px solid rgba(201,162,94,0.55);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-family:'JetBrains Mono',monospace;font-size:15px;font-variant-numeric:tabular-nums;">4,150.00</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;color:#8c95a0;">Buyer name</span>
+                <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-size:15px;">Dan K.</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;color:#8c95a0;">Buyer handle</span>
+                <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-family:'JetBrains Mono',monospace;font-size:13px;">u/dankay512</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;color:#8c95a0;">Payment method</span>
+                <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;justify-content:space-between;padding:0 11px;font-size:15px;">PayPal G&amp;S<span style="display:flex;color:#6c757f;"><i data-lucide="chevron-down"></i></span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;color:#8c95a0;">Tracking number</span>
+                <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-family:'JetBrains Mono',monospace;font-size:13px;">9405 5118 9956 2043</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;color:#8c95a0;">Venue fee</span>
+                <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-family:'JetBrains Mono',monospace;font-size:15px;font-variant-numeric:tabular-nums;">0.00</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;color:#8c95a0;">Processing fee</span>
+                <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-family:'JetBrains Mono',monospace;font-size:15px;font-variant-numeric:tabular-nums;">129.15</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;color:#8c95a0;">Shipping</span>
+                <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-family:'JetBrains Mono',monospace;font-size:15px;font-variant-numeric:tabular-nums;">28.40</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;color:#8c95a0;">Insurance</span>
+                <div style="height:36px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;background:#1b212a;display:flex;align-items:center;padding:0 11px;font-family:'JetBrains Mono',monospace;font-size:15px;font-variant-numeric:tabular-nums;">12.00</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="width:262px;flex:none;border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#12171d;padding:16px;display:flex;flex-direction:column;gap:10px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">NET PROCEEDS</span>
+            <div style="display:flex;flex-direction:column;gap:7px;font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">
+              <div style="display:flex;justify-content:space-between;"><span style="color:#8c95a0;">Sale price</span><span>4,150.00</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#8c95a0;">Venue fee</span><span style="color:#8c95a0;">− 0.00</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#8c95a0;">Processing</span><span style="color:#8c95a0;">− 129.15</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#8c95a0;">Shipping</span><span style="color:#8c95a0;">− 28.40</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#8c95a0;">Insurance</span><span style="color:#8c95a0;">− 12.00</span></div>
+            </div>
+            <div style="height:1px;background:rgba(255,255,255,0.10);"></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">
+              <span style="font-size:13px;color:#8c95a0;">Net</span><span style="font-size:19px;">3,980.45</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;">
+              <span style="color:#8c95a0;">Cost basis</span><span style="color:#8c95a0;">3,504.00</span>
+            </div>
+            <div style="height:1px;background:rgba(255,255,255,0.10);"></div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">REALIZED GAIN</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-variant-numeric:tabular-nums;color:#5aa37a;">+476.45</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#5aa37a;">+13.6% · held 2y 3m</span>
+            </div>
+          </div>
+        </div>
+        <div style="padding:14px 20px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;">
+          <span style="font-size:13px;color:#8c95a0;flex:1;text-wrap:pretty;">Marks the watch Sold, closes the listing, and turns price checking off so the agent stops spending on a watch you no longer own.</span>
+          <span style="font-size:13px;color:#a8b0bb;padding:0 12px;">Cancel</span>
+          <span style="height:34px;display:flex;align-items:center;padding:0 16px;border-radius:8px;background:#c9a25e;color:#14181d;font-size:13px;font-weight:600;">Record sale</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#c9a25e;">04</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Realized Gains</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">/reports/realized-gains · grouped by year</span>
+    </div>
+
+    <div style="width:1180px;display:flex;flex-direction:column;gap:20px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Realized Gains</h3>
+        <p style="margin:0;font-size:15px;color:#8c95a0;">Every sale, net of venue and processing fees and shipping, against cost basis at acquisition.</p>
+      </div>
+
+      <div style="display:flex;gap:34px;flex-wrap:wrap;border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:16px 20px;">
+        <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">SALES</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-variant-numeric:tabular-nums;">5</span></div>
+        <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">GROSS</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-variant-numeric:tabular-nums;">$8,320.00</span></div>
+        <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">FEES</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-variant-numeric:tabular-nums;">$349.95</span></div>
+        <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">NET</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-variant-numeric:tabular-nums;">$7,970.05</span></div>
+        <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">REALIZED</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-variant-numeric:tabular-nums;color:#5aa37a;">+$196.05</span></div>
+        <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">WIN RATE</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-variant-numeric:tabular-nums;">3 / 5</span></div>
+        <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">AVG HOLD</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-variant-numeric:tabular-nums;">2y 1m</span></div>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr) 108px 108px 96px 116px 132px 92px;gap:0;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.08);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:#8c95a0;">
+          <span>SOLD</span><span>WATCH</span><span style="text-align:right;">BASIS</span><span style="text-align:right;">SALE</span><span style="text-align:right;">FEES</span><span style="text-align:right;">NET</span><span style="text-align:right;">REALIZED</span><span style="text-align:right;">HELD</span>
+        </div>
+
+        <div style="padding:8px 18px;background:#12171d;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:baseline;gap:14px;">
+          <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;">2026</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;">4 SALES · NET $6,965.65 ·</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5aa37a;">+$81.65</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr) 108px 108px 96px 116px 132px 92px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:15px;align-items:center;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8c95a0;">12 AUG</span>
+          <span style="display:flex;align-items:center;gap:10px;min-width:0;"><span style="width:26px;height:32px;border-radius:6px;flex:none;filter:grayscale(0.7);background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 6px,rgba(255,255,255,0.015) 6px 12px);"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Tudor Black Bay 58 <span style="color:#8c95a0;font-size:13px;">· r/WatchExchange</span></span></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">3,504.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">4,150.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#8c95a0;font-variant-numeric:tabular-nums;">169.55</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">3,980.45</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#5aa37a;font-variant-numeric:tabular-nums;">+476.45 (+13.6%)</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#8c95a0;">2y 3m</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr) 108px 108px 96px 116px 132px 92px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:15px;align-items:center;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8c95a0;">04 JUN</span>
+          <span style="display:flex;align-items:center;gap:10px;min-width:0;"><span style="width:26px;height:32px;border-radius:6px;flex:none;filter:grayscale(0.7);background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 6px,rgba(255,255,255,0.015) 6px 12px);"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Seiko SPB143 <span style="color:#8c95a0;font-size:13px;">· r/WatchExchange</span></span></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">1,180.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">980.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#8c95a0;font-variant-numeric:tabular-nums;">42.30</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">937.70</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#c85046;font-variant-numeric:tabular-nums;">−242.30 (−20.5%)</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#8c95a0;">1y 8m</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr) 108px 108px 96px 116px 132px 92px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:15px;align-items:center;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8c95a0;">19 MAR</span>
+          <span style="display:flex;align-items:center;gap:10px;min-width:0;"><span style="width:26px;height:32px;border-radius:6px;flex:none;filter:grayscale(0.7);background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 6px,rgba(255,255,255,0.015) 6px 12px);"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Oris Divers Sixty-Five <span style="color:#8c95a0;font-size:13px;">· RedBar Austin</span></span></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">1,740.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">1,620.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#8c95a0;font-variant-numeric:tabular-nums;">68.40</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">1,551.60</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#c85046;font-variant-numeric:tabular-nums;">−188.40 (−10.8%)</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#8c95a0;">3y 1m</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr) 108px 108px 96px 116px 132px 92px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:15px;align-items:center;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8c95a0;">08 FEB</span>
+          <span style="display:flex;align-items:center;gap:10px;min-width:0;"><span style="width:26px;height:32px;border-radius:6px;flex:none;filter:grayscale(0.7);background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 6px,rgba(255,255,255,0.015) 6px 12px);"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Hamilton Khaki Field Mech <span style="color:#8c95a0;font-size:13px;">· RedBar Austin</span></span></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">460.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">520.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#8c95a0;font-variant-numeric:tabular-nums;">24.10</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">495.90</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#5aa37a;font-variant-numeric:tabular-nums;">+35.90 (+7.8%)</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#8c95a0;">11m</span>
+        </div>
+
+        <div style="padding:8px 18px;background:#12171d;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:baseline;gap:14px;">
+          <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;">2025</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;">1 SALE · NET $1,004.40 ·</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5aa37a;">+$114.40</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr) 108px 108px 96px 116px 132px 92px;padding:11px 18px;font-size:15px;align-items:center;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8c95a0;">22 NOV</span>
+          <span style="display:flex;align-items:center;gap:10px;min-width:0;"><span style="width:26px;height:32px;border-radius:6px;flex:none;filter:grayscale(0.7);background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 6px,rgba(255,255,255,0.015) 6px 12px);"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Christopher Ward C60 <span style="color:#8c95a0;font-size:13px;">· r/WatchExchange</span></span></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">890.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">1,050.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#8c95a0;font-variant-numeric:tabular-nums;">45.60</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">1,004.40</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#5aa37a;font-variant-numeric:tabular-nums;">+114.40 (+12.9%)</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#8c95a0;">2y</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#c9a25e;">05</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Annual Summary</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">/reports/annual-summary · prints on Letter · CSV per section</span>
+    </div>
+
+    <div style="width:820px;border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;padding:24px 26px;display:flex;flex-direction:column;gap:22px;">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Annual Summary 2026</h3>
+          <p style="margin:0;font-size:15px;color:#8c95a0;">Bought, sold, held and paid in fees — the year in one page.</p>
+        </div>
+        <div style="display:flex;gap:0;border:1px solid rgba(255,255,255,0.12);border-radius:8px;overflow:hidden;">
+          <span style="font-size:13px;padding:7px 13px;background:rgba(201,162,94,0.16);color:#c9a25e;font-weight:500;">2026</span>
+          <span style="font-size:13px;padding:7px 13px;color:#a8b0bb;border-left:1px solid rgba(255,255,255,0.12);">2025</span>
+          <span style="font-size:13px;padding:7px 13px;color:#a8b0bb;border-left:1px solid rgba(255,255,255,0.12);">2024</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">1 · ACQUISITIONS</span>
+          <span style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;display:flex;align-items:center;gap:6px;"><i data-lucide="copy"></i>CSV</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:15px;">
+          <div style="display:flex;justify-content:space-between;"><span>6 watches bought</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$9,340.00</span></div>
+          <div style="display:flex;justify-content:space-between;color:#8c95a0;font-size:13px;"><span>Acquisition costs — shipping, tax, duty</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$742.60</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;"><span style="color:#8c95a0;">Total invested</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$10,082.60</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">2 · SALES</span>
+          <span style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;display:flex;align-items:center;gap:6px;"><i data-lucide="copy"></i>CSV</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:15px;">
+          <div style="display:flex;justify-content:space-between;"><span>4 watches sold · gross</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$7,270.00</span></div>
+          <div style="display:flex;justify-content:space-between;color:#8c95a0;font-size:13px;"><span>Net proceeds after fees and shipping</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$6,965.65</span></div>
+          <div style="display:flex;justify-content:space-between;color:#8c95a0;font-size:13px;"><span>Cost basis of watches sold</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$6,884.00</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;"><span style="color:#8c95a0;">Realized gain</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#5aa37a;">+$81.65</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">3 · POSITION AT YEAR END</span>
+          <span style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:15px;">
+          <div style="display:flex;justify-content:space-between;"><span>42 watches owned · cost basis</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$41,860.00</span></div>
+          <div style="display:flex;justify-content:space-between;color:#8c95a0;font-size:13px;"><span>Current market value — 28 tracked</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$47,320.00</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;"><span style="color:#8c95a0;">Unrealized gain</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#5aa37a;">+$5,460.00 (+13.0%)</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">4 · FEES PAID, BY VENUE</span>
+          <span style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;display:flex;align-items:center;gap:6px;"><i data-lucide="copy"></i>CSV</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:15px;">
+          <div style="display:flex;justify-content:space-between;"><span>r/WatchExchange <span style="color:#8c95a0;font-size:13px;">· 2 sales · PayPal G&amp;S</span></span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$211.85</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>RedBar Austin <span style="color:#8c95a0;font-size:13px;">· 2 sales · cash, Zelle</span></span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$92.50</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;"><span style="color:#8c95a0;">Cost of doing business</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">$304.35</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#c9a25e;">06</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Collection — sold, listed, candidate</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6c757f;">/collection · sold stays in place, dimmed</span>
+    </div>
+
+    <div style="width:1180px;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8c95a0;">SALE STATUS</span>
+        <span style="font-size:13px;padding:6px 12px;border-radius:9999px;background:rgba(201,162,94,0.16);border:1px solid rgba(201,162,94,0.5);color:#c9a25e;">All</span>
+        <span style="font-size:13px;padding:6px 12px;border-radius:9999px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;">Owned only</span>
+        <span style="font-size:13px;padding:6px 12px;border-radius:9999px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;">Candidates</span>
+        <span style="font-size:13px;padding:6px 12px;border-radius:9999px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;">Listed</span>
+        <span style="font-size:13px;padding:6px 12px;border-radius:9999px;border:1px solid rgba(255,255,255,0.12);color:#a8b0bb;">Sold</span>
+        <span style="flex:1;"></span>
+        <span style="font-size:13px;color:#8c95a0;">42 watches · 5 sold · <span style="font-family:'JetBrains Mono',monospace;">$41,860</span> basis</span>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:#161b21;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:64px minmax(0,1.4fr) 150px 130px 130px 120px;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.08);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:#8c95a0;">
+          <span>PHOTO</span><span>WATCH</span><span>STATUS</span><span style="text-align:right;">BASIS</span><span style="text-align:right;">VALUE</span><span style="text-align:right;">±</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:64px minmax(0,1.4fr) 150px 130px 130px 120px;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.05);align-items:center;">
+          <span style="width:40px;height:48px;border-radius:6px;background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 8px,rgba(255,255,255,0.015) 8px 16px);"></span>
+          <span style="display:flex;flex-direction:column;gap:2px;min-width:0;"><span style="font-size:15px;font-weight:500;">Grand Seiko SBGA413</span><span style="font-size:13px;color:#8c95a0;">Shunbun · Spring Drive</span></span>
+          <span style="font-size:13px;color:#8c95a0;">Owned</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">5,088.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">5,650.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#5aa37a;font-variant-numeric:tabular-nums;">+11.0%</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:64px minmax(0,1.4fr) 150px 130px 130px 120px;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.05);align-items:center;">
+          <span style="width:40px;height:48px;border-radius:6px;background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 8px,rgba(255,255,255,0.015) 8px 16px);"></span>
+          <span style="display:flex;flex-direction:column;gap:2px;min-width:0;"><span style="font-size:15px;font-weight:500;">Tudor Black Bay 58</span><span style="font-size:13px;color:#8c95a0;">M79030N-0001 · r/WatchExchange</span></span>
+          <span style="display:flex;align-items:center;gap:7px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#c9a25e;background:rgba(201,162,94,0.15);border:1px solid rgba(201,162,94,0.35);border-radius:9999px;padding:2px 8px;">LISTED</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;">DAY 14</span></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">3,504.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">4,150.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#5aa37a;font-variant-numeric:tabular-nums;">+18.4%</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:64px minmax(0,1.4fr) 150px 130px 130px 120px;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.05);align-items:center;">
+          <span style="width:40px;height:48px;border-radius:6px;background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 8px,rgba(255,255,255,0.015) 8px 16px);"></span>
+          <span style="display:flex;flex-direction:column;gap:2px;min-width:0;"><span style="font-size:15px;font-weight:500;">Longines Spirit 40</span><span style="font-size:13px;color:#8c95a0;">L3.810.4 · duplicate of the BB58</span></span>
+          <span style="display:flex;align-items:center;gap:7px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;border:1px solid rgba(255,255,255,0.14);border-radius:9999px;padding:2px 8px;">CANDIDATE</span></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">1,780.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">1,610.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#c85046;font-variant-numeric:tabular-nums;">−9.6%</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:64px minmax(0,1.4fr) 150px 130px 130px 120px;padding:10px 18px;align-items:center;opacity:0.55;">
+          <sc-if value="{{ soldGrayscale }}" hint-placeholder-val="{{ true }}">
+          <span style="width:40px;height:48px;border-radius:6px;filter:grayscale(0.7);background-color:#1b212a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 8px,rgba(255,255,255,0.015) 8px 16px);"></span>
+          </sc-if>
+          <span style="display:flex;flex-direction:column;gap:2px;min-width:0;"><span style="font-size:15px;font-weight:500;">Seiko SPB143</span><span style="font-size:13px;color:#8c95a0;">Sold 4 Jun to u/dankay512</span></span>
+          <span style="display:flex;align-items:center;gap:7px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8c95a0;border:1px solid rgba(255,255,255,0.14);border-radius:9999px;padding:2px 8px;">SOLD</span></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">1,180.00</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;">937.70</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:#c85046;font-variant-numeric:tabular-nums;">−20.5%</span>
+        </div>
+      </div>
+
+      <p style="margin:0;font-size:13px;color:#8c95a0;max-width:820px;text-wrap:pretty;">Sold rows keep their place at 55% opacity with a desaturated thumbnail. Their VALUE column shows net proceeds rather than an estimate, and they are excluded from current-value totals, price-check runs and coverage targets — but included in counts, search and every report.</p>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showAttention&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Market landing&quot;},&quot;showValuationBand&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Trend chart&quot;},&quot;soldGrayscale&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Collection&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() { this.icons(0) }
+  componentDidUpdate() { this.icons(0) }
+  icons(n) {
+    if (window.lucide) {
+      window.lucide.createIcons({ attrs: { width: 16, height: 16, "stroke-width": 1.75 } })
+    } else if (n < 40) {
+      setTimeout(() => this.icons(n + 1), 120)
+    }
+  }
+  renderVals() {
+    return {
+      showAttention: this.props.showAttention ?? true,
+      showValuationBand: this.props.showValuationBand ?? true,
+      soldGrayscale: this.props.soldGrayscale ?? true,
+    }
+  }
+}
+</script>
+</body>
+</html>

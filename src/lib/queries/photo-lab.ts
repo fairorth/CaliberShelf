@@ -39,8 +39,11 @@ export interface PhotoLabCoverage {
 export async function getPhotoLabCoverage(): Promise<PhotoLabCoverage> {
   const supabase = await createClient()
 
-  // Owned watches only — wish-list entries have nothing to shoot (D1).
-  const watches = (await getWatches()).filter((w) => !w.is_wishlist)
+  // Owned watches only — wish-list entries have nothing to shoot (D1), and a
+  // sold watch is no longer in hand to reshoot (§3.6).
+  const watches = (await getWatches()).filter(
+    (w) => !w.is_wishlist && w.sale_status !== "sold"
+  )
 
   const [photosRes, scoresRes] = await Promise.all([
     supabase.from("watch_photos").select("watch_id, angle"),

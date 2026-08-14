@@ -33,6 +33,21 @@ export type CaseShape =
 
 export type BrandType = "major" | "micro" | "indie"
 
+// ── Sale lifecycle (Phase 5, migrations 00043–00045) ────────────
+
+/** Linear lifecycle, one status per watch. Transitions are enforced in
+ *  src/lib/actions/sales.ts — see the transition table there. */
+export type SaleStatus = "owned" | "candidate" | "listed" | "sold"
+
+export type SaleVenue =
+  | "watchexchange"
+  | "redbar_austin"
+  | "ebay"
+  | "chrono24"
+  | "forum"
+  | "local"
+  | "other"
+
 // ── Brand ──────────────────────────────────────────────────────
 
 export interface Brand {
@@ -119,6 +134,18 @@ export interface Watch {
   purchase_date: string | null
   purchase_price_cents: number | null
   purchase_currency: string
+  // Sale lifecycle + cost basis (00043)
+  sale_status: SaleStatus
+  candidate_since: string | null
+  /** why it's on the block (≤200 chars) */
+  candidate_note: string | null
+  target_ask_cents: number | null
+  acq_shipping_cents: number | null
+  acq_tax_cents: number | null
+  acq_duty_cents: number | null
+  /** GENERATED: purchase + shipping + tax + duty, nulls as 0. Never re-derive.
+   *  0 when purchase_price_cents is null — the UI shows "—" for gain then. */
+  cost_basis_cents: number
   /** free-text storage location — which watch case/box holds this watch */
   box: string | null
   notes: string | null
@@ -183,6 +210,10 @@ export interface WatchWithCover extends Watch {
 
 // ── Valuation ───────────────────────────────────────────────────
 
+/** Who logged the value (00046). Portfolio totals and the trend chart's
+ *  primary series use 'agent' rows only; 'manual' rows plot alongside. */
+export type ValuationSource = "agent" | "manual"
+
 export interface ValuationDatapoint {
   price_usd: number
   source: string
@@ -209,7 +240,60 @@ export interface WatchValuation {
   method_notes: string | null
   caveats: string | null
   agent_model: string | null
+  source: ValuationSource
+  /** manual rows only — "saw one sell at RedBar for 4.2" */
+  entered_note: string | null
   created_at: string
+}
+
+// ── Sale ledger (Phase 5, migrations 00044/00045) ───────────────
+
+/** One listing row per time a watch goes on the market; at most one 'active'
+ *  per watch (partial unique index). Days-on-market lives here. */
+export interface WatchListing {
+  id: string
+  watch_id: string
+  user_id: string
+  venue: SaleVenue
+  /** required when venue = 'other' */
+  venue_other: string | null
+  listing_url: string | null
+  listed_at: string // "YYYY-MM-DD"
+  ask_price_cents: number
+  currency: string
+  status: "active" | "sold" | "withdrawn"
+  closed_at: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** The sale record — UNIQUE(watch_id) makes the linear lifecycle physical.
+ *  net_proceeds_cents is GENERATED (sale price minus the four fee columns);
+ *  realized gain = net_proceeds_cents - watches.cost_basis_cents, computed in
+ *  src/lib/queries/sales.ts and nowhere else. */
+export interface WatchSale {
+  id: string
+  watch_id: string
+  user_id: string
+  listing_id: string | null
+  sold_at: string // "YYYY-MM-DD"
+  sale_price_cents: number
+  currency: string
+  venue: SaleVenue
+  venue_other: string | null
+  buyer_name: string | null
+  buyer_handle: string | null
+  payment_method: string | null
+  tracking_number: string | null
+  venue_fee_cents: number
+  processing_fee_cents: number
+  shipping_cost_cents: number
+  insurance_cents: number
+  net_proceeds_cents: number
+  notes: string | null
+  created_at: string
+  updated_at: string
 }
 
 // ── Wishlist Deal ───────────────────────────────────────────────

@@ -10,7 +10,7 @@ import {
 } from "react"
 import type { MouseEvent } from "react"
 import { useRouter } from "next/navigation"
-import { Check, Cog, FolderOpen, Layers, Ruler, Settings2, Tag, X } from "lucide-react"
+import { Check, Cog, FolderOpen, Layers, Ruler, Settings2, Tag, TrendingUp, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -523,6 +523,8 @@ export function WatchForm({
     watch?.purchase_price_cents != null
       ? (watch.purchase_price_cents / 100).toFixed(2)
       : ""
+  const dollarsDefault = (cents: number | null | undefined) =>
+    cents != null ? (cents / 100).toFixed(2) : ""
 
   return (
     <form
@@ -703,6 +705,35 @@ export function WatchForm({
             />
           </div>
 
+          {/* Acquisition costs (00043) — the DB derives cost basis as
+              purchase + these three in a generated column. */}
+          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+            <FormLabel>Acquisition costs ($) — count toward cost basis</FormLabel>
+            <div className="grid grid-cols-3 gap-3">
+              {(
+                [
+                  ["acq_shipping", "Shipping", watch?.acq_shipping_cents],
+                  ["acq_tax", "Tax", watch?.acq_tax_cents],
+                  ["acq_duty", "Duty", watch?.acq_duty_cents],
+                ] as const
+              ).map(([name, label, cents]) => (
+                <div key={name} className="space-y-1">
+                  <span className="text-xs text-muted-foreground">{label}</span>
+                  <Input
+                    id={name}
+                    name={name}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    defaultValue={dollarsDefault(cents)}
+                    className={cn(FIELD, "font-mono")}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <FormLabel htmlFor="box">Box</FormLabel>
             <input type="hidden" name="box" value={box} />
@@ -762,9 +793,32 @@ export function WatchForm({
             </p>
           </div>
 
+          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+            <FormLabel htmlFor="notes">Notes</FormLabel>
+            <Textarea
+              id="notes"
+              name="notes"
+              placeholder="Any additional details about this watch..."
+              rows={3}
+              defaultValue={watch?.notes ?? ""}
+              className={FIELD}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Market card (V8, V10): tracking + target ask ────────── */}
+      <Card className={CARD}>
+        <CardHeader className={CARD_HEADER}>
+          <CardTitle className={CARD_TITLE}>
+            <span className={CHIP}><TrendingUp className="h-4 w-4" aria-hidden="true" /></span>
+            Market
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
           <div
             className={cn(
-              "flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-3",
+              "flex flex-col justify-center gap-1 text-sm",
               !hasRef && "opacity-50"
             )}
           >
@@ -789,21 +843,25 @@ export function WatchForm({
             </label>
             <span className="text-xs text-muted-foreground">
               {hasRef
-                ? "— include in automated market-value updates"
-                : "— requires a reference number"}
+                ? "Include in automated market-value updates."
+                : "Requires a reference number."}
             </span>
           </div>
-
-          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-            <FormLabel htmlFor="notes">Notes</FormLabel>
-            <Textarea
-              id="notes"
-              name="notes"
-              placeholder="Any additional details about this watch..."
-              rows={3}
-              defaultValue={watch?.notes ?? ""}
-              className={FIELD}
+          <div className="space-y-2">
+            <FormLabel htmlFor="target_ask">Target ask ($)</FormLabel>
+            <Input
+              id="target_ask"
+              name="target_ask"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="e.g. 4300.00"
+              defaultValue={dollarsDefault(watch?.target_ask_cents)}
+              className={cn(FIELD, "font-mono")}
             />
+            <p className="text-xs text-muted-foreground">
+              The number the market has to cross — drawn on the trend chart.
+            </p>
           </div>
         </CardContent>
       </Card>

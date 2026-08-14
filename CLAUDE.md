@@ -40,9 +40,14 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   links, info chips). Prices and totals are `--foreground` + `font-mono tabular-nums` —
   never colored. Brass is NEVER decoration (no colored card borders or header washes).
 - **Badges, pills, chips and status dots go through `<StatusPill>`** (`ui/status-pill.tsx`):
-  solid brass, outline brass, neutral, and `--destructive` for failure only. Never a Tailwind
-  colour literal — that is how a non-brass accent survived four sweeps. The user-chosen label
-  palette in `validations/label.ts` is the one deliberate exception (it is data, not accent).
+  solid brass, outline brass, neutral, `--warning` amber for staleness/aging, and
+  `--destructive` for failure only. Never a Tailwind colour literal — that is how a non-brass
+  accent survived four sweeps. The user-chosen label palette in `validations/label.ts` is the
+  one deliberate exception (it is data, not accent).
+- **Gain/loss is the only number that takes colour** — `--chart-2` up, `--destructive` down,
+  via `<GainValue>` (`components/gain-value.tsx`). Both themes are green/red: light
+  `--chart-2` was a cyan-blue until Phase 5 and made a gain read as data. A null gain
+  renders `—`, never 0 and never a percentage.
 - **Neutral tokens must stay neutral.** `--muted-foreground`, `--accent` and
   `--accent-foreground` once carried enough blue chroma to read as system blue at 11px, which
   is why "remove the blue" kept finding new instances. Sweep the token, not the instance.
@@ -92,8 +97,28 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - `next/image` with `fill` positions against the nearest **positioned** ancestor. A sized box without `relative` lets the image size itself to whatever ancestor happens to be positioned — in the collection table that was the whole column, producing a letterbox strip through the middle of the watch. Always pair `fill` with `relative` on the box that defines the size.
 - `table-layout: fixed` treats `<colgroup>` widths as **ratios, not pixels**, whenever the table is wider than their sum: the surplus is shared out proportionally and every column inflates together. For literal widths, size the table explicitly (`width: sum-of-columns`) rather than letting it fill. Don't "fix" this with one `width: auto` flex column — a flex column absorbs width released by any other column, which silently inverts the drag direction of every resize handle to its right.
 
+## Sales & investment (Phase 5) — see docs/data-model.md
+- **Lifecycle** is linear and one-per-watch: `owned → candidate → listed → sold`.
+  Transitions are enforced in `src/lib/actions/sales.ts` against the table in the spec,
+  NOT by a DB constraint. Every status write goes through `assertTransition`.
+- **`cost_basis_cents` and `net_proceeds_cents` are generated columns.** Nothing in code
+  re-derives them. A watch with no purchase price has basis 0 → every gain shows `—`.
+- **All gain math lives in `queries/gain.ts`** (pure), re-exported by `queries/sales.ts`
+  and `queries/portfolio.ts`. No component computes a gain inline; `<GainValue>` renders it.
+- **Portfolio totals and the trend chart's primary series use `source='agent'` valuation
+  rows only.** Manual rows (`source='manual'`, V7) plot alongside as hollow markers and
+  never move a total.
+- **Sold watches stay in the collection**, dimmed with a `SOLD` pill and net proceeds in
+  the price cell. They are excluded from current-value totals, price-check runs, Photo Lab
+  coverage targets and never-worn prompts; they stay in counts, search and every report.
+- **Market section** owns `/market` (portfolio strip, value-over-time chart, pipeline,
+  attention) and `/market/sold` (the archive with footer totals).
+- **No `npm run …` in UI copy** — the in-app "Check price now" button is the answer
+  (finding V9).
+
 ## Collection table conventions (`components/collection-table.tsx`)
 - Filters, search and sort live in the **URL**, not component state, so a filtered list survives a trip out to a watch and back and is linkable. Multi-value filters repeat their key (`?category=a&category=b`). View mode, tile size and column choice are per-device preferences and stay in localStorage.
+- The **Sale status** filter (`?sale=`) has view-specific defaults: an *absent* param means "Owned only" in tiles and "All" in the table, so `""` is unset and `"all"` is the explicit everything choice (clearing the chip writes `all`, otherwise the default would silently reapply). Sold watches always sort to the bottom, whatever the active sort.
 - The Brand and Category **cells** filter the collection; the rest of the row opens the watch. This deliberately narrows "one row, one destination" — see DECISIONS.md §8.
 - Column widths are explicit pixels, resizable, persisted per device. Any column may be resized; the table sizes itself to their sum.
 
@@ -113,6 +138,10 @@ constants, end-of-run cost printout, and run logging via
 script (or `route.ts` for spec-fetch).
 - **price-check** (`scripts/price-check.mjs`) → `watch_valuations`; needs a
   reference_number to enable (Zod refine + DB CHECK); monthly `price-check.yml`.
+  The per-watch research call lives in **`scripts/lib/price-research.mjs`**,
+  shared with `POST /api/price-check/[watchId]` (the "Check price now" button)
+  so the prompt exists once — edit sources/method THERE. The route requires
+  opt-in, refuses sold watches, and allows one run per watch per hour.
   Operator guide: `docs/price-check.md`.
 - **deal-check** (`scripts/deal-check.mjs`) → `wishlist_deals` from each brand's
   Shopify `products.json`; deterministic; daily `deal-check.yml`. `best_used_*`
@@ -139,7 +168,8 @@ script (or `route.ts` for spec-fetch).
 ## Agent run logging (agent_runs — migration 00028)
 Every agent records a run — duration, cost (integer microdollars), item counts,
 tokens, and a per-item audit trail — via `scripts/lib/agent-run.mjs` (scripts)
-or a direct insert (spec-fetch route). Surfaced in the **Agent Execution
+or a direct insert (the spec-fetch and price-check routes; the latter logs
+`trigger = 'ui'`). Surfaced in the **Agent Execution
 Review** report (`/reports/agents`). Logging is best-effort and must NEVER break
 an agent (all writes are wrapped). `npm run backfill-agent-runs` imports past
 valuation runs.

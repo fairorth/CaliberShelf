@@ -7,7 +7,6 @@ import { getCategories } from "@/lib/queries/categories"
 import { getLabels, getLabelsForWatch } from "@/lib/queries/labels"
 import { getWearCountForWatch } from "@/lib/queries/wear-logs"
 import { getTimegrapherRuns } from "@/lib/queries/timegrapher"
-import { getValuationsForWatch } from "@/lib/queries/valuations"
 import { getStraps } from "@/lib/queries/straps"
 import { strapMaterialLabels } from "@/lib/validations/strap"
 import { strapDisplayName } from "@/lib/types/strap"
@@ -15,7 +14,6 @@ import { WatchForm } from "@/components/watch-form"
 import { PhotoGallery } from "../_components/photo-gallery"
 import { PhotoUploader } from "../_components/photo-uploader"
 import { TimegrapherPanel } from "../_components/timegrapher-panel"
-import { ValuationPanel } from "../_components/valuation-panel"
 import { WearTodayButton } from "../_components/wear-today-button"
 import { DialFramingEditor } from "./_components/dial-framing-editor"
 import { StrapPanel } from "../_components/strap-panel"
@@ -56,7 +54,7 @@ export default async function EditWatchPage({
   }
   const returnTo = RETURN_TARGETS[from ?? ""] ?? "/collection"
 
-  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, valuations, boxConfig, straps] =
+  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, boxConfig, straps] =
     await Promise.all([
       getWatchById(id),
       getBrands(),
@@ -66,7 +64,6 @@ export default async function EditWatchPage({
       getLabelsForWatch(id),
       getWearCountForWatch(id),
       getTimegrapherRuns(id),
-      getValuationsForWatch(id),
       getBoxConfig(),
       getStraps(),
     ])
@@ -151,10 +148,6 @@ export default async function EditWatchPage({
             defaultLabelIds={watchLabels.map((l) => l.id)}
             stickyBar
             cancelHref={returnTo}
-          />
-          <ValuationPanel
-            valuations={valuations}
-            purchasePriceCents={watch.purchase_price_cents}
           />
           <TimegrapherPanel
             watchId={watch.id}

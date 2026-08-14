@@ -5,6 +5,7 @@ import { caseMaterialLabels } from "@/lib/validations/watch"
 import { caliberTypeLabels } from "@/lib/validations/movement"
 import {
   EMPTY_FILTERS,
+  SALE_STATUS_OPTIONS,
   type CollectionFilters,
   type BrandOption,
   type MovementOption,
@@ -139,6 +140,19 @@ export function ActiveFilterChips({
       key: "price-tracking",
       label: f.priceTracking === "tracked" ? "Tracked only" : "Not tracked",
       onClear: () => onChange({ ...f, priceTracking: "" }),
+    })
+  }
+
+  // Sale status (§3.6). Shown whenever it hides something — including the
+  // tiles view's own "Owned only" default, so the list never quietly drops
+  // rows. Clearing sets "all" explicitly; "" would just restore the default.
+  if (f.saleStatus && f.saleStatus !== "all") {
+    chips.push({
+      key: "sale-status",
+      label:
+        SALE_STATUS_OPTIONS.find((o) => o.value === f.saleStatus)?.label ??
+        f.saleStatus,
+      onClear: () => onChange({ ...f, saleStatus: "all" }),
     })
   }
 

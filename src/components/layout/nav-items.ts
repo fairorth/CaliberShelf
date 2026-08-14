@@ -1,4 +1,5 @@
 import {
+  Archive,
   BadgeDollarSign,
   CalendarDays,
   Camera,
@@ -12,6 +13,7 @@ import {
   PackagePlus,
   Settings,
   Tag,
+  TrendingUp,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -49,13 +51,20 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    // "Acquisition & Imagery" needed 191px of the rail's 175px, so it wrapped
-    // to two lines and closed to within 2px of the item below it. This covers
-    // the same two halves — Deals and Batch Import acquire, Photo Lab and
-    // Inspiration shoot — and clears the rail by 33px.
-    heading: "Acquire & Shoot",
+    // Phase 5 §3.1: Deals is market-side and moves in here; the imagery tools
+    // get their own honest group below. (Both headings are short enough for
+    // the rail's 175px — the old "Acquisition & Imagery" needed 191px and
+    // wrapped, which is why that combined group is gone.)
+    heading: "Market",
     items: [
+      { href: "/market", label: "Market", icon: TrendingUp },
+      { href: "/market/sold", label: "Sold Archive", icon: Archive },
       { href: "/deals", label: "Deals", icon: BadgeDollarSign },
+    ],
+  },
+  {
+    heading: "Imagery",
+    items: [
       { href: "/photo-lab", label: "Photo Lab", icon: Camera },
       { href: "/inspiration", label: "Inspiration", icon: Images },
       { href: "/batch-import", label: "Batch Import", icon: PackagePlus },
@@ -74,6 +83,8 @@ export const NAV_GROUPS: NavGroup[] = [
  *  also claims watch detail pages, which are reached from the collection. */
 export function isNavItemActive(href: string, pathname: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard"
+  // Exact, so the Sold Archive child route doesn't also light up its parent.
+  if (href === "/market") return pathname === "/market"
   if (href === "/collection") {
     return (
       pathname.startsWith("/collection") ||

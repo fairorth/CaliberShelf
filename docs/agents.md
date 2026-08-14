@@ -18,7 +18,7 @@ follow), see [price-check.mjs.md](price-check.mjs.md).
 
 | Agent | Kind | Trigger | Model | Observed cost | Recurring? |
 |---|---|---|---|---|---|
-| Valuation (`price-check.mjs`) | LLM + web search/fetch | Monthly cron (1st, 14:00 UTC) + manual | Sonnet 5, 6+6 uses | ~$1–1.5/watch (~340k tokens, ~9 min each) | Yes — monthly, flagged watches only |
+| Valuation (`price-check.mjs`) | LLM + web search/fetch | Monthly cron (1st, 14:00 UTC) + manual + **"Check price now" in the app** | Sonnet 5, 6+6 uses | ~$1–1.5/watch (~340k tokens, ~9 min each) | Yes — monthly, flagged watches only |
 | Spec autofill (`/api/spec-fetch`) | LLM + web search/fetch | ✨ button on watch form | Sonnet 5, 4+4 uses | ~$0.05–0.15/click (shown in UI) | Per click |
 | Store-URL / brand-type sweep (`find-store-urls.mjs`) | LLM + web search | Manual script | Sonnet 5, 3 uses | $0.14/brand ($10.22 for all 73) | One-time; re-runs touch only NULL columns |
 | Reference sweep (`find-references.mjs`) | LLM + web search | Manual script | Sonnet 5, 4 uses | **$0.44/watch** ($2.20 for 5) | One-time-ish; ~77 watches remain ≈ $30–35 |
@@ -55,9 +55,17 @@ Researches the secondary-market value of every watch with
 `price_check_enabled = true` (checkbox on the watch form, requires a
 reference number) and inserts a row into `watch_valuations`.
 
+The per-watch research call (model, prompt, output contract, agent loop) lives
+in **`scripts/lib/price-research.mjs`**, shared by the CLI and the in-app
+"Check price now" button (`POST /api/price-check/[watchId]`, Phase 5 / V6) so
+there is exactly one prompt. The route requires the watch to be opted in,
+refuses sold watches, and rate-limits to one run per watch per hour; its runs
+log with `trigger = 'ui'`.
+
 - **Initiate:** runs itself on the 1st of each month via GitHub Actions
   (`price-check.yml`); manual via Actions "Run workflow" (with `limit` /
-  `max_uses` inputs) or locally `npm run price-check -- [--dry-run] [--limit N]
+  `max_uses` inputs), from the watch page's Market panel, or locally
+  `npm run price-check -- [--dry-run] [--limit N]
   [--watch <uuid>] [--max-uses N]`.
 - **Cost:** ~$1–1.5 per watch at 6+6 uses. Currently ~6 flagged watches →
   **roughly $6–9/month**. Cost scales with how many watches you flag.

@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button"
 import { getWatchById } from "@/lib/queries/watches"
 import { getWearCountForWatch } from "@/lib/queries/wear-logs"
 import { getValuationsForWatch } from "@/lib/queries/valuations"
+import { getActiveListing, getSaleForWatch } from "@/lib/queries/sales"
+import { gainVersusBasis } from "@/lib/queries/portfolio"
+import { GainValue } from "@/components/gain-value"
 import { getTimegrapherRuns } from "@/lib/queries/timegrapher"
 import { getCurrentStrapForWatch } from "@/lib/queries/straps"
 import { getBoxConfig } from "@/lib/queries/box-config"
@@ -26,6 +29,7 @@ import { strapDisplayName } from "@/lib/types/strap"
 import { WatchViewPhotos } from "./_components/watch-view-photos"
 import { WearTodayButton } from "./_components/wear-today-button"
 import { CollectionBackLink } from "./_components/collection-back-link"
+import { MarketPanel } from "./_components/market-panel"
 
 export async function generateMetadata({
   params,
@@ -121,7 +125,7 @@ export default async function WatchViewPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [watch, wearInfo, valuations, timegrapherRuns, currentStrap, boxConfig] =
+  const [watch, wearInfo, valuations, timegrapherRuns, currentStrap, boxConfig, listing, sale] =
     await Promise.all([
       getWatchById(id),
       getWearCountForWatch(id),
@@ -129,6 +133,8 @@ export default async function WatchViewPage({
       getTimegrapherRuns(id),
       getCurrentStrapForWatch(id),
       getBoxConfig(),
+      getActiveListing(id),
+      getSaleForWatch(id),
     ])
 
   if (!watch) notFound()
@@ -138,11 +144,21 @@ export default async function WatchViewPage({
   const fullPhotoUrls: Record<string, string> = {}
   for (const [key, value] of watch.full_photo_urls) fullPhotoUrls[key] = value
 
+  // Sale status outranks the ownership states: a sold watch is not "owned",
+  // and the banner below carries the detail (§3.6).
   const status = watch.is_wishlist
     ? "WISH LIST"
     : watch.is_coming_soon
       ? "COMING SOON"
-      : "OWNED"
+      : watch.sale_status === "sold"
+        ? "SOLD"
+        : watch.sale_status === "listed"
+          ? "LISTED"
+          : watch.sale_status === "candidate"
+            ? "SALE CANDIDATE"
+            : "OWNED"
+
+  const realizedGain = sale ? gainVersusBasis(sale.net_proceeds_cents, watch) : null
 
   const movement = watch.movement
   const movementLine = movement
@@ -172,14 +188,6 @@ export default async function WatchViewPage({
       value: watch.water_resistance_m != null ? `${watch.water_resistance_m} m` : null,
     },
   ].filter((m) => m.value !== null)
-
-  const latestValuation = valuations[0]
-  const valuationDeltaPct =
-    latestValuation && watch.purchase_price_cents
-      ? ((latestValuation.value_mid_cents - watch.purchase_price_cents) /
-          watch.purchase_price_cents) *
-        100
-      : null
 
   const latestRun = timegrapherRuns[0]
 
@@ -237,6 +245,23 @@ export default async function WatchViewPage({
           </Button>
         </div>
       </div>
+
+      {/* Sold banner (§3.6) — brass-free; the only colour is the gain. */}
+      {sale && (
+        <Link
+          href="/market/sold"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-border bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:border-muted-foreground/40"
+        >
+          <span className="font-mono text-2xs uppercase tracking-[0.14em] text-foreground">
+            Sold {formatDate(sale.sold_at)}
+          </span>
+          <span className="font-mono tabular-nums text-foreground">
+            {formatCurrency(sale.net_proceeds_cents, sale.currency)} net
+          </span>
+          <GainValue gain={realizedGain} currency={sale.currency} showPct />
+          <span className="ml-auto text-xs">View the sale record →</span>
+        </Link>
+      )}
 
       {/* Body: photos + spec rail */}
       <div className="grid items-start gap-[22px] lg:grid-cols-[1fr_380px]">
@@ -321,6 +346,9 @@ export default async function WatchViewPage({
         </div>
       </div>
 
+      {/* Market panel (§3.3) — estimate, trend, actions, basis + lifecycle. */}
+      <MarketPanel watch={watch} valuations={valuations} listing={listing} sale={sale} />
+
       {/* Strips — each renders an empty state rather than disappearing (A1). */}
       <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
         {!watch.is_wishlist && (
@@ -342,35 +370,6 @@ export default async function WatchViewPage({
             }
           />
         )}
-        <Strip
-          href="/reports/valuations"
-          eyebrow="Market value"
-          value={
-            latestValuation
-              ? formatCurrency(latestValuation.value_mid_cents, latestValuation.currency, true)
-              : "—"
-          }
-          valueSuffix={
-            valuationDeltaPct != null ? (
-              <span className={valuationDeltaPct >= 0 ? "text-chart-2" : "text-destructive"}>
-                {valuationDeltaPct >= 0 ? "+" : ""}
-                {valuationDeltaPct.toFixed(1)}%
-              </span>
-            ) : undefined
-          }
-          context={
-            latestValuation ? (
-              <>
-                <span className="text-foreground">
-                  {formatDate(latestValuation.valued_at.slice(0, 10))}
-                </span>{" "}
-                · {latestValuation.confidence} confidence
-              </>
-            ) : (
-              "No valuations yet · enable price checking"
-            )
-          }
-        />
         <Strip
           href={`/watch/${watch.id}/edit?from=watch`}
           eyebrow="Timegrapher"

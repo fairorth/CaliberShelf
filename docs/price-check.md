@@ -42,6 +42,14 @@ adds the total current value and percent gain/loss next to the cost total.
 
 ## Running it
 
+### From the app
+
+**Watch page → Market panel → "Check price now"** runs the same research call
+for that one watch (route: `/api/price-check/[watchId]`, shared implementation
+in `scripts/lib/price-research.mjs`). Rate-limited to one run per watch per
+hour; disabled while the watch isn't opted in; refuses sold watches. Runs are
+logged to `agent_runs` with `trigger = 'ui'`.
+
 ### Manually, from the command line
 
 Requires three keys in `.env.local` (never committed):
@@ -101,7 +109,7 @@ Cost levers, in order of impact:
 1. **Which watches are flagged** — the `$$` list *is* the budget.
 2. **`--max-uses`** — 6 (default) vs 12 roughly doubles tokens; identical mid
    estimates in testing, but more datapoints and higher confidence.
-3. **Model** — `MODEL` constant in [scripts/price-check.mjs](../scripts/price-check.mjs).
+3. **Model** — `MODEL` constant in [scripts/lib/price-research.mjs](../scripts/lib/price-research.mjs).
    `claude-sonnet-5` (current) is ~60% cheaper than `claude-opus-4-8`.
 4. **Anthropic spend limit** — console.anthropic.com → Billing → Limits
    (set to $100/month).
@@ -115,7 +123,8 @@ Usage link.
 
 The watch-market sites the agent consults are configured in **plain English,
 not code** — the `Method:` section of `SYSTEM_PROMPT` in
-[scripts/price-check.mjs](../scripts/price-check.mjs). There are no per-site
+[scripts/lib/price-research.mjs](../scripts/lib/price-research.mjs) (shared by
+the CLI and the in-app button — one edit covers both). There are no per-site
 parsers or scrapers: the agent has two generic tools (web search + web fetch)
 and reads whatever pages come back the way a human would. Consequences:
 

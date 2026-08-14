@@ -21,10 +21,12 @@ import { ActiveFilterChips } from "./active-filter-chips"
 import {
   CollectionFiltersDialog,
   activeFilterCount,
+  defaultSaleStatus,
   filtersFromParams,
   filtersToParams,
   type CollectionFilters,
 } from "./collection-filters"
+import type { SaleSummary } from "@/lib/queries/sales"
 import { cn, formatCurrency } from "@/lib/utils"
 import { COLLECTION_RETURN_KEY, SHOW_COST_KEY } from "@/lib/preferences"
 import { KNOWN_COMPLICATIONS } from "@/lib/validations/watch"
@@ -40,6 +42,8 @@ interface CollectionViewProps {
   tierBands: TierBand[]
   /** watch_id → collection-guide name, for badging guide members. */
   guideNames?: Record<string, string>
+  /** watch_id → net proceeds + realized gain, for sold rows (§3.6). */
+  saleSummaries?: Record<string, SaleSummary>
 }
 
 type ViewMode = "table" | "gallery"
@@ -146,6 +150,23 @@ function matchesWishlistSource(
   return f.wishlistSource === "manual" ? !guide : guide === f.wishlistSource
 }
 
+/** Sale lifecycle (§3.6). "unsold" is everything you still hold, whatever
+ *  stage it is at; the three named stages narrow further. */
+function matchesSaleStatus(w: WatchWithCover, f: CollectionFilters): boolean {
+  switch (f.saleStatus) {
+    case "unsold":
+      return w.sale_status !== "sold"
+    case "candidate":
+      return w.sale_status === "candidate"
+    case "listed":
+      return w.sale_status === "listed"
+    case "sold":
+      return w.sale_status === "sold"
+    default:
+      return true
+  }
+}
+
 function applyFilters(
   watches: WatchWithCover[],
   f: CollectionFilters,
@@ -154,6 +175,7 @@ function applyFilters(
 ): WatchWithCover[] {
   return watches.filter((w) => {
     if (!matchesStatus(w, f)) return false
+    if (!matchesSaleStatus(w, f)) return false
     if (!matchesWishlistSource(w, f, guideNames)) return false
     if (f.brandId && w.brand_id !== f.brandId) return false
     if (f.movementId && w.movement_id !== f.movementId) return false
@@ -215,8 +237,16 @@ function sortValue(w: WatchWithCover, key: SortKey): string | number | null {
 }
 
 function sortWatches(watches: WatchWithCover[], key: SortKey, dir: SortDir): WatchWithCover[] {
-  if (key === "default") return watches
+  // Sold watches group to the bottom regardless of the active sort (§3.6) —
+  // they are history, and interleaving them would break every column's
+  // reading order. This runs even with no sort applied.
+  const soldLast = (a: WatchWithCover, b: WatchWithCover) =>
+    Number(a.sale_status === "sold") - Number(b.sale_status === "sold")
+
+  if (key === "default") return [...watches].sort(soldLast)
   return [...watches].sort((a, b) => {
+    const bySold = soldLast(a, b)
+    if (bySold !== 0) return bySold
     const va = sortValue(a, key)
     const vb = sortValue(b, key)
     // Push missing values to the bottom regardless of direction.
@@ -228,7 +258,7 @@ function sortWatches(watches: WatchWithCover[], key: SortKey, dir: SortDir): Wat
   })
 }
 
-export function CollectionView({ watches, categories, valuationMids, tierBands, guideNames }: CollectionViewProps) {
+export function CollectionView({ watches, categories, valuationMids, tierBands, guideNames, saleSummaries }: CollectionViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
@@ -246,7 +276,18 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   // (CLAUDE.md: a soft navigation re-renders without re-mounting, so seeded
   // useState would go stale). This is what makes a filtered collection
   // survive a trip out to a watch and back, and what makes it linkable.
-  const filters = useMemo(() => filtersFromParams(searchParams), [searchParams])
+  const rawFilters = useMemo(() => filtersFromParams(searchParams), [searchParams])
+  // An unset ?sale resolves against the view (§3.6): tiles browse what you
+  // still own, the table is the two-sided ledger. An explicit choice wins.
+  const viewDefaultSale = defaultSaleStatus(view)
+  const filters = useMemo(
+    () =>
+      rawFilters.saleStatus
+        ? rawFilters
+        : { ...rawFilters, saleStatus: viewDefaultSale },
+    [rawFilters, viewDefaultSale]
+  )
+
   const [sortKey, setSortKey] = useState<SortKey>("default")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
@@ -444,11 +485,19 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     [afterSearch, sortKey, sortDir]
   )
 
-  // Total value of the watches currently shown (filters + search applied).
+  // Sold watches are excluded from every money total (§3.6) — their value is
+  // realized, not current — but they still appear in the list and the counts.
+  const displayedUnsold = useMemo(
+    () => displayed.filter((w) => w.sale_status !== "sold"),
+    [displayed]
+  )
+  const soldShown = displayed.length - displayedUnsold.length
+
+  // Total cost of the watches currently shown (filters + search applied).
   // Only rendered when the per-device "show cost" preference is on.
   const displayedTotalCents = useMemo(
-    () => displayed.reduce((sum, w) => sum + (w.purchase_price_cents ?? 0), 0),
-    [displayed]
+    () => displayedUnsold.reduce((sum, w) => sum + (w.purchase_price_cents ?? 0), 0),
+    [displayedUnsold]
   )
 
   // In "Tracked Only" mode, also total the latest market values of the
@@ -456,9 +505,9 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   const displayedValueCents = useMemo(
     () =>
       filters.priceTracking === "tracked"
-        ? displayed.reduce((sum, w) => sum + (valuationMids[w.id] ?? 0), 0)
+        ? displayedUnsold.reduce((sum, w) => sum + (valuationMids[w.id] ?? 0), 0)
         : 0,
-    [displayed, filters.priceTracking, valuationMids]
+    [displayedUnsold, filters.priceTracking, valuationMids]
   )
   const gainPct =
     displayedValueCents > 0 && displayedTotalCents > 0
@@ -469,7 +518,11 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   // when it has something to hold — never an empty band, never a lone
   // floating button (FIXES §3). Columns is table view's only such control;
   // tiles view's sort and density sit in band 1.
-  const hasChips = activeFilterCount(filters) > 0
+  // The Filters badge counts only what the user explicitly chose, so the
+  // view's own default never reads as a filter they applied — but the chip row
+  // still states it, because a list that is quietly hiding rows must say so.
+  const hasChips =
+    activeFilterCount(rawFilters) > 0 || filters.saleStatus !== "all"
   const hasViewControls = view === "table"
 
   return (
@@ -479,6 +532,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
         <h1 className="font-display text-lg font-semibold tracking-tight">Collection</h1>
         <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
           <Stat label="Showing" value={`${displayed.length}/${ownershipTotal}`} />
+          {soldShown > 0 && <Stat label="Sold" value={String(soldShown)} />}
           {showCost && displayedTotalCents > 0 && (
             <Stat label="Cost" value={formatCurrency(displayedTotalCents, "USD", true)} />
           )}
@@ -522,6 +576,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           tiers={tierOptions}
           labels={labelOptions}
           categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+          viewDefaultSaleStatus={viewDefaultSale}
           countMatches={countMatches}
         />
 
@@ -676,9 +731,16 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           sortDir={sortDir}
           onSortChange={handleTableSort}
           chosenColumns={chosenColumns}
+          saleSummaries={saleSummaries}
         />
       ) : (
-        <GalleryGrid watches={displayed} itemSize={size} showCost={showCost} guideNames={guideNames} />
+        <GalleryGrid
+          watches={displayed}
+          itemSize={size}
+          showCost={showCost}
+          guideNames={guideNames}
+          saleSummaries={saleSummaries}
+        />
       )}
     </div>
   )

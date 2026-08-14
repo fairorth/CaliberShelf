@@ -8,7 +8,9 @@ import { caliberTypeLabels } from "@/lib/validations/movement"
 import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import { WishlistBadge } from "@/components/wishlist-badge"
 import { GuideBadge } from "@/components/guide-badge"
-import { formatCurrency } from "@/lib/utils"
+import { GainValue } from "@/components/gain-value"
+import { cn, formatCurrency } from "@/lib/utils"
+import type { SaleSummary } from "@/lib/queries/sales"
 import type { WatchWithCover } from "@/lib/types/watch"
 
 interface GalleryGridProps {
@@ -19,9 +21,11 @@ interface GalleryGridProps {
   showCost?: boolean
   /** watch_id → collection-guide name, for badging guide members. */
   guideNames?: Record<string, string>
+  /** watch_id → net proceeds + realized gain for sold watches (§3.6). */
+  saleSummaries?: Record<string, SaleSummary>
 }
 
-export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }: GalleryGridProps) {
+export function GalleryGrid({ watches, itemSize, showCost = false, guideNames, saleSummaries }: GalleryGridProps) {
   if (watches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -53,10 +57,16 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
         const caliberLine = watch.movement
           ? `${watch.movement.manufacturer ? watch.movement.manufacturer + " " : ""}${watch.movement.caliber_name}`.trim()
           : null
-        const priceLabel =
-          showCost && watch.purchase_price_cents !== null
-            ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
-            : null
+        // A sold tile shows what it returned, not what it cost (§3.6).
+        const sold = watch.sale_status === "sold"
+        const sale = sold ? saleSummaries?.[watch.id] : undefined
+        const priceLabel = !showCost
+          ? null
+          : sale
+            ? formatCurrency(sale.netProceedsCents)
+            : watch.purchase_price_cents !== null
+              ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
+              : null
         const showFooter = Boolean(caliberLine) || priceLabel !== null
         const wearCount = watch.wear_count ?? 0
 
@@ -70,7 +80,10 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
         <Link
           key={watch.id}
           href={`/watch/${watch.id}`}
-          className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/45 hover:shadow-[0_16px_30px_rgba(0,0,0,0.4)]"
+          className={cn(
+            "group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/45 hover:shadow-[0_16px_30px_rgba(0,0,0,0.4)]",
+            sold && "opacity-55 [&_img]:grayscale-[0.7]"
+          )}
         >
           {/* Photo first: 4:5 portrait from the tile's top edge (B6). */}
           <div className="relative aspect-[4/5] overflow-hidden border-b border-border/70 bg-surface-photo">
@@ -128,7 +141,14 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
             <p className="truncate text-sm font-medium leading-tight">
               {watch.brand.name}
             </p>
-            <p className="truncate text-xs text-muted-foreground">{watch.model}</p>
+            <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="truncate">{watch.model}</span>
+              {sold && (
+                <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 font-mono text-2xs uppercase tracking-wide text-muted-foreground ring-1 ring-border">
+                  Sold
+                </span>
+              )}
+            </p>
             {watch.box && (
               <p
                 title={`Stored in ${watch.box}`}
@@ -145,8 +165,13 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames }:
                   {[typeLabel, caliberLine].filter(Boolean).join(" · ")}
                 </span>
                 {priceLabel && (
-                  <span className="shrink-0 font-mono text-xs font-medium tabular-nums text-foreground">
-                    {priceLabel}
+                  <span className="flex shrink-0 flex-col items-end leading-tight">
+                    <span className="font-mono text-xs font-medium tabular-nums text-foreground">
+                      {priceLabel}
+                    </span>
+                    {sale && (
+                      <GainValue gain={sale.gain} wholeDollars className="text-2xs" />
+                    )}
                   </span>
                 )}
               </div>

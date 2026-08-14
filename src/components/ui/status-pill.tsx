@@ -12,17 +12,19 @@ import { cn } from "@/lib/utils"
  * - `solid`   brass fill — the strongest state, for something in motion
  * - `outline` brass outline, no fill — same family, one step quieter
  * - `neutral` muted surface — classification, not status
+ * - `warning` amber — staleness and aging, needs a look (not failure)
  * - `danger`  the one semantic exception, for failure only
  *
- * All four resolve from palette tokens, so they follow the theme and cannot
+ * All five resolve from palette tokens, so they follow the theme and cannot
  * drift out of the palette again.
  */
-export type StatusTone = "solid" | "outline" | "neutral" | "danger"
+export type StatusTone = "solid" | "outline" | "neutral" | "warning" | "danger"
 
 const TONES: Record<StatusTone, string> = {
   solid: "bg-brass/15 text-brass ring-1 ring-brass/35",
   outline: "text-brass ring-1 ring-brass/45",
   neutral: "bg-muted text-muted-foreground ring-1 ring-border",
+  warning: "bg-warning/12 text-warning ring-1 ring-warning/35",
   danger: "bg-destructive/12 text-destructive ring-1 ring-destructive/30",
 }
 

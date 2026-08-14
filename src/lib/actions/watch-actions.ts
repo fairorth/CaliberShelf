@@ -106,6 +106,10 @@ export async function createWatch(
         ? dollarsToCents(data.purchase_price)
         : null,
       purchase_currency: data.purchase_currency,
+      acq_shipping_cents: data.acq_shipping !== null ? dollarsToCents(data.acq_shipping) : null,
+      acq_tax_cents: data.acq_tax !== null ? dollarsToCents(data.acq_tax) : null,
+      acq_duty_cents: data.acq_duty !== null ? dollarsToCents(data.acq_duty) : null,
+      target_ask_cents: data.target_ask !== null ? dollarsToCents(data.target_ask) : null,
       notes: data.notes || null,
       box: data.box || null,
       is_coming_soon: data.is_coming_soon,
@@ -188,6 +192,10 @@ export async function updateWatch(
         ? dollarsToCents(data.purchase_price)
         : null,
       purchase_currency: data.purchase_currency,
+      acq_shipping_cents: data.acq_shipping !== null ? dollarsToCents(data.acq_shipping) : null,
+      acq_tax_cents: data.acq_tax !== null ? dollarsToCents(data.acq_tax) : null,
+      acq_duty_cents: data.acq_duty !== null ? dollarsToCents(data.acq_duty) : null,
+      target_ask_cents: data.target_ask !== null ? dollarsToCents(data.target_ask) : null,
       notes: data.notes || null,
       box: data.box || null,
       is_coming_soon: data.is_coming_soon,

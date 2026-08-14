@@ -232,8 +232,11 @@ export async function getWearStats(
     count,
   })).filter((item) => item.watch !== undefined)
 
-  // Never worn
-  const neverWorn = allWatches.filter((w) => !countByWatch.has(w.id))
+  // Never worn — a prompt to go wear something, so a sold watch has no place
+  // in it (§3.6). Its past wears still count in the totals above.
+  const neverWorn = allWatches.filter(
+    (w) => !countByWatch.has(w.id) && w.sale_status !== "sold"
+  )
 
   // Streaks: consecutive days with at least one wear
   const uniqueDates = [...new Set(logs.map((l) => l.worn_date))].sort().reverse()

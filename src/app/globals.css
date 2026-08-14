@@ -33,6 +33,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -83,6 +84,10 @@
   --accent: oklch(0.93 0.008 235);
   --accent-foreground: oklch(0.3 0.015 245);
   --destructive: oklch(0.55 0.2 27);
+  /* Warning amber — staleness, aging listings, missing data. A warning is not
+     an accent (design system §1): distinct from brass by chroma and lightness,
+     never used for actions or selection. */
+  --warning: oklch(0.6 0.13 70);
   --border: oklch(0.87 0.01 235);
   --input: oklch(0.89 0.01 235);
   /* Focus rings are brass — the single action accent (design system §1). */
@@ -110,7 +115,11 @@
   --surface-rail: oklch(0.955 0.006 235);
   --surface-photo: oklch(0.94 0.007 235);
   --chart-1: oklch(0.78 0.12 210);
-  --chart-2: oklch(0.66 0.16 222);
+  /* Positive delta / success — green in BOTH themes. Every text-chart-2 usage
+     is semantic (gains, passing scores, success ticks) and pairs against
+     --destructive red; the old blue here made a gain read as data, not good
+     news. Deep emerald: 4.5:1+ as 13px mono text on --card. */
+  --chart-2: oklch(0.51 0.12 166);
   --chart-3: oklch(0.58 0.18 235);
   --chart-4: oklch(0.5 0.16 248);
   --chart-5: oklch(0.44 0.14 258);
@@ -140,6 +149,8 @@
   --accent: #222a33;
   --accent-foreground: #eef1f5;
   --destructive: #c85046;
+  /* Warning amber (see :root note). Mock value from the Phase 5 hand-off. */
+  --warning: #d9a13a;
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 10%);
   /* Focus rings are brass — the single action accent (design system §1). */

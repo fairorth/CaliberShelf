@@ -29,7 +29,9 @@ import { labelColorMap } from "@/lib/validations/label"
 import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import { WishlistBadge } from "@/components/wishlist-badge"
 import { GuideBadge } from "@/components/guide-badge"
+import { GainValue } from "@/components/gain-value"
 import { cn, formatCurrency } from "@/lib/utils"
+import type { SaleSummary } from "@/lib/queries/sales"
 import type { WatchWithCover, Label } from "@/lib/types/watch"
 import type { LabelColor } from "@/lib/validations/label"
 
@@ -52,6 +54,8 @@ interface CollectionTableProps {
   /** Visible columns, owned by the collection view so the Columns menu can
    *  sit in the toolbar's second band rather than orphaned above the table. */
   chosenColumns: ColumnId[]
+  /** watch_id → net proceeds + realized gain for sold watches (§3.6). */
+  saleSummaries?: Record<string, SaleSummary>
 }
 
 function priceLabel(watch: WatchWithCover): string {
@@ -524,6 +528,7 @@ export function CollectionTable({
   sortDir,
   onSortChange,
   chosenColumns,
+  saleSummaries,
 }: CollectionTableProps) {
   const router = useRouter()
 
@@ -716,6 +721,9 @@ export function CollectionTable({
                   onClick={(e) => handleRowClick(e, watch.id)}
                   aria-selected={selectedRowId === watch.id}
                   className={cn(
+                    // Sold rows keep their place but recede (§3.6) — the row
+                    // is history, not inventory.
+                    watch.sale_status === "sold" && "opacity-55 [&_img]:grayscale-[0.7]",
                     // Quiet zebra (B4, FIXES §5): alternate rows step one
                     // notch off the page surface — --muted at 70% is ~2% L
                     // below --background in light mode, readable without
@@ -770,6 +778,21 @@ export function CollectionTable({
                     <TableCell className="overflow-hidden">
                       <span className="flex min-w-0 items-center gap-2">
                         <span className="truncate text-muted-foreground">{watch.model}</span>
+                        {watch.sale_status === "sold" && (
+                          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 align-middle font-mono text-2xs uppercase tracking-wide text-muted-foreground ring-1 ring-border">
+                            Sold
+                          </span>
+                        )}
+                        {watch.sale_status === "listed" && (
+                          <span className="shrink-0 rounded-full px-2 py-0.5 align-middle font-mono text-2xs uppercase tracking-wide text-brass ring-1 ring-brass/45">
+                            Listed
+                          </span>
+                        )}
+                        {watch.sale_status === "candidate" && (
+                          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 align-middle font-mono text-2xs uppercase tracking-wide text-muted-foreground ring-1 ring-border">
+                            Candidate
+                          </span>
+                        )}
                         {watch.is_coming_soon && <ComingSoonBadge className="shrink-0 align-middle" />}
                         {watch.is_wishlist && <WishlistBadge className="shrink-0 align-middle" />}
                         {watch.is_wishlist && guideNames?.[watch.id] && (
@@ -825,7 +848,22 @@ export function CollectionTable({
                   )}
                   {isVisible("price") && (
                     <TableCell className="text-right font-mono text-xs font-medium tabular-nums text-foreground">
-                      {priceLabel(watch)}
+                      {/* A sold row shows what it actually returned, with the
+                          realized gain beneath — not what it once cost (§3.6). */}
+                      {watch.sale_status === "sold" && saleSummaries?.[watch.id] ? (
+                        <span className="flex flex-col items-end leading-tight">
+                          <span>
+                            {formatCurrency(saleSummaries[watch.id].netProceedsCents)}
+                          </span>
+                          <GainValue
+                            gain={saleSummaries[watch.id].gain}
+                            wholeDollars
+                            className="text-2xs font-normal"
+                          />
+                        </span>
+                      ) : (
+                        priceLabel(watch)
+                      )}
                     </TableCell>
                   )}
                 </TableRow>
@@ -851,7 +889,10 @@ export function CollectionTable({
         {sorted.map((watch) => (
           <div
             key={watch.id}
-            className="flex items-center gap-3 rounded-lg border p-3 transition-colors"
+            className={cn(
+              "flex items-center gap-3 rounded-lg border p-3 transition-colors",
+              watch.sale_status === "sold" && "opacity-55 [&_img]:grayscale-[0.7]"
+            )}
           >
             <Link
               href={`/watch/${watch.id}`}
@@ -879,6 +920,11 @@ export function CollectionTable({
                 )}
                 <p className="text-sm font-semibold leading-tight">
                   {watch.brand.name}
+                  {watch.sale_status === "sold" && (
+                    <span className="ml-2 rounded-full bg-muted px-2 py-0.5 align-middle font-mono text-2xs uppercase tracking-wide text-muted-foreground ring-1 ring-border">
+                      Sold
+                    </span>
+                  )}
                   {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
                   {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
                   {watch.is_wishlist && guideNames?.[watch.id] && (
@@ -900,9 +946,19 @@ export function CollectionTable({
                 {watch.box && (
                   <p className="flex items-center gap-1 truncate text-xs text-muted-foreground"><Archive className="h-3 w-3 shrink-0" aria-hidden="true" /> {watch.box}</p>
                 )}
-                {showCost && (
-                  <p className="text-sm font-medium tabular-nums">{priceLabel(watch)}</p>
-                )}
+                {showCost &&
+                  (watch.sale_status === "sold" && saleSummaries?.[watch.id] ? (
+                    <p className="flex items-baseline gap-2 text-sm font-medium tabular-nums">
+                      {formatCurrency(saleSummaries[watch.id].netProceedsCents)}
+                      <GainValue
+                        gain={saleSummaries[watch.id].gain}
+                        wholeDollars
+                        className="text-xs font-normal"
+                      />
+                    </p>
+                  ) : (
+                    <p className="text-sm font-medium tabular-nums">{priceLabel(watch)}</p>
+                  ))}
                 {watch.movement && (
                   <p className="truncate text-xs text-muted-foreground">
                     {watch.movement.caliber_type ? (caliberTypeLabels[watch.movement.caliber_type] ?? watch.movement.caliber_type) : "—"}

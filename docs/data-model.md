@@ -32,6 +32,9 @@ erDiagram
   watches ||--o{ wear_logs : "worn on"
   watches ||--o{ timegrapher_runs : "measured by"
   watches ||--o{ watch_valuations : "valued by agent"
+  watches ||--o{ watch_listings : "listed for sale"
+  watches ||--o| watch_sales : "sold once"
+  watch_listings ||--o| watch_sales : "closed by"
   watches ||--o{ wishlist_deals : "1 deal row (wish-list)"
   watches ||--o{ watch_labels : tagged
   labels ||--o{ watch_labels : tags
@@ -57,11 +60,13 @@ mirror — they are **not** foreign-keyed to the user's `brands`/`watches`; the
 | `categories` | owner | app | display grouping (renamed from display_cases); `name`, `color` |
 | `labels` | owner | app | free tags; `name`, `color` |
 | `watch_labels` | via watch | app | junction watch↔label (composite PK) |
-| `watches` | owner | app + `find-references` (ref) | the core record; specs, `rotating_bezel` (00029), `box` (00031, free-text storage location), `is_wishlist`, `is_coming_soon`, `price_check_enabled`, `reference_unverified` |
+| `watches` | owner | app + `find-references` (ref) | the core record; specs, `rotating_bezel` (00029), `box` (00031, free-text storage location), `is_wishlist`, `is_coming_soon`, `price_check_enabled`, `reference_unverified`; Phase 5 (00043) adds `sale_status`, `candidate_since`/`candidate_note`, `target_ask_cents`, the three `acq_*_cents` acquisition costs, and **generated** `cost_basis_cents` |
 | `watch_photos` | owner | app | storage paths + `is_cover`, `thumb_path` |
 | `wear_logs` | owner | app | one row per wear-day; `worn_date` |
 | `timegrapher_runs` | owner | app | accuracy measurements; rate/amplitude/beat error |
-| `watch_valuations` | owner | `price-check` | time series of market-value estimates; `value_mid_cents`, `confidence`, `datapoints`, `sources`, `agent_model` |
+| `watch_valuations` | owner | `price-check` + the app | time series of market-value estimates; `value_mid_cents`, `confidence`, `datapoints`, `sources`, `agent_model`; `source` = `agent`\|`manual` + `entered_note` (00046) — manual rows are yours and never enter portfolio totals |
+| `watch_listings` | owner | app | one row per time a watch goes on the market (00044); `venue` enum, `ask_price_cents`, `listed_at`, `status` (`active`\|`sold`\|`withdrawn`). Partial unique index allows at most one `active` row per watch — days-on-market and price-drop history live here |
+| `watch_sales` | owner | app | the sale record (00045), `UNIQUE (watch_id)` — the linear lifecycle made physical; sale price, denormalized venue, buyer/payment/tracking, four fee columns, and **generated** `net_proceeds_cents` |
 | `wishlist_deals` | owner | `deal-check` | one current row per wish-list watch; `availability`, `retail_price_cents`; `best_used_*` reserved for Phase B |
 | `inspiration_images` | owner | app | Inspiration Gallery (00039): admired watch photography as a photo-lab mood board; storage under `{user_id}/inspiration/`, note ≤80 chars |
 | `watch_image_scores` | owner | `photo-score` | photo-scoring agent (00040): one row per image per watch keyed by `content_hash`; CV metrics (dial-ROI sharpness/brightness/glare, phash, dup grouping), stack collapse (`stack_seq`/`stack_role`), Track A card verdicts (`shot_card`, `card_pass`), Track B rubric + hero columns; covers local capture-folder frames (nullable `watch_photo_id` links uploads later) |
@@ -74,6 +79,37 @@ mirror — they are **not** foreign-keyed to the user's `brands`/`watches`; the
 | `chronoscout_sync_state` | global | `chronoscout-sync` | single row; last sync times, counts, `license` |
 | `agent_runs` | operational | all agents via `scripts/lib/agent-run.mjs` (+ spec-fetch route) | one row per agent invocation; duration, cost (micros), item counts, tokens |
 | `agent_run_items` | operational | agents (audit trail) | per-entity detail for a run; `action`, `field`, `detail`, `confidence`, `sources` |
+
+## The sale lifecycle (Phase 5)
+
+Linear, one status per watch, held in `watches.sale_status`:
+`owned → candidate → listed → sold`. **Transitions are enforced in
+`src/lib/actions/sales.ts`**, deliberately not by a DB CHECK — the app owns the
+lifecycle and a constraint here would block backfills. The permitted moves are:
+
+```
+owned     → candidate | listed
+candidate → listed | owned            (owned = "changed my mind")
+listed    → sold | candidate | owned  (back = withdrawn, listing row closed)
+sold      → owned                     (undo: deletes the sale row)
+```
+
+Two money columns are **`GENERATED ALWAYS … STORED`** and must never be
+re-derived in a query or a component:
+
+- `watches.cost_basis_cents` = purchase price + shipping + tax + duty (nulls
+  as 0). Where `purchase_price_cents` is null the basis is 0 and **every gain
+  figure must render `—`**, never 0 and never a percentage.
+- `watch_sales.net_proceeds_cents` = sale price − venue fee − processing fee
+  − shipping − insurance.
+
+All gain arithmetic lives in `src/lib/queries/gain.ts` (pure, client-safe) and
+is re-exported by `queries/sales.ts` and `queries/portfolio.ts`; the
+`<GainValue>` component is the only place a number takes a colour from its
+sign. Sold watches stay in the collection (dimmed, `SOLD` pill, price cell
+shows net proceeds) and are excluded from current-value totals, price-check
+runs, coverage targets and never-worn prompts — but stay in counts, search and
+every report.
 
 ## The three classification axes
 

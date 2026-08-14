@@ -1,0 +1,18 @@
+Implement Phase 5 (Watches as Investments) from design_handoff_v2_design_remediation/07-phase-5-sales-investment.md. Read that spec in full first, plus DECISIONS.md, 00-design-system.md, docs/data-model.md, docs/price-check.md, and scripts/price-check.mjs before writing anything.
+
+Work in the numbered order of Part 5 and stop after each numbered step so I can review — do not run the whole thing end to end.
+
+Non-negotiables:
+
+Migrations 00043–00047 exactly as specified. cost_basis_cents and net_proceeds_cents stay generated columns; nothing anywhere re-derives them.
+All gain math lives in src/lib/queries/sales.ts and portfolio.ts. No component computes a gain inline.
+Status transitions are enforced in src/lib/actions/sales.ts against the transition table in §2, not in the DB.
+Gain/loss uses --chart-2 / --destructive; every other number is --foreground, mono, tabular. No colour literals — that was finding V3.
+Step 5 extracts the per-watch research call from price-check.mjs into scripts/lib/price-research.mjs so the API route and CLI share one implementation. Do not copy the prompt.
+No npm run … in any UI copy (V9).
+Verify every new screen in light mode.
+Screens: match screens/TenTenLoupe Sales Screens.dc.html for layout, hierarchy, and label wording — it's the spec's visual half.
+
+Ask me before inventing any field, status, venue, or report not in the spec. The roadmap section at the end lists things deliberately excluded — leave them out.
+
+When done with each step, report against the Exit checklist items that step touches.
