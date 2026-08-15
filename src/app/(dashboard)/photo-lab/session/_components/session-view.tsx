@@ -239,8 +239,8 @@ export function SessionView({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No Watch Images folder configured — set it in Config → Settings, then run{" "}
-              <code className="font-mono text-xs">npm run sync-watch-folders</code>.
+              No Watch Images folder configured — set it in Config → Settings, then
+              run the folder sync on the capture machine (docs/photo-lab.md).
             </p>
           )}
         </div>
@@ -252,8 +252,8 @@ export function SessionView({
           </p>
           {frames.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
-              Nothing scored yet for this watch — shoot, then run{" "}
-              <code className="font-mono text-xs">npm run photo-score</code>.
+              Nothing scored yet for this watch — shoot, then run the photo-score
+              pass on the capture machine (docs/photo-lab.md).
             </p>
           ) : (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">

@@ -107,9 +107,8 @@ export default async function AgentReviewPage() {
           <CardContent className="pt-6 text-sm text-muted-foreground">
             No agent runs recorded yet. Apply migration{" "}
             <code className="font-mono text-xs">00028_create_agent_runs.sql</code>, then
-            run an agent (or{" "}
-            <code className="font-mono text-xs">npm run backfill-agent-runs</code> to import
-            past valuation runs).
+            run an agent — or import past valuation runs with the backfill script
+            (docs/agents.md).
           </CardContent>
         </Card>
       ) : (

@@ -138,7 +138,7 @@ export function ReviewSession({ frames, lastRun }: PhotoLabReview) {
       <div className="rounded-xl border border-dashed border-border py-16 text-center">
         <p className="text-sm text-muted-foreground">
           {frames.length === 0
-            ? "No scored frames yet — run npm run photo-score after a session."
+            ? "No scored frames yet — run the photo-score pass after a session."
             : "Every frame is reviewed. Run the scorer after the next session."}
         </p>
       </div>
