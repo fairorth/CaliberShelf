@@ -1,0 +1,52 @@
+You are producing the illustrated PDF edition of a Master Collection Guide:
+
+  A TRIO OF SWISS ARTISANS — The Idea, the Engine and the Cathedral
+  Horological Master Collection Series | PART II | 2026 Edition | v2.0
+  Breguet x Jaeger-LeCoultre x Vacheron Constantin
+
+I have attached:
+1. "Swiss Artisans v2.0 draft.md" — the COMPLETE content: thesis, timeline
+   spine, sixteen chapters, foundations, Canon, Alternates, cuts, price
+   overlay, photography index. This is the single source of truth.
+2. Two image-source files (JLC-VC and Breguet) — the photography credits
+   and provenance for every card.
+3. The card photographs themselves, filenames matching the subjects.
+
+RULES — read before designing anything:
+
+- The draft's substance is FINAL. Every reference number, calibre, date,
+  price band, confidence grade and TBV warning in it was produced by an
+  adversarial market review and a 31-claim fact-check. Reproduce them
+  faithfully. Do not invent, improve, round, update or "correct" any fact
+  or number — any change you make can only degrade accuracy. Where the
+  draft flags something as TBV, low-confidence, or ask-derived, that flag
+  MUST survive into print.
+- Voice: the draft's own — informative, exciting, a collection that
+  teaches. Every collector card LEADS with its "What it teaches" text;
+  specs and price come after. Price is an overlay, never the headline.
+- Structure (house style of the series):
+    · Cover page (series/part/edition/version banner)
+    · The thesis page — the Idea/Engine/Cathedral argument + the
+      chronometry-covenant triangle (1815 -> 1907 -> 2015)
+    · The timeline spine page — the full 1755-2026 arc with chapter markers
+    · The hunt list — acquisition order with VALUE / CORE / SPLURGE tiers
+      and the budget architecture
+    · Collector cards, two per page, embedded photography credited
+      on-card. Card banners as the draft states them: TARGET · OWNED /
+      FOUNDATION · STRETCH · IN NEGOTIATION · OFFERS OUT · CANON ·
+      ALTERNATE. The Tradition 7097 is the cornerstone card — owner-supplied
+      photograph, give it the frontispiece treatment.
+    · Canon & Alternates pages · "What fell away, and why"
+    · Sources & Methodology page — state plainly: bands sold-validated
+      2026-08-13/14 with channel, condition and as-of per card; two flagged
+      exceptions (Classique 7147 ask-derived; Roth-era low-confidence,
+      fresh comps mandatory before purchase)
+    · Photography index with full credits
+- Page footer throughout: "Horological Master Collection Series | PART II |
+  A Trio of Swiss Artisans | Aug 2026 v2.0 | Verify market, originality and
+  service before purchase"
+- Layout creativity is welcome; factual creativity is forbidden. If you
+  believe something in the draft needs changing, ASK — do not silently fix.
+
+Start by proposing the page plan (page count and what goes where), wait for
+my approval, then produce the document.
