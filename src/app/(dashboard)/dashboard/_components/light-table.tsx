@@ -216,6 +216,17 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
     setCanHover(window.matchMedia("(hover: hover)").matches)
   }, [])
 
+  // Supabase generates a 1080px render on first request for a given frame; a
+  // cold transform occasionally times out, and an eager image that fails
+  // paints the browser's broken-image box with the alt text across the stage.
+  // One delayed retry turns that into a hiccup, and a second failure degrades
+  // to a quiet field rather than a wall of alt text. Keyed by url, so moving
+  // to another frame resets the count without an effect.
+  const [frameLoad, setFrameLoad] = useState<{ url: string; failures: number }>({
+    url: "",
+    failures: 0,
+  })
+
   // Loupe position: px offsets for placement, fractional for background-position.
   const [loupe, setLoupe] = useState<{
     x: number
@@ -331,6 +342,7 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
     )
   }
 
+  const frameFailures = frameLoad.url === frame.url ? frameLoad.failures : 0
   const watchName = `${watch.brandName} ${watch.model}`.trim()
   const caption = `${frame.angle ? frame.angle.toUpperCase() : "UNTAGGED FRAME"} · ${watchName.toUpperCase()}`
   const scoreLabel =
@@ -472,18 +484,38 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
             }
             onPointerLeave={loupeEnabled ? () => setLoupe(null) : undefined}
           >
-            <Image
-              src={frame.url}
-              alt={caption}
-              fill
-              unoptimized
-              // The selected frame is the page's LCP element and the whole
-              // point of the screen — it must never be lazy (a hidden or
-              // not-yet-painted tab defers lazy images indefinitely).
-              priority
-              sizes="480px"
-              className="object-contain"
-            />
+            {frameFailures >= 2 ? (
+              <span className="absolute inset-0 flex items-center justify-center px-6 text-center text-xs text-muted-foreground">
+                This frame didn&rsquo;t load. It is still being prepared — the
+                next visit will have it.
+              </span>
+            ) : (
+              <Image
+                // The retry remounts the element, re-requesting the same
+                // signed URL once the transform has had time to finish.
+                key={`${frame.url}#${frameFailures}`}
+                src={frame.url}
+                alt={caption}
+                fill
+                unoptimized
+                // The selected frame is the page's LCP element and the whole
+                // point of the screen — it must never be lazy (a hidden or
+                // not-yet-painted tab defers lazy images indefinitely).
+                priority
+                sizes="480px"
+                className="object-contain"
+                onError={() => {
+                  const url = frame.url
+                  setTimeout(() => {
+                    setFrameLoad((prev) =>
+                      prev.url === url
+                        ? { url, failures: prev.failures + 1 }
+                        : { url, failures: 1 }
+                    )
+                  }, 1200)
+                }}
+              />
+            )}
             {/* Caption scrim — the caption must survive a bright frame. */}
             <div
               aria-hidden
