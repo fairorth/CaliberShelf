@@ -33,37 +33,59 @@ for unlinked entries. `UNIQUE (guide_id, position)` makes seeders idempotent.
 ## 1. Creating a new guide from scratch
 
 Guides are *authored* in the claude.ai chat surface (long-form research +
-illustrated PDF output is its strength), then *ingested* here. The format that
-worked, refined by the adversarial review's findings:
+illustrated PDF output is its strength), then *ingested* here. The format
+below was refined twice: by the GS adversarial review, and by the Aug 2026
+Swiss Artisans lesson — the guide that was priced rigorously and told no
+story, and had to be rebuilt narrative-first as "The Engine and the
+Cathedral."
 
-1. **Start with the thesis, and make it singular.** The review's sharpest
-   architecture finding: "design + precision + technology" is three theses
-   stapled together, and a multi-axis thesis has no stopping rule — that's how
-   a 12-watch idea becomes a 22-watch list. State ONE story the collection
-   tells, and let the owned foundation pieces suggest it (they usually already
-   sketch the real thesis).
-2. **Chapters, not models.** Each entry must answer "what chapter does this
-   add?" One watch per chapter; if two entries tell the same chapter, the
-   guide has padding. A good sizing test from the review: "one watch per
-   engine/era" style formulations expose duplicates instantly.
-3. **Per-entry card fields** (these map 1:1 to `guide_entries` columns):
-   title · reference · caliber · dates · historical role (2 sentences max) ·
-   recommended variant (originality criteria, what to avoid) · target band
-   (LOW–HIGH USD) · priority 0–10. Group into era/chapter sections; multi-brand
-   guides use the maison as the chapter and carry a per-entry brand.
-4. **Price bands: solds, not asks.** The single biggest defect the review
-   found (15 of 22 bands wrong-ish): bands built from Western dealer asking
-   prices. Weight sold transactions; note the JDM channel runs 20–40% under
-   Western asks on vintage Japanese refs. Mark thin-data bands as assumptions.
-5. **Separate the Canon from the plan.** Unbuyable-in-practice entries
+**The prime directive: the story is the product.** A Master Guide exists to
+inform, explain and *excite* — it should read like a talk you'd give to
+watch-loving friends, teaching them something they don't know. Price is the
+overlay, never the spine. If a draft leads with bands and buries the
+horology, it has failed regardless of how accurate the bands are.
+
+1. **Start with the thesis — singular, and story-shaped.** One story the
+   collection tells; the owned foundations usually already sketch it. A
+   multi-axis thesis ("design + precision + technology") has no stopping
+   rule — that's how a 12-watch idea becomes a 22-watch list. Test: could
+   the thesis be the title of a talk? Does it exclude most of the catalog?
+   The best theses are TRUE and under-told (the JLC×VC ébauche relationship
+   beat "two temperaments" because it's documented history almost nobody
+   knows).
+2. **Build the timeline spine before choosing a single watch.** Eras,
+   turning points, crossings, rivalries — the historical structure comes
+   first, and watches are then cast to *play the chapters*. Place the owned
+   pieces on the spine immediately: a guide is a collection plan, and the
+   strongest endings are owned pieces that close a circle a chapter opened
+   (Futurematic 1951 ↔ Master Control 2026).
+3. **Chapters, not models — and every card leads with what it teaches.**
+   One watch per chapter; if two entries tell the same chapter, one is
+   padding (keep it as a named *alternate* inside the chapter, not a second
+   slot). The card's first sentences are the lesson, not the spec sheet.
+4. **Per-entry card fields** (map 1:1 to `guide_entries` columns):
+   title · reference · caliber · dates · what-it-teaches/historical role
+   (leads the card) · recommended variant (originality criteria, what to
+   avoid) · target band (LOW–HIGH USD) · priority 0–10. Group into
+   era/chapter sections; multi-brand guides use the maison as the chapter
+   and carry a per-entry brand.
+5. **Price is the overlay, applied last — solds, not asks.** Attach bands
+   only after the spine stands (bands from sold transactions; JDM runs
+   20–40% under Western asks on vintage; thin-data bands are marked as
+   assumptions). Then declare the **budget architecture** explicitly: a
+   rough total, plus a VALUE / CORE / SPLURGE designation per chapter —
+   splurge where the object IS the argument, hunt value where the story is
+   cheap. v1.0 Swiss drifted to $241k because no budget was ever stated.
+6. **Separate the Canon from the plan.** Unbuyable-in-practice entries
    (allocation-gated, LE-20 auction-only, six-figure) corrupt the priority
    scale — the GS guide had 84% of its midpoint budget in four watches that
-   will never be bought. Keep them in a "Canon" appendix or mark priority
-   honestly low; don't let them sit as acquisition rows.
-6. **Structural pages:** an architecture/spine overview (owned + gaps),
-   a ranked "high-value gaps to fill first" list, and a sources/methodology
-   appendix separating documented facts from assumptions.
-7. **Version the document** (v1.0, v1.1 …) and end with the owned pieces
+   will never be bought. Canon appendix + a one-line promotion rule.
+7. **Structural pages:** the timeline spine (owned + gaps on one arc), a
+   ranked "buy first" list that follows the *story logic* not just price,
+   and a sources/methodology appendix separating documented facts from
+   assumptions (mark unverified narrative claims — an exciting story that
+   turns out false costs more than a dull one).
+8. **Version the document** (v1.0, v1.1 …) and end with the owned pieces
    integrated into the same sequence — a guide is a *collection* plan, not a
    wish list, so owned foundations belong in it.
 
@@ -125,25 +147,120 @@ the archived PDF; images are private, RLS-protected reference material.
 
 Run periodically (annually, or before a buying campaign). The August 2026 GS
 review (`docs/Watch Guides/Grand Seiko Review 2026-08.md`) is the reference
-output. Method: **7 agents** —
+output for *format and tone* — but it predates the method hardening below
+(added Aug 2026 after a critical audit of that run), so treat its process as
+a floor, not the spec. The stages:
 
-- **5 market-pricing agents, one per venue class**: eBay sold listings ·
-  WatchCharts · Chrono24 · Yahoo Japan closed auctions · auction houses +
-  r/WatchExchange. Each validates every entry's band independently,
-  prioritizing SOLD transactions over askings.
-- **2 adversarial critics**, briefed to attack: one on **collection
-  architecture** (does the list obey its own thesis? what's padding? what
-  chapters are missing?), one on **investment/collectability** (entry points,
-  liquidity, J-curves, allocation reality).
-- **Synthesis** merges them into: executive verdict · per-entry band table
-  with verdicts (✓ confirmed · ▲ too low · ▼ too high · ↔ re-shape · ?
-  unverifiable) + confidence + evidence · missing chapters ranked by damage ·
-  cut list · corrections to apply.
+### 3.1 Evidence collection — 5 venue agents as COMP COLLECTORS, not judges
+
+One agent per venue class. Each returns **structured comp rows** — entry # ·
+venue · date · **SOLD or ASK** tag · price + currency · condition/completeness
+note · URL — *not* a band opinion. Hard rules: a number without a live,
+fetched citation is discarded (**no prices from model memory** — with thin
+data, seven same-model agents converge on the same training anchor and the
+convergence masquerades as confirmation); every row carries its SOLD/ASK tag.
+Venue briefs must match what each venue can actually show:
+
+- **eBay** — sold listings where visible; where sold data is gated, report
+  the gap, never fill it from memory.
+- **WatchCharts** — index values and private-sale averages; note paywall
+  limits explicitly.
+- **Chrono24** — **asks only, structurally.** Brief: ask distribution,
+  listing count (supply depth), staleness/time-on-market signals. Asks are
+  ceilings and liquidity data, never comps.
+- **Yahoo Japan closed auctions** (via aggregators — aucfree/aucview class) —
+  hammer prices; note coverage gaps.
+- **Auction houses + r/WatchExchange** — realized prices, premium-included
+  status noted per row.
+
+### 3.2 Synthesis computes the bands — from pooled evidence, explicit rules
+
+Bands are computed from the pooled comp rows, not by merging five opinions:
+
+- Sold-weighted; asks bound the ceiling only.
+- **Normalize to landed USD**: hammer + buyer's premium/proxy fees + shipping
+  + import, with the FX rate used stamped in the report header.
+- **Every band states its assumed channel and condition tier** (e.g., "sharp
+  original, JDM, landed") — a single number spanning a 20–40% channel spread
+  is ill-defined. Vintage entries also state the typical polished/redialed
+  discount, since impaired examples are most of the supply.
+- **Disagreement rule**: venues apart by >~20% is a signal, not noise —
+  almost always a channel or condition mismatch. Investigate; never average.
+- **Verdict tolerances** (so two reviews are comparable): ✓ = sold-weighted
+  midpoint within ±12–15% of the guide midpoint AND the sold median falls
+  inside the guide band · ▲/▼ = beyond tolerance · ↔ = shape wrong (floor/top
+  need re-drawing even if the midpoint passes) · ? = insufficient data.
+- **Confidence tiers, defined by evidence**: high = ≥5 solds within 12
+  months · med = 2–4 solds, or solds older than 12 months · low = ask-only
+  or n≤1. Never assign confidence by feel.
+- Every band carries an **as-of date**. (As-of lives in the report and, on
+  correction, in the entry's notes; a `band_validated_at` column is a future
+  option if drift becomes a recurring problem.)
+
+### 3.3 Three adversarial critics, briefed to attack
+
+The **horological-narrative critic comes first and is co-equal with the
+pricing stages** (added Aug 2026 after the Swiss review over-indexed on
+pricing): does the guide teach? Is the story TRUE — every historical claim
+checked for the excitement it's carrying? Does each card lead with what the
+watch teaches, and does the timeline have real structure, or is it a shopping
+list wearing a chronology? What's the strongest story the material offers
+that the guide missed (the Swiss review buried its best finding — the
+ébauche-house relationship — in one flagged paragraph)? Then one critic on
+**collection architecture** (does the list obey its own thesis? what's
+padding? what chapters are missing?), and one on **investment/collectability**
+(entry points, liquidity, J-curves, allocation reality, exit paths). Hostile
+briefs — the job is to find what's wrong, not to grade generously.
+
+### 3.4 Fact check
+
+A cheap dedicated pass validates every entry's reference number, caliber,
+dates, production claims, and recommended-variant claims against
+authoritative sources. A wrong reference is worse than a wrong band — it
+means hunting (and authenticating against) the wrong watch.
+
+### 3.5 Validation tail — the review must survive its own method
+
+Two rules, both closing gaps the GS run demonstrated:
+
+- **Critic-proposed additions get priced properly.** Any entry a critic
+  proposes adding runs through §3.1–3.2 (sold-weighted, cited) before it
+  enters the corrections. A critic-invented band never ships — in the GS run
+  the most actionable outputs (new hunt-list entries) carried exactly the
+  unvalidated ask-based bands the review exists to eliminate.
+- **Material findings are verified before corrections are final.** Band moves
+  beyond tolerance, cuts, and additions each get an independent refute-style
+  check against the evidence appendix. A plausible-but-wrong finding applied
+  to `guide_entries` corrupts buying data permanently.
+
+### 3.6 Priority re-base
+
+Priorities get the same rigor as bands: re-score as **chapter weight ×
+buyability × entry-point timing**, force-ranked so the median lands ≈5, one
+line of justification per entry. (The GS guide had 17 of 22 entries ≥6.5 —
+a scale that ranks nothing.)
+
+### 3.7 The report
+
+**Lead with the story verdict, not the band table.** The executive section
+answers, in order: is the story true, is it the best story available, does
+the collection teach — and only then, is the money right. Then: narrative
+verdicts per chapter · missing chapters ranked by damage · cut list (each cut
+justified narratively, not just financially — "the band was wrong" doesn't
+survive the owner's second-guessing; "it has no chapter" does) · per-entry
+band table (verdict + confidence + channel/condition assumption + as-of) ·
+corrections to apply · **evidence appendix** — the full comp-row table with
+URLs. The run journal dies with the session; the report file is the only
+place the evidence survives, and both next year's diff and every §4 listing
+evaluation depend on it. Evidence-retrieval war stories (blocked venues,
+quota exhaustion) belong in a caveats appendix, not the headline sections —
+the reader is a collector, not a scraping engineer.
 
 Findings feed back in two directions: **data** (update `guide_entries` bands/
 priorities/status — a small update script or direct SQL) and **document** (the
-next PDF version incorporates the architecture verdicts). File the review
-report next to the PDFs.
+next PDF version incorporates the architecture verdicts). After the data
+update, append a **"corrections applied" checklist** to the review file so
+database and document can't silently drift. File the report next to the PDFs.
 
 ## 4. Evaluating a found listing against a guide
 
@@ -169,11 +286,14 @@ Structure every evaluation as:
    own rule is that a cheaper polished/redialed example is the more expensive
    mistake.
 4. **Value** — three numbers side by side: the guide band, the review's
-   validated band if one exists (§3 — prefer it; it's sold-weighted), and
-   fresh comps if the market may have moved (WebSearch: sold listings first —
-   eBay solds, WatchCharts, Yahoo JP closed; asks are ceilings, not comps).
-   Adjust for the specific example's condition/completeness (full set,
-   papers, service records).
+   validated band if one exists (§3 — prefer it; it's sold-weighted; check
+   its channel/condition assumption matches this listing), and fresh comps
+   (WebSearch: sold listings first — eBay solds, WatchCharts, Yahoo JP
+   closed; asks are ceilings, not comps). Fresh comps are **mandatory, not
+   optional, for any Buy or Negotiate verdict when the latest review is
+   older than ~6 months** — bands drift within a year (the GS V.F.A. moved
+   past its band in under one). Adjust for the specific example's
+   condition/completeness (full set, papers, service records).
 5. **Verdict** — a compact block:
    - **Fit**: which entry/chapter, variant delta, priority context
    - **Condition**: grade + the caveats

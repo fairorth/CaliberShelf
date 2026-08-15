@@ -10,14 +10,27 @@ it, walk me through your proposed entry list (chapters, bands, priorities,
 foundation links) before seeding, then follow §2 of the methodology end-to-end
 including card images.
 
-(b) REVIEW the "<NAME>" guide — run the §3 adversarial method (5
-market-pricing agents by venue, solds over asks; 2 critics: architecture +
-investment), produce the review report in docs/Watch Guides/, and propose the
-band/priority corrections before applying anything.
+(b) REVIEW the "<NAME>" guide — run the §3 adversarial method, and remember
+the guide is narrative-first: the story verdict leads the report, the band
+table follows. 5 venue agents as comp COLLECTORS (structured rows, SOLD/ASK
+tagged, URL + date, no prices from model memory); synthesis computes bands
+from pooled evidence (landed USD, channel + condition stated, defined verdict
+tolerances and confidence tiers); 3 hostile critics (horological narrative —
+does it teach, is the story true, what better story was missed — plus
+architecture + investment); a fact-check pass on refs/calibers/dates; then
+the validation tail — price any critic-proposed additions properly and
+refute-check material findings before corrections. Produce the review report
+WITH evidence appendix in docs/Watch Guides/ (retrieval war stories go in a
+caveats appendix, not the headline), re-base priorities to a ~5 median, and
+propose the band/priority corrections before applying anything.
 
-(c) CREATE a new guide with me on <TOPIC> — interview me §1-style (thesis
-first, one story; chapters not models; solds not asks; Canon separated from
-plan), then draft the card list for my review.
+(c) CREATE a new guide with me on <TOPIC> — §1-style and narrative-first:
+interview me for the story before any watch list (thesis singular and
+story-shaped — could it title a talk?; timeline spine with eras/crossings
+BEFORE casting watches; owned pieces placed on the spine first; every card
+leads with what it teaches). Price is the overlay, applied last: solds not
+asks, then a declared budget architecture with VALUE/CORE/SPLURGE per
+chapter. Canon separated from plan. Then draft the card list for my review.
 
 House rules apply: migrations are run BY ME in the SQL Editor (tell me the
 file), dry-run before any live seeding, and remind me to git push when done.
