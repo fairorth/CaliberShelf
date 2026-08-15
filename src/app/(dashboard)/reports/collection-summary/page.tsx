@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getWatches } from "@/lib/queries/watches"
+import { getPortfolioOverview } from "@/lib/queries/portfolio"
+import { GainValue } from "@/components/gain-value"
 import { formatCurrency } from "@/lib/utils"
 
 export const metadata: Metadata = {
@@ -20,7 +22,7 @@ function SummaryRow({
   hint,
 }: {
   label: string
-  value: string
+  value: React.ReactNode
   hint?: string
 }) {
   return (
@@ -35,20 +37,22 @@ function SummaryRow({
 }
 
 export default async function CollectionSummaryPage() {
-  const watches = await getWatches()
+  const [watches, portfolio] = await Promise.all([
+    getWatches(),
+    getPortfolioOverview(),
+  ])
 
   // Wish-list watches aren't owned — they stay out of every count and total.
   const owned = watches.filter((w) => !w.is_wishlist)
   const wishlistCount = watches.length - owned.length
 
   const totalWatches = owned.length
+  // §4.3: counts split owned/sold. Sold watches stay in the collection, so
+  // the split is total minus recorded sales.
+  const soldCount = portfolio.salesCount
+  const ownedNotSoldCount = totalWatches - soldCount
   const comingSoonCount = owned.filter((w) => w.is_coming_soon).length
   const unknownBrandCount = owned.filter((w) => needsBrandEditing(w.brand?.name)).length
-  const pricedWatches = owned.filter((w) => w.purchase_price_cents !== null)
-  const totalValueCents = pricedWatches.reduce(
-    (sum, w) => sum + (w.purchase_price_cents ?? 0),
-    0
-  )
 
   return (
     <div className="space-y-6">
@@ -65,7 +69,11 @@ export default async function CollectionSummaryPage() {
           <CardTitle className="text-sm">Collection Summary</CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-border/60">
-          <SummaryRow label="Total Watches" value={totalWatches.toLocaleString()} />
+          <SummaryRow
+            label="Total Watches"
+            value={totalWatches.toLocaleString()}
+            hint={`${ownedNotSoldCount.toLocaleString()} owned · ${soldCount.toLocaleString()} sold`}
+          />
           <SummaryRow
             label="Coming Soon"
             value={comingSoonCount.toLocaleString()}
@@ -82,9 +90,19 @@ export default async function CollectionSummaryPage() {
             hint="Watches still needing initial details"
           />
           <SummaryRow
-            label="Total Value"
-            value={formatCurrency(totalValueCents, "USD")}
-            hint={`From ${pricedWatches.length} of ${totalWatches} owned watches with a recorded price (includes coming-soon, excludes wish list)`}
+            label="Cost Basis"
+            value={formatCurrency(portfolio.costBasisCents, "USD")}
+            hint="Owned, unsold watches — purchase price plus acquisition costs"
+          />
+          <SummaryRow
+            label="Current Value"
+            value={formatCurrency(portfolio.currentValueCents, "USD")}
+            hint={`Latest agent estimates — ${portfolio.valuedCount} tracked of ${portfolio.ownedCount} owned`}
+          />
+          <SummaryRow
+            label="Unrealized"
+            value={<GainValue gain={portfolio.unrealized} showPct className="text-md" />}
+            hint="Value vs basis, over tracked watches with a known purchase price"
           />
         </CardContent>
       </Card>

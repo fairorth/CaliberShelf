@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getAttentionReport } from "@/lib/queries/attention"
 import { getAgentReview, formatUsdMicros } from "@/lib/queries/agent-runs"
 import { getAllValuations, valuationRunDate } from "@/lib/queries/valuations"
+import { getRealizedGains } from "@/lib/queries/sales"
+import { GainValue } from "@/components/gain-value"
 
 export const metadata: Metadata = {
   title: "Reports | TenTenLoupe",
@@ -16,8 +18,9 @@ interface ReportLink {
   title: string
   description: string
   available: boolean
-  /** Live value line, when the report has one worth surfacing (A5). */
-  live?: string
+  /** Live value line, when the report has one worth surfacing (A5).
+   *  A node so a gain can render through <GainValue> (§4.3). */
+  live?: React.ReactNode
 }
 
 function fmtRunDate(date: string): string {
@@ -66,10 +69,11 @@ function ReportCard({ report }: { report: ReportLink }) {
 }
 
 export default async function ReportsPage() {
-  const [attention, agentReview, valuations] = await Promise.all([
+  const [attention, agentReview, valuations, realizedGains] = await Promise.all([
     getAttentionReport(),
     getAgentReview(),
     getAllValuations(),
+    getRealizedGains(),
   ])
 
   const attentionCount =
@@ -138,6 +142,28 @@ export default async function ReportsPage() {
       live: lastValuation
         ? `LAST RUN ${fmtRunDate(valuationRunDate(lastValuation.valued_at)).toUpperCase()}`
         : undefined,
+    },
+    {
+      slug: "realized-gains",
+      title: "Realized Gains",
+      description:
+        "Per-sale P&L grouped by year — gross, fees, net, and realized gain against cost basis.",
+      available: true,
+      live:
+        realizedGains.lifetime.salesCount > 0 ? (
+          <>
+            LIFETIME <GainValue gain={realizedGains.lifetime.gain} wholeDollars /> ·{" "}
+            {realizedGains.lifetime.salesCount} SALE
+            {realizedGains.lifetime.salesCount === 1 ? "" : "S"}
+          </>
+        ) : undefined,
+    },
+    {
+      slug: "annual-summary",
+      title: "Annual Summary",
+      description:
+        "The records and tax view — one year's acquisitions, sales, position and fees. Prints on Letter, CSV per section.",
+      available: true,
     },
   ]
 
