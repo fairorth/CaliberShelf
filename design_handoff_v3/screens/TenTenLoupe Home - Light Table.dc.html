@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; background: oklch(0.97 0.005 235); color: oklch(0.22 0.018 245); font-family: Geist, "Helvetica Neue", Helvetica, sans-serif; }
+  a { color: oklch(0.22 0.018 245); text-decoration: none; }
+  a:hover { color: #8a6a2f; }
+</style>
+</helmet>
+
+<div style="width:1120px;height:900px;display:flex;background:oklch(0.97 0.005 235);overflow:hidden;">
+
+  <div style="width:200px;flex:none;display:flex;flex-direction:column;gap:18px;background:oklch(0.955 0.006 235);border-right:1px solid oklch(0.87 0.01 235);padding:14px 12px;overflow:hidden;">
+    <a href="#" style="display:flex;align-items:center;gap:10px;padding:4px 6px 0;" aria-label="TenTenLoupe">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="26" height="26" role="presentation" aria-hidden="true" style="display:block;flex:none;">
+        <path d="M50 50 L97 50 A47 47 0 0 1 73.5 90.7 Z" fill="#8a6a2f"></path>
+        <path d="M50 50 L73.5 90.7 A47 47 0 0 1 26.5 90.7 Z" fill="#b08c46"></path>
+        <path d="M50 50 L26.5 90.7 A47 47 0 0 1 3 50 Z" fill="#8a6a2f"></path>
+        <path d="M50 50 L3 50 A47 47 0 0 1 26.5 9.3 Z" fill="#b08c46"></path>
+        <path d="M50 50 L26.5 9.3 A47 47 0 0 1 73.5 9.3 Z" fill="#8a6a2f"></path>
+        <path d="M50 50 L73.5 9.3 A47 47 0 0 1 97 50 Z" fill="#b08c46"></path>
+        <path d="M83 50 L66.5 78.58 L33.5 78.58 L17 50 L33.5 21.42 L66.5 21.42 Z" fill="oklch(0.955 0.006 235)"></path>
+        <rect x="47.6" y="19" width="1.6" height="8" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+        <rect x="50.8" y="19" width="1.6" height="8" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+        <rect x="73" y="49.2" width="7" height="1.6" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+        <rect x="49.2" y="73" width="1.6" height="7" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+        <rect x="20" y="49.2" width="7" height="1.6" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+        <line x1="50" y1="50" x2="30.95" y2="39" stroke="oklch(0.22 0.018 245)" stroke-width="2.4" stroke-linecap="round"></line>
+        <line x1="50" y1="50" x2="75.11" y2="35.5" stroke="oklch(0.22 0.018 245)" stroke-width="2" stroke-linecap="round"></line>
+        <circle cx="50" cy="50" r="3.4" fill="#c9a25e"></circle>
+        <circle cx="50" cy="50" r="48" fill="none" stroke="#8a6a2f" stroke-width="2"></circle>
+      </svg>
+      <span style="display:flex;flex-direction:column;line-height:1;">
+        <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;letter-spacing:-0.02em;color:oklch(0.22 0.018 245);">Ten<span style="color:#8a6a2f;">:</span>Ten</span>
+        <span aria-hidden="true" style="margin:4px 0;height:1px;width:100%;background:linear-gradient(90deg,transparent,rgba(138,106,47,0.75),transparent);"></span>
+        <span style="padding-left:0.46em;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.46em;color:#8a6a2f;">LOUPE</span>
+      </span>
+    </a>
+
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;font-weight:500;background:rgba(138,106,47,0.14);color:#8a6a2f;"><span style="display:flex;"><i data-lucide="house"></i></span>Home</a>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Collection</div>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="list"></i></span>Collection</a>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="tag"></i></span>Brands</a>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="link-2"></i></span>Straps</a>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Analysis</div>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="calendar-days"></i></span>Wear Log</a>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="chart-column"></i></span>Reports</a>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="compass"></i></span>Guides</a>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Market</div>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="trending-up"></i></span>Market</a>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="archive"></i></span>Sold Archive</a>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="badge-dollar-sign"></i></span>Deals</a>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Imagery</div>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="camera"></i></span>Photo Lab</a>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="images"></i></span>Inspiration</a>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="package-plus"></i></span>Batch Import</a>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">System</div>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="settings"></i></span>Config</a>
+      <a href="#" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="info"></i></span>About</a>
+    </div>
+
+    <span style="margin-top:auto;padding:12px 10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">v2.1.0</span>
+  </div>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+
+    <div style="height:56px;flex:none;border-bottom:1px solid oklch(0.87 0.01 235);display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 16px;">
+      <span style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:8px;background:#8a6a2f;color:oklch(0.99 0.01 90);font-size:15px;font-weight:500;"><span style="display:flex;"><i data-lucide="plus"></i></span>Add Watch</span>
+      <span style="width:34px;height:34px;border-radius:9999px;background:oklch(0.94 0.008 235);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;">F</span>
+    </div>
+
+    <div style="flex:1;min-height:0;padding:20px 24px 24px;display:flex;flex-direction:column;gap:14px;">
+
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+          <h1 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;line-height:1.25;">On the table</h1>
+          <div style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">
+            <span style="color:#8a6a2f;">{{ setName }}</span>
+            <span>·</span>
+            <span>{{ setDetail }}</span>
+          </div>
+        </div>
+
+        <div style="position:relative;flex:none;">
+          <button type="button" onClick="{{ toggleMenu }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);background:oklch(0.99 0.003 235);font-family:Geist,sans-serif;font-size:13px;color:oklch(0.22 0.018 245);cursor:pointer;">
+            <span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="layers"></i></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">ROTATION</span>
+            <span style="font-weight:500;">{{ setShortName }}</span>
+            <span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-down"></i></span>
+          </button>
+
+          <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;right:0;top:40px;z-index:20;width:300px;background:oklch(0.99 0.003 235);border:1px solid oklch(0.87 0.01 235);border-radius:14px;box-shadow:0 18px 44px -12px rgba(0,0,0,0.30);padding:8px;display:flex;flex-direction:column;gap:2px;">
+            <sc-for list="{{ setItems }}" as="item" hint-placeholder-count="5">
+              <div style="display:flex;flex-direction:column;">
+                <sc-if value="{{ item.startsGuides }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:10px 10px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Master Guides</div>
+                </sc-if>
+                <button type="button" onClick="{{ item.select }}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;border:none;background:{{ item.bg }};text-align:left;cursor:pointer;font-family:Geist,sans-serif;">
+                  <span style="display:flex;color:{{ item.tick }};flex:none;"><i data-lucide="check"></i></span>
+                  <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+                    <span style="font-size:15px;color:{{ item.fg }};font-weight:500;">{{ item.label }}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">{{ item.meta }}</span>
+                  </span>
+                </button>
+              </div>
+            </sc-for>
+            <div style="border-top:1px solid oklch(0.87 0.01 235);margin-top:6px;padding:9px 10px 4px;font-size:13px;color:oklch(0.48 0.008 245);line-height:1.45;">Only watches with photographed frames enter the rotation.</div>
+          </div>
+          </sc-if>
+        </div>
+      </div>
+
+      <div style="flex:1;min-height:0;display:flex;gap:20px;align-items:stretch;">
+
+        <div style="width:480px;flex:none;display:flex;flex-direction:column;gap:12px;">
+
+          <div onMouseEnter="{{ loupeEnter }}" onMouseLeave="{{ loupeLeave }}" onMouseMove="{{ loupeMove }}" style="position:relative;width:480px;height:320px;flex:none;border-radius:8px;overflow:hidden;cursor:crosshair;background-color:{{ frameTone }};background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 12px,rgba(0,0,0,0.06) 12px 24px);">
+            <span style="position:absolute;left:14px;bottom:12px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:rgba(255,255,255,0.92);">{{ frameCaption }}</span>
+            <sc-if value="{{ frameHasLabel }}" hint-placeholder-val="{{ true }}">
+              <span style="position:absolute;right:12px;top:12px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;color:oklch(0.22 0.018 245);background:rgba(255,255,255,0.92);border-radius:9999px;padding:3px 9px;">{{ frameLabel }}</span>
+            </sc-if>
+            <sc-if value="{{ loupeOn }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;left:{{ loupeX }}px;top:{{ loupeY }}px;width:168px;height:168px;margin-left:-84px;margin-top:-84px;border-radius:9999px;border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 0 1px rgba(0,0,0,0.35),0 14px 34px rgba(0,0,0,0.45);pointer-events:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;background-color:{{ frameTone }};background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.12) 0 34px,rgba(0,0,0,0.05) 34px 68px);">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:rgba(255,255,255,0.95);">{{ loupeZoomLabel }}</span>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="flex:none;display:flex;align-items:center;gap:14px;">
+            <div style="position:relative;width:30px;height:30px;flex:none;">
+              <svg viewBox="0 0 36 36" style="width:30px;height:30px;display:block;transform:rotate(-90deg);">
+                <circle cx="18" cy="18" r="15" fill="none" stroke="oklch(0.87 0.01 235)" stroke-width="2"></circle>
+                <circle cx="18" cy="18" r="15" fill="none" stroke="#8a6a2f" stroke-width="2" stroke-linecap="round" stroke-dasharray="94.25" stroke-dashoffset="{{ ringOffset }}"></circle>
+              </svg>
+              <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;color:#8a6a2f;"><i data-lucide="aperture"></i></span>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:oklch(0.48 0.008 245);">{{ counter }}</span>
+            <span style="width:1px;height:16px;background:oklch(0.87 0.01 235);"></span>
+            <button type="button" onClick="{{ prevWatch }}" style="display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:none;background:none;font-family:Geist,sans-serif;font-size:13px;color:oklch(0.22 0.018 245);cursor:pointer;"><span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-left"></i></span>Previous</button>
+            <button type="button" onClick="{{ nextWatch }}" style="display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:none;background:none;font-family:Geist,sans-serif;font-size:13px;color:oklch(0.22 0.018 245);cursor:pointer;">Next<span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-right"></i></span></button>
+            <span style="width:1px;height:16px;background:oklch(0.87 0.01 235);"></span>
+            <a href="#" style="display:flex;align-items:center;gap:7px;font-size:13px;color:#8a6a2f;font-weight:500;">Open watch<span style="display:flex;"><i data-lucide="arrow-up-right"></i></span></a>
+            <span style="flex:1;"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">{{ pausedLabel }}</span>
+          </div>
+
+          <div style="flex:1;min-height:0;border-top:1px solid oklch(0.87 0.01 235);padding-top:12px;display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:flex-start;gap:16px;">
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+                <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;line-height:1.2;">{{ watchTitle }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.008 245);">{{ watchSpecs }}</span>
+              </div>
+              <div style="flex:none;display:flex;flex-direction:column;gap:3px;text-align:right;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">{{ frameScore }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">{{ frameExposure }}</span>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+              <div style="display:flex;flex-direction:column;gap:3px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">ACQUIRED</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">{{ acquired }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">WORN</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">{{ wornCount }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">LAST WORN</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">{{ lastWorn }}</span>
+              </div>
+            </div>
+
+            <sc-if value="{{ hasChapter }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:oklch(0.48 0.008 245);">
+                <span style="display:flex;color:#8a6a2f;"><i data-lucide="compass"></i></span>
+                <span>{{ chapterLine }}</span>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:center;gap:9px;flex:none;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">FRAMES</span>
+            <span style="flex:1;height:1px;background:oklch(0.87 0.01 235);"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">{{ frameCount }}</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:none;">
+            <sc-for list="{{ frames }}" as="frame" hint-placeholder-count="9">
+              <div onMouseEnter="{{ frame.hover }}" onClick="{{ frame.hover }}" style="display:flex;flex-direction:column;gap:5px;cursor:pointer;">
+                <div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;outline:{{ frame.outline }};outline-offset:2px;background-color:{{ frame.tone }};background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);">
+                  <sc-if value="{{ frame.stamp }}" hint-placeholder-val="{{ true }}">
+                    <span style="position:absolute;right:5px;top:5px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.06em;color:oklch(0.22 0.018 245);background:rgba(255,255,255,0.92);border-radius:9999px;padding:1px 6px;">{{ frame.label }}</span>
+                  </sc-if>
+                </div>
+                <sc-if value="{{ frame.caption }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.008 245);text-align:center;">{{ frame.captionLabel }}</span>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:8px;background:oklch(0.99 0.003 235);border:1px solid oklch(0.87 0.01 235);border-radius:8px;padding:10px 12px;flex:none;">
+            <span style="display:flex;color:#8a6a2f;margin-top:1px;"><i data-lucide="search"></i></span>
+            <span style="font-size:13px;color:oklch(0.48 0.008 245);line-height:1.45;">Hover a frame to bring it up. Hover the big frame for the loupe.</span>
+          </div>
+
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:7px;border-top:1px solid oklch(0.87 0.01 235);padding-top:12px;flex:none;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.008 245);">Coverage</span><span style="font-family:'JetBrains Mono',monospace;">{{ coverage }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.008 245);">Frames kept this month</span><span style="font-family:'JetBrains Mono',monospace;">62</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.008 245);">Awaiting review</span><span style="font-family:'JetBrains Mono',monospace;color:#8a6a2f;">7</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1120,&quot;height&quot;:900},&quot;dwellSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:12,&quot;min&quot;:4,&quot;max&quot;:30,&quot;step&quot;:1,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Rotation&quot;},&quot;labelPlacement&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;stamp&quot;,&quot;caption&quot;],&quot;default&quot;:&quot;stamp&quot;,&quot;tsType&quot;:&quot;\&quot;stamp\&quot; | \&quot;caption\&quot;&quot;,&quot;section&quot;:&quot;Contact sheet&quot;},&quot;loupeZoom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.4,&quot;min&quot;:1.5,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Loupe&quot;}}">
+const TONES = ["oklch(0.42 0.014 245)", "oklch(0.52 0.016 245)", "oklch(0.35 0.012 245)", "oklch(0.58 0.012 245)", "oklch(0.46 0.015 245)", "oklch(0.31 0.010 245)", "oklch(0.55 0.014 245)", "oklch(0.38 0.013 245)", "oklch(0.49 0.016 245)"]
+
+/** A frame: an angle label when the Photo Lab tagged one, null when it is just
+ *  another kept frame. Exposure/score come from the scoring agent. */
+function fr(angle, score, exposure, tone) {
+  return { angle: angle, score: score, exposure: exposure, tone: TONES[tone] }
+}
+
+const W = {
+  bb58: {
+    title: "Tudor Black Bay 58", specs: "M79030N-0001 · MT5402 · 39MM",
+    acquired: "14 Mar 2024", worn: "12 times", lastWorn: "3 days ago", coverage: "5 / 5 angles",
+    frames: [fr("HERO", "SCORE 94", "f/9 · 1/160 · 9-FRAME STACK", 0), fr("FLAT", "SCORE 91", "f/11 · 1/125 · 7-FRAME STACK", 1), fr("PROFILE", "SCORE 88", "f/13 · 1/100 · 5-FRAME STACK", 2), fr("CASEBACK", "SCORE 90", "f/11 · 1/125 · 6-FRAME STACK", 3), fr("MACRO", "SCORE 86", "f/4 · 4s · SINGLE FRAME", 5), fr(null, "SCORE 84", "f/9 · 1/200 · SINGLE FRAME", 4), fr(null, "SCORE 82", "f/8 · 1/160 · SINGLE FRAME", 6), fr(null, "SCORE 79", "f/11 · 1/125 · SINGLE FRAME", 7), fr(null, "SCORE 77", "f/10 · 1/160 · SINGLE FRAME", 8)],
+  },
+  gs413: {
+    title: "Grand Seiko SBGA413", specs: "SPRING DRIVE 9R65 · 40.2MM · 2023",
+    acquired: "02 Nov 2023", worn: "31 times", lastWorn: "yesterday", coverage: "5 / 5 angles",
+    chapter: "Grand Seiko · chapter 4, the Shunbun texture dial",
+    frames: [fr("HERO", "SCORE 97", "RF 100 MACRO · f/11 · 1/125 · 7-FRAME STACK", 2), fr("FLAT", "SCORE 95", "f/11 · 1/160 · 7-FRAME STACK", 0), fr("PROFILE", "SCORE 92", "f/13 · 1/100 · 6-FRAME STACK", 4), fr("CASEBACK", "SCORE 93", "f/11 · 1/125 · 6-FRAME STACK", 1), fr("MACRO", "SCORE 81", "f/4 · 6s · SINGLE FRAME", 5), fr("MACRO", "SCORE 89", "f/13 · 1/125 · 4-FRAME STACK", 3), fr(null, "SCORE 90", "f/9 · 1/200 · SINGLE FRAME", 6), fr(null, "SCORE 87", "f/10 · 1/160 · SINGLE FRAME", 8)],
+  },
+  speedy: {
+    title: "Omega Speedmaster Professional", specs: "310.30.42.50.01.001 · 3861 · 42MM",
+    acquired: "14 Mar 2024", worn: "12 times", lastWorn: "3 days ago", coverage: "5 / 5 angles",
+    frames: [fr("HERO", "SCORE 96", "RF 100 MACRO · f/11 · 1/125 · 7-FRAME STACK", 1), fr("FLAT", "SCORE 93", "f/11 · 1/160 · 7-FRAME STACK", 3), fr("PROFILE", "SCORE 90", "f/13 · 1/125 · 5-FRAME STACK", 0), fr("CASEBACK", "SCORE 94", "f/11 · 1/100 · 8-FRAME STACK", 2), fr("MACRO", "SCORE 88", "f/4 · 4s · SINGLE FRAME", 5), fr(null, "SCORE 85", "f/9 · 1/200 · SINGLE FRAME", 7)],
+  },
+  spb143: {
+    title: "Seiko SPB143", specs: "6R35 · 40.5MM · 2022",
+    acquired: "09 Jun 2022", worn: "44 times", lastWorn: "12 days ago", coverage: "4 / 5 angles",
+    frames: [fr("HERO", "SCORE 89", "f/9 · 1/160 · 6-FRAME STACK", 4), fr("FLAT", "SCORE 86", "f/11 · 1/125 · 5-FRAME STACK", 6), fr("CASEBACK", "SCORE 84", "f/11 · 1/125 · 5-FRAME STACK", 2), fr("MACRO", "SCORE 80", "f/4 · 5s · SINGLE FRAME", 5), fr(null, "SCORE 78", "f/10 · 1/160 · SINGLE FRAME", 1), fr(null, "SCORE 76", "f/9 · 1/200 · SINGLE FRAME", 8)],
+  },
+  longines: {
+    title: "Longines Spirit 40", specs: "L3.810.4 · L888.4 · 40MM",
+    acquired: "21 Jan 2025", worn: "6 times", lastWorn: "28 days ago", coverage: "3 / 5 angles",
+    frames: [fr("HERO", "SCORE 87", "f/11 · 1/125 · 6-FRAME STACK", 3), fr("FLAT", "SCORE 85", "f/11 · 1/160 · 5-FRAME STACK", 0), fr("PROFILE", "SCORE 82", "f/13 · 1/100 · 4-FRAME STACK", 7), fr(null, "SCORE 80", "f/9 · 1/200 · SINGLE FRAME", 4), fr(null, "SCORE 77", "f/10 · 1/160 · SINGLE FRAME", 6)],
+  },
+  gs45: {
+    title: "Grand Seiko 45GS", specs: "GS 4520-7010 · 4520A · 1968",
+    acquired: "18 Feb 2025", worn: "9 times", lastWorn: "6 days ago", coverage: "5 / 5 angles",
+    chapter: "Grand Seiko · chapter 1, the hand-wound 45GS foundation",
+    frames: [fr("HERO", "SCORE 92", "RF 100 MACRO · f/13 · 1/100 · 9-FRAME STACK", 5), fr("FLAT", "SCORE 90", "f/11 · 1/125 · 7-FRAME STACK", 2), fr("PROFILE", "SCORE 94", "f/16 · 1/80 · 11-FRAME STACK", 0), fr("CASEBACK", "SCORE 91", "f/13 · 1/100 · 6-FRAME STACK", 4), fr("MACRO", "SCORE 83", "f/11 · 1/125 · 4-FRAME STACK", 8), fr(null, "SCORE 86", "f/9 · 1/160 · SINGLE FRAME", 1)],
+  },
+  reverso: {
+    title: "Jaeger-LeCoultre Reverso", specs: "Q3958420 · 822/2 · 45.6×27.4MM",
+    acquired: "—", worn: "not yet owned", lastWorn: "—", coverage: "1 / 5 angles",
+    chapter: "Swiss Artisans · chapter 2, the rectangular manual dress watch",
+    frames: [fr("HERO", "REFERENCE", "GUIDE CARD IMAGE · NOT YET SHOT", 6), fr(null, "REFERENCE", "GUIDE CARD IMAGE · NOT YET SHOT", 3)],
+  },
+  vc222: {
+    title: "Vacheron Constantin 222", specs: "4200H/222J · 2455/2 · 37MM",
+    acquired: "—", worn: "not yet owned", lastWorn: "—", coverage: "1 / 5 angles",
+    chapter: "Swiss Artisans · chapter 5, the integrated-bracelet sports watch",
+    frames: [fr("HERO", "REFERENCE", "GUIDE CARD IMAGE · NOT YET SHOT", 1)],
+  },
+  cw60: {
+    title: "Christopher Ward C60", specs: "SH21 · 40MM · 2021",
+    acquired: "—", worn: "not yet owned", lastWorn: "—", coverage: "2 / 5 angles",
+    frames: [fr("HERO", "REFERENCE", "WISH-LIST CARD · NOT YET SHOT", 7), fr("FLAT", "REFERENCE", "WISH-LIST CARD · NOT YET SHOT", 4)],
+  },
+}
+
+/** The five rotation sets. `detail` is the honest scale of the real set; the
+ *  queue is what actually has frames to show. Guide sets come from
+ *  `guide_entries.watch_id` links (docs/master-guides.md); Wish List is the
+ *  flat `watches.is_wishlist` tier. */
+const SETS = [
+  { id: "all", label: "All Watches", short: "All Watches", name: "ALL WATCHES", detail: "42 WATCHES · 128 FRAMES", meta: "42 watches · 128 frames", queue: ["gs413", "bb58", "speedy", "spb143", "longines", "gs45"] },
+  { id: "wish", label: "Wish List", short: "Wish List", name: "WISH LIST", detail: "14 WATCHES · 6 WITH FRAMES", meta: "14 watches · 6 with frames", queue: ["cw60", "reverso", "vc222"] },
+  { id: "recent", label: "Last 20 Acquired", short: "Last 20", name: "LAST 20 ACQUIRED", detail: "20 WATCHES · 71 FRAMES", meta: "20 watches · 71 frames", queue: ["longines", "gs45", "speedy", "bb58"] },
+  { id: "gs", label: "Grand Seiko", short: "GS Guide", name: "MASTER GUIDE · GRAND SEIKO", detail: "22 CHAPTERS · 9 WITH FRAMES", meta: "22 chapters · 9 with frames", guide: true, queue: ["gs45", "gs413"] },
+  { id: "swiss", label: "Swiss Artisans", short: "Swiss Guide", name: "MASTER GUIDE · SWISS ARTISANS", detail: "16 CHAPTERS · 5 WITH FRAMES", meta: "16 chapters · 5 with frames", guide: true, queue: ["reverso", "vc222"] },
+]
+
+class Component extends DCLogic {
+  state = { setIdx: 0, watchIdx: 0, frameIdx: 0, elapsed: 0, menuOpen: false, loupe: null }
+
+  componentDidMount() {
+    this.icons(0)
+    this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (!this.reduced) {
+      this.tick = setInterval(() => {
+        // Hovering the frame (loupe up) or an open menu pauses the rotation,
+        // the same courtesy watch-hero.tsx extends on hover.
+        if (this.state.loupe || this.state.menuOpen) return
+        const dwell = this.dwell()
+        const next = this.state.elapsed + 0.2
+        if (next >= dwell) this.advance(1)
+        else this.setState({ elapsed: next })
+      }, 200)
+    }
+    this.onKey = (e) => {
+      if (e.key === "ArrowRight") { e.preventDefault(); this.advance(1) }
+      if (e.key === "ArrowLeft") { e.preventDefault(); this.advance(-1) }
+    }
+    window.addEventListener("keydown", this.onKey)
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.tick)
+    window.removeEventListener("keydown", this.onKey)
+  }
+
+  componentDidUpdate() { this.icons(0) }
+
+  icons(n) {
+    if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16, "stroke-width": 1.75 } })
+    else if (n < 40) setTimeout(() => this.icons(n + 1), 120)
+  }
+
+  dwell() { return Math.max(4, this.props.dwellSeconds ?? 12) }
+
+  set() { return SETS[this.state.setIdx] }
+
+  advance(delta) {
+    const n = this.set().queue.length
+    this.setState((s) => ({ watchIdx: (s.watchIdx + delta + n) % n, frameIdx: 0, elapsed: 0 }))
+  }
+
+  renderVals() {
+    const set = this.set()
+    const watch = W[set.queue[this.state.watchIdx % set.queue.length]]
+    const frames = watch.frames
+    const idx = Math.min(this.state.frameIdx, frames.length - 1)
+    const frame = frames[idx]
+    const stampLabels = (this.props.labelPlacement ?? "stamp") === "stamp"
+    const zoom = this.props.loupeZoom ?? 2.4
+
+    return {
+      setName: set.name,
+      setDetail: set.detail,
+      setShortName: set.short,
+      menuOpen: this.state.menuOpen,
+      toggleMenu: () => this.setState((s) => ({ menuOpen: !s.menuOpen })),
+      setItems: SETS.map((s, i) => {
+        const active = i === this.state.setIdx
+        return {
+          label: s.label,
+          meta: s.meta,
+          startsGuides: !!s.guide && !SETS[i - 1].guide,
+          bg: active ? "rgba(138,106,47,0.14)" : "transparent",
+          fg: active ? "#8a6a2f" : "oklch(0.22 0.018 245)",
+          tick: active ? "#8a6a2f" : "transparent",
+          select: () => this.setState({ setIdx: i, watchIdx: 0, frameIdx: 0, elapsed: 0, menuOpen: false }),
+        }
+      }),
+
+      frameTone: frame.tone,
+      frameLabel: frame.angle,
+      frameHasLabel: !!frame.angle,
+      frameCaption: frame.angle ? frame.angle + " · " + watch.title.toUpperCase() : "UNTAGGED FRAME · " + watch.title.toUpperCase(),
+      frameScore: frame.score,
+      frameExposure: frame.exposure,
+      frameCount: frames.length + " KEPT · " + watch.coverage.toUpperCase(),
+      coverage: watch.coverage,
+
+      frames: frames.map((f, i) => ({
+        tone: f.tone,
+        label: f.angle,
+        stamp: stampLabels && !!f.angle,
+        caption: !stampLabels && !!f.angle,
+        captionLabel: f.angle,
+        outline: i === idx ? "2px solid #8a6a2f" : "2px solid transparent",
+        hover: () => this.setState({ frameIdx: i }),
+      })),
+
+      watchTitle: watch.title,
+      watchSpecs: watch.specs,
+      acquired: watch.acquired,
+      wornCount: watch.worn,
+      lastWorn: watch.lastWorn,
+      hasChapter: !!watch.chapter,
+      chapterLine: watch.chapter || "",
+
+      counter: String(this.state.watchIdx + 1).padStart(2, "0") + " / " + String(set.queue.length).padStart(2, "0"),
+      ringOffset: this.reduced ? 0 : 94.25 * (1 - Math.min(1, this.state.elapsed / this.dwell())),
+      pausedLabel: this.state.loupe ? "PAUSED" : "EVERY " + this.dwell() + "S",
+      prevWatch: () => this.advance(-1),
+      nextWatch: () => this.advance(1),
+
+      loupeOn: !!this.state.loupe,
+      loupeX: this.state.loupe ? this.state.loupe.x : 0,
+      loupeY: this.state.loupe ? this.state.loupe.y : 0,
+      loupeZoomLabel: Math.round(zoom * 100) / 100 + "×",
+      loupeEnter: () => this.setState({ loupe: { x: 240, y: 160 } }),
+      loupeLeave: () => this.setState({ loupe: null }),
+      loupeMove: (e) => {
+        const r = e.currentTarget.getBoundingClientRect()
+        this.setState({ loupe: { x: e.clientX - r.left, y: e.clientY - r.top } })
+      },
+    }
+  }
+}
+</script>
+</body>
+</html>

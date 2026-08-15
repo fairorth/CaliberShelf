@@ -12,8 +12,21 @@ export const COLLECTION_RETURN_KEY = "collection-return-query"
 /** Attention Needed: whether wish-list watches are included. Default true. */
 export const ATTENTION_INCLUDE_WISHLIST_KEY = "attention-include-wishlist"
 
-/** Home: show the Display Box instead of the rotating Living Dial. */
+/** Home: show the Display Box instead of the rotating Light Table. */
 export const DISPLAY_BOX_HOME_KEY = "home-show-display-box"
+
+/** Home light table: which rotation set is showing. Values are RotationSetId
+ *  strings ("all" | "wish" | "recent" | "guide:<id>"). Read after mount, never
+ *  during SSR (same pattern as DISPLAY_BOX_HOME_KEY); an unknown or now-empty
+ *  set falls back to "all" — validation lives with the component, which knows
+ *  the live set list. */
+export const HOME_ROTATION_SET_KEY = "home-rotation-set"
+
+/** Read the saved rotation set id, or null when unset. Client-only. */
+export function readHomeRotationSet(): string | null {
+  if (typeof window === "undefined") return null
+  return localStorage.getItem(HOME_ROTATION_SET_KEY)
+}
 
 /** Home hero: how many seconds each featured watch stays up before swapping. */
 export const HERO_DWELL_KEY = "home-hero-dwell-seconds"

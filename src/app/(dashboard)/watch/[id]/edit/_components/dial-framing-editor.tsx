@@ -38,10 +38,10 @@ export function DialFramingEditor({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Dial framing</CardTitle>
+          <CardTitle className="text-sm">Thumbnail framing</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          Set a cover photo above, then come back to frame the dial for the home page.
+          Set a cover photo above, then come back to frame the square thumbnail.
         </CardContent>
       </Card>
     )
@@ -49,7 +49,7 @@ export function DialFramingEditor({
 
   // Convert a pointer position to a focal point as a percentage of the image.
   // Because the editor shows the FULL image, these percentages map 1:1 to the
-  // object-position used by the preview and the home-page dial marker.
+  // object-position used by the preview and the square collection tiles.
   function setFocalFromPointer(clientX: number, clientY: number) {
     const el = photoRef.current
     if (!el) return
@@ -100,7 +100,7 @@ export function DialFramingEditor({
       if (result.error) {
         toast.error(result.error)
       } else {
-        toast.success("Dial framing saved")
+        toast.success("Thumbnail framing saved")
       }
     })
   }
@@ -108,10 +108,11 @@ export function DialFramingEditor({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm">Dial framing</CardTitle>
+        <CardTitle className="text-sm">Thumbnail framing</CardTitle>
         <p className="text-xs text-muted-foreground">
-          Drag the crosshair onto the part of the dial you want centered, then zoom
-          to crop tight. The preview shows how it appears on the home-page watch face.
+          Drag the crosshair onto the part of the photo you want centered, then zoom
+          to crop tight. The preview shows how it appears as a square collection
+          tile — the home page shows frames uncropped.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">

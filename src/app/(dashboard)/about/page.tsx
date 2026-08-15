@@ -116,8 +116,8 @@ const SECTIONS: Section[] = [
       },
       {
         icon: Crosshair,
-        title: "Dial Framing",
-        text: "Fine-tune each dial's focal point and zoom so it's framed just right — and the home screen renders your collection as a living wristwatch dial.",
+        title: "Thumbnail Framing",
+        text: "Fine-tune each cover's focal point and zoom so the square collection tiles crop where you want them. The home page shows frames uncropped, on a light table.",
       },
       {
         icon: Rocket,

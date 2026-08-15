@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; background: oklch(0.97 0.005 235); color: oklch(0.22 0.018 245); font-family: Geist, "Helvetica Neue", Helvetica, sans-serif; }
+  a { color: oklch(0.22 0.018 245); text-decoration: none; }
+  a:hover { color: #8a6a2f; }
+</style>
+</helmet>
+
+<section style="padding:44px 40px 120px;display:flex;flex-direction:column;gap:30px;align-items:flex-start;">
+
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#8a6a2f;">TURN 1 · HOME PAGE · THREE DIRECTIONS</div>
+    <h1 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;letter-spacing:-0.02em;">Retiring the living dial</h1>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;">The circle is the problem. <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">watch-hero.tsx</code> crops each cover twice — square-to-circle mask, then focal point and zoom on top — inside a circle inset 4.82% of a 560px case. That is the awkward window, and no focal point fixes a composition the circle was never going to hold. All three directions keep the rotation and the key information, drop the mask, and carry the photography idea in the <em>presentation</em>. Refer to them as <a href="#1a" style="color:#8a6a2f;">1a</a>, <a href="#1b" style="color:#8a6a2f;">1b</a>, <a href="#1c" style="color:#8a6a2f;">1c</a>.</p>
+    <p style="margin:0;font-size:13px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">Each is drawn in the real desktop shell: the 200px rail from <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">nav-rail.tsx</code> carrying the horizontal lockup and the five groups from <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">nav-items.ts</code>, and the 56px header with no brand (it is <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">md:hidden</code> — the rail owns the mark from md up) and no search box (hidden on <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">/dashboard</code>). So the stage each concept actually gets is 920px wide, not 1120.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start;">
+
+    <div id="1a" style="display:flex;flex-direction:column;gap:12px;width:1120px;">
+      <div style="display:flex;align-items:baseline;gap:12px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.1em;color:oklch(0.99 0.01 90);background:#8a6a2f;border-radius:8px;padding:3px 8px;">1a</span>
+        <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">The Gallery Print</h2>
+        <span style="font-size:13px;color:oklch(0.48 0.008 245);">one photograph, matted and hung</span>
+      </div>
+      <p style="margin:0;max-width:1120px;font-size:15px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">The most photograph-respecting option, and the one least bothered by the rail — a centred print is indifferent to how wide the stage is. The frame adapts to the image instead of the image fighting the frame: portrait, square and landscape all sit in the same mat. The museum label carries specs on the left and <strong>capture</strong> data on the right, so every visit says &ldquo;this is a photography practice.&rdquo;</p>
+
+      <div style="width:1120px;border:1px solid oklch(0.87 0.01 235);border-radius:14px;overflow:hidden;display:flex;background:oklch(0.97 0.005 235);">
+
+        <div style="width:200px;flex:none;display:flex;flex-direction:column;gap:18px;background:oklch(0.955 0.006 235);border-right:1px solid oklch(0.87 0.01 235);padding:14px 12px;">
+          <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:4px 6px 0;" aria-label="TenTenLoupe">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="26" height="26" role="presentation" aria-hidden="true" style="display:block;flex:none;">
+              <path d="M50 50 L97 50 A47 47 0 0 1 73.5 90.7 Z" fill="#8a6a2f"></path>
+              <path d="M50 50 L73.5 90.7 A47 47 0 0 1 26.5 90.7 Z" fill="#b08c46"></path>
+              <path d="M50 50 L26.5 90.7 A47 47 0 0 1 3 50 Z" fill="#8a6a2f"></path>
+              <path d="M50 50 L3 50 A47 47 0 0 1 26.5 9.3 Z" fill="#b08c46"></path>
+              <path d="M50 50 L26.5 9.3 A47 47 0 0 1 73.5 9.3 Z" fill="#8a6a2f"></path>
+              <path d="M50 50 L73.5 9.3 A47 47 0 0 1 97 50 Z" fill="#b08c46"></path>
+              <path d="M83 50 L66.5 78.58 L33.5 78.58 L17 50 L33.5 21.42 L66.5 21.42 Z" fill="oklch(0.955 0.006 235)"></path>
+              <rect x="47.6" y="19" width="1.6" height="8" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="50.8" y="19" width="1.6" height="8" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="73" y="49.2" width="7" height="1.6" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="49.2" y="73" width="1.6" height="7" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="20" y="49.2" width="7" height="1.6" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <line x1="50" y1="50" x2="30.95" y2="39" stroke="oklch(0.22 0.018 245)" stroke-width="2.4" stroke-linecap="round"></line>
+              <line x1="50" y1="50" x2="75.11" y2="35.5" stroke="oklch(0.22 0.018 245)" stroke-width="2" stroke-linecap="round"></line>
+              <circle cx="50" cy="50" r="3.4" fill="#c9a25e"></circle>
+              <circle cx="50" cy="50" r="48" fill="none" stroke="#8a6a2f" stroke-width="2"></circle>
+            </svg>
+            <span style="display:flex;flex-direction:column;line-height:1;">
+              <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;letter-spacing:-0.02em;color:oklch(0.22 0.018 245);">Ten<span style="color:#8a6a2f;">:</span>Ten</span>
+              <span aria-hidden="true" style="margin:4px 0;height:1px;width:100%;background:linear-gradient(90deg,transparent,rgba(138,106,47,0.75),transparent);"></span>
+              <span style="padding-left:0.46em;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.46em;color:#8a6a2f;">LOUPE</span>
+            </span>
+          </a>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;font-weight:500;background:rgba(138,106,47,0.14);color:#8a6a2f;"><span style="display:flex;"><i data-lucide="house"></i></span>Home</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Collection</div>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="list"></i></span>Collection</a>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="tag"></i></span>Brands</a>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="link-2"></i></span>Straps</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Analysis</div>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="calendar-days"></i></span>Wear Log</a>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="chart-column"></i></span>Reports</a>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="compass"></i></span>Guides</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Market</div>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="trending-up"></i></span>Market</a>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="archive"></i></span>Sold Archive</a>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="badge-dollar-sign"></i></span>Deals</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Imagery</div>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="camera"></i></span>Photo Lab</a>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="images"></i></span>Inspiration</a>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="package-plus"></i></span>Batch Import</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">System</div>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="settings"></i></span>Config</a>
+            <a href="#1a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="info"></i></span>About</a>
+          </div>
+
+          <span style="margin-top:auto;padding:12px 10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">v2.1.0</span>
+        </div>
+
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+          <div style="height:56px;flex:none;border-bottom:1px solid oklch(0.87 0.01 235);display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 16px;">
+            <span style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:8px;background:#8a6a2f;color:oklch(0.99 0.01 90);font-size:15px;font-weight:500;"><span style="display:flex;"><i data-lucide="plus"></i></span>Add Watch</span>
+            <span style="width:34px;height:34px;border-radius:9999px;background:oklch(0.94 0.008 235);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;">F</span>
+          </div>
+
+          <div style="padding:40px 40px 34px;display:flex;flex-direction:column;align-items:center;gap:22px;background:oklch(0.94 0.007 235);">
+            <div style="background:oklch(0.99 0.003 235);padding:34px;box-shadow:0 1px 2px rgba(0,0,0,0.10),0 18px 44px -14px rgba(0,0,0,0.30);">
+              <div style="border:1px solid #b08c46;padding:3px;">
+                <div style="width:376px;height:470px;background-color:oklch(0.55 0.012 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 10px,rgba(0,0,0,0.06) 10px 20px);display:flex;align-items:flex-end;justify-content:center;padding-bottom:16px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:rgba(255,255,255,0.92);">HERO ANGLE · NATIVE 4:5 · NO CROP</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="width:444px;display:flex;flex-direction:column;gap:10px;padding-top:2px;">
+              <div style="display:flex;flex-direction:column;gap:5px;">
+                <span style="font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;line-height:1.15;">Grand Seiko</span>
+                <span style="font-size:15px;">SBGA413 &ldquo;Shunbun&rdquo;</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);letter-spacing:0.06em;">SPRING DRIVE 9R65 · 40.2MM · 2023</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);letter-spacing:0.06em;">WORN 12 TIMES · LAST WORN 3 DAYS AGO</span>
+              </div>
+              <div style="height:1px;width:100%;background:oklch(0.87 0.01 235);"></div>
+              <div style="display:flex;align-items:baseline;gap:12px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8a6a2f;flex:none;">CAPTURE</span>
+                <span style="flex:1;min-width:0;font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;">RF 100 MACRO · f/11 · 1/125</span>
+              </div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);text-align:right;">7-FRAME STACK · 12 AUG 2026</span>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:16px;">
+              <div style="position:relative;width:30px;height:30px;">
+                <svg viewBox="0 0 36 36" style="width:30px;height:30px;display:block;transform:rotate(-90deg);">
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="oklch(0.87 0.01 235)" stroke-width="2"></circle>
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="#8a6a2f" stroke-width="2" stroke-linecap="round" stroke-dasharray="94.2" stroke-dashoffset="34"></circle>
+                </svg>
+                <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;color:#8a6a2f;"><i data-lucide="aperture"></i></span>
+              </div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);letter-spacing:0.12em;">PRINT 3 OF 42</span>
+              <span style="width:1px;height:16px;background:oklch(0.87 0.01 235);"></span>
+              <span style="display:flex;align-items:center;gap:7px;font-size:13px;"><span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-left"></i></span>Previous</span>
+              <span style="display:flex;align-items:center;gap:7px;font-size:13px;">Next<span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-right"></i></span></span>
+              <span style="width:1px;height:16px;background:oklch(0.87 0.01 235);"></span>
+              <span style="display:flex;align-items:center;gap:7px;font-size:13px;color:#8a6a2f;font-weight:500;">Open watch<span style="display:flex;"><i data-lucide="arrow-up-right"></i></span></span>
+            </div>
+
+            <div style="display:flex;gap:26px;font-family:'JetBrains Mono',monospace;font-size:13px;color:oklch(0.48 0.008 245);">
+              <span><span style="color:oklch(0.22 0.018 245);">42</span> watches</span>
+              <span><span style="color:oklch(0.22 0.018 245);">14</span> brands</span>
+              <span><span style="color:oklch(0.22 0.018 245);">6</span> worn this week</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="1b" style="display:flex;flex-direction:column;gap:12px;width:1120px;">
+      <div style="display:flex;align-items:baseline;gap:12px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.1em;color:oklch(0.99 0.01 90);background:#8a6a2f;border-radius:8px;padding:3px 8px;">1b</span>
+        <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">The Light Table</h2>
+        <span style="font-size:13px;color:oklch(0.48 0.008 245);">a contact sheet you inspect with a loupe</span>
+      </div>
+      <p style="margin:0;max-width:1120px;font-size:15px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">The literal answer to the brand mark: the home page is the light table where frames get examined. One frame enlarged, the rest of the sheet beside it — hovering a thumbnail swaps the big frame, hovering the big frame raises a loupe that magnifies at 100%. The only concept that shows <em>many</em> photographs at once, which makes the loudest photography statement and doubles as the route into the Photo Lab. It is also the concept the rail costs most: at 920px the sheet drops to three columns.</p>
+
+      <div style="width:1120px;border:1px solid oklch(0.87 0.01 235);border-radius:14px;overflow:hidden;display:flex;background:oklch(0.97 0.005 235);">
+
+        <div style="width:200px;flex:none;display:flex;flex-direction:column;gap:18px;background:oklch(0.955 0.006 235);border-right:1px solid oklch(0.87 0.01 235);padding:14px 12px;">
+          <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:4px 6px 0;" aria-label="TenTenLoupe">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="26" height="26" role="presentation" aria-hidden="true" style="display:block;flex:none;">
+              <path d="M50 50 L97 50 A47 47 0 0 1 73.5 90.7 Z" fill="#8a6a2f"></path>
+              <path d="M50 50 L73.5 90.7 A47 47 0 0 1 26.5 90.7 Z" fill="#b08c46"></path>
+              <path d="M50 50 L26.5 90.7 A47 47 0 0 1 3 50 Z" fill="#8a6a2f"></path>
+              <path d="M50 50 L3 50 A47 47 0 0 1 26.5 9.3 Z" fill="#b08c46"></path>
+              <path d="M50 50 L26.5 9.3 A47 47 0 0 1 73.5 9.3 Z" fill="#8a6a2f"></path>
+              <path d="M50 50 L73.5 9.3 A47 47 0 0 1 97 50 Z" fill="#b08c46"></path>
+              <path d="M83 50 L66.5 78.58 L33.5 78.58 L17 50 L33.5 21.42 L66.5 21.42 Z" fill="oklch(0.955 0.006 235)"></path>
+              <rect x="47.6" y="19" width="1.6" height="8" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="50.8" y="19" width="1.6" height="8" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="73" y="49.2" width="7" height="1.6" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="49.2" y="73" width="1.6" height="7" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="20" y="49.2" width="7" height="1.6" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <line x1="50" y1="50" x2="30.95" y2="39" stroke="oklch(0.22 0.018 245)" stroke-width="2.4" stroke-linecap="round"></line>
+              <line x1="50" y1="50" x2="75.11" y2="35.5" stroke="oklch(0.22 0.018 245)" stroke-width="2" stroke-linecap="round"></line>
+              <circle cx="50" cy="50" r="3.4" fill="#c9a25e"></circle>
+              <circle cx="50" cy="50" r="48" fill="none" stroke="#8a6a2f" stroke-width="2"></circle>
+            </svg>
+            <span style="display:flex;flex-direction:column;line-height:1;">
+              <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;letter-spacing:-0.02em;color:oklch(0.22 0.018 245);">Ten<span style="color:#8a6a2f;">:</span>Ten</span>
+              <span aria-hidden="true" style="margin:4px 0;height:1px;width:100%;background:linear-gradient(90deg,transparent,rgba(138,106,47,0.75),transparent);"></span>
+              <span style="padding-left:0.46em;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.46em;color:#8a6a2f;">LOUPE</span>
+            </span>
+          </a>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;font-weight:500;background:rgba(138,106,47,0.14);color:#8a6a2f;"><span style="display:flex;"><i data-lucide="house"></i></span>Home</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Collection</div>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="list"></i></span>Collection</a>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="tag"></i></span>Brands</a>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="link-2"></i></span>Straps</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Analysis</div>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="calendar-days"></i></span>Wear Log</a>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="chart-column"></i></span>Reports</a>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="compass"></i></span>Guides</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Market</div>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="trending-up"></i></span>Market</a>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="archive"></i></span>Sold Archive</a>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="badge-dollar-sign"></i></span>Deals</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Imagery</div>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="camera"></i></span>Photo Lab</a>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="images"></i></span>Inspiration</a>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="package-plus"></i></span>Batch Import</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">System</div>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="settings"></i></span>Config</a>
+            <a href="#1b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="info"></i></span>About</a>
+          </div>
+
+          <span style="margin-top:auto;padding:12px 10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">v2.1.0</span>
+        </div>
+
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+          <div style="height:56px;flex:none;border-bottom:1px solid oklch(0.87 0.01 235);display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 16px;">
+            <span style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:8px;background:#8a6a2f;color:oklch(0.99 0.01 90);font-size:15px;font-weight:500;"><span style="display:flex;"><i data-lucide="plus"></i></span>Add Watch</span>
+            <span style="width:34px;height:34px;border-radius:9999px;background:oklch(0.94 0.008 235);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;">F</span>
+          </div>
+
+          <div style="padding:22px 24px 26px;display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;align-items:baseline;gap:12px;">
+              <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">On the table</h3>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">BEST FRAMES · LAST 30 DAYS</span>
+            </div>
+
+            <div style="display:flex;gap:20px;align-items:flex-start;">
+              <div style="flex:none;display:flex;flex-direction:column;gap:12px;width:496px;">
+                <div style="position:relative;width:496px;height:330px;background-color:oklch(0.42 0.014 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 12px,rgba(0,0,0,0.06) 12px 24px);border-radius:8px;overflow:hidden;">
+                  <span style="position:absolute;left:14px;bottom:12px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:rgba(255,255,255,0.92);">SELECTED FRAME · NATIVE 3:2</span>
+                  <sc-if value="{{ showLoupe }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:absolute;left:250px;top:76px;width:152px;height:152px;border-radius:9999px;border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 0 1px rgba(0,0,0,0.35),0 14px 34px rgba(0,0,0,0.45);background-color:oklch(0.5 0.016 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.14) 0 26px,rgba(0,0,0,0.05) 26px 52px);display:flex;align-items:center;justify-content:center;">
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:rgba(255,255,255,0.95);">100%</span>
+                  </div>
+                  </sc-if>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:16px;">
+                  <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+                    <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;">Tudor Black Bay 58</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);letter-spacing:0.06em;">M79030N-0001 · MT5402 · 39MM</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:3px;text-align:right;">
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">SCORE 94 · 3/4 ANGLE</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">f/9 · 1/160 · 9-FRAME STACK</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">CONTACT SHEET</span>
+                  <span style="flex:1;height:1px;background:oklch(0.87 0.01 235);"></span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">18</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                  <div style="aspect-ratio:1;border-radius:8px;outline:2px solid #8a6a2f;outline-offset:2px;background-color:oklch(0.42 0.014 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.5 0.016 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.38 0.012 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.55 0.012 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.45 0.014 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.5 0.016 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.38 0.012 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.55 0.012 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.45 0.014 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;background:oklch(0.99 0.003 235);border:1px solid oklch(0.87 0.01 235);border-radius:8px;padding:10px 12px;">
+                  <span style="display:flex;color:#8a6a2f;margin-top:1px;"><i data-lucide="search"></i></span>
+                  <span style="font-size:13px;color:oklch(0.48 0.008 245);line-height:1.45;">Hover the big frame for the loupe. Click a thumbnail to open it in the Photo Lab.</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:7px;border-top:1px solid oklch(0.87 0.01 235);padding-top:12px;">
+                  <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.008 245);">Frames kept this month</span><span style="font-family:'JetBrains Mono',monospace;">62</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.008 245);">Full coverage</span><span style="font-family:'JetBrains Mono',monospace;">18 / 42</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.008 245);">Awaiting review</span><span style="font-family:'JetBrains Mono',monospace;color:#8a6a2f;">7</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="1c" style="display:flex;flex-direction:column;gap:12px;width:1120px;">
+      <div style="display:flex;align-items:baseline;gap:12px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.1em;color:oklch(0.99 0.01 90);background:#8a6a2f;border-radius:8px;padding:3px 8px;">1c</span>
+        <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">The Editorial Spread</h2>
+        <span style="font-size:13px;color:oklch(0.48 0.008 245);">cover story, one watch at a time</span>
+      </div>
+      <p style="margin:0;max-width:1120px;font-size:15px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">The boldest of the three and the one that best rewards a genuinely great photograph. Framing it against the real shell changed it: the rail owns the left edge, so the photo now bleeds <strong>right</strong>, to the top, right and bottom of the content area — which reads better anyway, since the type column lands beside the nav instead of across the page from it. The angle rail beneath the type shows what you actually shot, straight from the coverage set. No crop decision, because the layout bends to the photo: portrait takes the right half as shown, landscape runs full width across the top with the type beneath.</p>
+
+      <div style="width:1120px;border:1px solid oklch(0.87 0.01 235);border-radius:14px;overflow:hidden;display:flex;background:oklch(0.97 0.005 235);">
+
+        <div style="width:200px;flex:none;display:flex;flex-direction:column;gap:18px;background:oklch(0.955 0.006 235);border-right:1px solid oklch(0.87 0.01 235);padding:14px 12px;">
+          <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:4px 6px 0;" aria-label="TenTenLoupe">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="26" height="26" role="presentation" aria-hidden="true" style="display:block;flex:none;">
+              <path d="M50 50 L97 50 A47 47 0 0 1 73.5 90.7 Z" fill="#8a6a2f"></path>
+              <path d="M50 50 L73.5 90.7 A47 47 0 0 1 26.5 90.7 Z" fill="#b08c46"></path>
+              <path d="M50 50 L26.5 90.7 A47 47 0 0 1 3 50 Z" fill="#8a6a2f"></path>
+              <path d="M50 50 L3 50 A47 47 0 0 1 26.5 9.3 Z" fill="#b08c46"></path>
+              <path d="M50 50 L26.5 9.3 A47 47 0 0 1 73.5 9.3 Z" fill="#8a6a2f"></path>
+              <path d="M50 50 L73.5 9.3 A47 47 0 0 1 97 50 Z" fill="#b08c46"></path>
+              <path d="M83 50 L66.5 78.58 L33.5 78.58 L17 50 L33.5 21.42 L66.5 21.42 Z" fill="oklch(0.955 0.006 235)"></path>
+              <rect x="47.6" y="19" width="1.6" height="8" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="50.8" y="19" width="1.6" height="8" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="73" y="49.2" width="7" height="1.6" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="49.2" y="73" width="1.6" height="7" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <rect x="20" y="49.2" width="7" height="1.6" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+              <line x1="50" y1="50" x2="30.95" y2="39" stroke="oklch(0.22 0.018 245)" stroke-width="2.4" stroke-linecap="round"></line>
+              <line x1="50" y1="50" x2="75.11" y2="35.5" stroke="oklch(0.22 0.018 245)" stroke-width="2" stroke-linecap="round"></line>
+              <circle cx="50" cy="50" r="3.4" fill="#c9a25e"></circle>
+              <circle cx="50" cy="50" r="48" fill="none" stroke="#8a6a2f" stroke-width="2"></circle>
+            </svg>
+            <span style="display:flex;flex-direction:column;line-height:1;">
+              <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;letter-spacing:-0.02em;color:oklch(0.22 0.018 245);">Ten<span style="color:#8a6a2f;">:</span>Ten</span>
+              <span aria-hidden="true" style="margin:4px 0;height:1px;width:100%;background:linear-gradient(90deg,transparent,rgba(138,106,47,0.75),transparent);"></span>
+              <span style="padding-left:0.46em;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.46em;color:#8a6a2f;">LOUPE</span>
+            </span>
+          </a>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;font-weight:500;background:rgba(138,106,47,0.14);color:#8a6a2f;"><span style="display:flex;"><i data-lucide="house"></i></span>Home</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Collection</div>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="list"></i></span>Collection</a>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="tag"></i></span>Brands</a>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="link-2"></i></span>Straps</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Analysis</div>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="calendar-days"></i></span>Wear Log</a>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="chart-column"></i></span>Reports</a>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="compass"></i></span>Guides</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Market</div>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="trending-up"></i></span>Market</a>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="archive"></i></span>Sold Archive</a>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="badge-dollar-sign"></i></span>Deals</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Imagery</div>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="camera"></i></span>Photo Lab</a>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="images"></i></span>Inspiration</a>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="package-plus"></i></span>Batch Import</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">System</div>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="settings"></i></span>Config</a>
+            <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="info"></i></span>About</a>
+          </div>
+
+          <span style="margin-top:auto;padding:12px 10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">v2.1.0</span>
+        </div>
+
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+          <div style="height:56px;flex:none;border-bottom:1px solid oklch(0.87 0.01 235);display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 16px;">
+            <span style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:8px;background:#8a6a2f;color:oklch(0.99 0.01 90);font-size:15px;font-weight:500;"><span style="display:flex;"><i data-lucide="plus"></i></span>Add Watch</span>
+            <span style="width:34px;height:34px;border-radius:9999px;background:oklch(0.94 0.008 235);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;">F</span>
+          </div>
+
+          <div style="flex:1;display:flex;align-items:stretch;min-height:600px;">
+            <div style="width:396px;flex:none;padding:32px 26px;display:flex;flex-direction:column;gap:24px;">
+              <div style="display:flex;flex-direction:column;gap:9px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#8a6a2f;">IN THE COLLECTION</span>
+                <span style="font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;line-height:1.08;letter-spacing:-0.02em;">Omega<br />Speedmaster<br />Professional</span>
+                <span style="font-size:15px;">310.30.42.50.01.001 · Calibre 3861</span>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid oklch(0.87 0.01 235);padding-bottom:7px;"><span style="color:oklch(0.48 0.008 245);">Acquired</span><span style="font-family:'JetBrains Mono',monospace;">14 Mar 2024</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid oklch(0.87 0.01 235);padding-bottom:7px;"><span style="color:oklch(0.48 0.008 245);">Case · movement</span><span style="font-family:'JetBrains Mono',monospace;">42mm · Manual</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.008 245);">Worn</span><span style="font-family:'JetBrains Mono',monospace;">12 times · 3 days ago</span></div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">COVERAGE</span>
+                  <span style="flex:1;height:1px;background:oklch(0.87 0.01 235);"></span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">5 / 6</span>
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                    <div style="aspect-ratio:1;border-radius:8px;outline:2px solid #8a6a2f;outline-offset:2px;background-color:oklch(0.42 0.014 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.008 245);text-align:center;">HERO</span>
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                    <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.5 0.016 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.008 245);text-align:center;">3/4</span>
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                    <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.38 0.012 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.008 245);text-align:center;">CASE</span>
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                    <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.55 0.012 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.008 245);text-align:center;">BACK</span>
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                    <div style="aspect-ratio:1;border-radius:8px;background-color:oklch(0.45 0.014 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 8px,rgba(0,0,0,0.06) 8px 16px);"></div>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.008 245);text-align:center;">LUME</span>
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                    <div style="aspect-ratio:1;border-radius:8px;border:1px dashed oklch(0.87 0.01 235);display:flex;align-items:center;justify-content:center;color:oklch(0.48 0.008 245);"><i data-lucide="plus"></i></div>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.008 245);text-align:center;">CLASP</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:auto;display:flex;flex-direction:column;gap:14px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="display:flex;align-items:center;gap:8px;height:36px;padding:0 16px;border-radius:8px;background:#8a6a2f;color:oklch(0.99 0.01 90);font-size:15px;font-weight:500;">Open watch<span style="display:flex;"><i data-lucide="arrow-right"></i></span></span>
+                  <span style="display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);font-size:15px;">Shuffle</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="position:relative;width:26px;height:26px;flex:none;">
+                    <svg viewBox="0 0 36 36" style="width:26px;height:26px;display:block;transform:rotate(-90deg);">
+                      <circle cx="18" cy="18" r="15" fill="none" stroke="oklch(0.87 0.01 235)" stroke-width="2.5"></circle>
+                      <circle cx="18" cy="18" r="15" fill="none" stroke="#8a6a2f" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="94.2" stroke-dashoffset="62"></circle>
+                    </svg>
+                  </div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);letter-spacing:0.1em;">08 / 42 · 42 WATCHES · 14 BRANDS</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="flex:1;min-width:0;background-color:oklch(0.42 0.014 245);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.10) 0 12px,rgba(0,0,0,0.06) 12px 24px);position:relative;">
+              <span style="position:absolute;right:20px;top:18px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:rgba(255,255,255,0.92);">FULL BLEED RIGHT · HERO ANGLE</span>
+              <span style="position:absolute;right:20px;bottom:18px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;color:rgba(255,255,255,0.92);">RF 100 MACRO · f/11 · 1/125 · 7-FRAME STACK</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="max-width:900px;border-top:1px solid oklch(0.87 0.01 235);padding-top:22px;display:flex;flex-direction:column;gap:10px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#8a6a2f;">WHAT CARRIES OVER, AND WHAT THE DIAL BECOMES</span>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;">Everything in <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">watch-hero.tsx</code> except the mask is worth keeping, and all three inherit it: the seeded shuffle, the per-device dwell preference, hover-to-pause, arrow-key stepping, the reduced-motion freeze, and the wear line. The dial motif survives as chrome in <a href="#1a" style="color:#8a6a2f;">1a</a> and <a href="#1c" style="color:#8a6a2f;">1c</a> — the brass rim line already laps once a minute as a live seconds hand, and it keeps exactly that job as the rotation timer, with no photograph behind it. <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">dial_focal_x/y</code> and <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">dial_zoom</code> then serve only the square gallery thumbnails in <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">gallery-grid.tsx</code>, where a centre-weighted crop of a composed frame is usually fine — so the framing editor can shrink to picking which frame is the hero, which the Photo Lab already does.</p>
+  </div>
+
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showLoupe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;1b Light Table&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() { this.icons(0) }
+  componentDidUpdate() { this.icons(0) }
+  icons(n) {
+    if (window.lucide) {
+      window.lucide.createIcons({ attrs: { width: 16, height: 16, "stroke-width": 1.75 } })
+    } else if (n < 40) {
+      setTimeout(() => this.icons(n + 1), 120)
+    }
+  }
+  renderVals() {
+    return { showLoupe: this.props.showLoupe ?? true }
+  }
+}
+</script>
+</body>
+</html>

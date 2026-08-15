@@ -36,6 +36,26 @@ export interface PhotoLabCoverage {
   reshootCount: number
 }
 
+/** A score row still waiting in Review: not a stack source, never reviewed.
+ *  The ONE definition — the coverage matrix and the home Light Table's
+ *  "Awaiting review" stat must never disagree. */
+export function isAwaitingReview(
+  s: Pick<WatchImageScore, "stack_role" | "review_state">
+): boolean {
+  return s.stack_role !== "source" && (s.review_state ?? "unreviewed") === "unreviewed"
+}
+
+/** Just the Awaiting-review count (home Light Table stats block, Phase 6). */
+export async function getAwaitingReviewCount(): Promise<number> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("watch_image_scores")
+    .select("stack_role, review_state")
+  return (
+    (data ?? []) as Pick<WatchImageScore, "stack_role" | "review_state">[]
+  ).filter(isAwaitingReview).length
+}
+
 export async function getPhotoLabCoverage(): Promise<PhotoLabCoverage> {
   const supabase = await createClient()
 
@@ -79,7 +99,7 @@ export async function getPhotoLabCoverage(): Promise<PhotoLabCoverage> {
   let awaitingReview = 0
   for (const s of scores) {
     if (s.stack_role === "source") continue
-    if ((s.review_state ?? "unreviewed") === "unreviewed") awaitingReview++
+    if (isAwaitingReview(s)) awaitingReview++
     const entry = byWatch.get(s.watch_id)
     if (!entry) continue
     const angle = angleFromScoreClass(s.angle_class)

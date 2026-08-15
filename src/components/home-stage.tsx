@@ -2,21 +2,21 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { WatchHero } from "@/components/watch-hero"
+import { LightTable } from "@/app/(dashboard)/dashboard/_components/light-table"
 import { DisplayBoxHome } from "@/components/display-box-home"
 import { DISPLAY_BOX_HOME_KEY } from "@/lib/preferences"
 import { cn } from "@/lib/utils"
-import type { WatchWithCover } from "@/lib/types/watch"
+import type { LightTableStats, RotationSet } from "@/lib/queries/light-table"
 import type { CurrentDisplayBox } from "@/lib/queries/display-box"
 
 interface HomeStageProps {
-  watches: WatchWithCover[]
+  sets: RotationSet[]
   seed: number
-  stats: { watches: number; brands: number; wornThisWeek: number }
+  stats: LightTableStats
   displayBox: CurrentDisplayBox | null
 }
 
-export function HomeStage({ watches, seed, stats, displayBox }: HomeStageProps) {
+export function HomeStage({ sets, seed, stats, displayBox }: HomeStageProps) {
   const [showBox, setShowBox] = useState(false)
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export function HomeStage({ watches, seed, stats, displayBox }: HomeStageProps) 
           aria-pressed={!showBox}
           className={cn(pill, !showBox ? active : idle)}
         >
-          Living Dial
+          Light Table
         </button>
         <button
           type="button"
@@ -69,10 +69,7 @@ export function HomeStage({ watches, seed, stats, displayBox }: HomeStageProps) 
           </div>
         )
       ) : (
-        // Extra top padding clears the watch's top lug, which overhangs the case.
-        <div className="pt-10 sm:pt-14">
-          <WatchHero watches={watches} seed={seed} stats={stats} />
-        </div>
+        <LightTable sets={sets} seed={seed} stats={stats} />
       )}
     </div>
   )

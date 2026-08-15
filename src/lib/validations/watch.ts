@@ -187,7 +187,7 @@ export const watchFormSchema = z.object({
 export type WatchFormValues = z.input<typeof watchFormSchema>
 export type WatchFormParsed = z.output<typeof watchFormSchema>
 
-// Dial framing — focal point (% within cover photo) + zoom for the home-page dial marker
+// Thumbnail framing — focal point (% within cover photo) + zoom for the square collection tiles
 export const dialFramingSchema = z.object({
   dial_focal_x: z.number().min(0).max(100),
   dial_focal_y: z.number().min(0).max(100),

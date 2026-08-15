@@ -207,52 +207,6 @@ select optgroup {
   color: var(--popover-foreground);
 }
 
-/* ── Watch Dial ── */
-
-.dial-sunburst {
-  /* Smoked-blue sunburst dial: a radial glow toward center for the "sunburst"
-     sheen, over alternating conic rays for the brushed-metal ray texture.
-     Distinct mid-blue surface so the face reads as a real dial against the
-     dark page and the steel bezel. */
-  background:
-    radial-gradient(
-      circle at 50% 42%,
-      oklch(0.52 0.092 232) 0%,
-      oklch(0.43 0.085 238) 38%,
-      oklch(0.33 0.07 244) 72%,
-      oklch(0.27 0.055 246) 100%
-    ),
-    conic-gradient(
-      from 0deg,
-      oklch(0.36 0.07 244) 0deg,
-      oklch(0.44 0.08 234) 15deg,
-      oklch(0.36 0.07 244) 30deg,
-      oklch(0.44 0.08 234) 45deg,
-      oklch(0.36 0.07 244) 60deg,
-      oklch(0.44 0.08 234) 75deg,
-      oklch(0.36 0.07 244) 90deg,
-      oklch(0.44 0.08 234) 105deg,
-      oklch(0.36 0.07 244) 120deg,
-      oklch(0.44 0.08 234) 135deg,
-      oklch(0.36 0.07 244) 150deg,
-      oklch(0.44 0.08 234) 165deg,
-      oklch(0.36 0.07 244) 180deg,
-      oklch(0.44 0.08 234) 195deg,
-      oklch(0.36 0.07 244) 210deg,
-      oklch(0.44 0.08 234) 225deg,
-      oklch(0.36 0.07 244) 240deg,
-      oklch(0.44 0.08 234) 255deg,
-      oklch(0.36 0.07 244) 270deg,
-      oklch(0.44 0.08 234) 285deg,
-      oklch(0.36 0.07 244) 300deg,
-      oklch(0.44 0.08 234) 315deg,
-      oklch(0.36 0.07 244) 330deg,
-      oklch(0.44 0.08 234) 345deg,
-      oklch(0.36 0.07 244) 360deg
-    );
-  background-blend-mode: soft-light, normal;
-}
-
 /* ── Watch Strap (leather, with edge stitching) ── */
 
 .watch-strap {
@@ -297,27 +251,6 @@ select optgroup {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-/* Home hero — plain photo cross-fade as the spotlighted watch changes */
-@keyframes cshero-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Home hero — brass rim line sweeps one full lap per minute (looped infinitely).
-   300 ≥ the r=47.5 circle circumference (~298.5), so it starts empty. */
-@keyframes cshero-ring {
-  from {
-    stroke-dashoffset: 300;
-  }
-  to {
-    stroke-dashoffset: 0;
   }
 }
 
@@ -374,9 +307,6 @@ select optgroup {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dial-sunburst {
-    background: oklch(0.4 0.08 238);
-  }
   /* Freeze everything the design system animates (D4): the hero ring sweep,
      caption/photo cross-fades, and tile hover scales. The hero's JS swap
      interval is also disabled in-component. */
