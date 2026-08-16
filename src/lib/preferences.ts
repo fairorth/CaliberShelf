@@ -49,3 +49,37 @@ export function readHeroDwellSeconds(): number {
     ? raw
     : DEFAULT_HERO_DWELL_SECONDS
 }
+
+/** Home light table: drop into glance mode when idle. Default ON — the screen
+ *  is meant to be left up, and glance mode is the reason it can be. */
+export const HOME_GLANCE_ENABLED_KEY = "home-glance-enabled"
+export const DEFAULT_GLANCE_ENABLED = true
+
+/** Seconds of no input before glance mode engages. */
+export const HOME_GLANCE_DELAY_KEY = "home-glance-delay"
+export const DEFAULT_GLANCE_DELAY_SECONDS = 60
+/** Delays offered in Settings (seconds); "Never" is the enabled toggle off. */
+export const GLANCE_DELAY_OPTIONS = [30, 60, 120, 300] as const
+
+/** "30 seconds" · "1 minute" · "5 minutes" — same shape as heroDwellLabel. */
+export function glanceDelayLabel(seconds: number): string {
+  return heroDwellLabel(seconds)
+}
+
+/** Read the glance toggle. Absent means ON, so an existing install gets the
+ *  feature without having to opt in; only an explicit "0" turns it off. */
+export function readGlanceEnabled(): boolean {
+  if (typeof window === "undefined") return DEFAULT_GLANCE_ENABLED
+  const raw = localStorage.getItem(HOME_GLANCE_ENABLED_KEY)
+  if (raw === null) return DEFAULT_GLANCE_ENABLED
+  return raw === "1"
+}
+
+/** Read the idle delay (seconds), falling back to the default. Client-only. */
+export function readGlanceDelaySeconds(): number {
+  if (typeof window === "undefined") return DEFAULT_GLANCE_DELAY_SECONDS
+  const raw = Number(localStorage.getItem(HOME_GLANCE_DELAY_KEY))
+  return (GLANCE_DELAY_OPTIONS as readonly number[]).includes(raw)
+    ? raw
+    : DEFAULT_GLANCE_DELAY_SECONDS
+}

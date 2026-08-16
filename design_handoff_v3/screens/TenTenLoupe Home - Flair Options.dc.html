@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; background: oklch(0.97 0.005 235); color: oklch(0.22 0.018 245); font-family: Geist, "Helvetica Neue", Helvetica, sans-serif; }
+  a { color: oklch(0.22 0.018 245); text-decoration: none; }
+  a:hover { color: #8a6a2f; }
+  @keyframes kb { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.07) translate(-1.2%, -0.8%); } }
+  @keyframes bloomdrift { from { transform: scale(1.3) translate(0, 0); } to { transform: scale(1.42) translate(1.5%, -1%); } }
+  @keyframes sweep { from { stroke-dashoffset: 94.25; } to { stroke-dashoffset: 0; } }
+</style>
+</helmet>
+
+<section style="padding:44px 40px 130px;display:flex;flex-direction:column;gap:34px;align-items:flex-start;">
+
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#8a6a2f;">TURN 2 · LIGHT TABLE · FLAIR</div>
+    <h1 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;letter-spacing:-0.02em;">Warmth, without whimsy</h1>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;">Your screenshot diagnoses itself: a warm, coloured photograph sitting in a cold grey void. I lifted the Citizen frame out of it and sampled — dial <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">#646f6e</code>, surround <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">#605243</code> — so every option below is judged against your real frame. The dryness is not the data. It is four fixable things: the letterbox is dead, the right column is empty whenever a watch has one frame, the nulls read as failures (<code style="font-family:'JetBrains Mono',monospace;font-size:13px;">0 / 5 angles</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">not yet worn</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">—</code>), and the watch's own name is set smaller than the page title. Refer to these as <a href="#2a" style="color:#8a6a2f;">2a</a>, <a href="#2b" style="color:#8a6a2f;">2b</a>, <a href="#2c" style="color:#8a6a2f;">2c</a>. They compose — 2a is a base layer, 2b a skin, 2c a mode.</p>
+    <p style="margin:0;font-size:13px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">Each is drawn at 920px, the real content width beside the 200px rail.</p>
+  </div>
+
+  <div id="2a" style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.1em;color:oklch(0.99 0.01 90);background:#8a6a2f;border-radius:8px;padding:3px 8px;">2a</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Developed in colour</h2>
+      <span style="font-size:13px;color:oklch(0.48 0.008 245);">the frame lights its own room</span>
+    </div>
+    <p style="margin:0;max-width:920px;font-size:15px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">The single highest-return change, and the one I would ship regardless of the others. The letterbox stops being grey: it fills with a heavily blurred, darkened copy of the frame itself, so a teal dial gives you a teal room and a warm desk shot gives you a warm one. Because the colour is <em>derived from the photograph</em>, the page recolours itself all day as the rotation moves, which is the &ldquo;dancing by&rdquo; feeling — motion of light, not motion of interface. The frame also drifts: a 1.00→1.07 scale across the full dwell, far too slow to read as animation, and a cross-fade between watches. The watch's name becomes the headline at 38px, and the frame is set larger.</p>
+    <p style="margin:0;max-width:920px;font-size:13px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;"><strong>The guardrail that keeps this from becoming slop:</strong> the derived colour is allowed to touch the bloom field and nothing else. Never text, never a border, never a control. Brass stays the only accent — otherwise this reintroduces the blue-accent creep the FIXES rounds cleaned up.</p>
+
+    <div style="width:920px;background:oklch(0.99 0.003 235);border:1px solid oklch(0.87 0.01 235);border-radius:14px;padding:22px 24px 24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;line-height:1.25;">On the table</h3>
+          <div style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">
+            <span style="color:#8a6a2f;">ALL WATCHES</span><span>·</span><span>119 WATCHES · 115 WITH FRAMES</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);flex:none;">
+          <span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="layers"></i></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">ROTATION</span>
+          <span style="font-size:13px;font-weight:500;">All Watches</span>
+          <span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-down"></i></span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:20px;align-items:stretch;">
+        <div style="width:520px;flex:none;display:flex;flex-direction:column;gap:12px;">
+          <div style="position:relative;width:520px;height:390px;border-radius:8px;overflow:hidden;background:oklch(0.30 0.010 245);">
+            <img src="frame-citizen.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(34px) saturate(1.5);opacity:0.85;animation:bloomdrift 60s ease-in-out infinite alternate;" />
+            <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 45%,rgba(0,0,0,0.10) 0%,rgba(0,0,0,0.52) 100%);"></div>
+            <img src="frame-citizen.png" alt="Citizen NJ0180-80X" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;animation:kb 30s ease-in-out infinite alternate;" />
+            <span style="position:absolute;right:12px;top:12px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;color:oklch(0.22 0.018 245);background:rgba(255,255,255,0.92);border-radius:9999px;padding:3px 9px;">UNTAGGED</span>
+            <span style="position:absolute;left:14px;bottom:12px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:rgba(255,255,255,0.92);text-shadow:0 1px 3px rgba(0,0,0,0.6);">CITIZEN NJ0180-80X</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="position:relative;width:30px;height:30px;flex:none;">
+              <svg viewBox="0 0 36 36" style="width:30px;height:30px;display:block;transform:rotate(-90deg);">
+                <circle cx="18" cy="18" r="15" fill="none" stroke="oklch(0.87 0.01 235)" stroke-width="2"></circle>
+                <circle cx="18" cy="18" r="15" fill="none" stroke="#8a6a2f" stroke-width="2" stroke-linecap="round" stroke-dasharray="94.25" style="animation:sweep 30s linear infinite;"></circle>
+              </svg>
+              <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;color:#8a6a2f;"><i data-lucide="aperture"></i></span>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:oklch(0.48 0.008 245);">11 / 60</span>
+            <span style="width:1px;height:16px;background:oklch(0.87 0.01 235);"></span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:13px;"><span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-left"></i></span>Previous</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:13px;">Next<span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-right"></i></span></span>
+            <span style="width:1px;height:16px;background:oklch(0.87 0.01 235);"></span>
+            <span style="display:flex;align-items:center;gap:7px;font-size:13px;color:#8a6a2f;font-weight:500;">Open watch<span style="display:flex;"><i data-lucide="arrow-up-right"></i></span></span>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#8a6a2f;">NOW ON THE TABLE</span>
+            <span style="font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;line-height:1.04;letter-spacing:-0.02em;">Citizen</span>
+            <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:400;line-height:1.2;">NJ0180-80X</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.008 245);margin-top:2px;">MIYOTA 8213 · 40MM · TITANIUM</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid oklch(0.87 0.01 235);padding-bottom:7px;"><span style="color:oklch(0.48 0.008 245);">Acquired</span><span style="font-family:'JetBrains Mono',monospace;">15 Aug 2024 · a year ago</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid oklch(0.87 0.01 235);padding-bottom:7px;"><span style="color:oklch(0.48 0.008 245);">Worn</span><span style="font-family:'JetBrains Mono',monospace;color:#8a6a2f;">never — give it a day</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.008 245);">Frames</span><span style="font-family:'JetBrains Mono',monospace;">1 kept</span></div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">COVERAGE</span>
+              <span style="flex:1;height:1px;background:oklch(0.87 0.01 235);"></span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a6a2f;">1 OF 5 SHOT</span>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;outline:2px solid #8a6a2f;outline-offset:2px;"><img src="frame-citizen.png" alt="" style="width:100%;height:100%;object-fit:cover;" /></div>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);text-align:center;">FLAT</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                <div style="aspect-ratio:1;border-radius:8px;border:1px dashed oklch(0.87 0.01 235);display:flex;align-items:center;justify-content:center;color:oklch(0.48 0.008 245);"><i data-lucide="plus"></i></div>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);text-align:center;">HERO</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                <div style="aspect-ratio:1;border-radius:8px;border:1px dashed oklch(0.87 0.01 235);display:flex;align-items:center;justify-content:center;color:oklch(0.48 0.008 245);"><i data-lucide="plus"></i></div>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);text-align:center;">PROFILE</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                <div style="aspect-ratio:1;border-radius:8px;border:1px dashed oklch(0.87 0.01 235);display:flex;align-items:center;justify-content:center;color:oklch(0.48 0.008 245);"><i data-lucide="plus"></i></div>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);text-align:center;">BACK</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                <div style="aspect-ratio:1;border-radius:8px;border:1px dashed oklch(0.87 0.01 235);display:flex;align-items:center;justify-content:center;color:oklch(0.48 0.008 245);"><i data-lucide="plus"></i></div>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);text-align:center;">MACRO</span>
+              </div>
+            </div>
+            <span style="font-size:13px;color:oklch(0.48 0.008 245);line-height:1.45;">Four angles still to shoot — the empty cells are the shot list, not a hole in the layout.</span>
+          </div>
+
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:7px;border-top:1px solid oklch(0.87 0.01 235);padding-top:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.008 245);">Frames kept this month</span><span style="font-family:'JetBrains Mono',monospace;">63</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.008 245);">Awaiting review</span><span style="font-family:'JetBrains Mono',monospace;">0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="2b" style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.1em;color:oklch(0.99 0.01 90);background:#8a6a2f;border-radius:8px;padding:3px 8px;">2b</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">The film edge</h2>
+      <span style="font-size:13px;color:oklch(0.48 0.008 245);">the light table, taken literally</span>
+    </div>
+    <p style="margin:0;max-width:920px;font-size:15px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">The flair comes from the craft vocabulary instead of from colour: sprocket edges, rebate markings along the frame, a stock line, hand-numbered frames. It is the warmest of the three because the ground moves from cool slate to bone paper, and it earns its technical text — <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">TENTENLOUPE 400 · 11/60</code> along the edge reads as film marking rather than as a data field. The contact sheet becomes an actual strip, and unshot angles are visible empty cells in the strip, which is the same fix as 2a's shot list but with more character. Best paired with 2a's bloom behind the frame; shown here on its own so you can judge the vocabulary.</p>
+
+    <div style="width:920px;background:oklch(0.955 0.012 85);border:1px solid oklch(0.87 0.012 85);border-radius:14px;padding:22px 24px 24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;line-height:1.25;">On the table</h3>
+          <div style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.010 85);">
+            <span style="color:#8a6a2f;">ALL WATCHES</span><span>·</span><span>119 WATCHES · 115 WITH FRAMES</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:8px;border:1px solid oklch(0.87 0.012 85);background:oklch(0.99 0.008 85);flex:none;">
+          <span style="display:flex;color:oklch(0.48 0.010 85);"><i data-lucide="layers"></i></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.010 85);">ROTATION</span>
+          <span style="font-size:13px;font-weight:500;">All Watches</span>
+          <span style="display:flex;color:oklch(0.48 0.010 85);"><i data-lucide="chevron-down"></i></span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:20px;align-items:stretch;">
+        <div style="width:520px;flex:none;display:flex;flex-direction:column;gap:12px;">
+          <div style="width:520px;background:oklch(0.26 0.008 85);border-radius:8px;padding:9px 0;display:flex;flex-direction:column;gap:7px;">
+            <div style="height:11px;margin:0 12px;background-image:repeating-linear-gradient(90deg,oklch(0.955 0.012 85) 0 12px,transparent 12px 26px);border-radius:2px;"></div>
+            <div style="display:flex;align-items:stretch;gap:8px;padding:0 12px;">
+              <span style="writing-mode:vertical-rl;transform:rotate(180deg);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.22em;color:rgba(255,255,255,0.55);text-align:center;">11</span>
+              <div style="flex:1;min-width:0;position:relative;height:336px;background:oklch(0.20 0.006 85);overflow:hidden;">
+                <img src="frame-citizen.png" alt="Citizen NJ0180-80X" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;animation:kb 30s ease-in-out infinite alternate;" />
+                <span style="position:absolute;right:10px;top:10px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;color:oklch(0.22 0.018 245);background:rgba(255,255,255,0.92);border-radius:9999px;padding:3px 9px;">UNTAGGED</span>
+              </div>
+              <span style="writing-mode:vertical-rl;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.22em;color:rgba(255,255,255,0.55);text-align:center;">NJ0180-80X</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.20em;color:#c9a25e;">TENTENLOUPE 400</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.20em;color:rgba(255,255,255,0.55);">FRAME 11 / 60 · 15 AUG 2026</span>
+            </div>
+            <div style="height:11px;margin:0 12px;background-image:repeating-linear-gradient(90deg,oklch(0.955 0.012 85) 0 12px,transparent 12px 26px);border-radius:2px;"></div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="position:relative;width:30px;height:30px;flex:none;">
+              <svg viewBox="0 0 36 36" style="width:30px;height:30px;display:block;transform:rotate(-90deg);">
+                <circle cx="18" cy="18" r="15" fill="none" stroke="oklch(0.87 0.012 85)" stroke-width="2"></circle>
+                <circle cx="18" cy="18" r="15" fill="none" stroke="#8a6a2f" stroke-width="2" stroke-linecap="round" stroke-dasharray="94.25" style="animation:sweep 30s linear infinite;"></circle>
+              </svg>
+              <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;color:#8a6a2f;"><i data-lucide="aperture"></i></span>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:oklch(0.48 0.010 85);">11 / 60</span>
+            <span style="width:1px;height:16px;background:oklch(0.87 0.012 85);"></span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:13px;"><span style="display:flex;color:oklch(0.48 0.010 85);"><i data-lucide="chevron-left"></i></span>Previous</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:13px;">Next<span style="display:flex;color:oklch(0.48 0.010 85);"><i data-lucide="chevron-right"></i></span></span>
+            <span style="width:1px;height:16px;background:oklch(0.87 0.012 85);"></span>
+            <span style="display:flex;align-items:center;gap:7px;font-size:13px;color:#8a6a2f;font-weight:500;">Open watch<span style="display:flex;"><i data-lucide="arrow-up-right"></i></span></span>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#8a6a2f;">SHEET 07 · FRAME 11</span>
+            <span style="font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;line-height:1.04;letter-spacing:-0.02em;">Citizen</span>
+            <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:400;line-height:1.2;">NJ0180-80X</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.010 85);margin-top:2px;">MIYOTA 8213 · 40MM · TITANIUM</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid oklch(0.87 0.012 85);padding-bottom:7px;"><span style="color:oklch(0.48 0.010 85);">Acquired</span><span style="font-family:'JetBrains Mono',monospace;">15 Aug 2024 · a year ago</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid oklch(0.87 0.012 85);padding-bottom:7px;"><span style="color:oklch(0.48 0.010 85);">Worn</span><span style="font-family:'JetBrains Mono',monospace;color:#8a6a2f;">never — give it a day</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.010 85);">Frames</span><span style="font-family:'JetBrains Mono',monospace;">1 kept</span></div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.010 85);">THE STRIP</span>
+              <span style="flex:1;height:1px;background:oklch(0.87 0.012 85);"></span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a6a2f;">1 OF 5 SHOT</span>
+            </div>
+            <div style="background:oklch(0.26 0.008 85);border-radius:8px;padding:7px 8px;display:flex;flex-direction:column;gap:6px;">
+              <div style="height:9px;background-image:repeating-linear-gradient(90deg,oklch(0.955 0.012 85) 0 9px,transparent 9px 20px);border-radius:2px;"></div>
+              <div style="display:flex;gap:5px;">
+                <div style="flex:1;aspect-ratio:1;overflow:hidden;outline:2px solid #c9a25e;outline-offset:-2px;"><img src="frame-citizen.png" alt="" style="width:100%;height:100%;object-fit:cover;" /></div>
+                <div style="flex:1;aspect-ratio:1;background:oklch(0.20 0.006 85);display:flex;align-items:center;justify-content:center;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.62);">·</span></div>
+                <div style="flex:1;aspect-ratio:1;background:oklch(0.20 0.006 85);display:flex;align-items:center;justify-content:center;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.62);">·</span></div>
+                <div style="flex:1;aspect-ratio:1;background:oklch(0.20 0.006 85);display:flex;align-items:center;justify-content:center;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.62);">·</span></div>
+                <div style="flex:1;aspect-ratio:1;background:oklch(0.20 0.006 85);display:flex;align-items:center;justify-content:center;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.62);">·</span></div>
+              </div>
+              <div style="display:flex;gap:5px;">
+                <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;color:#c9a25e;text-align:center;">FLAT</span>
+                <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.62);text-align:center;">HERO</span>
+                <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.62);text-align:center;">PROF</span>
+                <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.62);text-align:center;">BACK</span>
+                <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.62);text-align:center;">MACRO</span>
+              </div>
+              <div style="height:9px;background-image:repeating-linear-gradient(90deg,oklch(0.955 0.012 85) 0 9px,transparent 9px 20px);border-radius:2px;"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:7px;border-top:1px solid oklch(0.87 0.012 85);padding-top:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.010 85);">Frames kept this month</span><span style="font-family:'JetBrains Mono',monospace;">63</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:oklch(0.48 0.010 85);">Awaiting review</span><span style="font-family:'JetBrains Mono',monospace;">0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="2c" style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.1em;color:oklch(0.99 0.01 90);background:#8a6a2f;border-radius:8px;padding:3px 8px;">2c</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Glance mode</h2>
+      <span style="font-size:13px;color:oklch(0.48 0.008 245);">the page you actually leave up all day</span>
+    </div>
+    <p style="margin:0;max-width:920px;font-size:15px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">This is the direct answer to &ldquo;I intend to leave it up all day.&rdquo; A working screen and an ambient screen want opposite things, and right now one layout is trying to be both — which is exactly why it reads as dry. So: after 60 seconds without input, the chrome fades away. The frame grows to fill the stage, the bloom carries the colour, and all that remains is the brand, the reference, one quiet line, and the brass ring keeping time. Move the mouse and the working view returns instantly. Nothing is lost and nothing is hidden — it is the same rotation, dressed for glancing at from across the room.</p>
+    <p style="margin:0;max-width:920px;font-size:13px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">Cheap to build on what exists: one idle timer, one CSS class, no new data. It also inherits the reduced-motion rule — if motion is reduced, glance mode still fades in but the frame does not drift.</p>
+
+    <div style="width:920px;border:1px solid oklch(0.87 0.01 235);border-radius:14px;overflow:hidden;position:relative;background:oklch(0.20 0.010 245);">
+      <div style="position:relative;width:920px;height:560px;overflow:hidden;">
+        <img src="frame-citizen.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(46px) saturate(1.6);opacity:0.9;animation:bloomdrift 60s ease-in-out infinite alternate;" />
+        <div style="position:absolute;inset:0;background:radial-gradient(110% 85% at 50% 42%,rgba(0,0,0,0.06) 0%,rgba(0,0,0,0.62) 100%);"></div>
+        <img src="frame-citizen.png" alt="Citizen NJ0180-80X" style="position:absolute;left:0;right:0;top:26px;bottom:96px;width:100%;height:auto;max-height:calc(100% - 122px);object-fit:contain;animation:kb 30s ease-in-out infinite alternate;" />
+
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:22px 28px;display:flex;align-items:flex-end;gap:20px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.45));">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+            <span style="font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;line-height:1.04;letter-spacing:-0.02em;color:oklch(0.99 0.003 235);text-shadow:0 1px 8px rgba(0,0,0,0.5);">Citizen</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.14em;color:rgba(255,255,255,0.86);">NJ0180-80X · MIYOTA 8213 · 40MM TITANIUM</span>
+          </div>
+          <div style="flex:none;display:flex;align-items:center;gap:12px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:rgba(255,255,255,0.7);">11 / 60</span>
+            <div style="position:relative;width:26px;height:26px;">
+              <svg viewBox="0 0 36 36" style="width:26px;height:26px;display:block;transform:rotate(-90deg);">
+                <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.5"></circle>
+                <circle cx="18" cy="18" r="15" fill="none" stroke="#c9a25e" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="94.25" style="animation:sweep 30s linear infinite;"></circle>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:28px;top:24px;display:flex;align-items:center;gap:9px;opacity:0.5;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="22" height="22" role="presentation" aria-hidden="true" style="display:block;flex:none;">
+            <circle cx="50" cy="50" r="48" fill="none" stroke="#c9a25e" stroke-width="3"></circle>
+            <path d="M83 50 L66.5 78.58 L33.5 78.58 L17 50 L33.5 21.42 L66.5 21.42 Z" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="3"></path>
+          </svg>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.3em;color:rgba(255,255,255,0.8);">LOUPE</span>
+        </div>
+
+        <div style="position:absolute;right:24px;top:22px;display:flex;align-items:center;gap:7px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.18);border-radius:9999px;padding:5px 11px;">
+          <span style="display:flex;color:rgba(255,255,255,0.75);"><i data-lucide="mouse-pointer-2"></i></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:rgba(255,255,255,0.75);">MOVE TO RETURN</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:920px;border-top:1px solid oklch(0.87 0.01 235);padding-top:22px;display:flex;flex-direction:column;gap:10px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#8a6a2f;">WHAT I WOULD DO</span>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;">Ship <a href="#2a" style="color:#8a6a2f;">2a</a> and <a href="#2c" style="color:#8a6a2f;">2c</a> together and hold <a href="#2b" style="color:#8a6a2f;">2b</a>. 2a fixes the actual defect — a photograph in a grey void — and costs one blurred copy of an image you already load. 2c gives you the all-day artifact you asked for, and is an idle timer plus a class. 2b is the most characterful and the most opinionated: film vocabulary is lovely until the day you shoot a watch that has nothing to do with film, and it also warms the whole ground, which is a bigger design-system decision than the other two. Try it after the first two are in.</p>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;">Three smaller notes that apply to all of them. The nulls should read as invitations — <em>never — give it a day</em> instead of <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">not yet worn</code>, and the empty coverage cells as a shot list instead of <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">0 / 5 angles</code>. The watch, not the page, should carry the largest type. And the dwell wants to be much longer than 30 seconds for an all-day screen — 90 to 120 makes it feel like a gallery rather than a slideshow, and it is already a preference you can change.</p>
+  </div>
+
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.icons(0) }
+  componentDidUpdate() { this.icons(0) }
+  icons(n) {
+    if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16, "stroke-width": 1.75 } })
+    else if (n < 40) setTimeout(() => this.icons(n + 1), 120)
+  }
+}
+</script>
+</body>
+</html>

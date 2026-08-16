@@ -11,7 +11,15 @@ import {
   HERO_DWELL_KEY,
   HERO_DWELL_OPTIONS,
   DEFAULT_HERO_DWELL_SECONDS,
+  DEFAULT_GLANCE_DELAY_SECONDS,
+  DEFAULT_GLANCE_ENABLED,
+  GLANCE_DELAY_OPTIONS,
+  HOME_GLANCE_DELAY_KEY,
+  HOME_GLANCE_ENABLED_KEY,
+  glanceDelayLabel,
   heroDwellLabel,
+  readGlanceDelaySeconds,
+  readGlanceEnabled,
   readHeroDwellSeconds,
 } from "@/lib/preferences"
 import { saveWatchImagesPath } from "@/lib/actions/settings-actions"
@@ -23,6 +31,8 @@ export function SettingsTab({
 }) {
   const [showCost, setShowCost] = useState(false)
   const [heroDwell, setHeroDwell] = useState<number>(DEFAULT_HERO_DWELL_SECONDS)
+  const [glanceEnabled, setGlanceEnabled] = useState(DEFAULT_GLANCE_ENABLED)
+  const [glanceDelay, setGlanceDelay] = useState<number>(DEFAULT_GLANCE_DELAY_SECONDS)
   const [imagesPath, setImagesPath] = useState(initialWatchImagesPath)
   const [isSaving, startSaving] = useTransition()
 
@@ -31,7 +41,19 @@ export function SettingsTab({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowCost(localStorage.getItem(SHOW_COST_KEY) === "1")
     setHeroDwell(readHeroDwellSeconds())
+    setGlanceEnabled(readGlanceEnabled())
+    setGlanceDelay(readGlanceDelaySeconds())
   }, [])
+
+  function toggleGlance(next: boolean) {
+    setGlanceEnabled(next)
+    localStorage.setItem(HOME_GLANCE_ENABLED_KEY, next ? "1" : "0")
+  }
+
+  function changeGlanceDelay(next: number) {
+    setGlanceDelay(next)
+    localStorage.setItem(HOME_GLANCE_DELAY_KEY, String(next))
+  }
 
   function toggle(next: boolean) {
     setShowCost(next)
@@ -90,6 +112,49 @@ export function SettingsTab({
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Glance mode sits beside the dwell control — both are about
+              leaving the home screen up (Phase 7 §2.4). */}
+          <div className="space-y-3 border-t border-border pt-4">
+            <label className="flex items-start gap-3">
+              <Checkbox
+                checked={glanceEnabled}
+                onChange={(e) => toggleGlance(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span className="space-y-0.5">
+                <span className="block text-sm font-medium">
+                  Home screen — glance mode
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  After a spell with no input, the chrome leaves and the
+                  photograph takes the whole screen. The rotation keeps running;
+                  any movement — or Escape — brings the working view back.
+                </span>
+              </span>
+            </label>
+            <div className="space-y-1.5 pl-7">
+              <label htmlFor="glance-delay" className="block text-sm font-medium">
+                Idle before glance mode
+              </label>
+              <select
+                id="glance-delay"
+                value={glanceDelay}
+                disabled={!glanceEnabled}
+                onChange={(e) => changeGlanceDelay(Number(e.target.value))}
+                className="mt-1 flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50"
+              >
+                {GLANCE_DELAY_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {glanceDelayLabel(s)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Turn the checkbox off for never.
+              </p>
+            </div>
           </div>
 
           <p className="text-xs text-muted-foreground">

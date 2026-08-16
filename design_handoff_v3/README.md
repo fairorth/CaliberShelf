@@ -8,7 +8,8 @@ capability.
 
 | Doc | Phase | State |
 |---|---|---|
-| `08-phase-6-home-light-table.md` | Home page: the Light Table, replacing the Living Dial | specced, not started |
+| `08-phase-6-home-light-table.md` | Home page: the Light Table, replacing the Living Dial | built |
+| `09-phase-7-light-table-flair.md` | Light Table flair: the colour bloom (2a) and glance mode (2c) | built |
 
 Mocks live in `screens/`. They are Design Components — open the `.dc.html`
 directly in a browser, with `support.js` sitting beside it:
@@ -18,6 +19,11 @@ directly in a browser, with `support.js` sitting beside it:
 - `TenTenLoupe Home Concepts.dc.html` — the three directions the Light Table was
   chosen from (1a Gallery Print, 1b Light Table, 1c Editorial Spread). Kept for
   the record; 1a and 1c are still live options for other surfaces.
+- `TenTenLoupe Home - Flair Options.dc.html` — Phase 7's three flair directions
+  (2a Developed in colour, 2b The film edge, 2c Glance mode), drawn with a real
+  frame (`frame-citizen.png`, lifted from a production screenshot). **2a and 2c
+  are in scope; 2b is deliberately not** — it rewarms the whole ground, which is
+  a design-system decision rather than a home-page one. Kept for the record.
 
 ## What still lives in v2, and stays authoritative
 
