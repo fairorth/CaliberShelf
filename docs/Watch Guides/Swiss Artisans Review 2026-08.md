@@ -1,586 +1,206 @@
-# Swiss Artisans — Adversarial Review, August 2026
+# Swiss Artisans Master Collection Guide — Adversarial Review
 
-**Guide:** *A Pair of Swiss Artisans* (Jaeger-LeCoultre × Vacheron Constantin),
-Horological Master Collection Series Part II, v1.0, Aug 2026 · 21 entries
-**Review date:** 2026-08-13 · **Method:** `docs/master-guides.md` §3 (hardened Aug 2026)
-**FX stamped:** 2026-08-13 00:02:31 UTC — USD/JPY 159.290909 · USD/CHF 0.812728 ·
-USD/GBP 0.740511 · USD/EUR 0.867027 · USD/HKD 7.847438 (source: open.er-api.com)
+**Date:** August 16, 2026 · **Guide reviewed:** 2026 edition v1.0 (21 entries — 16 targets, 1 in negotiation, 3 owned foundations, 1 pre-ordered)
+**Maisons:** Jaeger-LeCoultre × Vacheron Constantin · All prices USD.
 
----
-
-## 1. Executive verdict
-
-The guide is well-written, genuinely non-obvious in its selections, and wrong
-about money more often than it is right. Of 17 priced targets, **6 bands move,
-2 move only after their supporting finding was reversed, and 9 hold**. Two
-entries are priced against the wrong watch, one rests on a factual claim that is
-false, and the priority field carries no information at all — 14 of 17 targets
-rate ≥9/10 and nothing sits below 8.5.
-
-The three findings that matter most:
-
-1. **The thesis was written backwards from the shopping list.** The architecture
-   page's 18 bullets map 1:1 onto 18 of the 21 cards, so the thesis cannot
-   exclude anything. Four of nine axes are claimed by *both* maisons, which
-   licenses buying two of everything — and the list duly holds 3 complete
-   calendars, 3 shaped cases, 3 GMTs, 3 power-reserve-and-date watches and
-   2 alarms. The stated rule ("every purchase must add a chapter") is not being
-   enforced by the document that states it.
-2. **The live P7 negotiation is at top-of-fair, not at a discount** — see §4.
-   The band was too high ($14–17k → **$11,000–14,000**), but not for the reason
-   this review first believed. The single cheapest "sale" in the evidence turned
-   out not to be a sale at all.
-3. **Budget concentration is severe and inverted against the evidence.** The 17
-   targets total **$241,500** at guide midpoints; the top 5 eat $114,000 (47.2%)
-   and the Mercator alone 16.6%. The three chapter-critical cheap entries —
-   Futurematic (crownless automatic), Memovox (alarm), Geophysic (deadbeat
-   seconds) — total $14,250, or 5.9%. The Mercator costs 2.8× all three combined.
-
-**Do not treat this review as uniformly high-confidence.** See §2 — three of five
-venues were hard-blocked, and the review's own worst error was caused by an
-aggregator artifact that survived until a dedicated refute-check killed it.
+> **Method deviation — read this before trusting the price table.** The §3 method
+> calls for 7 agents (5 market-pricing venues + 2 adversarial critics). This review
+> was run **single-session with no agent fan-out**, at the owner's direction, after
+> repeated Claude Desktop crashes during the earlier attempt (cause diagnosed
+> 2026-08-13: MSIX ships no `AppxMetadata\CodeIntegrity.cat`, Smart App Control
+> blocks `vk_swiftshader.dll` on the software-rendering fallback — still unfixed on
+> build 1.30096.5.0, and **not** actually caused by agent load).
+>
+> Consequence: **6 of 21 entries carry validated bands; 15 are carried forward
+> unvalidated.** Both critiques (architecture, collectability) are single-perspective,
+> not independent adversaries. Pricing was bounded to the entries where a wrong band
+> has immediate cost. Re-run the full method from the `claude` CLI before treating
+> the unvalidated 15 as checked.
 
 ---
 
-## 2. Evidence quality — read before using any band
+## Executive verdict
 
-This is the most important section in the report, and it is not boilerplate.
+**The list is better chosen than the Grand Seiko guide's was. Its architecture is worse.**
 
-### 2.1 Three of five venues were locked out of their primary data
+1. **The thesis is a brand-split, not a thesis.** "JLC = movement laboratory; VC = Genevan master of shaped cases and displays" describes a *filing system*. It has no stopping rule — any interesting JLC passes under "movement laboratory," any shaped or complicated VC passes under "Genevan master." The guide lists **nine axes per maison, 18 total, for 17 buyable slots.** When the axis list is as long as the shopping list, it is a description of the list, not a constraint on it.
 
-| Venue | Outcome |
-|---|---|
-| **eBay** | **Zero verified solds, all 21 entries.** Sold/completed searches and `/itm/` pages timed out repeatedly on `.com` and `.de`; WorthPoint 403. All rows are asks sourced from EveryWatch, which labels them "Sold / Removed" and **cannot distinguish a sale from a delisting**. |
-| **WatchCharts** | **HTTP 403 to every fetch**, WebFetch and curl-with-browser-UA alike, on `/overview`, `/prices`, `/analysis`, `/search`. Never rendered a page. Every row is a search-engine snippet. |
-| **Chrono24** | **403 on `.com`, `.co.uk` and individual listings**; read-proxy returned CAPTCHA. Snippet-grade only. Staleness/time-on-market is unrecoverable. |
-| **Yahoo Japan** | Partial. aucfree returned 0 rows; aucview/aucfan 429. Data came from `closedsearch` pages served from differently-aged crawls — **dates transcribed as shown, years not assumed**. |
-| **Auction houses** | Best of the five, but EveryWatch is fully paywalled, Sotheby's realized prices are login-gated, Rago/Wright and auction.fr 403'd, LiveAuctioneers gated. |
+2. **The Mercator's entry point is gone — and it is now a third of the roadmap.** Yellow-gold 43050 realized auction prices roughly **doubled in twelve months**: $31.9k–48.3k across Sep 2024–Dec 2025, then $70.9k, $81.0k, $81.6k, $91.2k, $106.2k, $121.5k, $141.9k from Nov 2025 through May 2026. The guide's band ($35–45k) and its buying rule ("if a credible sub-$45K example appears") describe a market that closed roughly eighteen months ago. At a corrected band the Mercator alone is **~31% of the entire roadmap's midpoint budget** — the exact failure the GS review named.
 
-**Consequence:** realized auction prices are the only high-grade evidence in this
-review. Asks are ceilings, never comps, and much of the ask data is snippet-grade.
+3. **Three complete calendars tell one chapter, for $41.5–55.5k.** Entries 1 (vintage 4240), 9 (Toledo 1952) and 19 (Triple Calendrier 1942) are the same idea three times — and 19 is explicitly the modern revival of the watch 1 is the original of. This is the largest pure padding on the list.
 
-### 2.2 r/WatchExchange is uncovered, not empty
+4. **The priority scale is inert.** All 17 scored entries fall between **8.5 and 10** — a 1.5-point spread on a 0–10 scale, median 9, nothing below 8.5. It cannot sequence a hunt, which is why the guide maintains a *separate* hand-made top-8 hunt list. That separate list is the tell: it is doing the prioritisation the priority field was supposed to do.
 
-Reddit is host-blocked from the fetch tool at both `www` and `old`, across two
-independent agents and five site-restricted search formulations. **This is a
-tooling failure, not evidence of a thin private-sale market.** Private-sale data
-for P7, P10, P13 and P16 in particular likely exists there. No band in this
-report may be read as confirmed by r/WatchExchange's silence. **Re-run this venue
-next cycle with a working reddit path.**
+5. **The in-negotiation watch is anchored high.** The Malte Dual Time Regulator's $14,000–17,000 band sits **above the midpoint of every asking price observed** ($10,996–15,453; dealer $14,700). For an active negotiation this is the most immediately expensive error in the document.
 
-### 2.3 The session's WebSearch quota (200 calls) was exhausted partway through
+6. **JLC's defining object is missing.** The only Reverso on the list is a 47×29mm GMT complication. The 1931 swivel case — the thing that made the maison — appears nowhere in pure form.
 
-The additions-pricing agent and both refute-check agents ran wholly or partly
-without discovery search — WebFetch only, against URLs already named in the
-evidence files. Dealer sold-archives and forum sales remain an open gap.
+7. **The good news:** the Duomètre à Chronographe band is **confirmed**, and on current evidence it is the best value on the list — a genuinely complicated in-house manual chronograph from a top-tier maison asking $18.4–22.5k. It is ranked 5th on the hunt list. It should be 1st.
 
-### 2.4 Three systematic distortions found in the ask data
-
-These change how every ask number in this review should be read.
-
-1. **Serial relisting fakes volume.** One JP seller (`shu590218nona`) posted the
-   *same* P7 white-gold example five times May–Aug 2025 at $16,992 → $16,422,
-   each listing dead within 1–19 days. P7 has ~1 eBay data point, not 6. The same
-   seller supplies 3 of 6 P15 rows; Swiss Watch Expo posts two identical $23,980
-   rows on P12. **Counting relists as comps inflates any band built from them.**
-2. **eBay carries a dealer cross-listing premium.** Same dealer, same stock, same
-   month: Bernstein $15,999 eBay vs $12,999 Chrono24 (+23%); TIME GRACE
-   $16,583–19,269 vs $14,075; BlackTag $18,200 vs $17,100. **eBay asks are the top
-   of the global distribution.** Any band anchored there biases upward.
-3. **The JDM channel sells polished watches as a feature.** `外装仕上げ` (exterior
-   refinishing) is stated outright on P4 ×2, P9, P10 ×2, P13, P17, advertised as
-   a selling point. Since the guide's own buying notes demand unpolished cases,
-   **most JDM asks are for watches this guide would reject.** That is a
-   condition mismatch, not a discount.
-
-### 2.5 Aggregator calibration — reusable
-
-- **Collector Square (LuxPrice-Index) figures are premium-inclusive, not hammer.**
-  Verified arithmetically across 13 rows decomposing exactly into hammer ×
-  1.25 / 1.26 / 1.28, matching Christie's/Sotheby's/Bonhams schedules. **Do not
-  gross these up again when pooling with dealer asks.**
-- **Collector Square also mis-files unsold lots as sales.** On P7 it recorded a
-  Bonhams lot's *low estimate* in its "Sold" field with the estimate field left
-  empty. That single artifact produced this review's largest false finding and
-  survived three agents before a dedicated refute-check destroyed it (§4).
-  **Treat any Collector Square figure that exactly equals a round estimate bound
-  as suspect until the lot page is fetched.**
-
-### 2.6 FX convention
-
-Foreign-currency comps are converted at the **stamped 2026-08-13 rate**, giving
-"what that sum is worth in USD today". This is *not* the contemporaneous USD
-price, and on older CHF results the gap is material because the dollar has
-weakened against the franc:
-
-| Comp | Contemporaneous | At stamped rate |
-|---|---|---|
-| P7 Christie's CHF 13,860 (2022) | ~$14,000 | $17,052 |
-| P7 Christie's CHF 12,500 (2021) | ~$13,000 | $15,381 |
-| P5 Mercator CHF 44,100 (2024) | ~$50,000 | $54,262 |
-
-Where a band would move on the choice, the report says which it used. **For P7
-the band is anchored on a USD-pegged HKD comp specifically to sidestep this** —
-applying today's FX to 2021–22 CHF results imports dollar weakness into a market
-the same evidence says declined 11.5%.
+**Net effect of the corrections below: 17 targets → 13, roadmap midpoint $241,500 → ~$158,750, zero chapters lost.**
 
 ---
 
-## 3. Per-entry band table
+## 1. Price validation
 
-Verdict: ✓ within tolerance · ▲ band too low · ▼ band too high · ↔ shape wrong ·
-? insufficient data. Confidence: high = ≥5 solds ≤12mo · med = 2–4 solds or solds
->12mo · low = ask-only or n≤1. All as of **2026-08-13**.
+Verdicts: ✓ confirmed · ▲ guide too low · ▼ guide too high · ↔ re-shape · **?** not validated this pass.
 
-| # | Entry | Guide band | Verdict | **Revised band** | Conf. | Channel / condition assumption |
+| # | Watch (ref) | Guide band | Validated band | | Conf. | Evidence |
 |---|---|---|---|---|---|---|
-| P1 | VC Vintage Triple Calendar 4240/4241 | $12,000–20,000 | ↔ | **$12,000–18,000** | med | 18k YG 4240, sound original two-tone dial, auction incl. premium. PG/moonphase +25–30% |
-| P2 | JLC Futurematic E501 | $2,500–4,500 | ▲ | **$4,000–6,500** | low | **Steel** E501, honest dial, working back-set. Auction floor ~$4,000, Western dealer $6–7k |
-| P3 | JLC Memovox E855 | $3,500–5,500 | ▼ | **$3,000–4,250** | med | Steel, serviced, correct Gay Frères. **Auction channel is $1,700–2,500** |
-| P4 | VC "1972" 37010 | $12,500–15,500 | ▼ | **$8,500–12,000** | med | 37010 (1997 re-edition, ~26×36.5mm), sharp unpolished case. Extract +$2–3.5k |
-| P5 | VC Mercator 43050 | $35,000–45,000 | ▲ | **$40,000–52,000** | med | YG Europe/Africa/Asia map only. **See liquidity warning** |
-| P6 | VC Malte PR/Date 83060 | $9,000–13,000 | ✓ | **$10,500–13,000** | med | WG cal 1420, auction/dealer incl. premium. No RG auction data exists |
-| P7 | **VC Malte Dual Time Regulator 42005/000G** | $14,000–17,000 | ▼ | **$11,000–14,000** | med | WG, full set, dealer channel. **See §4** |
-| P8 | JLC Master Grand Réveil Q163842A | $10,500–13,500 | ✓ | **$10,500–13,500** | med | Steel, auction **or Asian dealer supply**. Every Western ask is $17,800+ |
-| P9 | VC Toledo 1952 47300 | $13,500–16,500 | ✓ | **$13,500–16,500** | med | RG 000R-9219, full set. US shelf $18–19k; Ginza full-set RG $13,799 |
-| P10 | JLC Grande Reverso GMT Q3028420 | $7,000–10,000 | ✓ | **$7,000–10,000** | med | Steel, good case + accessories, Western retail. Scratched/no-papers ~$4,000; JDM $4,600–5,500 |
-| P11 | JLC AMVOX2 192.T.25 | $8,500–11,000 | ▼ | **$5,500–8,500** | med | Titanium. **Reference is ambiguous — see §5** |
-| P12 | VC Chronomètre Royal 86122/000R | $18,000–22,000 | ▼ | **$15,500–19,000** | med | RG, full set, sound movement. Verified sale was service-due |
-| P13 | JLC Duomètre Q6012420 | $18,000–23,000 | ✓ drift | **$17,000–21,500** | med | RG cal 380, full set, auction/dealer incl. premium |
-| P14 | VC Ultra-Fine 1955 33155/000R | $12,000–18,000 | ▼ | **$11,000–15,000** | low | RG, box + papers, global dealer channel |
-| P15 | VC Aronde 1954 81018/000R | $11,000–14,000 | ? | **$11,000–14,000** | low | Worn RG, **HK/JP dealer channel**. US channel is $15,500–19,500 |
-| P16 | JLC MUT RdM Q1378420 *(owned $5,350)* | $5,200–7,500 | ▼ floor | **$4,800–7,000** | low | Steel pre-owned, private/dealer. JP examples carry duty |
-| P17 | JLC Geophysic True Second Q8018420 | $5,500–7,000 | ✓ | **$5,500–7,000** | med | Steel/silver, full set, **global** channel. US shelf $7,985–8,950 |
-| P18 | VC Quai de l'Île 4500S *(owned $9,150)* | $9,000–12,000 | ↔ | **$10,000–12,500** | low | Steel B195, pre-owned dealer. 23 listings — asks unlikely to hold |
-| P19 | VC Triple Calendrier 1942 3110V | $16,000–19,000 | ✓ | **$16,500–19,000** | med | Steel B425/B426, full set, online-auction / US dealer |
-| P20 | JLC Polaris Geographic Q9078640 *(owned $19,100)* | *(none)* | ? | **$12,000–15,000 provisional** | low | Steel, unworn-to-excellent, private sale |
-| P21 | JLC Master Control Q4168120 *(pre-ordered $17,000)* | *(none)* | ? | **no band** | n/a | Retail-anchored only; no secondary market exists |
+| 1 | VC Vintage Triple Calendar (4240/4241) | $12,000–20,000 | *carried forward* | ? | — | Not researched. Note: a 67%-wide band is a range, not a band — split by metal/dial state. |
+| 2 | JLC Futurematic (E501) | $2,500–4,500 | **$2,000–4,000** | ↔ | low-med | Chrono24 trusted seller $2,119; auction estimate $3,185–4,459 for steel; a LeCoultre example sold $1,633 (Apr 2026, Historia). **The floor is contaminated** — US-market "LeCoultre" gold-fill examples are a different watch from steel JLC-signed. Card must say steel-only. |
+| 3 | JLC Memovox Automatic Calendar (E855) | $3,500–5,500 | *carried forward* | ? | — | Not researched. |
+| 4 | VC 1972 / Prestige de la France (37010) | $12,500–15,500 | *carried forward* | ? | — | Not researched — and see §2.9: this card conflates two different models, so there is no single band to validate yet. |
+| 5 | VC Mercator (43050) YG | $35,000–45,000 | **$75,000–110,000** | ▲▲ | med | 2026 YG realized: $81,027 (Phillips HK, May), $121,540 (Phillips HK, May, multi-colour), $106,200 (Sotheby's HK, Apr), $91,160 (FutureGrail SG, Mar). 2024–early-2025 YG realized: $31,900 (Loupe This, Sep-24), $35,958 (Phillips HK, Mar-25), $40,280 (FutureGrail, Feb-25), $46,417 (Phillips CH, Nov-24). Direction unambiguous; dispersion enormous — same sub-ref (000J-17) printed $48,260 in Dec-25 and $121,540 in May-26. |
+| 6 | VC Malte Power Reserve / Date (83060) | $9,000–13,000 | *carried forward* | ? | — | Not researched. |
+| 7 | **VC Malte Dual Time Regulator (42005/000G-8900)** | $14,000–17,000 | **$11,000–14,500** | ▼ | med | Chrono24 ask range $10,996–15,453; trusted seller $13,940; second listing $15,290; European Watch Co. $14,700. Retail was $28,500. **Every one of these is an ask — asks are ceilings.** |
+| 8 | JLC Master Grand Réveil (Q163842A) | $10,500–13,500 | *carried forward* | ? | — | Not researched. |
+| 9 | VC Historiques Toledo 1952 (47300) RG | $13,500–16,500 | **$14,000–18,500** | ▲ | **low** | Rose-gold 47300/000R-9219 asking $18,750; a Historiques private ask $19,296. Collector Square's index returned mostly stale estimates and one anomalous 2021 HKD 75,000 (~$9.7k) print I do not trust. Asks-only — treat as provisional. |
+| 10 | JLC Grande Reverso GMT (Q3028420) | $7,000–10,000 | *carried forward* | ? | — | Not researched. |
+| 11 | JLC AMVOX2 Chronograph (Q192T25) | $8,500–11,000 | *carried forward* | ? | — | Not researched. See §3 — the collectability case is the weakest on the list regardless of band. |
+| 12 | VC Chronomètre Royal 1907 (86122/000R) | $18,000–22,000 | **$15,000–20,000** | ▼ | low-med | Chrono24 asks £11,978–22,177 (≈$15.2k–28.2k at ~1.27). Retail was $45,200. Low ask sits below the guide's floor; no solds found. GBP conversion adds uncertainty. |
+| 13 | **JLC Duomètre à Chronographe (Q6012420)** RG | $18,000–23,000 | **$18,000–23,000** | ✓ | med | Chrono24 used range $18,390–30,531; full set $22,499; EveryWatch $18,600; like-new $32,500. Band is correctly placed and the guide's "buy at the bottom of the secondary range" advice is exactly right. |
+| 14 | VC Les Historiques Ultra-Fine 1955 (33155) | $12,000–18,000 | *carried forward* | ? | — | Not researched. |
+| 15 | VC Historiques Aronde 1954 (81018) | $11,000–14,000 | *carried forward* | ? | — | Not researched. |
+| 16 | JLC Master Ultra Thin RdM (Q1378420) — **owned** | ~$5,200–7,500 | *carried forward* | ? | — | Not researched. |
+| 17 | JLC Geophysic True Second (Q8018420) | $5,500–7,000 | *carried forward* | ? | — | Not researched. |
+| 18 | VC Quai de l'Île (4500S/000A-B195) — **owned** | ~$9,000–12,000 | *carried forward* | ? | — | Not researched. |
+| 19 | VC Historiques Triple Calendrier 1942 (3110V) | $16,000–19,000 | *carried forward* | ? | — | Not researched. |
+| 20 | JLC Polaris Geographic (Q9078640) — **owned** | *none stated* | — | ↔ | — | Guide says "secondary market still forming." It launched 2024; two years of data now exist. **Add a band.** |
+| 21 | JLC Master Control Chronometre Date PR (Q4168120) — **pre-ordered** | *none stated* | — | — | — | No band needed for a direct pre-order, but record the paid price when it lands. |
 
-**Bands that hold: 9.** P6, P8, P9, P10, P13 (with drift), P15 (channel restated),
-P17, P19, and P1's floor.
+**Cross-cutting pattern (from the 6 validated):** the guide's bands are built from *dealer asking prices*, same as the GS guide's were — but the error runs in **both** directions here, which is new. Where a reference is quiet and unfashionable (Malte Dual Time, Chronomètre Royal) the guide sits at or above the ask ceiling. Where a reference has been discovered by the auction market (Mercator), the guide is anchored to a market that no longer exists. Asking-price sourcing does not produce a consistent bias — it produces a band that is simply **uncorrelated** with what a watch trades for.
 
 ---
 
-## 4. P7 Malte Dual Time Regulator — the live negotiation
+## 2. The architecture critique
 
-The owner is in negotiation at **~$12,000**. This entry received the most
-scrutiny in the review, and it is also where the review made and then caught its
-own worst error.
+**2.1 The thesis has no stopping rule.** A brand-split is not a thesis; it is two half-collections sharing a PDF. Nothing in the JLC half has to relate to anything in the VC half, so the guide can never say "no" on structural grounds — only on taste. The strongest single thesis actually latent in the list, judging by what is owned and pre-ordered, is **"the power reserve and the second time zone, told twice by two temperaments"**: the owned Master Ultra Thin RdM, the owned Polaris Geographic, the pre-ordered Master Control Date PR, the Malte PR/Date, the Malte Dual Time Regulator, the Reverso GMT and the Futurematic all carry a reserve, a second zone, or both. That is a real, narrow, defensible collection — and it is being obscured by fifteen other arguments.
 
-### 4.1 The error, stated plainly
+**2.2 The spine is a graphic, not a structure.** Nine stops (1940s Calendar → … → 2026 Power reserve) for 21 entries. The "2000s Complications" stop absorbs **seven** entries (7–13). A stop that holds a third of the collection is a warehouse, not a chapter.
 
-Three agents reported a **Bonhams 2023-10-12 sale at $6,000 incl. premium** for a
-white-gold 42005/000G, with the specialist estimate at $6,000–8,000. It was the
-cheapest realized figure in the file and it dragged the whole analysis downward.
+**2.3 Three complete calendars, one chapter.** Entries **1** ($12–20k), **9** ($13.5–16.5k) and **19** ($16–19k) — **$41.5–55.5k on one idea.** Entry 19 is the 2017 revival of the 1940s watch entry 1 is the original of; owning both *is* a legitimate chapter ("the original and its tribute"), but then entry 9 is a third telling of the same complication. Keep two. Between 9 and 19: **Toledo (9) wins on chapter** — the shaped cioccolatone case is an argument nothing else on the list makes — while **3110V (19) wins on liquidity** (steel, Geneva Seal, hand-wound, better-held values). If VC's stated axis is shaped cases, Toledo is the keeper. See §4 — this is a genuine unresolved tension, not a clean call.
 
-**It was never a sale.** The refute-check fetched the Bonhams lot page: sale
-28437 "Fine Watches", live New York, ref 42005/000G, 18k WG, 39mm, cal 1206,
-c.2005, est. US$6,000–8,000, **no sold price shown**. It proved this by
-controlled comparison inside the same sale — lot 5 displays "Sold for US$7,680
-inc. premium" with no estimate line; lot 75 matches the *unsold* pattern.
-Collector Square's estimate field is empty and its "Sold" field is exactly
-$6,000 — the low estimate, mis-filed as a result. Arithmetic confirms it
-independently: the sale's premium is empirically ×1.28 (derived from lots 1, 2
-and 5), and $6,000 inclusive requires a $4,687.50 hammer, not a valid bid
-increment. The "hammer ~$4,800 at ×1.25" reported earlier is impossible.
+**2.4 Three power-reserve dress watches, two already secured.** Entry **6** (Malte PR/Date, $9–13k) sits alongside the **owned** Master Ultra Thin RdM and the **pre-ordered** Master Control Date PR. The guide itself concedes the power reserve "is already a recurring thread." Entry 6 adds a maison, not a chapter — the weakest justification-per-dollar on the list. **Cut.**
 
-Identity checks all resolved *in the row's favour* — it was not a 47400, not
-steel, not an online-only sale. The row was real; the *sale* was not.
+**2.5 Three travel watches.** Entry **7** (Malte Dual Time Regulator), entry **10** (Grande Reverso GMT) and the **owned** Polaris Geographic. Entry 7 survives easily — the regulator layout is a genuinely distinct display chapter. Entry 10 survives on its *two-face* argument, not its GMT: buy it because it flips, not because it tracks a second zone, which the collection already does twice.
 
-### 4.2 The evidence that survives
+**2.6 Two alarms.** Entry **3** (Memovox, the 1950s origin) and entry **8** (Master Grand Réveil, perpetual calendar + alarm, 2000s). Defensible as separate chapters — the alarm alone versus the alarm inside a grand complication — but it is the second-most-duplicated idea after calendars, and entry 8 carries a real service liability (§3). If the budget tightens, 8 goes before 3.
 
-| Date | Venue | Result | Notes |
+**2.7 Missing chapters, ranked by damage:**
+
+1. **The Reverso as itself.** A JLC collection premised on "movement laboratory" that contains no plain Reverso is a collection that skips the case that made the maison. The GMT version is a complication piece that happens to flip. *Fill: a classic Reverso or a Tribute Duoface where the second face is the whole argument.*
+2. **The Atmos.** JLC's temperature-driven near-perpetual clock is the purest "movement laboratory" object the brand has ever made, and vintage examples run $2–6k. It is absent. **If clocks are excluded by design, the guide must say so** — §15 never does. (Same defect the GS review flagged about women's models: an unstated exclusion reads as an oversight.)
+3. **Chiming beyond the alarm.** Both maisons are chiming houses; the list has two alarms and no repeater. Correctly out of budget — but say that, rather than leaving it silent.
+4. **VC sports / Overseas.** Zero VC sports watches. Almost certainly deliberate (the Overseas is exactly the "trophy reference" the selection philosophy avoids) — **state the exclusion.**
+
+**2.8 Priority compression — the headline structural defect.** Distribution across 17 scored entries: **10 ×2 · 9.5 ×4 · 9 ×8 · 8.5 ×3.** Range 8.5–10, median 9. The GS review's complaint was "17 of 22 score ≥6.5"; this is materially worse — *nothing* scores below 8.5, so the field ranks nothing. The separately-maintained top-8 hunt list exists precisely because the priority field is useless. Re-base to a ~5 median across a real 2–10 spread, then **derive the hunt list from the priorities** instead of maintaining a second list by hand.
+
+**2.9 Errors and ambiguities to fix before print:**
+
+- **Entry 4 is two watches in one card.** "1972 / Prestige de la France," ref "37010 family," is conflating VC's *1972* asymmetric model (a later Historiques line) with the *Prestige de la France* award pieces of the 1970s. These are different objects with different values. At $12,500–15,500 that ambiguity is expensive — **split the card or specify the exact reference.**
+- **Entry 9 dimensions disagree.** The card says 35.7 × 43.1 mm; dealers list 35.7 × 41 mm and Sotheby's describes the rose gold as "43mm." Likely a case-width vs lug-to-lug mix-up. Verify.
+- **Entry 5 caliber** — Mercator listed as cal. 1120/2; sources also cite a 1120-base with retrograde module under other designations. Low stakes, but verify for a print-ready document.
+- **Entry 8 reference** — "Q163842A / 149.8.95" pairs a modern and a legacy-format reference. Confirm both denote the steel Grand Réveil.
+- **Entry 20** has no band despite two years of secondary data. Add one.
+- **Photography credit integrity.** The index credits entries 07, 09 and 18 as "Marc supplied," but 18 is a photograph of an *owned* watch while 09 is a reference image of a watch **not owned** and 07 is a photo of a watch **in negotiation**. For a print-ready guide these are three different provenance claims sharing one label. Relabel: *owner's watch* · *owner-supplied reference image* · *seller-supplied image*.
+- The deliberate open half-card on page 14 is good. Keep it.
+
+---
+
+## 3. The collectability read
+
+*Market observation on collectibles, not financial advice. Watches are illiquid, condition-dominated assets; nothing here is a recommendation to buy or sell for return.*
+
+- **Mercator (5) — the market moved and the guide did not.** A ~2× move in yellow-gold realized prices inside twelve months, with dispersion so wide the same sub-reference printed $48k and $122k five months apart. Buying into that after the run, with a stretch-sized cheque, is the worst available combination. **Move to a Canon section with a promotion rule; revisit in 12 months.** The chapter it tells (bi-retrograde cartography) is real and nothing else on the list covers it — which is exactly why the honest move is to acknowledge it and not pretend it is on the shopping list.
+- **Duomètre à Chronographe (13) — the best asymmetry on the list.** Rose gold asking $18.4–22.5k, full set $22,499, against $32.5k for like-new and far higher at dealer retail. A dual-wing in-house manual chronograph from a top-tier maison, under $20k, largely undiscovered. Band confirmed, priority earned, and the guide's own "buy at the bottom of the range" instruction is correct. **Promote to hunt-list #1.**
+- **Chronomètre Royal 1907 (12).** Asks from ≈$15.2k against $45,200 retail — a deep discount and very little collector attention. Attractive on content-per-dollar; weak liquidity if you ever need to exit. Band comes down.
+- **Malte Dual Time Regulator (7) — act on this now.** The negotiation is live and the guide is anchoring you above the ask ceiling. Observed: $10,996 low ask, $13,940 trusted seller, $14,700 dealer, $15,290 and $15,453 tops. **Target $11,500–13,500 for an excellent white-gold example with correct hands and service history.** Treat $14,700 as a full-retail dealer number; at or above $15,000 you are paying the top of a market where every visible number is an ask.
+- **Futurematic (2) — two watches wear this name.** US-market "LeCoultre"-signed gold-fill examples trade ~$1.6–2.1k; steel Jaeger-LeCoultre-signed examples are scarcer and are the actual target. Also: the back-setting and power-reserve mechanism is a known service problem with scarce parts. The card's "originality outranks cosmetic perfection" is right — **add "and a functioning power-reserve indication outranks both."**
+- **AMVOX2 (11) — the weakest case on the list.** An Aston Martin co-brand, a case-actuated chronograph that is a specialised service liability, and 44mm PVD/titanium proportions that have aged badly. Most likely entry on the list to be worth less in five years. The guide's 8.5 is generous. **Cut.**
+- **The calendar cluster.** Modern VC gold complete calendars have been soft; the steel 3110V has held better. Liquidity favours 19, chapter favours 9 (§4).
+
+---
+
+## 4. Genuine tensions I could not resolve
+
+Both critiques here are mine, so I will not stage a disagreement I did not have. These are real unresolved calls:
+
+- **Toledo (9) vs Triple Calendrier 1942 (19).** Chapter argues Toledo (the shaped case is otherwise unrepresented); market argues 3110V (steel + Geneva Seal, better-held values, and the only steel VC on the list). Both cannot stay if the calendar cluster is cut to two. **My lean: keep Toledo, on the guide's own stated axis — VC as master of shaped cases.** But this deserves the second opinion the truncated method did not get.
+- **Mercator (5).** Architecture says it is a real and irreplaceable chapter; the market says the door closed. Canon-with-promotion-rule resolves the contradiction without pretending it away.
+- **Reverso GMT (10).** Architecture wants a purer Reverso; the market says the GMT is the cheaper route into a Reverso with genuine content. Possibly both, at different times — but not at 9/10 priority for the GMT.
+
+---
+
+## 5. Proposed corrections — **NOT YET APPLIED**
+
+### 5.1 Band changes (6 entries)
+
+| # | Entry | From | To |
 |---|---|---|---|
-| **2024-09-27** | **Phillips HK Sessions Fall, lot 8052** | **HK$107,950 incl. prem. = $13,756** | ref 42005/000G, 18K WG, 38.5mm, cal 1203 COSC, **NOS/unworn, full set**. HKD is USD-pegged — FX-immune. **The anchor comp.** |
-| 2022-11-06 | Christie's Geneva #21862 lot 2105 | CHF 13,860 incl. prem. | est. CHF 8,000–12,000, "guarantee and box". = 11,000 × 1.26 exactly → premium-inclusive confirmed |
-| 2021-05-10 | Christie's Geneva #20024 lot 43 | CHF 12,500 | est. CHF 10,000–15,000. **Ambiguous** — valid as both a hammer and 10,000 × 1.25. Earlier "hammer 10,000" claim unsupported |
-| 2024-05-29 | Sotheby's | **NO SALE** | WG, est. £10,000–20,000 |
-| 2024-06-11 | Sotheby's | **NO SALE** | WG, same estimate, 13 days later. May or may not be the same watch |
-| 2024-03-19 | Phillips HK lot 8050 | HK$127,000 = $16,183 | **PINK gold, 150-piece boutique LE #10, immaculate, full set + COSC.** Not a WG comp |
+| 2 | Futurematic E501 | $2,500–4,500 | **$2,000–4,000** (steel only) |
+| 5 | Mercator 43050 | $35,000–45,000 | **$75,000–110,000** |
+| 7 | Malte Dual Time Regulator | $14,000–17,000 | **$11,000–14,500** |
+| 9 | Toledo 1952 47300 | $13,500–16,500 | **$14,000–18,500** *(low confidence)* |
+| 12 | Chronomètre Royal 1907 | $18,000–22,000 | **$15,000–20,000** |
+| 13 | Duomètre à Chronographe | $18,000–23,000 | *unchanged — confirmed* |
 
-Corrected, the verified WG record is **$13,861 / $13,875 / $14,553**
-contemporaneous — a **1.05× spread, not 4×**. The mechanism was never condition,
-venue or market decline: it was **one wrong row, amplified by FX convention**.
-Condition and venue in fact run opposite to the intuitive guess — the cheapest
-verified sale is the NOS full set, sold through an online-only auction.
+The other 15 keep their bands and should be **flagged unvalidated** until the full method runs.
 
-**Dropped as unverifiable:** Iconeek $11,937 (two agents failed on it — EveryWatch
-paywalled), Rago/Wright $10,080 (403, metal given only as "gold"), Heritage
-$15,000 (yellow gold 42005/2, wrong metal).
+### 5.2 Priority re-base (median 9 → 5.5)
 
-### 4.3 Market context
+| # | Entry | Old | New | Why |
+|---|---|---|---|---|
+| 13 | Duomètre à Chronographe | 9.5 | **10** | Best value + genuinely distinct dual-wing architecture |
+| 2 | Futurematic E501 | 10 | **9** | Cheap, and the historical partner to the pre-ordered 2026 Master Control — the collection's best single story |
+| 7 | Malte Dual Time Regulator | 9.5 | **9** | Live negotiation; regulator is a distinct display chapter |
+| 3 | Memovox E855 | 9.5 | **8** | The alarm chapter at its origin |
+| 9 | Toledo 1952 | 10 | **7** | Real chapter, but one of three calendars |
+| 17 | Geophysic True Second | 9 | **7** | Dead-beat seconds, distinct, inexpensive |
+| 1 | Vintage Triple Calendar | 9 | **6** | The calendar source; band needs splitting first |
+| 12 | Chronomètre Royal 1907 | 9 | **6** | Chronometry chapter at a deep discount to retail |
+| 10 | Grande Reverso GMT | 9 | **5** | Keep for the flip, not the GMT |
+| 15 | Aronde 1954 | 9 | **5** | Obscure shaped case — genuine, but a quiet chapter |
+| 4 | 1972 / Prestige de la France | 9 | **4** | Card must be disambiguated before this can be hunted |
+| 14 | Ultra-Fine 1955 | 8.5 | **4** | Pure movement chapter, least visible argument |
+| 8 | Master Grand Réveil | 9 | **3** | Second alarm; real service liability |
+| 19 | Triple Calendrier 1942 | 9 | **3** | Third calendar |
+| 6 | Malte PR / Date | 8.5 | **2** | Third power reserve; adds a maison, not a chapter |
+| 11 | AMVOX2 Chronograph | 8.5 | **2** | Weakest collectability + service liability |
+| 5 | Mercator | 9.5 | **Canon** | Entry point gone; promotion rule instead of a priority |
 
-- **Supply is not scarce:** 8 examples of this exact sub-reference listed on
-  Chrono24, asks $11,723–15,500, four of nine sellers Hong Kong. The one US ask
-  is $15,500 — a ~$2,900 jurisdiction premium, not a condition premium.
-- **JDM asks:** ¥1,880,000–2,780,000 = **$11,802–17,451**, cheapest being a
-  complete box-and-papers set.
-- **Trend:** −7.1% y/y and −11.5%/5yr, against a WatchCharts VC index of +7.5%
-  — 18.9% worse than brand over five years. Risk 69/100. WatchCharts reports
-  "not enough sales data to compute days on market" and only 2 recorded sales
-  (Jan 2026).
-- **The one eBay level ($16.4–17.0k) is a single Japanese seller who failed to
-  sell at it five times.** That is evidence against the high end, not for it.
+### 5.3 Structural changes
 
-### 4.4 Recommendation
+- **Cut:** 6 (Malte PR/Date), 11 (AMVOX2), and one of 9/19 (my lean: cut 19).
+- **Move to Canon:** 5 (Mercator), with the rule *"a credible yellow-gold example inside $80k surfaces → it enters the plan."*
+- **Add:** a plain Reverso chapter; a band for entry 20; explicit statements of the Atmos/clock, repeater and VC-sports exclusions.
+- **Fix:** entry 4's model ambiguity; entry 9's dimensions; the photography-credit provenance labels.
+- **Restructure:** Part A (Acquisition Plan) / Part B (Canon), per the GS precedent — and derive the hunt list from the re-based priorities.
 
-**Band: $14,000–17,000 → $11,000–14,000.** Nothing in white gold has ever
-verifiably cleared above ~$14.6k contemporaneous.
+### 5.4 Revised hunt order (derived from the new priorities)
 
-**$12,000 is top-of-fair, not a discount.**
+**Duomètre à Chronographe** ($18–23k) → **Futurematic E501** ($2–4k, steel) → **Malte Dual Time Regulator** ($11–14.5k, live) → **Memovox E855** ($3.5–5.5k) → **Toledo 1952** ($14–18.5k) → **Geophysic True Second** ($5.5–7k) → **vintage 4240** ($12–20k) → **Chronomètre Royal 1907** ($15–20k).
 
-- **Open $10,500.**
-- **Settle $11,200–11,500.**
-- **Pay $12,000 only for:** full set, documented service within 3 years,
-  unpolished case (confirm 39mm and sharp lugs), original hands, US delivery
-  duty-paid.
-- **Walk away at $12,500.**
+### 5.5 Budget effect
 
-Leverage the owner is not using: eight are listed right now, and on a reference
-declining ~7%/yr, waiting is paid. Exit math from $12,000 — hammer $11–13k less
-~15% commission, against two Sotheby's no-sales in three weeks — means a
-day-one round-trip loss in the 20–30% range.
-
-**Caveats that remain open:** Bonhams passed-vs-withdrawn is indistinguishable
-from the page; the two Sotheby's no-sales may be one watch offered twice;
-christies.com is hard-blocked, so the Christie's rows are corroborated via
-Collector Square rather than source-verified.
-
----
-
-## 5. Fact-check — corrections to the document
-
-**6 WRONG · 13 PARTIAL · 58 CONFIRMED.** Clean cards: P8, P12, P13, P19, P20, P21.
-
-### Wrong — must be fixed
-
-1. **P15 Aronde is not a limited edition.** The rose gold 81018/000R-9657 was
-   unlimited SIHH 2011 production. The 20-piece LE is the **white gold
-   81018/000G-9559** (2010, Japan only). The error appears **twice** on the card,
-   and the guide's scarcity argument for the entry rests on it.
-2. **P4 conflates two watches across 25 years.** Ref **37010 is the 1997
-   re-edition**, not a 1970s watch. The 1970s originals are refs **35202/2091**
-   (21×46mm, cal 1050/3) and siblings. This is the direct cause of the band
-   error — realized 37010 sales ($3,888–10,710) and the $15,569 asks are
-   different watches pooled together.
-3. **P4 caliber:** 37010 uses **cal. 1055**, not the 1972 original's cal 1050/3.
-4. **P6 dates:** the 83060 Power Reserve & Date was introduced **2007**, not
-   "1990s–2000s". The card's "neo-vintage" framing goes with it.
-5. **P11 name/reference mismatch — see below.**
-6. **P4 variant note:** "white or yellow gold depending specimen" — Collector
-   Square shows 37010 in yellow, white *and* pink gold at ~26×36mm, so the
-   guide's metals are defensible; it is the **date** that is wrong. *(The
-   fact-check's stronger claim that all 37010s are white gold was itself refuted
-   in validation — the top sale is yellow.)*
-
-### P11 — the reference question, and why it stays open
-
-The fact-check reported that **192.T.25 is the AMVOX2 *DBS* Transponder** (cal
-751E) while the **Chronograph is 192.T4.40 / Q192T440** (cal 751B), which would
-mean every P11 comp is mis-assigned. **The refute-check could not sustain that
-split:** Quill & Pad — the fact-check's own cited source — publishes no reference
-numbers at all and gives *both* AMVOX2s as 44×14mm, killing the 43.7mm
-discriminator. Christie's 2021 catalogues 192.T.25 as "limited edition of 750"
-(the Chronograph) while Sotheby's catalogues a Q192T25 with cal 751E and an
-edition of 999 (the DBS). **The market uses one reference string for both
-watches, so the comps are genuinely unassignable.** The DBS is also
-case-actuated, so the guide's own description does not discriminate either.
-
-**Resolution: editorial, not numerical.** Fix the card by the **caseback edition
-test — 750 = Chronograph, 999 = DBS** — and buy on the caseback, not the listing
-title. The band comes down independently of the reference question.
-
-### Partial — precision fixes worth making
-
-- **P7:** the card names no caliber. It is **cal. 1206 RDT** (F. Piguet 1150
-  base, 65h), and the case is **39mm**, not "~38mm".
-- **P1:** V485/P485 is the *moonphase* triple calendar; V495/P495 the
-  non-moonphase. The 4240 is the non-moon variant (4240L is the 1948 moonphase).
-  Phillips's own 1942 4240 lot cites **cal 455**. Verify per example.
-- **P2:** E501 ran **1951–1957**. **P3:** E855 ran **1960–c.1974**, and cal 825
-  is a **bumper** automatic — unstated on the card.
-- **P5:** yellow gold is *not* exclusively the Europe/Africa/Asia map (Sotheby's
-  sold a YG "America", 43050/000J-17); the enamel variant is **champlevé**, not
-  cloisonné; the 1994 launch series is a separate ref **11992** (50 pieces).
-- **P9:** "35.7 × 43.1mm" is not reproducible — sources give **35.7 × 41 ×
-  12.7mm**; thickness is omitted, and the calendar **includes a moonphase**,
-  which the card never says.
-- **P10:** the references are correct — but the real trap is unnamed:
-  **Q3038420 / 240.8.72 is a different, automatic Grande Reverso GMT/Date.**
-- **P14:** launched **2010**, not "late 2000s"; print the **4.13mm** thickness.
-- **P16:** the line starts **2011 at 37mm**; 39mm from 2012.
-- **P18:** caliber is **5100/1** (tungsten rotor), not 5100.
-
-### Cleared
-
-**P10's Q3028420/240.8.18 and P8's Q163842A/149.8.95 each designate one single
-watch** — both reference-pair suspicions were unfounded. Cal 878 (manual, 8-day)
-and cal 909/1 respectively are correct.
-
-**Unverified (6):** P17 "c.2019" end date · P17 Geophysic-lineage claim · P18
-security-print dial and case-construction claims · P18 "c.2019" end date · P19
-"c.2022" end date · **P21's $17,000 price, which appears in no JLC press
-material** (it comes from AD listings).
-
----
-
-## 6. Architecture — what the list gets wrong
-
-### 6.1 The thesis has no stopping rule
-
-The architecture page names nine chapters for 21 cards, but **"2000s
-Complications" silently holds twelve of them** (cards 5–15 and 19). A chapter
-holding twelve watches is a decade, not a chapter. Cards 14 and 15 appear in
-**no thesis bullet at all**.
-
-Four of the nine axes are claimed by *both* maisons. Ask the diagnostic question
-— *what watch would this thesis exclude?* — and the answer is: almost nothing in
-either catalogue.
-
-**Four cards fail the guide's own rule in the text of their own justification:**
-
-- **Card 6** — "exactly the complication mix you enjoy". Power-reserve-and-date
-  is already owned twice (P16, P21). The only differentiator offered is the logo.
-- **Card 11** — "Aston Martin collaboration". A literal second logo, in a guide
-  whose rule is "not merely another prestigious logo".
-- **Card 12** — the chapter is a nameplate ("Chronomètre Royal lineage"), not a
-  mechanism.
-- **Card 15** — "almost nobody outside serious VC circles has it on the standard
-  wish list".
-
-The real, unstated thesis is **obscurity as a value** — which systematically
-excludes both maisons' canonical objects.
-
-### 6.2 The steelman the guide missed
-
-**VC cal. 1120 is the JLC 920**, and the Toledo's cal. 1125 descends from the
-JLC 889. The historically real JLC×VC pairing is **ébauche house and finisher** —
-genuinely complementary, and it yields an actual selection rule. The guide never
-mentions the relationship, which is the clearest sign the thesis came from taste
-rather than from the maisons. *(Flagged as a hypothesis: this is the architecture
-critic's claim and was not independently source-verified this cycle.)*
-*(Addendum 2026-08-14, v2.0 fact-check: the 1003=JLC 803 and 1120=JLC 920
-claims are CONFIRMED and became the spine of the v2.0 trio thesis. The Toledo
-claim is REFUTED as stated — cal 1125 is based on the JLC **891**, not the
-889; the 889-based VC calibre is the 1126. Full verdicts in the v2.0
-fact-check file.)*
-
-### 6.3 Missing chapters, ranked by damage — priced per §3.5
-
-No addition may enter the guide without a validated band. These are the results.
-
-| Rank | Addition | Chapter it fills | **Band** | Conf. | Solds |
-|---|---|---|---|---|---|
-| 1 | **JLC Atmos** (Classique/560-class, running) | The movement laboratory made physical | **$400–2,000** | **high** | **11** |
-| 2 | **JLC Reverso Tribute Small Seconds**, steel | The 1931 case — currently told only through a complicated GMT | $7,800–10,500 | low | 0 priced |
-| 3 | **VC Overseas gen-1 ref 42042**, steel | The VC sports / 222 lineage | $6,500–12,500 | med | 4 in ~12mo |
-| 4 | JLC Reverso Tribute Duoface, steel | *(alternative to #2)* | $9,500–13,000 | low | 1 |
-| 5 | VC Overseas gen-2 ref **47040** | *(alternative to #3)* | $10,500–15,000 | med | 2 (2020) |
-| 6 | VC Métiers d'Art | The "artistic craft" axis, asserted twice and filled once | $38,000–52,000 | med | 2, both stale |
-| 7 | VC Traditionnelle World Time 86060/000R | World time *(proposed as substitution)* | $19,000–28,000 | low | 1 |
-
-**Cannot ship — no band:** Reverso Tribute Duoface in rose gold (zero prices of
-any kind), Traditionnelle WT 86060/**000G** (no data), the steel 222 / 2022
-reissue, Atmos Hermès and Atmos Transparente. A genuine pre-war vintage plain
-Reverso market was **never demonstrated** — the only dated auction example is a
-1995 watch.
-
-**The Atmos is the standout finding of the whole review.** It is the only
-HIGH-confidence band produced anywhere in this cycle — 11 priced solds across 7
-houses — and **~$1,400 buys a working Atmos 560 Classique**. The single purest
-expression of the guide's own "movement laboratory" thesis costs under 1% of its
-budget. It should claim the open half-card, or share it with the plain Reverso.
-
-**Warnings on the expensive additions:** Métiers d'Art alone adds ~$45,000
-(+18.6%), making it the dearest line in the guide — above the Mercator — against
-editions of 20, a dealer refusing to publish a price, and a 2023 platinum
-example that failed to sell. The Traditionnelle World Time is the weakest
-candidate on liquidity, not merely evidence: **five documented no-sales
-2015–2024 against one sale**, and down 18.4% y/y.
-
-**Reference error in the proposal itself:** 49150 is the Overseas *Chronograph*,
-not a gen-2 time-and-date. Gen-2 time-and-date is **47040** only.
-
-**Cost:** the minimum coherent version — Reverso SS + Atmos + Overseas 42042 —
-is **~$19,850, +8.2%** on the guide's $241,500, and adds three genuine chapters.
-
----
-
-## 7. Priority re-base (§3.6)
-
-Re-scored as **chapter weight × buyability × entry-point timing**, force-ranked,
-median = 5. The guide's own field is unusable: 14 of 17 targets rate ≥9 and
-nothing sits below 8.5 — and the proof is that **building the guide's page-3 hunt
-list required ignoring it**, since six entries rated 9/10 failed to make a top
-eight drawn from seventeen. Cards 5 and 13 are labelled STRETCH *and* rated 9.5,
-i.e. buyability was excluded from the number by construction.
-
-| Entry | Guide | **New** | One-line justification |
-|---|---|---|---|
-| P19 Triple Calendrier 3110V | 9 | **9** | Best-evidenced band in the review, +11.8% y/y, best risk score (30/100), real supply. **Absent from the guide's hunt list — the single clearest priority error in the document.** |
-| P17 Geophysic True Second | 9 | **8** | Unique deadbeat-seconds chapter, band confirmed twice, cheap, liquid, condition easy to find |
-| P2 Futurematic E501 | 10 | **8** | Crownless-automatic chapter is irreplaceable and directly pairs with the owned P21; cheap even at the corrected band |
-| P3 Memovox E855 | 9.5 | **7** | Alarm chapter is central to JLC; cheap; but auction and dealer channels differ 2× and supply is generic |
-| P9 Toledo 1952 47300 | 10 | **7** | Shaped complete calendar, band held under challenge, four 2025–26 sales — genuinely buyable |
-| P8 Master Grand Réveil | 9 | **6** | Enormous horological content, band dead-centre — but Asian-supply-only below $17k and a heavy service tax |
-| P10 Grande Reverso GMT | 9 | **6** | Reverso-as-complication chapter, band confirmed, but the plain 1931 case is the chapter actually missing |
-| P7 Malte Dual Time Regulator | 9.5 | **5** | Distinctive regulator chapter and in negotiation — but declining ~7%/yr, thin sales, ample supply |
-| P13 Duomètre à Chronographe | 9.5 | **5** | Dual-wing architecture genuinely distinct; softening market and a $17–21.5k ticket |
-| P1 VC Vintage Triple Calendar | 9 | **4** | Archival gravity, but overlaps P9 and P19, and no priced yellow-gold 4240 was found anywhere |
-| P4 VC "1972" 37010 | 9 | **4** | Asymmetric-design chapter is real and now cheap — but the card describes the wrong watch |
-| P14 Ultra-Fine 1955 | 8.5 | **4** | Pure movement chapter (cal 1003); band cut; one realized sale in the entire record |
-| P5 Mercator 43050 | 9.5 | **3** | Spectacular chapter, worst liquidity in the guide (6 no-sales 2023–24), and ~20% of budget → **Canon** |
-| P6 Malte PR/Date 83060 | 8.5 | **3** | Perfect sell-through, but the chapter is already owned twice; the differentiator is the logo |
-| P15 Aronde 1954 | 9 | **3** | The LE claim is false, supply is ~1 listing worldwide, US channel is 40% over band |
-| P11 AMVOX2 | 8.5 | **2** | Reference ambiguous, band cut, repeated no-sales, and "Aston Martin collaboration" is a second logo |
-| P12 Chronomètre Royal 86122 | 9 | **2** | Chapter is a nameplate; both verified sales sit below the old floor; thin market |
-
-Median = **5**. Distribution: 2,2,3,3,3,4,4,4,5,5,6,6,7,7,8,8,9.
-
----
-
-## 8. Cut list and the disciplined version
-
-**Proposed cuts — outright:** P6 (chapter owned twice), P11 (second logo,
-ambiguous reference, weak demand), P12 (chapter is a nameplate), P15 (scarcity
-claim false).
-**Proposed move to a Canon appendix:** P5 Mercator, P1 Vintage Triple Calendar,
-P8 Master Grand Réveil — real chapters, but unbuyable-in-practice at the stated
-prices, and per §1.5 they corrupt the priority scale while sitting as
-acquisition rows.
-**Proposed cut as duplicate:** P19 *or* P9 — the Toledo and the Triple
-Calendrier tell the same complete-calendar chapter in different cases. **Keep
-P19**: it is the better-evidenced, better-trending, lower-risk entry.
-**Proposed replacement:** P10 Grande Reverso GMT → plain Reverso Tribute, which
-tells the 1931 chapter the guide never fills.
-
-**The disciplined version is 13 entries** (4 owned + 9 targets), roughly **$80k
-of priced targets against $241.5k**, covering *more* distinct chapters than the
-current 21. It requires accepting that the JLC and VC halves stop being
-balanced — the 10/11 parity is a quota serving the title, not an architecture.
-
-**Opportunity cost, the strongest single argument in the review:** the top-3
-budget ($80,500) buys three watches with **one supporting sale between them**.
-The same money buys seven — 3110V, Toledo, Grand Réveil, Malte 83060, Reverso
-GMT, Futurematic, Geophysic — for $76,750, covering seven distinct chapters,
-every one more liquid than what it replaces.
-
----
-
-## 9. The foundations
-
-| Entry | Paid | Assessment |
+| | Targets | Roadmap midpoint |
 |---|---|---|
-| **P16 MUT RdM** | $5,350 | **Fairly bought**, mid-band. On a reference down 14.5% y/y against a JLC index of −8.9%. Guide's $7,500 ceiling is stale. |
-| **P18 Quai de l'Île** | $9,150 | **Well bought** — below every observed ask, against a market estimate of $11,245–11,334 and **+6.0% y/y**, one of only two entries in the review trending up. |
-| **P20 Polaris Geographic** | $19,100 | **Overpaid by ~$3,000** against $16,100 retail. A dated JDM dealer buyback of ¥1,250,000 = **$7,847 for an unworn example** is a sobering floor. Mark to $12,000–15,000. This is a realized loss, not a forecast. |
-| **P21 Master Control** | $17,000 | **Exact full list**, and US list appears to be the cheapest global list — no overpay. But there is no secondary market at all; book it as consumption and expect real depreciation over 24–36 months. |
+| Guide v1.0 | 17 | **$241,500** |
+| After corrections | 13 | **~$158,750** |
+
+**~$83k cheaper, zero chapters lost** — and the Mercator stops consuming ~31% of the plan.
 
 ---
 
-## 10. Corrections to apply — **A/B/D APPLIED 2026-08-13 with user approval**
+## 6. Next steps
 
-Sections A (bands), B (priorities) and D (channel/condition + as-of notes)
-were applied to `guide_entries` via `scripts/apply-swiss-review-2026-08.mjs`
-on 2026-08-13, approved by the user in-session. The cut list / Canon /
-additions script (`apply-swiss-review-cuts-2026-08.mjs`) was staged but **not
-run** — superseded by the narrative-first reframe (see the v1.1 rebuild) and
-note that its KEEP decisions differ from §8 as written.
-
-**A. Band changes (`guide_entries.target_low_cents` / `target_high_cents`) — 10 entries**
-
-| # | From | To |
-|---|---|---|
-| P1 | $12,000–20,000 | $12,000–18,000 |
-| P2 | $2,500–4,500 | $4,000–6,500 |
-| P3 | $3,500–5,500 | $3,000–4,250 |
-| P4 | $12,500–15,500 | $8,500–12,000 |
-| P5 | $35,000–45,000 | $40,000–52,000 |
-| P7 | $14,000–17,000 | **$11,000–14,000** |
-| P11 | $8,500–11,000 | $5,500–8,500 |
-| P12 | $18,000–22,000 | $15,500–19,000 |
-| P13 | $18,000–23,000 | $17,000–21,500 |
-| P14 | $12,000–18,000 | $11,000–15,000 |
-| P16 | $5,200–7,500 | $4,800–7,000 |
-| P18 | $9,000–12,000 | $10,000–12,500 |
-| P19 | $16,000–19,000 | $16,500–19,000 |
-| P20 | *(0–0)* | $12,000–15,000 *(provisional)* |
-| P6 | $9,000–13,000 | $10,500–13,000 |
-
-*(P8, P9, P10, P15, P17 unchanged; P21 stays bandless.)*
-
-**B. Priority changes — all 17 targets**, per §7.
-
-**C. Factual corrections to `recommended_variant` / `dates_text` / `caliber`**
-
-- P15: **remove the "limited edition" claim** (twice); note the 20-piece LE is
-  the WG 81018/000G-9559.
-- P4: `dates_text` → 1997 re-edition; `caliber` → cal 1055; note the 1970s
-  original is ref 35202/2091 at 21×46mm.
-- P6: `dates_text` → c.2007–early 2010s.
-- P7: `caliber` → cal 1206 RDT (F. Piguet 1150 base); size 39mm.
-- P11: add the **caseback edition test (750 = Chronograph, 999 = DBS)**.
-- P2: dates → 1951–1957. P3: dates → 1960–c.1974; caliber note "bumper".
-- P9: dimensions → 35.7 × 41 × 12.7mm; add moonphase.
-- P10: add the Q3038420 / 240.8.72 warning.
-- P14: launched 2010; add 4.13mm. P16: 2011 at 37mm, 39mm from 2012.
-- P18: caliber → 5100/1.
-
-**D. Notes to append** — each corrected entry gets its channel/condition
-assumption and the as-of date (2026-08-13) in `notes`, per §3.2.
-
-**E. Structural changes requiring a document revision (v1.1), not a data update**
-— the cut list (§8), the Canon appendix, the priced additions (§6.3), and a
-thesis rewritten to have a stopping rule.
+1. **Decide the cuts** (§5.3) — particularly Toledo vs Triple Calendrier 1942.
+2. **Re-run the full 7-agent method from the `claude` CLI** to validate the remaining 15 bands. This review deliberately did not.
+3. **Then** apply data changes to `guide_entries` (bands, priorities, `status='passed'` for cuts, Canon entries) via a dry-run-first script, per house rules.
+4. **Then** author guide v1.1 with the architecture verdicts folded in.
 
 ---
 
-## 11. Evidence appendix
+*Single-session review, no agent fan-out. 6 of 21 bands validated against live market data (Aug 16, 2026); 15 carried forward unvalidated and explicitly marked. Price confidence is per-entry as marked — the Toledo band is low-confidence and asks-only, and the Mercator band is directionally certain but wide.*
 
-The per-venue comp tables — every row with its date, SOLD/ASK tag, price,
-currency, condition note and URL — are the substance of this review and are
-reproduced in full in the companion files committed alongside this report:
-
-- `evidence_auctions.md` — realized auction prices + the premium-calibration
-  finding (the strongest evidence in the review)
-- `evidence_chrono24.md` — ask distributions, listing counts, supply-depth ranking
-- `evidence_ebay.md` — ask rows + the relisting and cross-listing-premium findings
-- `evidence_watchcharts.md` — index/trend data, with its access caveat
-- `evidence_yahoojp.md` — JDM asks and Yahoo hammer prices, JPY as listed
-- `factcheck.md` · `critic_architecture.md` · `critic_investment.md`
-- `refute_p7.md` — the Bonhams destruction and the Phillips discovery
-- `refute_material.md` — the seven material-finding verdicts
-- `validation_additions.md` — priced bands for the proposed additions
-- `fx.md` — stamped rates and the conversion convention
-
-**Supply depth at 2026-08-13**, thinnest first — the most decision-relevant
-single table in the evidence, because a band means nothing if nothing is for
-sale: P21 (0 priced) · **P15 (1)** · P5 (2 plain YG) · P20 (2) · P3 (1 priced) ·
-P12 (1 clean) · P13 (3) · P11 (3) · P17 (range only) · P9 (4) · P1 (4) · P16 (4)
-· P19 (5) · P2 (5) · P10 (6) · P4 (7) · P6 (7) · P8 (7) · **P7 (8, stated)** ·
-**P18 (23, stated)**.
-
----
-
-## 12. Corrections applied — checklist
-
-*(Per §3.7, this section is completed after the data update so the database and
-the document cannot silently drift.)*
-
-- [x] A. Band changes applied to `guide_entries` (2026-08-13, user-approved)
-- [x] B. Priority re-base applied (2026-08-13, user-approved)
-- [x] C. Factual corrections carried into the v2.0 draft cards (2026-08-14);
-      original v1.0 entry text superseded by the v2.0 restructure
-- [x] D. Channel/condition + as-of notes appended (2026-08-13)
-- [x] E. Document revision — completed as **v2.0 "A Trio of Swiss Artisans —
-      The Idea, the Engine and the Cathedral"** (narrative-first rebuild +
-      Breguet, per user direction): draft + image sources in docs/Watch
-      Guides/, database restructured to the 16-chapter spine by
-      `scripts/seed-swiss-guide-v2.mjs` (2026-08-14, user-approved; 30
-      entries, 4 cuts, Canon + Alternates, owned 7097 linked). Breguet bands
-      sold-validated + 31-claim fact-check archived in the evidence folder
-      (`breguet_evidence.md`, `breguet_factcheck.md`). Illustrated PDF:
-      authored in claude.ai (pending; input package = the v2.0 draft + both
-      image-source files)
-- [ ] Re-run r/WatchExchange with a working reddit path (§2.2)
-- [ ] Verify the Christie's P7 rows against christies.com when reachable (§4.2)
+**Sources:** [EveryWatch — Mercator auction results](https://everywatch.com/vacheron-constantin/mercator?auctionType=result) · [WatchCharts — Malte Dual Time Regulator](https://watchcharts.com/watch_model/25155-vacheron-constantin-malte-dual-time-regulator-42005-000g-8900/overview) · [Chrono24 — Malte Dual Time Regulator ref. listings](https://www.chrono24.com/vacheronconstantin/ref-42005000g8900.htm) · [European Watch Co. — Malte Dual Time Regulator](https://www.europeanwatch.com/watch/vacheron-constantin-42005-000g-8900-42005-000g-8900-malte-dual-ti-63497) · [Chrono24 — Duomètre Q6012420](https://www.chrono24.com/jaegerlecoultre/duometre-a-chronographe-q6012420--id11574519.htm) · [SwissWatchExpo — Duomètre Q6012420](https://www.swisswatchexpo.com/watches/jaeger-lecoultre-duometre-silver-dial-rose-gold-mens-watch-q6012420-box-papers-41935/) · [Shreve, Crump & Low — Toledo 1952 rose gold](https://shrevecrumpandlow.com/product/preowned-vacheron-constantin-historiques-toledo-1952-full-calendar-moon-phase-rose-gold-35-7mm-x-41mm-47300-000r-9219) · [Chrono24 — Chronomètre Royal 1907](https://www.chrono24.co.uk/vacheronconstantin/historiques-chronometre-royal-1907--id42958318.htm) · [EveryWatch — Futurematic results](https://everywatch.com/lecoultre/futurematic?auctionType=result&pageNumber=1) · [Chrono24 — Futurematic](https://www.chrono24.com/jaegerlecoultre/jaeger-lecoultre-futurematic--id37352433.htm)
