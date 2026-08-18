@@ -48,5 +48,15 @@ RULES — read before designing anything:
 - Layout creativity is welcome; factual creativity is forbidden. If you
   believe something in the draft needs changing, ASK — do not silently fix.
 
+FORMAT EXEMPLAR: I have also provided "Swiss Artisans.pdf" — the v1.0
+edition of this same guide (and possibly "Grand Seiko.pdf", Part I of the
+series). v2.0 is a NEW EDITION of that document, not a new design: match its
+visual format — cover composition, typography, card layout and proportions,
+banner treatment, priority presentation, footer — as closely as the medium
+allows. Where v2.0's content demands something v1.0 had no pattern for (the
+timeline spine, the trio thesis, Canon/Alternates pages), extend the
+existing visual language rather than inventing a new one.
+
 Start by proposing the page plan (page count and what goes where), wait for
-my approval, then produce the document.
+my approval, then produce the document. Include in the page plan a note on
+how you will reproduce the v1.0 visual format.
