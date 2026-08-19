@@ -30,6 +30,7 @@ import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import { WishlistBadge } from "@/components/wishlist-badge"
 import { GuideBadge } from "@/components/guide-badge"
 import { GainValue } from "@/components/gain-value"
+import { caliberLabel } from "@/lib/caliber"
 import { cn, formatCurrency } from "@/lib/utils"
 import type { SaleSummary } from "@/lib/queries/sales"
 import type { WatchWithCover, Label } from "@/lib/types/watch"
@@ -832,7 +833,7 @@ export function CollectionTable({
                   {isVisible("caliber") && (
                     <TableCell className="font-mono text-xs text-muted-foreground">
                       {watch.movement
-                        ? `${watch.movement.manufacturer ?? ""} ${watch.movement.caliber_name}`.trim()
+                        ? caliberLabel(watch.movement)
                         : "—"}
                     </TableCell>
                   )}

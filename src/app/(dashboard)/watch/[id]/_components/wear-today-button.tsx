@@ -7,15 +7,15 @@ import { toast } from "sonner"
 
 interface WearTodayButtonProps {
   watchId: string
-  wearInfo?: { count: number; lastWorn: string | null }
 }
 
-function formatLastWorn(dateStr: string): string {
-  const date = new Date(dateStr + "T00:00:00")
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-}
-
-export function WearTodayButton({ watchId, wearInfo }: WearTodayButtonProps) {
+/**
+ * The action alone. The wear COUNT used to sit under this button, which meant
+ * a never-worn watch said zero three times on one screen — here, on the WEAR
+ * card, and again in that card's context line. Phase 9 §2.3 keeps the count in
+ * one place, the WEAR card, and leaves the header the thing you press.
+ */
+export function WearTodayButton({ watchId }: WearTodayButtonProps) {
   const [isPending, startTransition] = useTransition()
 
   function handleQuickWear() {
@@ -30,16 +30,8 @@ export function WearTodayButton({ watchId, wearInfo }: WearTodayButtonProps) {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1.5">
-      <Button variant="outline" size="sm" onClick={handleQuickWear} disabled={isPending}>
-        Wore Today
-      </Button>
-      {wearInfo && (
-        <span className="text-xs text-muted-foreground">
-          Worn {wearInfo.count} {wearInfo.count === 1 ? "time" : "times"}
-          {wearInfo.lastWorn && ` · Last: ${formatLastWorn(wearInfo.lastWorn)}`}
-        </span>
-      )}
-    </div>
+    <Button variant="outline" size="sm" onClick={handleQuickWear} disabled={isPending}>
+      Wore Today
+    </Button>
   )
 }

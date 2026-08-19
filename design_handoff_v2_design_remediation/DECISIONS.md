@@ -23,9 +23,18 @@ Therefore:
 - The light palette in `:root` stays as authored (Slate & Ice). `--brass` in light mode is
   `oklch(0.52 0.07 75)` — darker for contrast — and that is correct; do not unify it with
   the dark value.
-- Exception, unchanged: the physical-object components (`watch-hero.tsx`,
-  `display-box-home.tsx`, `watch-dial.tsx`) keep their literal steel/brass/felt gradients
-  in both themes. They model objects, not chrome.
+- Exception, **now reduced to one component**: `watch-dial.tsx` keeps its literal
+  steel/brass/felt gradients. It models an object, not chrome.
+
+  > **Superseded 2026-08-18 (Phase 8 §8).** This clause used to cover `watch-hero.tsx`
+  > and `display-box-home.tsx` as well. Both are gone: the hero was deleted in Phase 6
+  > when the home page stopped masking composed photographs into a dial, and the display
+  > box was rebuilt in Phase 8 as `display-case.tsx` — trays on `--surface-rail` with a
+  > single `inset 0 1px 3px rgba(0,0,0,0.06)` shadow, tokens throughout, no wood, no
+  > gloss, no off-palette yellow. The exception was protecting the one surface in the app
+  > that read as a 1990s skeuomorph, and it was fighting the photographs it existed to
+  > present. Withdrawn deliberately, in the same commit as the restyle, so the design
+  > system and the code do not disagree. See `00-design-system.md` §4.
 
 ## 2. The watch form keeps a manual Save button (affects C1)
 

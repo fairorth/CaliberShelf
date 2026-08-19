@@ -5,6 +5,7 @@ import path from "path"
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { buildStoragePath } from "@/lib/storage"
+import { dimensionColumns, type ImageDimensions } from "@/lib/image-meta"
 import { generateThumbnail, thumbPathFor } from "@/lib/thumbnails"
 import { PHOTO_ANGLES } from "@/lib/photo-lab"
 import type { PhotoAngle, ReviewState } from "@/lib/types/watch"
@@ -124,16 +125,24 @@ export async function promoteScoredFrame(
   }
 
   let jpeg: Buffer
+  // Dimensions of the COMPOSITE, not the source (00048). `resolveWithObject`
+  // hands back the output size from the encode that is already happening, so
+  // this costs nothing and — crucially — describes the file that actually gets
+  // stored. Reading the RAW instead would describe a frame nobody sees: the
+  // resize below changes it, and `.rotate()` may transpose it.
+  let jpegDims: ImageDimensions | null = null
   try {
     const { default: sharp } = await import("sharp")
-    jpeg = await sharp(sourceBytes)
+    const encoded = await sharp(sourceBytes)
       .rotate()
       .resize(PROMOTE_LONG_EDGE, PROMOTE_LONG_EDGE, {
         fit: "inside",
         withoutEnlargement: true,
       })
       .jpeg({ quality: 85 })
-      .toBuffer()
+      .toBuffer({ resolveWithObject: true })
+    jpeg = encoded.data
+    jpegDims = { width: encoded.info.width, height: encoded.info.height }
   } catch {
     return { error: "Could not decode this frame (unsupported format)." }
   }
@@ -176,6 +185,7 @@ export async function promoteScoredFrame(
       sort_order: count ?? 0,
       is_cover: makeCover,
       angle,
+      ...dimensionColumns(jpegDims),
     })
     .select("id")
     .single()

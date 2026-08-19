@@ -5,7 +5,6 @@ import { getMovements } from "@/lib/queries/movements"
 import { getBoxConfig } from "@/lib/queries/box-config"
 import { getCategories } from "@/lib/queries/categories"
 import { getLabels, getLabelsForWatch } from "@/lib/queries/labels"
-import { getWearCountForWatch } from "@/lib/queries/wear-logs"
 import { getTimegrapherRuns } from "@/lib/queries/timegrapher"
 import { getStraps } from "@/lib/queries/straps"
 import { strapMaterialLabels } from "@/lib/validations/strap"
@@ -14,8 +13,6 @@ import { WatchForm } from "@/components/watch-form"
 import { PhotoGallery } from "../_components/photo-gallery"
 import { PhotoUploader } from "../_components/photo-uploader"
 import { TimegrapherPanel } from "../_components/timegrapher-panel"
-import { WearTodayButton } from "../_components/wear-today-button"
-import { DialFramingEditor } from "./_components/dial-framing-editor"
 import { StrapPanel } from "../_components/strap-panel"
 import { updateWatch } from "@/lib/actions/watch-actions"
 
@@ -54,7 +51,8 @@ export default async function EditWatchPage({
   }
   const returnTo = RETURN_TARGETS[from ?? ""] ?? "/collection"
 
-  const [watch, brands, movements, categories, labels, watchLabels, wearInfo, timegrapherRuns, boxConfig, straps] =
+  // No wear count here any more (§3.1) — one fewer query, too.
+  const [watch, brands, movements, categories, labels, watchLabels, timegrapherRuns, boxConfig, straps] =
     await Promise.all([
       getWatchById(id),
       getBrands(),
@@ -62,7 +60,6 @@ export default async function EditWatchPage({
       getCategories(),
       getLabels(),
       getLabelsForWatch(id),
-      getWearCountForWatch(id),
       getTimegrapherRuns(id),
       getBoxConfig(),
       getStraps(),
@@ -85,10 +82,6 @@ export default async function EditWatchPage({
     fullPhotoUrls[key] = value
   }
 
-  // Resolve the cover photo's signed URL for the dial-framing editor
-  const coverPhoto = watch.watch_photos.find((p) => p.is_cover)
-  const coverPhotoUrl = coverPhoto ? photoUrls[coverPhoto.storage_path] ?? null : null
-
   // Display names for the strap panel (computed server-side; the panel is a
   // client component and shouldn't need the material label map).
   const strapLabels: Record<string, string> = {}
@@ -103,7 +96,12 @@ export default async function EditWatchPage({
           {watch.brand.name}{" "}
           <span className="text-muted-foreground">{watch.nickname || watch.model}</span>
         </h1>
-        <WearTodayButton watchId={watch.id} wearInfo={wearInfo} />
+        {/* §3.1 — `Wore Today` and the wear count are gone from the edit
+            page. Logging a wear is a mutation on a DIFFERENT record, fired
+            from inside a form with unsaved changes and a manual save: pressing
+            it while dirty asks a question with no good answer (does the edit
+            save, get discarded, or half-persist?). Both live on the view page,
+            where an action that is not editing belongs. */}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[420px_1fr] lg:items-start lg:gap-[26px]">
@@ -117,13 +115,6 @@ export default async function EditWatchPage({
               watchId={watch.id}
             />
             <PhotoUploader watchId={watch.id} />
-            <DialFramingEditor
-              watchId={watch.id}
-              coverPhotoUrl={coverPhotoUrl}
-              initialFocalX={watch.dial_focal_x}
-              initialFocalY={watch.dial_focal_y}
-              initialZoom={watch.dial_zoom}
-            />
             <StrapPanel
               watchId={watch.id}
               watchStrapWidthMm={watch.strap_width_mm}

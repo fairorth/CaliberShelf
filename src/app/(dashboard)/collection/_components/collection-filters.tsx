@@ -388,7 +388,7 @@ export function CollectionFiltersDialog({
         {/* The body scrolls under the pinned footer, so the match count and
             the actions stay reachable however long the list grows. */}
         <div className="-mx-4 space-y-6 overflow-y-auto px-4">
-          <FilterSection title="Status">
+          <FilterSection title="Ownership">
           {/* Status — every watch is exactly one of these three */}
           <div className="space-y-1.5">
             <FormLabel>Show</FormLabel>

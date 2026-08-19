@@ -3,7 +3,6 @@
 import { useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { Star, Trash2, Watch } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { PhotoLightbox } from "./photo-lightbox"
 import {
   AlertDialog,
@@ -135,10 +134,14 @@ export function PhotoGallery({ photos, photoUrls, fullPhotoUrls, watchId }: Phot
                 )}
               </button>
 
-              {photo.is_cover && (
-                <Badge className="pointer-events-none absolute left-2 top-2 text-2xs">
-                  Cover
-                </Badge>
+              {/* §2.5 — `COVER` is pre-Phase-6 vocabulary; the concept is the
+                  hero ANGLE. Show the angle name, or nothing. That also settles
+                  §3.9, since the badge that rendered blue here and brass-grey
+                  on the view page no longer exists in either. */}
+              {photo.angle && (
+                <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-card/90 px-2 py-[3px] font-mono text-2xs font-medium uppercase tracking-[0.1em] text-foreground">
+                  {photo.angle}
+                </span>
               )}
 
               {/* Per-tile hover actions (replace the select-then-act footer). */}

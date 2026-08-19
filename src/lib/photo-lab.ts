@@ -18,13 +18,17 @@ export const ANGLE_LABELS: Record<PhotoAngle, string> = {
   macro: "Macro",
 }
 
-/** Short uppercase column headings for the coverage matrix.
+/** Short uppercase column headings for the coverage matrix and the home
+ *  page's strip.
  *  One word each: the five columns share equal width, so a two-word heading
  *  wraps and drags the whole header row out of alignment. The long forms live
- *  in ANGLE_LABELS, which is what the Session and Review screens use. */
+ *  in ANGLE_LABELS, which is what the Session and Review screens use.
+ *  ASCII only — the ¾ that used to ride on HERO rendered as a stray glyph in
+ *  mono at 11px (Phase 8 §10), and the strip's vocabulary is exactly
+ *  FLAT · HERO · PROFILE · CASEBACK · MACRO. */
 export const ANGLE_HEADINGS: Record<PhotoAngle, string> = {
   flat: "FLAT",
-  hero: "HERO ¾",
+  hero: "HERO",
   profile: "PROFILE",
   caseback: "CASEBACK",
   macro: "MACRO",

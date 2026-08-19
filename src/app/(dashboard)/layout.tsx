@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { getJumpIndex } from "@/lib/queries/jump"
 import { NavHeader } from "@/components/layout/nav-header"
 import { NavRail } from "@/components/layout/nav-rail"
 import { IosInstallPrompt } from "@/components/ios-install-prompt"
@@ -19,6 +20,12 @@ export default async function DashboardLayout({
     redirect("/login")
   }
 
+  // The jump index rides in the shell so `/` is instant on every page, with no
+  // round trip to search (Phase 8 §6.1). It is five short text columns per
+  // watch and no photographs — a fraction of what any single page below it
+  // already ships.
+  const jumpIndex = await getJumpIndex()
+
   return (
     <UnsavedChangesProvider>
       {/* print: the h-dvh + overflow-y-auto pair truncates printing to one
@@ -31,7 +38,7 @@ export default async function DashboardLayout({
         </div>
         <div className="flex min-w-0 flex-1 flex-col print:block">
           <div className="contents print:hidden">
-            <NavHeader userEmail={user.email ?? ""} />
+            <NavHeader userEmail={user.email ?? ""} jumpIndex={jumpIndex} />
           </div>
           <main className="flex-1 overflow-y-auto p-4 md:p-6 print:overflow-visible print:p-0">
             {children}

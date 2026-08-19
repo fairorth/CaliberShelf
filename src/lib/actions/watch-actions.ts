@@ -3,12 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import {
-  watchFormSchema,
-  quickAddSchema,
-  dialFramingSchema,
-  type DialFramingValues,
-} from "@/lib/validations/watch"
+import { watchFormSchema, quickAddSchema } from "@/lib/validations/watch"
 import { setWatchLabels } from "@/lib/actions/label-actions"
 import { buildStoragePath } from "@/lib/storage"
 import { generateThumbnail, thumbPathFor } from "@/lib/thumbnails"
@@ -226,36 +221,10 @@ export async function updateWatch(
   redirect(dest)
 }
 
-/**
- * Update only the dial framing (focal point + zoom) for a watch.
- * Direct-call action (not form-bound) — see CLAUDE.md gotcha.
- */
-export async function updateDialFraming(
-  watchId: string,
-  data: DialFramingValues
-): Promise<WatchActionState> {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return { error: "You must be logged in." }
-
-  const parsed = dialFramingSchema.safeParse(data)
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
-
-  const { error } = await supabase
-    .from("watches")
-    .update(parsed.data)
-    .eq("id", watchId)
-    .eq("user_id", user.id)
-
-  if (error) return { error: error.message }
-
-  revalidatePath("/dashboard")
-  revalidatePath(`/watch/${watchId}`); revalidatePath(`/watch/${watchId}/edit`)
-  return { success: true }
-}
+// `updateDialFraming` is gone (Phase 9 §1.2). It was the only writer of
+// `dial_focal_x/y` and `dial_zoom`; the columns stay and their existing values
+// are untouched, so if the automatic nearest-1:1 rule disappoints the data is
+// still there to fall back on. Drop them a phase later, after living with it.
 
 /**
  * Delete a watch and all associated photos from storage.

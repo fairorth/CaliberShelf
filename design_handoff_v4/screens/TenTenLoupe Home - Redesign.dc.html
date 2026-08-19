@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; background: oklch(0.97 0.005 235); color: oklch(0.22 0.018 245); font-family: Geist, "Helvetica Neue", Helvetica, sans-serif; }
+  a { color: oklch(0.22 0.018 245); text-decoration: none; }
+  a:hover { color: #8a6a2f; }
+  @keyframes kb { from { transform: scale(1); } to { transform: scale(1.06) translate(-1%, -0.7%); } }
+  @keyframes bd { from { transform: scale(1.3); } to { transform: scale(1.42) translate(1.4%, -1%); } }
+  @keyframes sweep { from { stroke-dashoffset: 94.25; } to { stroke-dashoffset: 0; } }
+</style>
+</helmet>
+
+<section style="padding:44px 40px 60px;display:flex;flex-direction:column;gap:26px;align-items:flex-start;">
+
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#8a6a2f;">TURN 5 · COMPOSING A FLAT SHOT FOR A 3:2 STAGE</div>
+    <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;letter-spacing:-0.02em;">Give the dial somewhere to sit</h2>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;">A dial is round, so the instinct on a flat shot is to centre it and crop tight — which produces a square, and a square costs you half the stage. The fix is not to shoot the dial smaller; it is to shoot <em>wider</em>, and put the dial somewhere other than the middle. Your R10's native 3:2 is exactly the stage aspect, so an uncropped horizontal frame fills the page edge to edge.</p>
+  </div>
+
+  <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+
+    <div style="display:flex;flex-direction:column;gap:10px;width:352px;">
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">A · TIGHT &amp; CENTRED</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a6a2f;">0.81:1</span>
+      </div>
+      <div style="position:relative;width:352px;height:235px;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);">
+        <img src="w-addiesdive-flat.png" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(30px) saturate(1.45);opacity:0.9;" />
+        <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 45%,rgba(0,0,0,0.06) 0%,rgba(0,0,0,0.34) 100%);"></div>
+        <img src="w-addiesdive-flat.png" alt="Addiesdive, centred and tight" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" />
+      </div>
+      <span style="font-size:13px;line-height:1.5;color:oklch(0.48 0.008 245);">Your existing shot. The watch gets the middle 54%; the rest is blur. Nothing wrong with the photograph — it is the wrong <em>shape</em> for this stage.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;width:352px;">
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8a6a2f;">B · DIAL RIGHT, SPACE LEFT</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">3:2</span>
+      </div>
+      <div style="position:relative;width:352px;height:235px;border-radius:8px;overflow:hidden;background:oklch(0.30 0.012 245);">
+        <div style="position:absolute;inset:0;background:radial-gradient(70% 90% at 66.66% 33.33%,rgba(255,255,255,0.16) 0%,transparent 70%);"></div>
+        <div style="position:absolute;left:33.33%;top:0;bottom:0;width:1px;background:rgba(201,162,94,0.30);"></div>
+        <div style="position:absolute;left:66.66%;top:0;bottom:0;width:1px;background:rgba(201,162,94,0.30);"></div>
+        <div style="position:absolute;top:33.33%;left:0;right:0;height:1px;background:rgba(201,162,94,0.30);"></div>
+        <div style="position:absolute;top:66.66%;left:0;right:0;height:1px;background:rgba(201,162,94,0.30);"></div>
+        <div style="position:absolute;left:53.3%;top:13.3%;width:94px;height:94px;border-radius:9999px;border:2px solid rgba(201,162,94,0.85);background:rgba(201,162,94,0.10);"></div>
+        <div style="position:absolute;left:53.3%;top:13.3%;width:94px;height:94px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:rgba(255,255,255,0.92);">DIAL</div>
+        <div style="position:absolute;left:0;bottom:0;width:62%;height:44%;background:linear-gradient(45deg,rgba(201,162,94,0.22),transparent 70%);"></div>
+        <span style="position:absolute;left:14px;top:46%;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:rgba(255,255,255,0.75);">NEGATIVE<br />SPACE</span>
+        <span style="position:absolute;left:16px;bottom:12px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:rgba(201,162,94,0.95);">STRAP LEADS IN ↗</span>
+      </div>
+      <span style="font-size:13px;line-height:1.5;color:oklch(0.48 0.008 245);">Dial centred where the right-hand vertical third crosses the upper horizontal third, strap sweeping in from the bottom-left corner. The empty half is not wasted — it is where the brand name and the bloom breathe.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;width:352px;">
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8a6a2f;">C · DIAL LEFT, SPACE RIGHT</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">3:2</span>
+      </div>
+      <div style="position:relative;width:352px;height:235px;border-radius:8px;overflow:hidden;background:oklch(0.30 0.012 245);">
+        <div style="position:absolute;inset:0;background:radial-gradient(70% 90% at 33.33% 33.33%,rgba(255,255,255,0.16) 0%,transparent 70%);"></div>
+        <div style="position:absolute;left:33.33%;top:0;bottom:0;width:1px;background:rgba(201,162,94,0.30);"></div>
+        <div style="position:absolute;left:66.66%;top:0;bottom:0;width:1px;background:rgba(201,162,94,0.30);"></div>
+        <div style="position:absolute;top:33.33%;left:0;right:0;height:1px;background:rgba(201,162,94,0.30);"></div>
+        <div style="position:absolute;top:66.66%;left:0;right:0;height:1px;background:rgba(201,162,94,0.30);"></div>
+        <div style="position:absolute;left:20%;top:13.3%;width:94px;height:94px;border-radius:9999px;border:2px solid rgba(201,162,94,0.85);background:rgba(201,162,94,0.10);"></div>
+        <div style="position:absolute;left:20%;top:13.3%;width:94px;height:94px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:rgba(255,255,255,0.92);">DIAL</div>
+        <div style="position:absolute;right:0;bottom:0;width:62%;height:44%;background:linear-gradient(-45deg,rgba(201,162,94,0.22),transparent 70%);"></div>
+        <span style="position:absolute;right:14px;top:22%;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:rgba(255,255,255,0.75);">NEGATIVE<br />SPACE</span>
+        <span style="position:absolute;right:16px;bottom:12px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:rgba(201,162,94,0.95);">↖ STRAP LEADS IN</span>
+      </div>
+      <span style="font-size:13px;line-height:1.5;color:oklch(0.48 0.008 245);">The mirror — dial on the left-hand third, strap in from the bottom-right. Worth shooting both so the rotation does not always lean the same way: variety you get for free at the camera.</span>
+    </div>
+  </div>
+
+  <div style="max-width:1100px;display:flex;flex-direction:column;gap:10px;border-top:1px solid oklch(0.87 0.01 235);padding-top:18px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#8a6a2f;">FIVE THINGS TO DO AT THE CAMERA</span>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 32px;font-size:15px;line-height:1.55;color:oklch(0.48 0.008 245);">
+      <span><strong style="color:oklch(0.22 0.018 245);">Shoot landscape, deliver 3:2.</strong> Turn the camera horizontal and do not crop. The R10's native frame already matches the stage exactly.</span>
+      <span><strong style="color:oklch(0.22 0.018 245);">Dial on a third line, not the centre.</strong> Centre it where a vertical third crosses a horizontal one — about two-thirds across and one-third down, or its mirror.</span>
+      <span><strong style="color:oklch(0.22 0.018 245);">Let the strap enter from a corner.</strong> A diagonal gives the empty half something to do and stops it reading as a gap.</span>
+      <span><strong style="color:oklch(0.22 0.018 245);">Light the negative space, don't just leave it dark.</strong> A gradient falling off across the empty side is what the bloom picks up.</span>
+      <span style="grid-column:1 / -1;"><strong style="color:oklch(0.22 0.018 245);">Leave the dial some margin.</strong> Roughly 40% of the frame height, not 90% — the bloom then reads as a rim of light rather than a field, and the watch still dominates because the frame is wide, not because the dial is huge.</span>
+    </div>
+  </div>
+
+</section>
+
+<section style="padding:0 40px 60px;display:flex;flex-direction:column;gap:26px;align-items:flex-start;">
+
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#8a6a2f;">TURN 4 · THE FRAME SHOULD FIT THE PHOTOGRAPH</div>
+    <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;letter-spacing:-0.02em;">Stop forcing 3:2</h2>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;">The Addiesdive frame is <strong>0.81:1</strong> — portrait. In a fixed 3:2 box it gets 54% of the width and the bloom takes the other 46%, so the loudest thing on the page is a blur. The widest-frame preference helps when a watch has options, but this watch has exactly one photograph, so no selection rule can save it. The container itself is the problem: a fixed aspect box means every photo that isn't 3:2 pays for the difference in bloom.</p>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;"><strong>Fix: fix the height, let the width follow the photograph.</strong> The bloom stops being a field the photo floats in and becomes a spill of light around its edges — the same colour, doing the same job, at a tenth of the area. A wide reclining shot fills the content width; a square dial-on shot sits centred and compact. Neither is cropped, and neither is drowned.</p>
+  </div>
+
+  <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:baseline;gap:10px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">NOW — FORCED 3:2</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a6a2f;">46% BLOOM</span>
+      </div>
+      <div style="position:relative;width:520px;height:346px;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);">
+        <img src="w-addiesdive-flat.png" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(38px) saturate(1.45);opacity:0.9;" />
+        <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 45%,rgba(0,0,0,0.06) 0%,rgba(0,0,0,0.34) 100%);"></div>
+        <img src="w-addiesdive-flat.png" alt="Addiesdive AD2541" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" />
+      </div>
+      <span style="font-size:13px;color:oklch(0.48 0.008 245);max-width:520px;">The watch is the middle third. The teal is lovely and it is winning.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:baseline;gap:10px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#8a6a2f;">PROPOSED — ASPECT FIT</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">GLOW ONLY</span>
+      </div>
+      <div style="width:520px;height:346px;display:flex;align-items:center;justify-content:center;">
+        <div style="position:relative;width:281px;height:346px;">
+          <img src="w-addiesdive-flat.png" alt="" aria-hidden="true" style="position:absolute;inset:-40px;width:calc(100% + 80px);height:calc(100% + 80px);object-fit:cover;filter:blur(40px) saturate(1.5);opacity:0.55;border-radius:9999px;" />
+          <img src="w-addiesdive-flat.png" alt="Addiesdive AD2541" style="position:relative;width:100%;height:100%;object-fit:contain;border-radius:8px;box-shadow:0 8px 28px -6px rgba(0,0,0,0.28);" />
+        </div>
+      </div>
+      <span style="font-size:13px;color:oklch(0.48 0.008 245);max-width:520px;">Same photograph, same height, uncropped — the colour now lights it from behind instead of surrounding it.</span>
+    </div>
+  </div>
+
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:8px;border-top:1px solid oklch(0.87 0.01 235);padding-top:18px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#8a6a2f;">THE RULE</span>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;">Stage height stays fixed at 470px. Width = <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">470 × aspect</code>, capped at the content width — so a 3:2 or wider frame still fills the page edge to edge and nothing about the current best case changes. The bloom becomes a soft radial spill extending ~40px past the photo at low opacity, which also retires the scrim entirely: there is no large dark field left to correct, so the luminance-adaptive mapping from Phase 8 §2 becomes a small opacity adjustment rather than a fix. Aspect comes from the stored image dimensions, so the box is correct on first paint with no layout shift.</p>
+  </div>
+
+</section>
+
+<section style="padding:0 40px 130px;display:flex;flex-direction:column;gap:38px;align-items:flex-start;">
+
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#8a6a2f;">TURN 3 · HOME REDESIGN · BOXES · DISPLAY CASE</div>
+    <h1 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:600;letter-spacing:-0.02em;">One spine, not two columns</h1>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;">The alignment problem you spotted is structural, not a padding bug: two independent columns of different heights can only agree at the top, so the left always ends early and leaves a hole. The fix is to stop having two columns. Everything now stacks down one centre line in the order you actually read it — <strong>photograph → who it is → the strip → the facts</strong> — which also kills the duplicate-image problem, because the strip is the only place thumbnails live. Sections: <a href="#3a" style="color:#8a6a2f;">3a</a> home, <a href="#3b" style="color:#8a6a2f;">3b</a> Boxes in the nav, <a href="#3c" style="color:#8a6a2f;">3c</a> the display case.</p>
+    <p style="margin:0;font-size:13px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">Drawn in the real 1120px shell with your own photographs, cropped out of the screenshots you sent. The main frame also demonstrates the scrim fix — the Vario is shot on white, so its scrim is nearly off; the old fixed 0.52 is what was making these look like a dark hole.</p>
+  </div>
+
+  <div id="3a" style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.1em;color:oklch(0.99 0.01 90);background:#8a6a2f;border-radius:8px;padding:3px 8px;">3a</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">The home page</h2>
+      <span style="font-size:13px;color:oklch(0.48 0.008 245);">one image, one strip, one band of facts</span>
+    </div>
+
+    <div style="width:1120px;display:flex;background:oklch(0.97 0.005 235);border:1px solid oklch(0.87 0.01 235);border-radius:14px;overflow:hidden;">
+
+      <div style="width:200px;flex:none;display:flex;flex-direction:column;gap:16px;background:oklch(0.955 0.006 235);border-right:1px solid oklch(0.87 0.01 235);padding:14px 12px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:4px 6px 0;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="26" height="26" aria-hidden="true" style="display:block;flex:none;">
+            <path d="M50 50 L97 50 A47 47 0 0 1 73.5 90.7 Z" fill="#8a6a2f"></path>
+            <path d="M50 50 L73.5 90.7 A47 47 0 0 1 26.5 90.7 Z" fill="#b08c46"></path>
+            <path d="M50 50 L26.5 90.7 A47 47 0 0 1 3 50 Z" fill="#8a6a2f"></path>
+            <path d="M50 50 L3 50 A47 47 0 0 1 26.5 9.3 Z" fill="#b08c46"></path>
+            <path d="M50 50 L26.5 9.3 A47 47 0 0 1 73.5 9.3 Z" fill="#8a6a2f"></path>
+            <path d="M50 50 L73.5 9.3 A47 47 0 0 1 97 50 Z" fill="#b08c46"></path>
+            <path d="M83 50 L66.5 78.58 L33.5 78.58 L17 50 L33.5 21.42 L66.5 21.42 Z" fill="oklch(0.955 0.006 235)"></path>
+            <rect x="47.6" y="19" width="1.6" height="8" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+            <rect x="50.8" y="19" width="1.6" height="8" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+            <rect x="73" y="49.2" width="7" height="1.6" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+            <rect x="49.2" y="73" width="1.6" height="7" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+            <rect x="20" y="49.2" width="7" height="1.6" rx="0.8" fill="oklch(0.22 0.018 245)"></rect>
+            <line x1="50" y1="50" x2="30.95" y2="39" stroke="oklch(0.22 0.018 245)" stroke-width="2.4" stroke-linecap="round"></line>
+            <line x1="50" y1="50" x2="75.11" y2="35.5" stroke="oklch(0.22 0.018 245)" stroke-width="2" stroke-linecap="round"></line>
+            <circle cx="50" cy="50" r="3.4" fill="#c9a25e"></circle>
+            <circle cx="50" cy="50" r="48" fill="none" stroke="#8a6a2f" stroke-width="2"></circle>
+          </svg>
+          <span style="display:flex;flex-direction:column;line-height:1;">
+            <span style="font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;letter-spacing:-0.02em;">Ten<span style="color:#8a6a2f;">:</span>Ten</span>
+            <span aria-hidden="true" style="margin:4px 0;height:1px;width:100%;background:linear-gradient(90deg,transparent,rgba(138,106,47,0.75),transparent);"></span>
+            <span style="padding-left:0.46em;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.46em;color:#8a6a2f;">LOUPE</span>
+          </span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;font-weight:500;background:rgba(138,106,47,0.14);color:#8a6a2f;"><span style="display:flex;"><i data-lucide="house"></i></span>Home</a>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Collection</div>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="list"></i></span>Collection</a>
+          <a href="#3b" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="package"></i></span>Boxes<span style="flex:1;"></span><span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-right"></i></span></a>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="tag"></i></span>Brands</a>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="link-2"></i></span>Straps</a>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Analysis</div>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="calendar-days"></i></span>Wear Log</a>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="chart-column"></i></span>Reports</a>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="compass"></i></span>Guides</a>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Market</div>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="trending-up"></i></span>Market</a>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="archive"></i></span>Sold Archive</a>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="badge-dollar-sign"></i></span>Deals</a>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Imagery</div>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="camera"></i></span>Photo Lab</a>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="images"></i></span>Inspiration</a>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="package-plus"></i></span>Batch Import</a>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">System</div>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="settings"></i></span>Config</a>
+          <a href="#3a" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="info"></i></span>About</a>
+        </div>
+
+        <span style="margin-top:auto;padding:12px 10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">v2.1.0</span>
+      </div>
+
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+        <div style="height:56px;flex:none;border-bottom:1px solid oklch(0.87 0.01 235);display:flex;align-items:center;gap:10px;padding:0 16px;">
+          <label style="display:flex;align-items:center;gap:8px;height:34px;width:300px;padding:0 12px;border:1px solid oklch(0.87 0.01 235);border-radius:8px;background:oklch(0.99 0.003 235);">
+            <span style="display:flex;color:oklch(0.48 0.008 245);flex:none;"><i data-lucide="search"></i></span>
+            <span style="flex:1;min-width:0;font-size:13px;color:oklch(0.48 0.008 245);">Jump to a watch or brand…</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);border:1px solid oklch(0.87 0.01 235);border-radius:4px;padding:1px 5px;flex:none;">/</span>
+          </label>
+          <span style="flex:1;"></span>
+          <div style="display:flex;align-items:baseline;gap:8px;font-family:'JetBrains Mono',monospace;">
+            <span style="font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">{{ dateLine }}</span>
+            <span style="font-size:15px;font-variant-numeric:tabular-nums;color:oklch(0.22 0.018 245);">{{ hhmm }}</span>
+            <span style="font-size:11px;font-variant-numeric:tabular-nums;color:oklch(0.48 0.008 245);">{{ seconds }}</span>
+            <span style="font-size:11px;letter-spacing:0.1em;color:oklch(0.48 0.008 245);">{{ meridiem }}</span>
+          </div>
+          <span style="width:1px;height:18px;background:oklch(0.87 0.01 235);"></span>
+          <span style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:8px;background:#8a6a2f;color:oklch(0.99 0.01 90);font-size:15px;font-weight:500;"><span style="display:flex;"><i data-lucide="plus"></i></span>Add Watch</span>
+          <span style="width:34px;height:34px;border-radius:9999px;background:oklch(0.94 0.008 235);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;">F</span>
+        </div>
+
+        <div style="padding:20px 24px 24px;display:flex;flex-direction:column;gap:16px;">
+
+          <div style="position:relative;width:100%;height:470px;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);">
+            <img src="w-vario.png" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(38px) saturate(1.45);opacity:0.85;animation:bd 90s ease-in-out infinite alternate;" />
+            <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 45%,rgba(0,0,0,0.02) 0%,rgba(0,0,0,0.13) 100%);"></div>
+            <img src="w-vario.png" alt="Vario Futurist" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;animation:kb 90s ease-in-out infinite alternate;" />
+          </div>
+
+          <div style="display:flex;align-items:flex-end;gap:20px;">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;color:#8a6a2f;">NOW ON THE TABLE</span>
+              <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                <span style="font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:400;line-height:1.04;letter-spacing:-0.02em;">Vario</span>
+                <span style="font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:400;line-height:1.1;">Futurist</span>
+              </div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.48 0.008 245);">AUTOMATIC · MIYOTA 9039 · 39MM · BOX4</span>
+            </div>
+            <div style="flex:none;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+            <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);background:oklch(0.99 0.003 235);">
+              <span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="layers"></i></span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">ROTATION</span>
+              <span style="font-size:13px;font-weight:500;">All Watches</span>
+              <span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-down"></i></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;">
+              <div style="position:relative;width:30px;height:30px;flex:none;">
+                <svg viewBox="0 0 36 36" style="width:30px;height:30px;display:block;transform:rotate(-90deg);">
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="oklch(0.87 0.01 235)" stroke-width="2"></circle>
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="#8a6a2f" stroke-width="2" stroke-linecap="round" stroke-dasharray="94.25" style="animation:sweep 90s linear infinite;"></circle>
+                </svg>
+                <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;color:#8a6a2f;"><i data-lucide="aperture"></i></span>
+              </div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:oklch(0.48 0.008 245);">10 / 107 · EVERY 90S</span>
+              <span style="width:1px;height:16px;background:oklch(0.87 0.01 235);"></span>
+              <span style="display:flex;align-items:center;gap:6px;font-size:13px;"><span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-left"></i></span>Previous</span>
+              <span style="display:flex;align-items:center;gap:6px;font-size:13px;">Next<span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="chevron-right"></i></span></span>
+              <span style="width:1px;height:16px;background:oklch(0.87 0.01 235);"></span>
+              <span style="display:flex;align-items:center;gap:7px;font-size:13px;color:#8a6a2f;font-weight:500;">Open watch<span style="display:flex;"><i data-lucide="arrow-up-right"></i></span></span>
+            </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">THE STRIP</span>
+              <span style="flex:1;height:1px;background:oklch(0.87 0.01 235);"></span>
+            </div>
+
+            <div style="background:oklch(0.28 0.010 245);border-radius:8px;padding:8px 0;display:flex;flex-direction:column;gap:7px;">
+              <div style="height:10px;margin:0 12px;background-image:repeating-linear-gradient(90deg,oklch(0.97 0.005 235) 0 11px,transparent 11px 24px);border-radius:2px;"></div>
+              <div style="display:flex;gap:6px;padding:0 12px;">
+                <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                  <div style="aspect-ratio:3/2;overflow:hidden;outline:2px solid #c9a25e;outline-offset:-2px;background:oklch(0.22 0.008 245);"><img src="w-vario.png" alt="" style="width:100%;height:100%;object-fit:cover;" /></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:rgba(255,255,255,0.62);text-align:center;">UNTAGGED</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                  <div style="aspect-ratio:3/2;background:oklch(0.22 0.008 245);border:1px dashed rgba(255,255,255,0.28);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.55);"><i data-lucide="plus"></i></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:rgba(255,255,255,0.62);text-align:center;">FLAT</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                  <div style="aspect-ratio:3/2;background:oklch(0.22 0.008 245);border:1px dashed rgba(255,255,255,0.28);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.55);"><i data-lucide="plus"></i></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:rgba(255,255,255,0.62);text-align:center;">HERO</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                  <div style="aspect-ratio:3/2;background:oklch(0.22 0.008 245);border:1px dashed rgba(255,255,255,0.28);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.55);"><i data-lucide="plus"></i></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:rgba(255,255,255,0.62);text-align:center;">PROFILE</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                  <div style="aspect-ratio:3/2;background:oklch(0.22 0.008 245);border:1px dashed rgba(255,255,255,0.28);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.55);"><i data-lucide="plus"></i></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:rgba(255,255,255,0.62);text-align:center;">CASEBACK</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                  <div style="aspect-ratio:3/2;background:oklch(0.22 0.008 245);border:1px dashed rgba(255,255,255,0.28);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.55);"><i data-lucide="plus"></i></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:rgba(255,255,255,0.62);text-align:center;">MACRO</span>
+                </div>
+              </div>
+              <div style="height:10px;margin:0 12px;background-image:repeating-linear-gradient(90deg,oklch(0.97 0.005 235) 0 11px,transparent 11px 24px);border-radius:2px;"></div>
+            </div>
+            <span style="font-size:13px;color:oklch(0.48 0.008 245);">Five angles still to shoot — the empty frames are the shot list. The strip scrolls when a watch has more.</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;border-top:1px solid oklch(0.87 0.01 235);padding-top:14px;">
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">ACQUIRED</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">12 May 2026</span>
+              <span style="font-size:13px;color:oklch(0.48 0.008 245);">3 months ago</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">WORN</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8a6a2f;">never</span>
+              <span style="font-size:13px;color:oklch(0.48 0.008 245);">give it a day</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">COVERAGE</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">0 of 5 angles</span>
+              <span style="font-size:13px;color:oklch(0.48 0.008 245);">1 frame</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">STORED IN</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;">Box4</span>
+              <span style="font-size:13px;color:oklch(0.48 0.008 245);">Divers &amp; Tools</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin:0;max-width:1120px;font-size:13px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">The strip borrows the film vocabulary from 2b — sprocket edges, 3:2 frames, shot label under each — but <strong>only inside the strip</strong>. The page ground stays slate, so the photo-lab feeling arrives without the design-system decision 2b would have forced. Metadata is now four labelled columns of equal width, so long values like <em>never / give it a day</em> have room to breathe instead of wrapping mid-phrase.</p>
+  </div>
+
+  <div id="3b" style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.1em;color:oklch(0.99 0.01 90);background:#8a6a2f;border-radius:8px;padding:3px 8px;">3b</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Boxes, promoted</h2>
+      <span style="font-size:13px;color:oklch(0.48 0.008 245);">flyout under Collection</span>
+    </div>
+    <p style="margin:0;max-width:1120px;font-size:15px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">Boxes already exist properly in the data — <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">Box1…BoxN</code> with optional descriptions, configurable count — they were just buried in a filter and a Config tab. Promoting them costs no schema: the flyout lists the display case first, then every configured box with its live count, then a way to Config. Descriptions render exactly as <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">boxLabel()</code> already formats them.</p>
+
+    <div style="display:flex;gap:0;align-items:flex-start;">
+      <div style="width:200px;flex:none;display:flex;flex-direction:column;gap:2px;background:oklch(0.955 0.006 235);border:1px solid oklch(0.87 0.01 235);border-radius:14px 0 0 14px;padding:14px 12px;">
+        <div style="padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.48 0.008 245);">Collection</div>
+        <span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="list"></i></span>Collection</span>
+        <span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;font-weight:500;background:rgba(138,106,47,0.14);color:#8a6a2f;"><span style="display:flex;"><i data-lucide="package"></i></span>Boxes<span style="flex:1;"></span><span style="display:flex;"><i data-lucide="chevron-right"></i></span></span>
+        <span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="tag"></i></span>Brands</span>
+        <span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="link-2"></i></span>Straps</span>
+      </div>
+
+      <div style="width:288px;flex:none;background:oklch(0.99 0.003 235);border:1px solid oklch(0.87 0.01 235);border-radius:0 14px 14px 14px;box-shadow:0 18px 44px -12px rgba(0,0,0,0.26);padding:8px;display:flex;flex-direction:column;gap:2px;margin-top:34px;">
+        <a href="#3c" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:rgba(138,106,47,0.10);">
+          <span style="display:flex;color:#8a6a2f;"><i data-lucide="grid-2x2"></i></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:1px;">
+            <span style="font-size:15px;font-weight:500;color:#8a6a2f;">Display Case</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">EVERY BOX, LAID OUT</span>
+          </span>
+        </a>
+        <div style="height:1px;background:oklch(0.87 0.01 235);margin:6px 4px;"></div>
+        <div style="padding:2px 10px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">BOXES</div>
+        <sc-for list="{{ boxes }}" as="box" hint-placeholder-count="6">
+          <a href="#3c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;">
+            <span style="display:flex;color:oklch(0.48 0.008 245);"><i data-lucide="package"></i></span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+              <span style="font-size:15px;">{{ box.name }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">{{ box.desc }}</span>
+            </span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:oklch(0.48 0.008 245);flex:none;">{{ box.count }}</span>
+          </a>
+        </sc-for>
+        <div style="height:1px;background:oklch(0.87 0.01 235);margin:6px 4px;"></div>
+        <a href="#3c" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:13px;color:oklch(0.48 0.008 245);"><span style="display:flex;"><i data-lucide="settings"></i></span>Configure boxes</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="3c" style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.1em;color:oklch(0.99 0.01 90);background:#8a6a2f;border-radius:8px;padding:3px 8px;">3c</span>
+      <h2 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">The display case</h2>
+      <span style="font-size:13px;color:oklch(0.48 0.008 245);">a tray, not a wood cabinet</span>
+    </div>
+    <p style="margin:0;max-width:1120px;font-size:15px;line-height:1.55;color:oklch(0.48 0.008 245);text-wrap:pretty;">The brown cabinet went. What replaces the physicality is one soft inset tray per box on the rail surface, a brass hairline, and nothing else — the photographs supply all the richness, which is the whole argument of the app. Watches are grouped by box with a live count, names in the real type scale, and <em>Wear now</em> as a quiet ghost button that only turns brass on hover, so eleven of them don't shout at once. This deliberately retires the display-box material-gradient exception in <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">00-design-system.md</code> §Materials.</p>
+
+    <div style="width:1120px;background:oklch(0.97 0.005 235);border:1px solid oklch(0.87 0.01 235);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:22px;">
+      <div style="display:flex;align-items:flex-end;gap:16px;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+          <h3 style="margin:0;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:600;">Display Case</h3>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;color:oklch(0.48 0.008 245);">6 BOXES · 121 WATCHES · 4 OUT OF THE CASE</span>
+        </div>
+        <div style="display:flex;gap:6px;flex:none;">
+          <span style="font-size:13px;padding:6px 12px;border-radius:9999px;background:rgba(138,106,47,0.14);border:1px solid rgba(138,106,47,0.45);color:#8a6a2f;">All boxes</span>
+          <span style="font-size:13px;padding:6px 12px;border-radius:9999px;border:1px solid oklch(0.87 0.01 235);color:oklch(0.48 0.008 245);">Box4</span>
+          <span style="font-size:13px;padding:6px 12px;border-radius:9999px;border:1px solid oklch(0.87 0.01 235);color:oklch(0.48 0.008 245);">Box5</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#8a6a2f;">BOX4</span>
+          <span style="font-size:13px;color:oklch(0.48 0.008 245);">Divers &amp; Tools</span>
+          <span style="flex:1;height:1px;background:linear-gradient(90deg,rgba(138,106,47,0.4),oklch(0.87 0.01 235));"></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">4 WATCHES</span>
+        </div>
+
+        <div style="background:oklch(0.955 0.006 235);border:1px solid oklch(0.87 0.01 235);border-radius:14px;padding:16px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.06);display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);"><img src="w-boderry.png" alt="Boderry Voyager" style="width:100%;height:100%;object-fit:cover;" /></div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:15px;font-weight:500;line-height:1.3;">Boderry Voyager</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">AUTOMATIC · 39MM</span>
+              </div>
+              <span style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);font-size:13px;color:oklch(0.48 0.008 245);">Wear now</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);"><img src="w-addiesdive.png" alt="Addiesdive AD2541" style="width:100%;height:100%;object-fit:cover;" /></div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:15px;font-weight:500;line-height:1.3;">Addiesdive AD2541</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">AUTOMATIC · 41MM</span>
+              </div>
+              <span style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);font-size:13px;color:oklch(0.48 0.008 245);">Wear now</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);"><img src="w-blutezeit.png" alt="Blutezeit 2.1" style="width:100%;height:100%;object-fit:cover;" /></div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:15px;font-weight:500;line-height:1.3;">Blutezeit 2.1</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">AUTOMATIC · 38MM</span>
+              </div>
+              <span style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);font-size:13px;color:oklch(0.48 0.008 245);">Wear now</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);"><img src="w-casio.png" alt="Casio GST-B1000D-3A" style="width:100%;height:100%;object-fit:cover;" /></div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:15px;font-weight:500;line-height:1.3;">Casio GST-B1000D-3A</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">SOLAR · 45MM</span>
+              </div>
+              <span style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);font-size:13px;color:oklch(0.48 0.008 245);">Wear now</span>
+            </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#8a6a2f;">BOX1</span>
+          <span style="font-size:13px;color:oklch(0.48 0.008 245);">Luxury Tier</span>
+          <span style="flex:1;height:1px;background:linear-gradient(90deg,rgba(138,106,47,0.4),oklch(0.87 0.01 235));"></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">4 WATCHES</span>
+        </div>
+
+        <div style="background:oklch(0.955 0.006 235);border:1px solid oklch(0.87 0.01 235);border-radius:14px;padding:16px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.06);display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);"><img src="w-cartier.png" alt="Cartier Pasha" style="width:100%;height:100%;object-fit:cover;" /></div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:15px;font-weight:500;line-height:1.3;">Cartier Pasha</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">AUTOMATIC · 35MM</span>
+              </div>
+              <span style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);font-size:13px;color:oklch(0.48 0.008 245);">Wear now</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);"><img src="w-breguet.png" alt="Breguet Tradition 7097" style="width:100%;height:100%;object-fit:cover;" /></div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:15px;font-weight:500;line-height:1.3;">Breguet Tradition 7097</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">AUTOMATIC · 40MM</span>
+              </div>
+              <span style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);font-size:13px;color:oklch(0.48 0.008 245);">Wear now</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);"><img src="w-heron.png" alt="Heron Mirabel" style="width:100%;height:100%;object-fit:cover;" /></div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:15px;font-weight:500;line-height:1.3;">Heron Mirabel</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">AUTOMATIC · 37MM</span>
+              </div>
+              <span style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);font-size:13px;color:oklch(0.48 0.008 245);">Wear now</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:oklch(0.94 0.007 235);"><img src="w-pagani.png" alt="Pagani Design PD-1701" style="width:100%;height:100%;object-fit:cover;" /></div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:15px;font-weight:500;line-height:1.3;">Pagani Design PD-1701</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:oklch(0.48 0.008 245);">MECAQUARTZ · 40MM</span>
+              </div>
+              <span style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:8px;border:1px solid oklch(0.87 0.01 235);font-size:13px;color:oklch(0.48 0.008 245);">Wear now</span>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1120px;border-top:1px solid oklch(0.87 0.01 235);padding-top:22px;display:flex;flex-direction:column;gap:10px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#8a6a2f;">ON YOUR POINT 4 — IT ISN'T A BUG</span>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:oklch(0.48 0.008 245);text-wrap:pretty;">The full-screen zoomed watch that reverts the moment you move the pointer is <strong>glance mode</strong>, working exactly as designed and shipped. I checked the code: it is wired, with a Config toggle and an idle-delay list. It feels random because your dwell is 15 seconds and your glance delay is 60 — so the watch changes four times, then the screen transforms, and the two events look unrelated. Nothing is broken; it is undiscoverable, which is my fault in the spec. Three fixes: raise the dwell to 90s so the two timers read as one rhythm, make the <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">MOVE TO RETURN</code> pill unmissable (check whether it is even rendering — you didn't mention seeing it), and add a one-time toast the first few times it engages: <em>&ldquo;Glance mode — move the mouse to return. Configurable in Config.&rdquo;</em></p>
+  </div>
+
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { now: new Date() }
+  componentDidMount() {
+    this.icons(0)
+    // A real seconds tick: the only motion on the page that is information
+    // rather than decoration, so it earns its place.
+    this.clock = setInterval(() => this.setState({ now: new Date() }), 1000)
+  }
+  componentWillUnmount() { clearInterval(this.clock) }
+  componentDidUpdate() { this.icons(0) }
+  icons(n) {
+    if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16, "stroke-width": 1.75 } })
+    else if (n < 40) setTimeout(() => this.icons(n + 1), 120)
+  }
+  renderVals() {
+    const d = this.state.now
+    const pad = (n) => String(n).padStart(2, "0")
+    const h = d.getHours()
+    return {
+      dateLine: d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" }).toUpperCase(),
+      hhmm: (h % 12 || 12) + ":" + pad(d.getMinutes()),
+      seconds: ":" + pad(d.getSeconds()),
+      meridiem: h < 12 ? "AM" : "PM",
+      boxes: [
+        { name: "Box1", desc: "Luxury Tier", count: 14 },
+        { name: "Box2", desc: "Daily Rotation", count: 22 },
+        { name: "Box3", desc: "Fun AliExpress Finds", count: 31 },
+        { name: "Box4", desc: "Divers & Tools", count: 18 },
+        { name: "Box5", desc: "Chronographs", count: 19 },
+        { name: "Box6", desc: "Vintage & Inherited", count: 17 },
+      ],
+    }
+  }
+}
+</script>
+</body>
+</html>

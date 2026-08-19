@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/tooltip"
 import { Logo, Mark } from "@/components/brand/logo"
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider"
-import { NAV_GROUPS, NAV_HOME, isNavItemActive } from "@/components/layout/nav-items"
+import { NAV_GROUPS, isNavItemActive } from "@/components/layout/nav-items"
 import type { NavItem } from "@/components/layout/nav-items"
 import { cn } from "@/lib/utils"
 import { APP_VERSION } from "@/lib/version"
@@ -112,10 +112,6 @@ export function NavRail() {
           <Logo markSize={26} />
         </Link>
 
-        <div className="flex flex-col gap-0.5">
-          <ExpandedItem item={NAV_HOME} pathname={pathname} guardClick={guardClick} />
-        </div>
-
         {NAV_GROUPS.map((group) => (
           <div key={group.heading} className="flex flex-col gap-0.5">
             {/* leading + pb so that a heading which does wrap still clears the
@@ -124,7 +120,12 @@ export function NavRail() {
               {group.heading}
             </div>
             {group.items.map((item) => (
-              <ExpandedItem key={item.href} item={item} pathname={pathname} guardClick={guardClick} />
+              <ExpandedItem
+                key={item.href}
+                item={item}
+                pathname={pathname}
+                guardClick={guardClick}
+              />
             ))}
           </div>
         ))}
@@ -150,12 +151,16 @@ export function NavRail() {
           {/* Collapsed 56px rail: the mark alone at 32px (RENAME §4). */}
           <Mark size={32} />
         </Link>
-        <IconItem item={NAV_HOME} pathname={pathname} guardClick={guardClick} />
         {NAV_GROUPS.slice(0, -1).map((group) => (
           <div key={group.heading} className="flex flex-col items-center gap-1">
             <div className="mb-2 h-px w-6 bg-border" aria-hidden="true" />
             {group.items.map((item) => (
-              <IconItem key={item.href} item={item} pathname={pathname} guardClick={guardClick} />
+              <IconItem
+                key={item.href}
+                item={item}
+                pathname={pathname}
+                guardClick={guardClick}
+              />
             ))}
           </div>
         ))}

@@ -90,9 +90,10 @@ Delete `rounded-[13px]`, `rounded-[11px]`, `rounded-[10px]`, `rounded-[7px]`,
 `rounded-[5px]`, and the `rounded-2xl`/`rounded-3xl`/`rounded-4xl` usages.
 `grep -rn "rounded-\[" src/` finds them.
 
-Exception: `watch-hero.tsx` and the display-box/dial components model physical objects
-(lugs, spring bars, crowns, cushions) — their geometry is illustration, not UI chrome,
-and their literal radii stay.
+Exception: `watch-dial.tsx` models a physical object (lugs, spring bars, crowns,
+cushions) — its geometry is illustration, not UI chrome, and its literal radii stay.
+`watch-hero.tsx` was deleted in Phase 6 and the display box in Phase 8; neither is
+covered any more.
 
 ## 4. Surfaces and borders — light mode IS supported (finding C2)
 
@@ -109,8 +110,23 @@ Keep the theme toggle, keep `next-themes`, keep `defaultTheme="dark"`. **Verify 
 screen in light mode** before closing C2 and at every phase exit. `--brass` is
 deliberately darker in light mode (`oklch(0.52 0.07 75)`) — leave that difference alone.
 
-**No new hex literals for surfaces, borders, or text.** Tokens only. The physical-object
-components (`watch-hero`, `display-box-home`, `watch-dial`) keep their material gradients.
+**No new hex literals for surfaces, borders, or text.** Tokens only.
+
+**The materials exception is withdrawn for the display box (Phase 8 §8, 2026-08-18.)**
+It used to read: *the physical-object components (`watch-hero`, `display-box-home`,
+`watch-dial`) keep their material gradients.* Two of those three are gone. `watch-hero.tsx`
+was deleted in Phase 6 when the home page stopped masking photographs into a dial, and
+`display-box-home.tsx` was replaced in Phase 8 by `display-case.tsx` — a soft inset tray on
+`--surface-rail` with one `inset 0 1px 3px rgba(0,0,0,0.06)` shadow and nothing else. The
+brown wood-grain cabinet with glossy yellow buttons was the one surface in the app reading
+as a 1990s skeuomorph, with off-palette yellows and brown-on-brown contrast, and it fought
+the photographs it was supposed to be presenting.
+
+What survives of the exception: **`watch-dial.tsx` only**, and only while `/about` still
+illustrates it. Two dark literals also stand deliberately outside the token palette — the
+Light Table's film strip (`oklch(0.28 0.010 245)` / `oklch(0.22 0.008 245)`) and the glance
+overlay's scrims. Both are photographic surfaces, scoped to the component that draws them,
+and neither is a material gradient standing in for a physical object.
 
 ## 5. Text hierarchy (finding E5)
 
@@ -186,14 +202,16 @@ future sessions from re-drifting; full detail lives in `docs/design-system.md`.
 - **Type:** six steps only — 11 / 13 / 15 / 19 / 26 / 38px. Every page `h1` is 26px.
   `font-display` (Fraunces) only at ≥19px. Mono only at 11px and 13px. Never write an
   arbitrary `text-[Npx]`.
-- **Radii:** 8px controls · 14px cards · full pills. Nothing else (physical-object
-  illustrations in watch-hero/display-box excepted).
+- **Radii:** 8px controls · 14px cards · full pills. Nothing else (the `watch-dial`
+  illustration excepted).
 - **Color:** tokens only. No hex or `white/[0.0x]` literals for surfaces, borders, fields
   or text. Never stack opacity on `--muted-foreground`.
 - **Icons:** lucide-react only, `currentColor`, `aria-hidden`. No emoji in UI — the two
   exceptions are ✨ (AI autofill) and ⚠ (unverified reference).
 - **Images:** `object-contain` where the photo is the subject; `object-cover` only in
   dense grids, framed by `dial_focal_x/y/zoom`.
+- **Materials:** tokens only, everywhere. The one surviving physical-object exception is
+  `watch-dial.tsx`; `watch-hero` and `display-box-home` are gone (Phases 6 and 8).
 - **Motion:** 150ms color / 200ms transform, ease-out. `prefers-reduced-motion` must stop
   the hero auto-advance, the ring sweep and hover scales.
 - **Text hierarchy:** exactly one full-`--foreground` value per surface; everything else

@@ -63,6 +63,40 @@ function transformKey(path: string, t: ImageTransform): string {
   return `${path}|${t.width ?? ""}x${t.height ?? ""}|${t.resize ?? ""}|${t.quality ?? ""}`
 }
 
+/**
+ * How many signing requests are in flight at once.
+ *
+ * This used to be unbounded: `Promise.all` over every path, which on the home
+ * page is ~350 photos and then ~350 again for the thumbnail size. Firing 700
+ * concurrent requests at storage means a handful of them lose, and a lost
+ * signature is not a cosmetic failure — a frame with no URL is skipped, and a
+ * watch whose frames were all skipped drops out of the rotation entirely. The
+ * symptom was a home-page count that read 121, then 118, then 112 across
+ * reloads of the same unchanged collection.
+ */
+const SIGN_CONCURRENCY = 12
+/** One retry: these failures are load-related, so a second ask usually wins. */
+const SIGN_ATTEMPTS = 2
+
+/** Run `fn` over `items` with at most `limit` in flight, preserving order. */
+async function mapWithLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let next = 0
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (;;) {
+      const i = next++
+      if (i >= items.length) return
+      results[i] = await fn(items[i])
+    }
+  })
+  await Promise.all(workers)
+  return results
+}
+
 export async function getTransformedSignedUrls(
   storagePaths: string[],
   transform: ImageTransform
@@ -71,19 +105,37 @@ export async function getTransformedSignedUrls(
 
   const now = Date.now()
   const supabase = await createClient()
-  const entries = await Promise.all(
-    storagePaths.map(async (path) => {
+  const entries = await mapWithLimit(
+    storagePaths,
+    SIGN_CONCURRENCY,
+    async (path) => {
       const key = transformKey(path, transform)
       const hit = signedUrlCache.get(key)
       if (hit && hit.expiresAt > now) return [path, hit.url] as const
 
-      const { data, error } = await supabase.storage
-        .from(BUCKET)
-        .createSignedUrl(path, SIGNED_URL_EXPIRY, { transform })
-      if (error || !data) return [path, null] as const
-      signedUrlCache.set(key, { url: data.signedUrl, expiresAt: now + CACHE_TTL_MS })
-      return [path, data.signedUrl] as const
-    })
+      for (let attempt = 1; attempt <= SIGN_ATTEMPTS; attempt++) {
+        const { data, error } = await supabase.storage
+          .from(BUCKET)
+          .createSignedUrl(path, SIGNED_URL_EXPIRY, { transform })
+        if (!error && data) {
+          signedUrlCache.set(key, {
+            url: data.signedUrl,
+            expiresAt: now + CACHE_TTL_MS,
+          })
+          return [path, data.signedUrl] as const
+        }
+        if (attempt === SIGN_ATTEMPTS) {
+          // Loud on the way out: a dropped signature silently removes a watch
+          // from the home rotation, which is exactly the kind of disappearance
+          // that is impossible to notice from the outside.
+          console.error(
+            `Signed URL failed after ${SIGN_ATTEMPTS} attempts: ${path}`,
+            error?.message
+          )
+        }
+      }
+      return [path, null] as const
+    }
   )
 
   const urlMap = new Map<string, string>()

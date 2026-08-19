@@ -187,14 +187,10 @@ export const watchFormSchema = z.object({
 export type WatchFormValues = z.input<typeof watchFormSchema>
 export type WatchFormParsed = z.output<typeof watchFormSchema>
 
-// Thumbnail framing — focal point (% within cover photo) + zoom for the square collection tiles
-export const dialFramingSchema = z.object({
-  dial_focal_x: z.number().min(0).max(100),
-  dial_focal_y: z.number().min(0).max(100),
-  dial_zoom: z.number().min(1).max(4),
-})
-
-export type DialFramingValues = z.infer<typeof dialFramingSchema>
+// The dial-framing schema is gone with the editor (Phase 9 §1). The COLUMNS
+// remain in the database and existing values are untouched — nothing writes
+// them any more, and square tiles now pick the frame nearest 1:1 instead of
+// asking the user to aim a crosshair 121 times.
 
 // Minimal schema for the camera-first "Add Watch" mobile flow
 export const quickAddSchema = z.object({

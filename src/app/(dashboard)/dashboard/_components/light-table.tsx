@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -14,9 +14,9 @@ import {
   Layers,
   MousePointer2,
   Plus,
-  Search,
 } from "lucide-react"
 import { Mark } from "@/components/brand/logo"
+import { clockParts, useClockSeconds } from "@/components/layout/header-clock"
 import { ANGLE_HEADINGS, ANGLE_LABELS, PHOTO_ANGLES } from "@/lib/photo-lab"
 import {
   DropdownMenu,
@@ -28,20 +28,34 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
+  bumpGlanceSeenCount,
   DEFAULT_GLANCE_DELAY_SECONDS,
   DEFAULT_GLANCE_ENABLED,
   DEFAULT_HERO_DWELL_SECONDS,
+  GLANCE_EXPLAIN_TIMES,
   HOME_ROTATION_SET_KEY,
   readGlanceDelaySeconds,
   readGlanceEnabled,
+  readGlanceSeenCount,
   readHeroDwellSeconds,
   readHomeRotationSet,
 } from "@/lib/preferences"
+import {
+  bloomOpacityForLuminance,
+  cachedLuminance,
+  DEFAULT_BLOOM_OPACITY,
+  DEFAULT_SCRIM_STRENGTH,
+  sampleThumbLuminance,
+  scrimStrengthForLuminance,
+} from "@/lib/frame-luminance"
+import { caseMaterialLabels } from "@/lib/validations/watch"
 import { cn } from "@/lib/utils"
+import { frameAspect } from "@/lib/frame-aspect"
 import type {
   LightTableFrame,
-  LightTableStats,
   LightTableWatch,
+  PhotoAngle,
+  RotationGroup,
   RotationSet,
 } from "@/lib/queries/light-table"
 
@@ -50,18 +64,69 @@ interface LightTableProps {
   sets: RotationSet[]
   /** Server-generated seed for the rotation shuffle (step 5). */
   seed: number
-  stats: LightTableStats
 }
 
 /** Ring geometry (viewBox 36): r=15 → circumference ~94.25 (the mock's value). */
 const RING_CIRCUMFERENCE = 94.25
 
+/** Stage height (§2.1, mock 4a). Fixed, so the page's vertical rhythm never
+ *  moves; the WIDTH is what follows each photograph. */
+const STAGE_HEIGHT = 470
+
 /** Loupe (§2.2): 168px circular window at 2.4× — the mock's defaults. */
 const LOUPE_SIZE = 168
 const LOUPE_ZOOM = 2.4
 
-/** Contact-sheet grid columns — arrow-key stepping needs the row width. */
-const GRID_COLS = 3
+/** The strip's own surfaces (Phase 8 §1.1). Literal, and deliberately so: the
+ *  strip is a photographic object, the way the glance overlay is, and the
+ *  palette has no token meaning "the inside of a film strip". The film
+ *  vocabulary is scoped to these two values and the sprocket gradient — the
+ *  page ground stays slate. */
+const STRIP_BASE = "oklch(0.28 0.010 245)"
+const STRIP_CELL = "oklch(0.22 0.008 245)"
+
+/** Sprocket holes: punched in the PAGE background colour so they read as
+ *  holes through the strip rather than pale bars painted on it. */
+const SPROCKET_STYLE = {
+  borderRadius: 2,
+  backgroundImage:
+    "repeating-linear-gradient(90deg, var(--background) 0 11px, transparent 11px 24px)",
+} as const
+
+/** One cell of the fixed rack (§1.2). Every watch renders the same five
+ *  angles in the same order, filled or empty, so position becomes information
+ *  and the eye learns where to look; anything the rack did not take is
+ *  appended after it.
+ *
+ *  A union rather than one shape with nullable fields: an empty cell always
+ *  has an angle (it IS an angle nobody has shot) and never has a frame or a
+ *  place in the roving-tabindex list, and saying that in the type means the
+ *  JSX needs no assertions to prove it. */
+interface StripFrameCell {
+  kind: "frame"
+  key: string
+  /** null only on an appended untagged frame. */
+  angle: PhotoAngle | null
+  label: string
+  frameIndex: number
+  /** Position among the strip's FRAME cells — the roving-tabindex list. */
+  framePos: number
+}
+
+type StripCell =
+  | StripFrameCell
+  | { kind: "empty"; key: string; angle: PhotoAngle; label: string }
+
+/**
+ * `frameIdx` sentinel meaning "whichever frame this watch should land on".
+ *
+ * The landing frame is per-watch and computed server-side (the widest, hero
+ * breaking ties — Phase 8 §1.2), so a reset cannot just write 0. It also
+ * cannot write the next watch's index, because the rotation interval advances
+ * the WATCH without knowing anything about it. A sentinel resolved at render
+ * keeps one line in the timer and still lands on the right frame.
+ */
+const LANDING_FRAME = -1
 
 /** One timer owns both the ring and the advance (§2.3) — a CSS animation plus
  *  a JS timer drift apart, and the ring is the dwell's only honest readout. */
@@ -89,9 +154,6 @@ function shuffleWith<T>(arr: T[], rng: () => number): T[] {
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-/** The shot-list sentence counts in words, and the count can only be 1–5. */
-const COUNT_WORDS = ["", "One", "Two", "Three", "Four", "Five"]
 
 /** "14 Mar 2024" — deterministic (no Date/locale) so SSR and hydration agree. */
 function formatDay(iso: string): string {
@@ -125,18 +187,86 @@ function wornLabel(iso: string, now: Date | null): string {
   return relativeAge(iso, now) ?? formatDay(iso)
 }
 
-/** "M79030N-0001 · MT5402 · 39MM" — whatever exists, in that order. */
-function specLine(w: LightTableWatch): string {
-  return [
+/** "+2 S/D" — the rate, signed, because a watch running fast and one running
+ *  slow are not the same fact. Null when the run recorded no rate. */
+function timingShort(w: LightTableWatch): string | null {
+  const rate = w.timing?.rateSecPerDay
+  if (rate == null) return null
+  return `${rate > 0 ? "+" : ""}${rate} S/D`
+}
+
+/**
+ * The line under the watch's name — now the MOVEMENT line.
+ *
+ * Movement is the most identifying thing about a watch after its name, so it
+ * gets the position directly beneath it rather than a column in the band. The
+ * case dimensions and the box moved OUT of here and into the facts band, where
+ * they have room and labels; repeating them in both places was the same
+ * duplication the frame caption had.
+ *
+ * The timing reading joins the line only when the watch has actually been on a
+ * timegrapher. An unmeasured watch shows nothing at all — this screen does not
+ * report work not done.
+ */
+function specLine(w: LightTableWatch, opts?: { withCase?: boolean }): string {
+  const line = [
     w.referenceNumber?.toUpperCase(),
     w.caliberLine?.toUpperCase(),
-    w.caseDiameterMm != null ? `${w.caseDiameterMm}MM` : null,
+    w.beatRate?.toUpperCase(),
+    w.powerReserve?.toUpperCase(),
+    timingShort(w),
+    // Glance mode has no facts band, so it carries the case size inline.
+    opts?.withCase && w.caseDiameterMm != null ? `${w.caseDiameterMm}MM` : null,
   ]
     .filter(Boolean)
     .join(" · ")
+  if (line) return line
+
+  // Plenty of watches have no movement record and no reference number, and an
+  // empty line would both look like a load failure and change the block's
+  // height as the rotation advances. Fall back to whatever else describes this
+  // particular watch rather than leaving a gap.
+  const material = w.caseMaterial
+    ? (caseMaterialLabels[w.caseMaterial] ?? w.caseMaterial).toUpperCase()
+    : null
+  // `complication` is stored comma-joined; the middot is this line's separator
+  // everywhere else, so it should not switch to commas here.
+  const complications = w.complication
+    ? w.complication
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean)
+        .join(" · ")
+        .toUpperCase()
+    : null
+  return [complications, material].filter(Boolean).join(" · ")
+}
+
+/** "39 × 11.5 mm", or just the diameter when no height is recorded. */
+function caseSize(w: LightTableWatch): string {
+  if (w.caseDiameterMm == null) return "—"
+  if (w.caseHeightMm == null) return `${w.caseDiameterMm} mm`
+  return `${w.caseDiameterMm} × ${w.caseHeightMm} mm`
+}
+
+/** "20 mm lugs · 47 mm lug-to-lug" — whichever of the two exists. */
+function caseDetail(w: LightTableWatch): string | null {
+  const parts = [
+    w.strapWidthMm != null ? `${w.strapWidthMm} mm lugs` : null,
+    w.lugToLugMm != null ? `${w.lugToLugMm} mm lug-to-lug` : null,
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(" · ") : null
 }
 
 const EYEBROW = "font-mono text-2xs tracking-[0.14em] text-muted-foreground"
+
+/** The ROTATION menu's groups, in order. The first carries no heading — it is
+ *  the standing sets, and a heading over them would only label the obvious. */
+const ROTATION_GROUPS: Array<{ group: RotationGroup; heading: string | null }> = [
+  { group: "primary", heading: null },
+  { group: "guide", heading: "Master Guides" },
+  { group: "box", heading: "Boxes" },
+]
 
 /**
  * The photograph and the field it sits on — the ONE definition of the bloom
@@ -165,6 +295,42 @@ function FrameField({
 }) {
   const glance = variant === "glance"
 
+  // ── The scrim's strength (Phase 8 §2) ─────────────────────────
+  // Derived from the frame's own mean luminance, not fixed. Seeded from the
+  // cache so a frame already measured — by the other FrameField, or on a
+  // previous pass of the rotation — paints correctly on its very first frame
+  // instead of fading in from mid.
+  const [luminance, setLuminance] = useState<number | null>(
+    () => cachedLuminance(frame.thumbUrl) ?? null
+  )
+  useEffect(() => {
+    const url = frame.thumbUrl
+    let live = true
+    // Resolves off the cache when this frame has been measured before, so the
+    // repeat case costs a microtask and no pixels. The previous frame's
+    // strength is deliberately held until the new one resolves — with the
+    // 400ms settle below, that is invisible, where a flash to mid would not
+    // be.
+    sampleThumbLuminance(url).then((value) => {
+      if (live && value != null) setLuminance(value)
+    })
+    return () => {
+      live = false
+    }
+  }, [frame.thumbUrl])
+
+  const strength =
+    luminance != null
+      ? scrimStrengthForLuminance(luminance)
+      : DEFAULT_SCRIM_STRENGTH
+  // §2.1 demotes luminance on the stage from a fix to a nudge: the spill is a
+  // blurred copy of the photograph, so a dark frame wants a little less halo
+  // and a pale one can afford a little more.
+  const bloomOpacity =
+    luminance != null
+      ? bloomOpacityForLuminance(luminance)
+      : DEFAULT_BLOOM_OPACITY
+
   // Retry state lives here so the component is self-contained; keyed by url,
   // so rotating to another frame resets the count without an effect.
   const [load, setLoad] = useState<{ url: string; failures: number }>({
@@ -191,29 +357,67 @@ function FrameField({
         alt=""
         aria-hidden
         fetchPriority="low"
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        // Matches the sampler's request mode above, so the luminance sample
+        // reuses THIS fetch instead of opening a second cache entry for the
+        // same thumbnail: browsers key the HTTP cache on CORS mode.
+        crossOrigin="anonymous"
+        className={cn(
+          // max-w-none: preflight gives every <img> `max-width: 100%`, which
+          // silently clamped the spill back to the box's own width and made
+          // the overhang exist on the vertical axis only.
+          "pointer-events-none absolute max-w-none object-cover",
+          // Stage: a SPILL of light around the photograph's edges, ~40px past
+          // it, rounded off to an ellipse so it reads as glow rather than as a
+          // second rectangle behind the first (§2.1, mock 4a). Glance: still a
+          // full-bleed field, because there the photograph really is floating
+          // in a viewport-sized dark room.
+          glance
+            ? "inset-0 h-full w-full"
+            : "-inset-10 h-[calc(100%+80px)] w-[calc(100%+80px)] rounded-full"
+        )}
         style={{
-          filter: glance ? "blur(46px) saturate(1.6)" : "blur(34px) saturate(1.5)",
-          opacity: glance ? 0.9 : 0.85,
+          filter: glance ? "blur(46px) saturate(1.6)" : "blur(40px) saturate(1.5)",
+          opacity: glance ? 0.9 : bloomOpacity,
           // Reduced motion keeps the field and drops the drift — the bloom is
           // colour, not motion. The static overscale stays either way.
-          transform: reducedMotion ? "scale(1.3)" : undefined,
-          animation: reducedMotion
-            ? undefined
-            : `lt-bloom-drift ${dwellSeconds * 2}s ease-in-out infinite alternate`,
+          transform: reducedMotion && glance ? "scale(1.3)" : undefined,
+          animation:
+            reducedMotion || !glance
+              ? undefined
+              : `lt-bloom-drift ${dwellSeconds * 2}s ease-in-out infinite alternate`,
+          transition: reducedMotion ? undefined : "opacity 400ms ease-out",
         }}
       />
-      {/* Scrim — keeps the sharp frame on a darker field than its own bloom so
-          the caption stays legible over any photograph. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: glance
-            ? "radial-gradient(110% 85% at 50% 42%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.62) 100%)"
-            : "radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.52) 100%)",
-        }}
-      />
+      {/* Scrim — keeps the sharp frame on a slightly darker field than its own
+          bloom so the caption stays legible over any photograph, at a strength
+          derived from how bright the photograph actually is (§2).
+
+          The gradient is authored at FULL alpha and the whole layer is then
+          dimmed by `opacity`, rather than rebuilding the colour stops per
+          frame. Two reasons: one number controls the whole scrim, which is
+          exactly what §2 asks for; and opacity is animatable where gradient
+          stops are not, so the change from one frame to the next is a soft
+          settle instead of a jump. The stop ratios are Phase 7's own values
+          (0.10/0.52 and 0.06/0.62), so a genuinely dark frame still lands on
+          precisely the scrim Phase 7 specified. */}
+      {/* The scrim is a GLANCE-ONLY layer now (§2.1). On the stage it existed
+          to rescue a large blurred field the photograph floated in; the box
+          now matches the photograph, so there is no field left to correct and
+          a scrim would only dim the picture. Glance mode still has one,
+          because there the photograph really does sit in a viewport-sized
+          room and every caption over it needs ground. */}
+      {glance && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(110% 85% at 50% 42%, rgba(0,0,0,0.097) 0%, rgba(0,0,0,1) 100%)",
+            opacity: Math.min(0.72, strength * 1.2),
+            transition: reducedMotion ? undefined : "opacity 400ms ease-out",
+          }}
+        />
+      )}
 
       {failures >= 2 ? (
         <span className="absolute inset-0 flex items-center justify-center px-6 text-center text-xs text-white/80">
@@ -235,7 +439,13 @@ function FrameField({
           priority={!glance}
           sizes={glance ? "100vw" : "480px"}
           className={cn(
+            // ALWAYS object-contain. The box matching the photograph's aspect
+            // is not a licence to crop — it is what makes cropping unnecessary.
             "object-contain",
+            // On the stage the photograph now fills its own box, so it can
+            // carry the radius and the shadow itself and read as a print lying
+            // on a lit surface (§2.1).
+            !glance && "rounded-lg shadow-[0_8px_28px_-6px_rgba(0,0,0,0.28)]",
             // Glance insets the photograph to leave the caption bar its room.
             glance && "!top-[26px] !bottom-[96px] !h-auto max-h-[calc(100%-122px)]"
           )}
@@ -286,29 +496,29 @@ function SetItem({
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm">{set.label}</span>
         <span className="block font-mono text-2xs text-muted-foreground">
-          {set.total} {set.isGuide ? "chapters" : "watches"} · {set.withFrames} with
-          frames
+          {set.total} {set.group === "guide" ? "chapters" : "watches"} ·{" "}
+          {set.withFrames} with frames
         </span>
       </span>
     </DropdownMenuItem>
   )
 }
 
-export function LightTable({ sets, seed, stats }: LightTableProps) {
+export function LightTable({ sets, seed }: LightTableProps) {
   // The active set, persisted per device. Read after mount (never during SSR,
-  // the DISPLAY_BOX_HOME_KEY pattern); an unknown id falls back to "all", and
+  // the read-after-mount pattern); an unknown id falls back to "all", and
   // a known-but-frameless set falls back below with a one-line explanation.
   const [requestedSetId, setRequestedSetId] = useState<string>("all")
   useEffect(() => {
     const saved = readHomeRotationSet()
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to a client-only preference
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reading a client-only preference
     if (saved && sets.some((s) => s.id === saved)) setRequestedSetId(saved)
   }, [sets])
 
   function chooseSet(id: string) {
     setRequestedSetId(id)
     setWatchIdx(0)
-    setFrameIdx(0)
+    setFrameIdx(LANDING_FRAME)
     resetElapsed()
     try {
       localStorage.setItem(HOME_ROTATION_SET_KEY, id)
@@ -328,13 +538,13 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
   const fellBack = requested != null && set != null && set.id !== requested.id
 
   const [watchIdx, setWatchIdx] = useState(0)
-  const [frameIdx, setFrameIdx] = useState(0)
+  const [frameIdx, setFrameIdx] = useState(LANDING_FRAME)
 
   // Per-device dwell — readHeroDwellSeconds() is THE dwell preference; the
   // status label shows it, the rotation (step 5) consumes it.
   const [dwellSeconds, setDwellSeconds] = useState(DEFAULT_HERO_DWELL_SECONDS)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to a client-only preference
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reading a client-only preference
     setDwellSeconds(readHeroDwellSeconds())
   }, [])
 
@@ -342,7 +552,7 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
   // hydration agree (the watch-hero pattern).
   const [now, setNow] = useState<Date | null>(null)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- clock mounts client-only so SSR and hydration agree
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the clock only exists client-side, so SSR and hydration agree
     setNow(new Date())
   }, [])
 
@@ -376,14 +586,20 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
   } | null>(null)
   const loupeEnabled = canHover && !reducedMotion
 
-  // Roving tabindex for the contact-sheet grid — one Tab stop, arrows within.
-  const tileRefs = useRef<(HTMLAnchorElement | null)[]>([])
-  function moveGridFocus(from: number, delta: number) {
-    const n = frames.length
-    if (n === 0) return
-    const next = Math.min(n - 1, Math.max(0, from + delta))
-    tileRefs.current[next]?.focus()
+  // Roving tabindex for the strip — one Tab stop, arrows within. Indexed by
+  // position among the strip's FRAME cells, not by index into `frames`: the
+  // rack's left-to-right order is not the frames array's order, and an arrow
+  // has to move to the neighbour the eye sees.
+  const stripRefs = useRef<(HTMLAnchorElement | null)[]>([])
+  function moveStripFocus(from: number, delta: number) {
+    if (stripFrameCount === 0) return
+    const next = Math.min(stripFrameCount - 1, Math.max(0, from + delta))
+    stripRefs.current[next]?.focus()
   }
+
+  // The strip scroller, and which edges still have strip beyond them.
+  const stripScrollerRef = useRef<HTMLDivElement | null>(null)
+  const [stripEdges, setStripEdges] = useState({ left: false, right: false })
 
   // Deterministic per-load order: the server seed makes SSR and hydration
   // agree, and re-seeding per set keeps each queue's order stable while you
@@ -395,13 +611,96 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
   }, [set, seed])
 
   const watch = queue.length > 0 ? queue[watchIdx % queue.length] : null
-  const frames = watch?.frames ?? []
-  const frame = frames.length > 0 ? frames[Math.min(frameIdx, frames.length - 1)] : null
+  // Memoised on the watch, not rebuilt per render: `?? []` would hand the rack
+  // a new array identity every time and rebuild the strip on every keystroke,
+  // hover and tick.
+  const frames = useMemo(() => watch?.frames ?? [], [watch])
+  // The sentinel resolves against THIS watch; an explicit hover/focus choice
+  // wins over it, and is clamped in case the frame list shrank underneath.
+  const activeFrameIdx =
+    frames.length === 0
+      ? -1
+      : frameIdx === LANDING_FRAME
+        ? Math.min(watch?.landingFrameIndex ?? 0, frames.length - 1)
+        : Math.min(frameIdx, frames.length - 1)
+  const frame = activeFrameIdx >= 0 ? frames[activeFrameIdx] : null
+
+  // ── The fixed rack (§1.2) ────────────────────────────────────
+  // FLAT · HERO · PROFILE · CASEBACK · MACRO, always, in that order — each
+  // slot either a real frame or an empty shot-list cell — then whatever the
+  // rack did not take, appended in the frames array's own order. Position
+  // therefore means the same thing on every watch, which is the entire point:
+  // the eye learns where to look instead of re-reading the row each time.
+  const strip = useMemo<StripCell[]>(() => {
+    // `frames` already arrives in strip order from the query — band 1 the
+    // filled angle slots in rack order, band 2 the untagged frames — so
+    // position here IS display position and needs no re-sorting.
+    const cells: StripCell[] = frames.map((f, i) => ({
+      kind: "frame",
+      key: f.id,
+      angle: f.angle,
+      label: f.angle ? ANGLE_HEADINGS[f.angle] : "UNTAGGED",
+      frameIndex: i,
+      framePos: i,
+    }))
+
+    // Band 3: the empty shot-list cells, in rack order, AFTER every
+    // photograph. Interleaving them at their rack positions is what shipped
+    // first, and on a sparsely shot watch it put plus-signs ahead of the
+    // photograph — a to-do list with a photo attached. Photographs first.
+    const shot = new Set(frames.map((f) => f.angle).filter(Boolean))
+    for (const angle of PHOTO_ANGLES) {
+      if (shot.has(angle)) continue
+      cells.push({
+        kind: "empty",
+        key: `slot-${angle}`,
+        angle,
+        label: ANGLE_HEADINGS[angle],
+      })
+    }
+
+    return cells
+  }, [frames])
+
+  const stripFrames = strip.filter((c): c is StripFrameCell => c.kind === "frame")
+  const stripFrameCount = stripFrames.length
+  const activeStripPos =
+    stripFrames.find((c) => c.frameIndex === activeFrameIdx)?.framePos ?? 0
+
+  // Which edges of the strip still have strip beyond them. Measured rather
+  // than guessed from the cell count, because whether the rack overflows
+  // depends on the viewport as much as on how many frames a watch has — and a
+  // fade drawn over a row that already fits reads as a vignette, not an
+  // affordance.
+  useEffect(() => {
+    const el = stripScrollerRef.current
+    if (!el) return
+    const update = () => {
+      const left = el.scrollLeft > 2
+      const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 2
+      // Bail out when nothing changed. A fresh object every scroll event is
+      // never Object.is-equal to the last one, so React would re-render the
+      // whole stage — frame, strip, facts and all — on every frame of a flick
+      // through the strip. Same reason the glance idle handler bails out
+      // functionally rather than setting state on every pointermove.
+      setStripEdges((prev) =>
+        prev.left === left && prev.right === right ? prev : { left, right }
+      )
+    }
+    update()
+    el.addEventListener("scroll", update, { passive: true })
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener("scroll", update)
+      ro.disconnect()
+    }
+  }, [strip, watch?.id])
 
   function stepWatch(delta: number) {
     if (queue.length < 2) return
     setWatchIdx((i) => (i + delta + queue.length) % queue.length)
-    setFrameIdx(0)
+    setFrameIdx(LANDING_FRAME)
     resetElapsed()
   }
 
@@ -410,13 +709,35 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
   const [glanceEnabled, setGlanceEnabled] = useState(DEFAULT_GLANCE_ENABLED)
   const [glanceDelay, setGlanceDelay] = useState(DEFAULT_GLANCE_DELAY_SECONDS)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to client-only preferences
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reading client-only preferences
     setGlanceEnabled(readGlanceEnabled())
     setGlanceDelay(readGlanceDelaySeconds())
   }, [])
 
   const [glance, setGlance] = useState(false)
   const glanceActive = glance && glanceEnabled
+
+  // §9 — glance mode reads as a malfunction the first few times it fires, so
+  // the first three engagements carry a line saying what happened and where to
+  // change it. Counted in localStorage; after that it never appears again.
+  const [explainGlance, setExplainGlance] = useState(false)
+  useEffect(() => {
+    if (!glanceActive) return
+    if (readGlanceSeenCount() >= GLANCE_EXPLAIN_TIMES) return
+    bumpGlanceSeenCount()
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- first-run notice, gated on a client-only counter
+    setExplainGlance(true)
+    // Long enough to read from across the room, short enough that it does not
+    // become furniture on the ambient screen.
+    const id = setTimeout(() => setExplainGlance(false), 9000)
+    return () => clearTimeout(id)
+  }, [glanceActive])
+
+  // The same 1s tick the header clock runs on — one subscription, shared, so
+  // glance mode never starts a second timer for the same second.
+  const clockSeconds = useClockSeconds()
+  const glanceParts =
+    clockSeconds != null ? clockParts(new Date(clockSeconds * 1000)) : null
 
   // The idle timer is armed and reset by REAL INPUT ONLY. Deliberately not
   // keyed to the rotation's own state: re-arming on every advance would mean
@@ -516,7 +837,7 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
       if (elapsedRef.current >= dwellRef.current) {
         elapsedRef.current = 0
         setWatchIdx((i) => (i + 1) % Math.max(1, queueLenRef.current))
-        setFrameIdx(0)
+        setFrameIdx(LANDING_FRAME)
       }
       setElapsed(elapsedRef.current)
     }, TICK_MS)
@@ -543,27 +864,46 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
     )
   }
 
+  // §2.1 — the box's geometry. Height fixed, width following the photograph,
+  // capped at the content width by `maxWidth`. `aspectRatio` with an explicit
+  // height gives exactly `height × aspect` and needs no measurement, so the
+  // first paint is already right.
+  const stageAspect = frameAspect(frame)
+  const stageBoxStyle: React.CSSProperties = stageAspect
+    ? { height: STAGE_HEIGHT, aspectRatio: `${stageAspect}`, maxWidth: "100%" }
+    : // No stored dimensions: the content-width 3:2 fallback, exactly as §2.1
+      // specifies. Width-driven rather than height-driven, so it fills the
+      // measure the way the pre-aspect stage did.
+      { width: "100%", aspectRatio: "3 / 2" }
+
   const watchName = `${watch.brandName} ${watch.model}`.trim()
   // §1.4 — nulls become invitations, on owned watches only.
   const neverWorn = !watch.isWishlist && watch.wearCount === 0
   const acquiredAge = watch.purchaseDate ? relativeAge(watch.purchaseDate, now) : null
 
-  // §1.5 — the angles this watch has no frame for, in the canonical order.
-  // Derived from the frames themselves, so the cells can never disagree with
-  // the thumbnails beside them.
-  const shotAngles = new Set(frames.map((f) => f.angle).filter(Boolean))
-  const missingAngles = PHOTO_ANGLES.filter((a) => !shotAngles.has(a))
-  const shotListLine =
-    missingAngles.length === 1
-      ? "One angle still to shoot — the empty cell is the shot list, not a hole in the layout."
-      : `${COUNT_WORDS[missingAngles.length] ?? missingAngles.length} angles still to shoot — the empty cells are the shot list, not a hole in the layout.`
-  const caption = `${frame.angle ? frame.angle.toUpperCase() : "UNTAGGED FRAME"} · ${watchName.toUpperCase()}`
-  const scoreLabel =
-    frame.score != null
-      ? `SCORE ${Math.round(frame.score)}`
-      : watch.isWishlist
-        ? "REFERENCE"
-        : null
+  // The unshot angles are no longer counted here: the strip's empty cells ARE
+  // the shot list, and the sentence that used to spell that out was Photo Lab
+  // direction sitting on a display screen. The rack still renders every angle
+  // from PHOTO_ANGLES, so nothing about the strip changed.
+  // §4.1 — the angle stamp appears ONLY when there is an angle, and UNTAGGED
+  // survives in exactly one place on the screen: the strip cell's own label.
+  // A pill over the photograph reading UNTAGGED is the loudest available way
+  // to announce that there is nothing to report.
+  // Alt text now, not a visible caption (§ home second pass): the stage's
+  // identity block names the watch below the frame, so printing it over the
+  // photograph too was saying the same thing twice with the quieter copy
+  // sitting on top of the picture. Glance mode still shows the name — there is
+  // no identity block there.
+  const caption = [frame.angle?.toUpperCase(), watchName.toUpperCase()]
+    .filter(Boolean)
+    .join(" · ")
+  // Phase 6 §2.4's right-aligned SCORE line has no home in the spine: the
+  // facts band is four NAMED columns and none of them is a photo grade, the
+  // strip header is "THE STRIP and a hairline, nothing more" (Phase 8 §4), and
+  // the mock shows no score anywhere. It is the same argument Part 4 makes for
+  // the other counters — a grading number is actionable in the Photo Lab and
+  // decorative here. `frame.score` stays on the type; nothing on this screen
+  // reads it.
 
   return (
     <>
@@ -586,464 +926,514 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
           stepWatch(1)
         }
       }}
-      className="w-full max-w-[1080px] space-y-3.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+      className="w-full max-w-[1080px] space-y-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
     >
-      {/* ── Header: title + eyebrow, ROTATION control (§2.1) ── */}
-      <div className="flex items-start gap-4">
-        <div className="min-w-0 flex-1 space-y-1">
-          <h1 className="font-display text-lg font-semibold tracking-tight">
-            On the table
-          </h1>
-          <p className={EYEBROW}>
-            <span className="text-brass">{set.displayName}</span>
-            <span> · </span>
-            <span>
-              {set.total} {set.isGuide ? "CHAPTERS" : "WATCHES"} · {set.withFrames}{" "}
-              WITH FRAMES
-            </span>
-          </p>
+      {/* ── One spine, not two columns (Phase 8 §1) ──────────────
+          Everything below is full content width, stacked in reading order:
+          photograph → who it is → the strip → the facts. The old stage put
+          frame+info beside sheet+stats, and two columns of unequal height can
+          only agree at the top — so the shorter one always ended early and
+          left a hole, and a one-frame watch rendered that frame twice at once.
+          Nothing sits beside anything else here except the small control row. */}
+
+      {/* The top row holds the rotation control and nothing else. The
+          `On the table` page heading is gone: the phrase survives as the
+          NOW ON THE TABLE eyebrow under the frame, where it labels the actual
+          watch instead of the page. */}
+      <div className="flex justify-end">
+        <div className="flex min-w-0 flex-col items-end gap-1.5">
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label={`Rotation set: ${set.label}`}
+                  className="flex h-[34px] flex-none items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-foreground transition-colors hover:border-brass/50"
+                />
+              }
+            >
+              <Layers className="size-4 text-muted-foreground" aria-hidden />
+              <span className={EYEBROW}>ROTATION</span>
+              <span className="font-medium">{set.label}</span>
+              <ChevronDown className="size-4 text-muted-foreground" aria-hidden />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[300px]">
+              <DropdownMenuGroup>
+                {/* Three headed groups, in the order they were added to the
+                    app: the standing sets, then the guides, then the boxes.
+                    A group with no members renders nothing at all rather than
+                    an empty heading. */}
+                {ROTATION_GROUPS.map(({ group, heading }) => {
+                  const inGroup = sets.filter((s) => s.group === group)
+                  if (inGroup.length === 0) return null
+                  return (
+                    // Fragment, not a wrapper element: Base UI's menu walks its
+                    // own children for roving focus, and a div between the menu
+                    // and its items breaks arrow-key navigation.
+                    <Fragment key={group}>
+                      {heading && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className={EYEBROW}>
+                            {heading}
+                          </DropdownMenuLabel>
+                        </>
+                      )}
+                      {inGroup.map((s) => (
+                        <SetItem
+                          key={s.id}
+                          set={s}
+                          active={s.id === requestedSetId}
+                          onChoose={chooseSet}
+                        />
+                      ))}
+                    </Fragment>
+                  )
+                })}
+                <DropdownMenuSeparator />
+                <p className="px-2 py-1.5 text-2xs leading-relaxed text-muted-foreground">
+                  Only watches with photographed frames enter the rotation.
+                </p>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* One number, and it is the counter's denominator (Phase 8 §3).
+              The set name is not repeated here — the control above says it. */}
+          <p className={EYEBROW}>{queue.length} IN ROTATION</p>
           {fellBack && requested && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-right text-xs text-muted-foreground">
               {requested.label} has no photographed frames yet — showing All
               Watches.
             </p>
           )}
         </div>
-
-        {/* ROTATION menu (§2.1). Every set is prefetched, so switching is
-            instant and needs no round trip. An open menu pauses the rotation. */}
-        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-          <DropdownMenuTrigger
-            render={
-              <button
-                type="button"
-                aria-label={`Rotation set: ${set.label}`}
-                className="flex h-[34px] flex-none items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-foreground transition-colors hover:border-brass/50"
-              />
-            }
-          >
-            <Layers className="size-4 text-muted-foreground" aria-hidden />
-            <span className={EYEBROW}>ROTATION</span>
-            <span className="font-medium">{set.label}</span>
-            <ChevronDown className="size-4 text-muted-foreground" aria-hidden />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[300px]">
-            <DropdownMenuGroup>
-              {sets
-                .filter((s) => !s.isGuide)
-                .map((s) => (
-                  <SetItem
-                    key={s.id}
-                    set={s}
-                    active={s.id === requestedSetId}
-                    onChoose={chooseSet}
-                  />
-                ))}
-              {sets.some((s) => s.isGuide) && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className={EYEBROW}>
-                    Master Guides
-                  </DropdownMenuLabel>
-                  {sets
-                    .filter((s) => s.isGuide)
-                    .map((s) => (
-                      <SetItem
-                        key={s.id}
-                        set={s}
-                        active={s.id === requestedSetId}
-                        onChoose={chooseSet}
-                      />
-                    ))}
-                </>
-              )}
-              <DropdownMenuSeparator />
-              <p className="px-2 py-1.5 text-2xs leading-relaxed text-muted-foreground">
-                Only watches with photographed frames enter the rotation.
-              </p>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
-      <div className="flex flex-col gap-5 md:flex-row md:items-stretch">
-        {/* ── Left column: frame, controls, info ── */}
-        <div className="flex w-full flex-col gap-3 md:w-[480px] md:flex-none">
-          {/* The selected frame. FrameField owns the picture and the bloom
-              behind it (Phase 7 §1.1); this box owns the size, the radius and
-              the loupe. The frame is still object-contain — the letterbox is
-              filled with colour, never cropped away. */}
+      {/* ── The frame (Phase 8 §2.1) ───────────────────────────────
+          The box takes its shape from the photograph, not the other way round.
+          Height is fixed so the page's vertical rhythm never moves; width is
+          `height × aspect`, capped at the content width — so a 3:2 or wider
+          frame still fills the page edge to edge and the previous best case is
+          unchanged, while a portrait frame sits compact and centred instead of
+          taking 54% of the width with bloom filling the rest.
+
+          The aspect comes from STORED dimensions (00048), so the box is right
+          on first paint with no layout shift as the rotation advances. A photo
+          with no stored dimensions falls back to a content-width 3:2 box —
+          a real, supported path, not an error.
+
+          No `overflow-hidden` any more: the bloom is a spill that must escape
+          the box, and the photograph carries its own radius. */}
+      <div className="flex w-full justify-center">
+      <div
+        className={cn(
+          "relative bg-transparent",
+          loupeEnabled && "cursor-crosshair"
+        )}
+        style={stageBoxStyle}
+        onPointerEnter={
+          loupeEnabled
+            ? (e) => {
+                const r = e.currentTarget.getBoundingClientRect()
+                const x = e.clientX - r.left
+                const y = e.clientY - r.top
+                setLoupe({ x, y, fx: x / r.width, fy: y / r.height })
+              }
+            : undefined
+        }
+        onPointerMove={
+          loupeEnabled
+            ? (e) => {
+                const r = e.currentTarget.getBoundingClientRect()
+                const x = e.clientX - r.left
+                const y = e.clientY - r.top
+                setLoupe({ x, y, fx: x / r.width, fy: y / r.height })
+              }
+            : undefined
+        }
+        onPointerLeave={loupeEnabled ? () => setLoupe(null) : undefined}
+      >
+        <FrameField
+          frame={frame}
+          alt={caption}
+          variant="stage"
+          dwellSeconds={dwellSeconds}
+          reducedMotion={reducedMotion}
+        />
+        {/* No caption on the photograph: the identity block directly beneath
+            it already names the watch, twice the size. Two labels for one
+            subject, one of them competing with the image, is one too many —
+            and dropping it takes the scrim with it, so the frame is now
+            genuinely unobstructed. The caption survives as the image's alt
+            text, where it does real work. */}
+        {frame.angle && (
+          <span className="absolute right-3 top-3 rounded-full bg-card/90 px-2.5 py-[3px] font-mono text-2xs font-medium tracking-[0.14em] text-foreground">
+            {frame.angle.toUpperCase()}
+          </span>
+        )}
+        {/* The loupe (§2.2): the same image at 2.4×, background-positioned
+            from the pointer's fractional offset. pointer-events: none. */}
+        {loupe && loupeEnabled && (
           <div
-            className={cn(
-              "relative aspect-[3/2] w-full overflow-hidden rounded-lg bg-surface-photo",
-              loupeEnabled && "cursor-crosshair"
-            )}
-            onPointerEnter={
-              loupeEnabled
-                ? (e) => {
-                    const r = e.currentTarget.getBoundingClientRect()
-                    const x = e.clientX - r.left
-                    const y = e.clientY - r.top
-                    setLoupe({ x, y, fx: x / r.width, fy: y / r.height })
-                  }
-                : undefined
-            }
-            onPointerMove={
-              loupeEnabled
-                ? (e) => {
-                    const r = e.currentTarget.getBoundingClientRect()
-                    const x = e.clientX - r.left
-                    const y = e.clientY - r.top
-                    setLoupe({ x, y, fx: x / r.width, fy: y / r.height })
-                  }
-                : undefined
-            }
-            onPointerLeave={loupeEnabled ? () => setLoupe(null) : undefined}
-          >
-            <FrameField
-              frame={frame}
-              alt={caption}
-              variant="stage"
-              dwellSeconds={dwellSeconds}
-              reducedMotion={reducedMotion}
-            />
-            {/* Caption scrim — the caption must survive a bright frame. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/45 to-transparent"
-            />
-            <span className="absolute bottom-3 left-3.5 font-mono text-2xs tracking-[0.16em] text-white/90">
-              {caption}
-            </span>
-            {frame.angle && (
-              <span className="absolute right-3 top-3 rounded-full bg-card/90 px-2.5 py-[3px] font-mono text-2xs font-medium tracking-[0.14em] text-foreground">
-                {frame.angle.toUpperCase()}
-              </span>
-            )}
-            {/* The loupe (§2.2): the same image at 2.4×, background-positioned
-                from the pointer's fractional offset. pointer-events: none. */}
-            {loupe && loupeEnabled && (
-              <div
-                aria-hidden
-                className="pointer-events-none absolute flex items-end justify-center rounded-full border-[3px] border-card bg-surface-photo bg-no-repeat pb-3 shadow-[0_0_0_1px_rgba(0,0,0,0.35),0_14px_34px_rgba(0,0,0,0.45)]"
-                style={{
-                  left: loupe.x,
-                  top: loupe.y,
-                  width: LOUPE_SIZE,
-                  height: LOUPE_SIZE,
-                  marginLeft: -LOUPE_SIZE / 2,
-                  marginTop: -LOUPE_SIZE / 2,
-                  backgroundImage: `url(${frame.url})`,
-                  backgroundSize: `${LOUPE_ZOOM * 100}%`,
-                  backgroundPosition: `${loupe.fx * 100}% ${loupe.fy * 100}%`,
-                }}
-              >
-                <span className="font-mono text-2xs tracking-[0.14em] text-white/95 [text-shadow:0_1px_2px_rgba(0,0,0,0.7)]">
-                  {LOUPE_ZOOM}×
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Controls row (§2.3). The ring is static until step 5. */}
-          <div className="flex flex-none items-center gap-3">
-            <div className="relative size-[30px] flex-none">
-              <svg viewBox="0 0 36 36" className="block size-[30px] -rotate-90">
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="15"
-                  fill="none"
-                  className="stroke-border"
-                  strokeWidth="2"
-                />
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="15"
-                  fill="none"
-                  className="stroke-brass"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeDasharray={RING_CIRCUMFERENCE}
-                  strokeDashoffset={ringOffset}
-                />
-              </svg>
-              <Aperture
-                className="absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 text-brass"
-                aria-hidden
-              />
-            </div>
-            <span className="font-mono text-2xs tracking-[0.12em] text-muted-foreground">
-              {String((watchIdx % queue.length) + 1).padStart(2, "0")} /{" "}
-              {String(queue.length).padStart(2, "0")}
-            </span>
-            <span aria-hidden className="h-4 w-px bg-border" />
-            <button
-              type="button"
-              onClick={() => stepWatch(-1)}
-              className="flex h-[30px] items-center gap-1.5 px-2 text-xs text-foreground transition-colors hover:text-brass"
-            >
-              <ChevronLeft className="size-4 text-muted-foreground" aria-hidden />
-              Previous
-            </button>
-            <button
-              type="button"
-              onClick={() => stepWatch(1)}
-              className="flex h-[30px] items-center gap-1.5 px-2 text-xs text-foreground transition-colors hover:text-brass"
-            >
-              Next
-              <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
-            </button>
-            <span aria-hidden className="h-4 w-px bg-border" />
-            <Link
-              href={`/watch/${watch.id}`}
-              className="flex items-center gap-1.5 text-xs font-medium text-brass"
-            >
-              Open watch
-              <ArrowUpRight className="size-4" aria-hidden />
-            </Link>
-            <span className="flex-1" />
-            <span
-              className={cn(
-                "font-mono text-2xs",
-                paused && canRotate ? "text-brass" : "text-muted-foreground"
-              )}
-            >
-              {!canRotate
-                ? reducedMotion
-                  ? "MOTION OFF"
-                  : "SINGLE FRAME"
-                : paused
-                  ? "PAUSED"
-                  : `EVERY ${dwellSeconds}S`}
-            </span>
-          </div>
-
-          {/* Info block (§2.4): the FACTS. The name moved to the editorial
-              block at the top of the right column (§1.3) — the subject should
-              not be set smaller than the page furniture. Score only on the
-              right: capture data (EXIF, stack depth) is not persisted; see
-              design_handoff_v3 §1 open question, settled 2026-08-15 — the line
-              arrives with 10-capture-data. */}
-          <div className="flex min-h-0 flex-1 flex-col gap-2.5 border-t border-border pt-3">
-            {scoreLabel && (
-              <div className="flex justify-end">
-                <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                  {scoreLabel}
-                </span>
-              </div>
-            )}
-
-            <div className="grid grid-cols-3 gap-2.5">
-              <div className="space-y-0.5">
-                <span className={cn("block", EYEBROW)}>ACQUIRED</span>
-                <span className="block font-mono text-xs text-foreground">
-                  {watch.isWishlist || !watch.purchaseDate ? (
-                    "—"
-                  ) : (
-                    <>
-                      {formatDay(watch.purchaseDate)}
-                      {acquiredAge && (
-                        <span className="text-muted-foreground"> · {acquiredAge}</span>
-                      )}
-                    </>
-                  )}
-                </span>
-              </div>
-              <div className="space-y-0.5">
-                <span className={cn("block", EYEBROW)}>WORN</span>
-                {/* The only null that turns brass: an owned watch never worn is
-                    an invitation. Twelve wears is not a call to action, and a
-                    wish-list watch is not yours to wear (§1.4). */}
-                <span
-                  className={cn(
-                    "block font-mono text-xs",
-                    neverWorn ? "text-brass" : "text-foreground"
-                  )}
-                >
-                  {watch.isWishlist
-                    ? "not yet owned"
-                    : neverWorn
-                      ? "never — give it a day"
-                      : `${watch.wearCount} ${watch.wearCount === 1 ? "time" : "times"}`}
-                </span>
-              </div>
-              <div className="space-y-0.5">
-                <span className={cn("block", EYEBROW)}>LAST WORN</span>
-                <span className="block font-mono text-xs text-foreground">
-                  {watch.isWishlist || !watch.lastWornDate
-                    ? "—"
-                    : wornLabel(watch.lastWornDate, now)}
-                </span>
-              </div>
-            </div>
-
-            {watch.guideChapter && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Compass className="size-4 flex-none text-brass" aria-hidden />
-                <span className="min-w-0 truncate">{watch.guideChapter}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Right column: the watch, then its contact sheet ── */}
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
-          {/* Editorial block (§1.3): the subject is the headline. The page
-              title stays at text-lg; the brand takes text-xl, the top of the
-              six-step scale — no new sizes. */}
-          <div className="flex-none space-y-0.5">
-            <span className="block font-mono text-2xs tracking-[0.14em] text-brass">
-              NOW ON THE TABLE
-            </span>
-            <h2 className="font-display text-xl font-semibold leading-none tracking-tight">
-              {watch.brandName}
-            </h2>
-            <p className="font-display text-md leading-tight text-foreground">
-              {watch.model}
-            </p>
-            {specLine(watch) && (
-              <p className="font-mono text-2xs tracking-[0.06em] text-muted-foreground">
-                {specLine(watch)}
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-none items-center gap-2.5">
-            <span className={EYEBROW}>FRAMES</span>
-            <span aria-hidden className="h-px flex-1 bg-border" />
-            {/* "N OF 5 SHOT" rather than "N / 5 ANGLES" (§1.4): the same
-                number, read as progress through a shot list instead of as a
-                score out of five. */}
-            <span className="font-mono text-2xs text-muted-foreground">
-              {frames.length} KEPT · {watch.coveredAngles} OF 5 SHOT
-            </span>
-          </div>
-
-          {/* Thumbnails are navigation targets — object-cover is correct HERE
-              and only here. Hover or focus raises a frame into the main view;
-              the grid is a real focusable list (one Tab stop, arrows within,
-              Enter opens the Photo Lab session) — never hover-only. */}
-          <div
-            role="group"
-            aria-label="Frames and shot list — arrow keys browse the shot frames, Enter opens the Photo Lab"
-            className="grid flex-none grid-cols-3 gap-2"
-            onKeyDown={(e) => {
-              const step =
-                e.key === "ArrowRight"
-                  ? 1
-                  : e.key === "ArrowLeft"
-                    ? -1
-                    : e.key === "ArrowDown"
-                      ? GRID_COLS
-                      : e.key === "ArrowUp"
-                        ? -GRID_COLS
-                        : null
-              if (step === null) return
-              // An arrow pressed anywhere in the contact sheet must never reach
-              // the stage's handler: stepping the whole rotation would replace
-              // the very grid the user is navigating.
-              e.stopPropagation()
-              // Only SHOT frames are in the roving list. A shot-list cell is
-              // not a frame, so arrows there do nothing and cannot pull focus
-              // into the frame list (§1.5).
-              if (!(e.target as HTMLElement).dataset.frameTile) return
-              e.preventDefault()
-              moveGridFocus(Math.min(frameIdx, frames.length - 1), step)
+            aria-hidden
+            className="pointer-events-none absolute flex items-end justify-center rounded-full border-[3px] border-card bg-surface-photo bg-no-repeat pb-3 shadow-[0_0_0_1px_rgba(0,0,0,0.35),0_14px_34px_rgba(0,0,0,0.45)]"
+            style={{
+              left: loupe.x,
+              top: loupe.y,
+              width: LOUPE_SIZE,
+              height: LOUPE_SIZE,
+              marginLeft: -LOUPE_SIZE / 2,
+              marginTop: -LOUPE_SIZE / 2,
+              backgroundImage: `url(${frame.url})`,
+              backgroundSize: `${LOUPE_ZOOM * 100}%`,
+              backgroundPosition: `${loupe.fx * 100}% ${loupe.fy * 100}%`,
             }}
           >
-            {frames.map((f, i) => {
-              const active = i === Math.min(frameIdx, frames.length - 1)
-              return (
-                <Link
-                  key={f.id}
-                  ref={(el) => {
-                    tileRefs.current[i] = el
-                  }}
-                  // Truthy on purpose: an empty attribute value reads back as
-                  // "" and would fail the guard below, disabling the arrows.
-                  data-frame-tile="1"
-                  href={`/photo-lab/session?watch=${watch.id}${f.angle ? `&angle=${f.angle}` : ""}`}
-                  tabIndex={active ? 0 : -1}
-                  onMouseEnter={() => setFrameIdx(i)}
-                  onFocus={() => setFrameIdx(i)}
-                  aria-label={`Frame ${i + 1} of ${frames.length}${f.angle ? ` — ${f.angle}` : ""} — open in Photo Lab`}
-                  aria-current={active || undefined}
-                  className={cn(
-                    "relative aspect-square overflow-hidden rounded-lg bg-surface-photo outline-2 outline-offset-2 focus-visible:ring-2 focus-visible:ring-ring/60",
-                    active ? "outline outline-brass" : "outline-transparent"
-                  )}
-                >
-                  <Image
-                    src={f.thumbUrl}
-                    alt=""
-                    fill
-                    unoptimized
-                    sizes="160px"
-                    className="object-cover"
-                  />
-                  {f.angle && (
-                    <span className="absolute right-1.5 top-1.5 rounded-full bg-card/90 px-1.5 py-px font-mono text-2xs font-medium tracking-[0.06em] text-foreground">
-                      {f.angle.toUpperCase()}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
-
-            {/* The grid always completes (§1.5): one inert cell per unshot
-                angle, so a one-frame watch reads as a shot list rather than a
-                two-thirds-empty column. These are NOT frames — no ref, no
-                hover/focus raise, no place in the arrow-key list — each is its
-                own tab stop that opens the session for that angle. */}
-            {missingAngles.map((angle) => (
-              <Link
-                key={`slot-${angle}`}
-                href={`/photo-lab/session?watch=${watch.id}&angle=${angle}`}
-                aria-label={`${ANGLE_LABELS[angle]} not shot yet — open the Photo Lab session`}
-                className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-brass/50 hover:text-brass focus-visible:ring-2 focus-visible:ring-ring/60"
-              >
-                <Plus className="size-4" aria-hidden />
-                <span className="font-mono text-2xs tracking-[0.06em]">
-                  {ANGLE_HEADINGS[angle]}
-                </span>
-              </Link>
-            ))}
-          </div>
-
-          {missingAngles.length > 0 && (
-            <p className="flex-none text-xs leading-relaxed text-muted-foreground">
-              {shotListLine}
-            </p>
-          )}
-
-          <div className="flex flex-none items-start gap-2 rounded-lg border border-border bg-card px-3 py-2.5">
-            <Search className="mt-px size-4 flex-none text-brass" aria-hidden />
-            <span className="text-xs leading-relaxed text-muted-foreground">
-              Hover a frame to bring it up. Hover the big frame for the loupe.
+            <span className="font-mono text-2xs tracking-[0.14em] text-white/95 [text-shadow:0_1px_2px_rgba(0,0,0,0.7)]">
+              {LOUPE_ZOOM}×
             </span>
           </div>
+        )}
+      </div>
+      </div>
 
-          <div className="mt-auto flex flex-none flex-col gap-1.5 border-t border-border pt-3">
-            {/* Coverage moved up to the FRAMES rail (§1.4) — repeating it here
-                as "0 / 5 angles" was the second place a null read as a score. */}
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Frames kept this month</span>
-              <span className="font-mono tabular-nums">{stats.framesThisMonth}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Awaiting review</span>
-              <Link
-                href="/photo-lab/review"
-                className="font-mono tabular-nums text-brass underline-offset-2 hover:underline"
-              >
-                {stats.awaitingReview}
-              </Link>
-            </div>
+      {/* ── Who it is, and the controls ────────────────────────────
+          The one place two things still sit side by side, because the control
+          row is small and belongs with the watch it steps through. */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-5">
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <span className="block font-mono text-2xs tracking-[0.2em] text-brass">
+            NOW ON THE TABLE
+          </span>
+          <div className="flex flex-wrap items-baseline gap-x-2.5">
+            {/* The watch is the page's heading now — the page furniture that
+                used to outrank it is gone (Phase 8 §1).
+
+                §5: 38px at weight 400, with the model at 26px, also 400. The
+                old 38/600 against 19/400 was a 2:1 size jump PLUS a weight
+                jump, so the brand overwhelmed the model — which is the more
+                identifying half. Size alone carries the hierarchy now, and it
+                reads as a gallery label rather than a headline. Both steps are
+                on the six-step scale; nothing arbitrary was added. */}
+            <h1 className="font-display text-xl font-normal leading-[1.04] tracking-tight">
+              {watch.brandName}
+            </h1>
+            <p className="font-display text-lg font-normal leading-tight text-foreground">
+              {watch.model}
+            </p>
           </div>
+          {/* Always rendered, even when empty: this line's height is part of
+              the block's, and letting it collapse made the whole spine shift
+              up and down as the rotation stepped between a watch with a
+              movement record and one without. */}
+          <p className="min-h-[1.1em] font-mono text-2xs tracking-[0.06em] text-muted-foreground">
+            {specLine(watch)}
+          </p>
+        </div>
+
+        {/* Controls (§2.3). The ring and the advance share one interval. */}
+        <div className="flex flex-none flex-wrap items-center gap-3">
+          <div className="relative size-[30px] flex-none">
+            <svg viewBox="0 0 36 36" className="block size-[30px] -rotate-90">
+              <circle
+                cx="18"
+                cy="18"
+                r="15"
+                fill="none"
+                className="stroke-border"
+                strokeWidth="2"
+              />
+              <circle
+                cx="18"
+                cy="18"
+                r="15"
+                fill="none"
+                className="stroke-brass"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeDasharray={RING_CIRCUMFERENCE}
+                strokeDashoffset={ringOffset}
+              />
+            </svg>
+            <Aperture
+              className="absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 text-brass"
+              aria-hidden
+            />
+          </div>
+          <span className="font-mono text-2xs tracking-[0.12em] text-muted-foreground">
+            {String((watchIdx % queue.length) + 1).padStart(2, "0")} /{" "}
+            {String(queue.length).padStart(2, "0")}
+          </span>
+          {/* The words for what the ring is doing, kept beside it so the two
+              read as one readout (Phase 6 §2.3 still binding). */}
+          <span
+            className={cn(
+              "font-mono text-2xs",
+              paused && canRotate ? "text-brass" : "text-muted-foreground"
+            )}
+          >
+            {!canRotate
+              ? reducedMotion
+                ? "MOTION OFF"
+                : "SINGLE FRAME"
+              : paused
+                ? "PAUSED"
+                : `EVERY ${dwellSeconds}S`}
+          </span>
+          <span aria-hidden className="h-4 w-px bg-border" />
+          <button
+            type="button"
+            onClick={() => stepWatch(-1)}
+            className="flex h-[30px] items-center gap-1.5 px-2 text-xs text-foreground transition-colors hover:text-brass"
+          >
+            <ChevronLeft className="size-4 text-muted-foreground" aria-hidden />
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => stepWatch(1)}
+            className="flex h-[30px] items-center gap-1.5 px-2 text-xs text-foreground transition-colors hover:text-brass"
+          >
+            Next
+            <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+          </button>
+          <span aria-hidden className="h-4 w-px bg-border" />
+          <Link
+            href={`/watch/${watch.id}`}
+            className="flex items-center gap-1.5 text-xs font-medium text-brass"
+          >
+            Open watch
+            <ArrowUpRight className="size-4" aria-hidden />
+          </Link>
         </div>
       </div>
+
+      {/* ── The strip (Phase 8 §1.1 + §1.2) ────────────────────────
+          Replaces the square contact sheet, and is now the ONLY place
+          thumbnails exist — which is how the duplicate-image defect goes away
+          by construction rather than by a rule someone has to remember.
+
+          The header is the label and a hairline, nothing more (§4): the
+          counters that used to sit here described decisions about photographs
+          rather than watches, and a strip already communicates frame count by
+          being a strip. */}
+      <div className="flex items-center gap-2.5">
+        <span className={EYEBROW}>THE STRIP</span>
+        <span aria-hidden className="h-px flex-1 bg-border" />
+      </div>
+
+      {/* The film vocabulary lives HERE and nowhere else — the page ground
+          stays slate. That scoping is what earns the photo-lab feeling without
+          the whole-app rewarming the rejected `2b film edge` would have
+          forced. The literal dark values are deliberate: this is a
+          photographic surface, like the glance overlay below, and no palette
+          token means "the inside of a film strip". */}
+      <div className="relative">
+        <div
+          className="overflow-hidden rounded-lg py-2"
+          style={{ background: STRIP_BASE }}
+        >
+          {/* Sprockets, top and bottom. The holes are painted in the PAGE
+              background colour, so they read as punched through the strip
+              rather than as pale rectangles drawn on top of it. */}
+          <div aria-hidden className="mx-3 h-2.5" style={SPROCKET_STYLE} />
+
+          <div
+            ref={stripScrollerRef}
+            role="group"
+            aria-label="The strip — arrow keys browse the shot frames, Enter opens the Photo Lab"
+            className="flex gap-1.5 overflow-x-auto px-3 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            onKeyDown={(e) => {
+              const step =
+                e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : null
+              if (step === null) return
+              // An arrow pressed inside the strip must never reach the stage's
+              // handler: stepping the whole rotation would replace the very
+              // strip being navigated.
+              e.stopPropagation()
+              // Only SHOT frames are in the roving list. An empty shot-list
+              // cell is not a frame, so arrows there do nothing and cannot
+              // pull focus into the frame list (Phase 7 §1.5).
+              if (!(e.target as HTMLElement).dataset.frameTile) return
+              e.preventDefault()
+              moveStripFocus(activeStripPos, step)
+            }}
+          >
+            {strip.map((cell) => {
+              const active =
+                cell.kind === "frame" && cell.frameIndex === activeFrameIdx
+              const href = `/photo-lab/session?watch=${watch.id}${cell.angle ? `&angle=${cell.angle}` : ""}`
+              return (
+                <div
+                  key={cell.key}
+                  className="flex min-w-0 flex-col gap-1"
+                  // Grows to fill when the rack fits, never shrinks below a
+                  // legible frame — which is what makes the row scroll rather
+                  // than squeeze once a watch has more than the five.
+                  style={{ flex: "1 0 132px" }}
+                >
+                  {cell.kind === "frame" ? (
+                    <Link
+                      ref={(el) => {
+                        stripRefs.current[cell.framePos] = el
+                      }}
+                      // Truthy on purpose: an empty attribute value reads back
+                      // as "" and would fail the guard above.
+                      data-frame-tile="1"
+                      href={href}
+                      tabIndex={active ? 0 : -1}
+                      onMouseEnter={() => setFrameIdx(cell.frameIndex)}
+                      onFocus={() => setFrameIdx(cell.frameIndex)}
+                      aria-label={`Frame ${cell.framePos + 1} of ${stripFrameCount}${cell.angle ? ` — ${cell.angle}` : ""} — open in Photo Lab`}
+                      aria-current={active || undefined}
+                      className={cn(
+                        // Inset outline, so the brass reads as a selected frame
+                        // ON the strip rather than a card floating above it.
+                        "relative block aspect-[3/2] overflow-hidden outline-2 -outline-offset-2 focus-visible:ring-2 focus-visible:ring-ring/60",
+                        active ? "outline outline-brass" : "outline-transparent"
+                      )}
+                      style={{ background: STRIP_CELL }}
+                    >
+                      <Image
+                        src={frames[cell.frameIndex].thumbUrl}
+                        alt=""
+                        fill
+                        unoptimized
+                        sizes="180px"
+                        // A thumbnail is a navigation target, so a crop is
+                        // right here — and only here. The sharp frame above is
+                        // still object-contain.
+                        className="object-cover"
+                      />
+                    </Link>
+                  ) : (
+                    <Link
+                      href={href}
+                      aria-label={`${ANGLE_LABELS[cell.angle]} not shot yet — open the Photo Lab session`}
+                      className="flex aspect-[3/2] items-center justify-center border border-dashed border-white/25 text-white/55 transition-colors hover:border-brass hover:text-brass focus-visible:ring-2 focus-visible:ring-ring/60"
+                      style={{ background: STRIP_CELL }}
+                    >
+                      <Plus className="size-4" aria-hidden />
+                    </Link>
+                  )}
+                  {/* The label lives INSIDE the strip, under its frame — and
+                      is the one and only place UNTAGGED may appear, muted
+                      white, never brass (§4.1): brass would make an absence
+                      look like an achievement. */}
+                  <span className="truncate text-center font-mono text-2xs tracking-[0.06em] text-white/60">
+                    {cell.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+
+          <div aria-hidden className="mx-3 h-2.5" style={SPROCKET_STYLE} />
+        </div>
+
+        {/* Edge fade, no arrows — and only on the side that actually has more
+            strip to reach, so a rack that fits shows no vignette at all. */}
+        {stripEdges.left && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 w-10 rounded-l-lg"
+            style={{ background: `linear-gradient(90deg, ${STRIP_BASE}, transparent)` }}
+          />
+        )}
+        {stripEdges.right && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-r-lg"
+            style={{ background: `linear-gradient(270deg, ${STRIP_BASE}, transparent)` }}
+          />
+        )}
+      </div>
+
+
+      {/* ── The facts (Phase 8 §1) ─────────────────────────────────
+          Four labelled columns of equal width. The old three-column row was
+          too narrow for the Phase 7 invitation copy, which wrapped mid-phrase
+          (`12 May 2026 · 3` / `months ago`); each column now carries a mono
+          value and a muted second line instead of one crowded string. */}
+      <div className="grid grid-cols-2 gap-4 border-t border-border pt-3.5 sm:grid-cols-4">
+        <div className="flex flex-col gap-[3px]">
+          <span className={EYEBROW}>ACQUIRED</span>
+          <span className="font-mono text-xs text-foreground">
+            {watch.isWishlist || !watch.purchaseDate
+              ? "—"
+              : formatDay(watch.purchaseDate)}
+          </span>
+          {!watch.isWishlist && acquiredAge && (
+            <span className="text-xs text-muted-foreground">{acquiredAge}</span>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-[3px]">
+          <span className={EYEBROW}>WORN</span>
+          {/* The only null that turns brass: an owned watch never worn is an
+              invitation. Twelve wears is not a call to action, and a wish-list
+              watch is not yours to wear (Phase 7 §1.4). */}
+          <span
+            className={cn(
+              "font-mono text-xs",
+              neverWorn ? "text-brass" : "text-foreground"
+            )}
+          >
+            {watch.isWishlist
+              ? "not yet owned"
+              : neverWorn
+                ? "never"
+                : `${watch.wearCount} ${watch.wearCount === 1 ? "time" : "times"}`}
+          </span>
+          {!watch.isWishlist &&
+            (neverWorn ? (
+              <span className="text-xs text-muted-foreground">give it a day</span>
+            ) : (
+              watch.lastWornDate && (
+                <span className="text-xs text-muted-foreground">
+                  last worn {wornLabel(watch.lastWornDate, now)}
+                </span>
+              )
+            ))}
+        </div>
+
+        {/* CASE, where COVERAGE used to be. A coverage count is a progress bar
+            for the photography backlog — the one thing this screen is not for.
+            The case dimensions are the opposite: they are the watch, and they
+            are what you actually want to know when one you had forgotten comes
+            up in the rotation. */}
+        <div className="flex flex-col gap-[3px]">
+          <span className={EYEBROW}>CASE</span>
+          <span className="font-mono text-xs text-foreground">
+            {caseSize(watch)}
+          </span>
+          {caseDetail(watch) && (
+            <span className="text-xs text-muted-foreground">
+              {caseDetail(watch)}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-[3px]">
+          <span className={EYEBROW}>STORED IN</span>
+          <span className="font-mono text-xs text-foreground">
+            {watch.box ?? "—"}
+          </span>
+          {watch.boxDescription && (
+            <span className="text-xs text-muted-foreground">
+              {watch.boxDescription}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {watch.guideChapter && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Compass className="size-4 flex-none text-brass" aria-hidden />
+          <span className="min-w-0 truncate">{watch.guideChapter}</span>
+        </div>
+      )}
+
     </div>
 
     {/* ── Glance mode (§2.2) ────────────────────────────────────
@@ -1078,13 +1468,27 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
           </span>
         </div>
 
-        {/* Top-right: the state must never look like a freeze. */}
-        <div className="absolute right-6 top-5 flex items-center gap-1.5 rounded-full border border-white/20 bg-black/35 px-3 py-1.5">
-          <MousePointer2 className="size-3.5 text-white/75" aria-hidden />
-          <span className="font-mono text-2xs tracking-[0.12em] text-white/75">
+        {/* Top-right: the state must never look like a freeze — and the user
+            did not report seeing this at all, so §9 makes it unmissable. It
+            was white/20 on black/35 with white/75 text over an arbitrarily
+            bright photograph, which is a pill you can look straight past. Solid
+            ground, full-strength text, a real border. */}
+        <div className="absolute right-6 top-5 flex items-center gap-2 rounded-full border border-white/35 bg-black/60 px-3.5 py-2 shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
+          <MousePointer2 className="size-4 text-card" aria-hidden />
+          <span className="font-mono text-2xs tracking-[0.14em] text-card">
             MOVE TO RETURN
           </span>
         </div>
+
+        {/* First-run explanation (§9). Under the pill it points at, so the two
+            read as one thing rather than as two unrelated captions. */}
+        {explainGlance && (
+          <div className="absolute right-6 top-[58px] max-w-[320px] rounded-lg border border-white/25 bg-black/60 px-3.5 py-2.5 shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
+            <p className="text-xs leading-relaxed text-card">
+              Glance mode — move the mouse to return. Configurable in Config.
+            </p>
+          </div>
+        )}
 
         {/* Bottom bar — every glyph over the photograph sits on this gradient
             or carries a shadow; the frame beneath can be any brightness. */}
@@ -1093,13 +1497,30 @@ export function LightTable({ sets, seed, stats }: LightTableProps) {
           style={{ background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.45))" }}
         >
           <div className="min-w-0 flex-1">
-            <p className="font-display text-xl font-semibold leading-none tracking-tight text-card [text-shadow:0_1px_8px_rgba(0,0,0,0.5)]">
+            <p className="font-display text-xl font-normal leading-none tracking-tight text-card [text-shadow:0_1px_8px_rgba(0,0,0,0.5)]">
               {watch.brandName}
             </p>
             <p className="mt-2 truncate font-mono text-xs tracking-[0.14em] text-white/85">
-              {[watch.model.toUpperCase(), specLine(watch)].filter(Boolean).join(" · ")}
+              {[watch.model.toUpperCase(), specLine(watch, { withCase: true })]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           </div>
+
+          {/* Glance mode promotes the clock (§6.2): a screen seen from across
+              a room that shows a beautiful watch AND tells you it is 4:15 is
+              useful; one that shows only the watch is a screensaver. Same
+              subsidiary-register treatment as the header, one size up, off the
+              same tick. */}
+          {glanceParts && (
+            <div className="flex flex-none items-baseline gap-2 font-mono tabular-nums [text-shadow:0_1px_8px_rgba(0,0,0,0.5)]">
+              <span className="text-xl text-card">{glanceParts.hhmm}</span>
+              <span className="text-xs text-white/70">{glanceParts.seconds}</span>
+              <span className="text-xs tracking-[0.1em] text-white/70">
+                {glanceParts.meridiem}
+              </span>
+            </div>
+          )}
           <div className="flex flex-none items-center gap-3">
             <span className="font-mono text-2xs tracking-[0.14em] text-white/70">
               {String((watchIdx % queue.length) + 1).padStart(2, "0")} /{" "}

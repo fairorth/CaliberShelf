@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { TrendingUp } from "lucide-react"
+import { ArrowRight, TrendingUp } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatusPill } from "@/components/ui/status-pill"
 import { ValuationEvidence, ConfidenceBadge } from "@/components/valuation-evidence"
@@ -67,15 +67,27 @@ export function MarketPanel({ watch, valuations, listing, sale }: MarketPanelPro
 
   // Basis breakdown — echoes the stored components; the total is the
   // generated column, never recomputed here.
+  //
+  // §2.7: capitalised and formatted as money. It rendered `purchase 317`
+  // directly beneath `$317.00` — lowercase, no currency symbol, no decimals —
+  // which read as debug output rather than a breakdown. And the whole line is
+  // suppressed unless an ACQUISITION cost exists: a breakdown whose only row
+  // repeats the total above it is not a breakdown.
+  const acquisitionCosts =
+    (watch.acq_shipping_cents ?? 0) +
+    (watch.acq_tax_cents ?? 0) +
+    (watch.acq_duty_cents ?? 0)
   const basisParts: string[] = []
-  if (watch.purchase_price_cents != null)
-    basisParts.push(`purchase ${Math.round(watch.purchase_price_cents / 100).toLocaleString()}`)
-  if (watch.acq_shipping_cents)
-    basisParts.push(`shipping ${Math.round(watch.acq_shipping_cents / 100).toLocaleString()}`)
-  if (watch.acq_tax_cents)
-    basisParts.push(`tax ${Math.round(watch.acq_tax_cents / 100).toLocaleString()}`)
-  if (watch.acq_duty_cents)
-    basisParts.push(`duty ${Math.round(watch.acq_duty_cents / 100).toLocaleString()}`)
+  if (acquisitionCosts > 0) {
+    if (watch.purchase_price_cents != null)
+      basisParts.push(`Purchase ${formatCurrency(watch.purchase_price_cents)}`)
+    if (watch.acq_shipping_cents)
+      basisParts.push(`Shipping ${formatCurrency(watch.acq_shipping_cents)}`)
+    if (watch.acq_tax_cents)
+      basisParts.push(`Tax ${formatCurrency(watch.acq_tax_cents)}`)
+    if (watch.acq_duty_cents)
+      basisParts.push(`Duty ${formatCurrency(watch.acq_duty_cents)}`)
+  }
 
   const watchName = `${watch.brand.name} ${watch.model}`.trim()
   const showLifecycle = !watch.is_wishlist && !watch.is_coming_soon
@@ -127,13 +139,24 @@ export function MarketPanel({ watch, valuations, listing, sale }: MarketPanelPro
             )}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            {watch.price_check_enabled
-              ? "No estimate yet — run the first check below."
-              : watch.reference_number
-                ? "Not tracked. Turn on price checking on the edit form to start the monthly estimate."
-                : "Not tracked. Add a reference number on the edit form, then turn on price checking."}
-          </p>
+          // §2.4 — no empty state names another page in prose. Prose beside a
+          // disabled button is the shape Phase 5 finding V9 removed; the state
+          // that needs an action elsewhere IS a link to it.
+          watch.price_check_enabled ? (
+            <p className="text-sm text-muted-foreground">
+              No estimate yet — run the first check below.
+            </p>
+          ) : (
+            <Link
+              href={`/watch/${watch.id}/edit?from=watch#market`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-brass hover:underline"
+            >
+              {watch.reference_number
+                ? "Turn on price tracking"
+                : "Add a reference number and turn on tracking"}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          )
         )}
 
         {/* ── Trend — needs ≥2 agent points, else the header stands in ── */}

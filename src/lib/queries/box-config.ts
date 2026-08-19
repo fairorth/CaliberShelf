@@ -7,7 +7,7 @@ export async function getBoxConfig(): Promise<BoxConfig> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return { count: DEFAULT_BOX_COUNT, descriptions: {} }
+  if (!user) return { count: DEFAULT_BOX_COUNT, descriptions: {}, lastAutoFill: null }
 
   const { data } = await supabase
     .from("profiles")
@@ -16,7 +16,7 @@ export async function getBoxConfig(): Promise<BoxConfig> {
     .maybeSingle()
 
   if (!data || data.box_config == null) {
-    return { count: DEFAULT_BOX_COUNT, descriptions: {} }
+    return { count: DEFAULT_BOX_COUNT, descriptions: {}, lastAutoFill: null }
   }
   return normalizeBoxConfig(data.box_config)
 }

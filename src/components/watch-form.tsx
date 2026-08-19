@@ -762,12 +762,16 @@ export function WatchForm({
               DECISIONS.md §6). The columns stay is_coming_soon/is_wishlist;
               the control guarantees they are never both true. */}
           <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-            <FormLabel>Status</FormLabel>
+            {/* §2.6 — "Ownership", not "Status". The view page's Lifecycle
+                (Owned → Candidate → Listed → Sold) is a different axis that
+                also contains a value called "Owned"; two controls named the
+                same thing, both offering "Owned", is a collision worth ending. */}
+            <FormLabel>Ownership</FormLabel>
             <input type="hidden" name="is_coming_soon" value={status === "coming_soon" ? "on" : ""} />
             <input type="hidden" name="is_wishlist" value={status === "wishlist" ? "on" : ""} />
             <div
               role="radiogroup"
-              aria-label="Status"
+              aria-label="Ownership"
               className="inline-flex overflow-hidden rounded-lg border border-border"
             >
               {STATUS_OPTIONS.map((opt) => (
@@ -839,7 +843,7 @@ export function WatchForm({
                 }}
                 className="h-4 w-4 rounded border-border accent-brass"
               />
-              <span className="font-medium">Perform price checking</span>
+              <span className="font-medium">Track market value</span>
             </label>
             <span className="text-xs text-muted-foreground">
               {hasRef

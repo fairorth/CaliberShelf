@@ -10,6 +10,7 @@ import {
   type TableSortKey,
 } from "@/components/collection-table"
 import { SearchInput } from "@/components/search-input"
+import { caliberLabel } from "@/lib/caliber"
 import {
   Select,
   SelectContent,
@@ -227,7 +228,7 @@ function sortValue(w: WatchWithCover, key: SortKey): string | number | null {
       return w.movement?.caliber_type?.toLowerCase() ?? null
     case "caliber":
       return w.movement
-        ? `${w.movement.manufacturer ?? ""} ${w.movement.caliber_name}`.trim().toLowerCase()
+        ? (caliberLabel(w.movement) ?? "").toLowerCase()
         : null
     case "box":
       return w.box?.toLowerCase() ?? null
@@ -415,7 +416,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     for (const w of watches) {
       brandMap.set(w.brand_id, w.brand.name)
       if (w.movement) {
-        const label = `${w.movement.manufacturer ? w.movement.manufacturer + " " : ""}${w.movement.caliber_name}`.trim()
+        const label = caliberLabel(w.movement) ?? ""
         movementMap.set(w.movement.id, label)
         if (w.movement.caliber_type) caliberSet.add(w.movement.caliber_type)
       }
@@ -555,11 +556,16 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
 
       {/* Toolbar band 1 — search (grows), Filters, then the view control. */}
       <div className="flex flex-wrap items-center gap-3">
+        {/* "Filter", not "Search". This bar and the header's jump are two
+            different verbs and must not look like the same promise: the jump
+            answers "where is X" and navigates; this one answers "which of
+            these match X" and narrows the list in place, owning ?q. Naming
+            the count makes the scope explicit — it filters THESE watches. */}
         <SearchInput
           value={query}
           onChange={setQuery}
-          placeholder="Search brand, model, nickname, ref…"
-          ariaLabel="Search collection"
+          placeholder={`Filter these ${afterFilters.length} ${afterFilters.length === 1 ? "watch" : "watches"}…`}
+          ariaLabel="Filter the collection"
           className="w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-md"
         />
 

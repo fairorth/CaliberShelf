@@ -55,7 +55,8 @@ export function ActiveFilterChips({
     ].filter(Boolean)
     chips.push({
       key: "status",
-      label: shown.length === 0 ? "Status: none" : `Status: ${shown.join(" + ")}`,
+      label:
+        shown.length === 0 ? "Ownership: none" : `Ownership: ${shown.join(" + ")}`,
       onClear: () =>
         onChange({ ...f, showOwned: true, showComingSoon: true, showWishlist: true }),
     })

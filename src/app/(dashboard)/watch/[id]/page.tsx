@@ -17,13 +17,14 @@ import { getTimegrapherRuns } from "@/lib/queries/timegrapher"
 import { getCurrentStrapForWatch } from "@/lib/queries/straps"
 import { getBoxConfig } from "@/lib/queries/box-config"
 import { boxLabel } from "@/lib/boxes"
-import { formatCurrency } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import {
   caseMaterialLabels,
   crystalLabels,
   caseShapeLabels,
 } from "@/lib/validations/watch"
 import { caliberTypeLabels } from "@/lib/validations/movement"
+import { caliberLabel } from "@/lib/caliber"
 import { strapMaterialLabels } from "@/lib/validations/strap"
 import { strapDisplayName } from "@/lib/types/strap"
 import { WatchViewPhotos } from "./_components/watch-view-photos"
@@ -93,12 +94,15 @@ function Strip({
   eyebrow,
   value,
   valueSuffix,
+  valueTone,
   context,
 }: {
   href: string
   eyebrow: string
   value: string
   valueSuffix?: React.ReactNode
+  /** Brass marks the one value that is an invitation rather than a fact. */
+  valueTone?: "default" | "invite"
   context: React.ReactNode
 }) {
   return (
@@ -111,7 +115,14 @@ function Strip({
         <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
       <span className="flex items-baseline gap-2">
-        <span className="font-mono text-lg tabular-nums text-foreground">{value}</span>
+        <span
+          className={cn(
+            "font-mono text-lg tabular-nums",
+            valueTone === "invite" ? "text-brass" : "text-foreground"
+          )}
+        >
+          {value}
+        </span>
         {valueSuffix && <span className="text-xs">{valueSuffix}</span>}
       </span>
       <span className="text-xs text-muted-foreground">{context}</span>
@@ -160,10 +171,18 @@ export default async function WatchViewPage({
 
   const realizedGain = sale ? gainVersusBasis(sale.net_proceeds_cents, watch) : null
 
+  // §2.5 — the pill earns its place only when it says something the model
+  // does not. Compared loosely: "SN0144" and "SN0144-CG7" are the same fact
+  // to a reader, and spacing/case should not decide it.
+  const flat = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, "")
+  const showReference =
+    Boolean(watch.reference_number) &&
+    flat(watch.reference_number ?? "") !== flat(watch.model)
+
   const movement = watch.movement
   const movementLine = movement
     ? [
-        `${movement.manufacturer ? movement.manufacturer + " " : ""}${movement.caliber_name}`.trim(),
+        caliberLabel(movement),
         movement.caliber_type
           ? caliberTypeLabels[movement.caliber_type] ?? movement.caliber_type
           : null,
@@ -177,17 +196,19 @@ export default async function WatchViewPage({
     .map((c) => c.trim())
     .filter(Boolean)
 
-  const measurements: { label: string; value: string | null }[] = [
-    { label: "Diameter", value: watch.case_diameter_mm ? `${watch.case_diameter_mm} mm` : null },
-    { label: "Height", value: watch.case_height_mm ? `${watch.case_height_mm} mm` : null },
-    { label: "Lug-to-lug", value: watch.lug_to_lug_mm ? `${watch.lug_to_lug_mm} mm` : null },
-    { label: "Lug width", value: watch.strap_width_mm ? `${watch.strap_width_mm} mm` : null },
-    { label: "Weight", value: watch.weight_g ? `${watch.weight_g} g` : null },
-    {
-      label: "Water res.",
-      value: watch.water_resistance_m != null ? `${watch.water_resistance_m} m` : null,
-    },
-  ].filter((m) => m.value !== null)
+  // §2.7 — the number and its unit are separate, so the unit can be muted.
+  // A brass or full-strength "mm" puts the accent on the least meaningful
+  // token in the row; the measurement is the meaning.
+  const measurements: { label: string; value: number; unit: string }[] = (
+    [
+      { label: "Diameter", value: watch.case_diameter_mm, unit: "mm" },
+      { label: "Height", value: watch.case_height_mm, unit: "mm" },
+      { label: "Lug-to-lug", value: watch.lug_to_lug_mm, unit: "mm" },
+      { label: "Lug width", value: watch.strap_width_mm, unit: "mm" },
+      { label: "Weight", value: watch.weight_g, unit: "g" },
+      { label: "Water res.", value: watch.water_resistance_m, unit: "m" },
+    ] as { label: string; value: number | null; unit: string }[]
+  ).filter((m): m is { label: string; value: number; unit: string } => m.value != null)
 
   const latestRun = timegrapherRuns[0]
 
@@ -199,7 +220,9 @@ export default async function WatchViewPage({
       {/* Title row */}
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div className="min-w-0 space-y-2">
-          <h1 className="font-display text-lg font-semibold tracking-tight">
+          {/* Weight 400, matching the home stage (Phase 8 §5, Phase 9 §2.5):
+              size alone carries the hierarchy. */}
+          <h1 className="font-display text-lg font-normal tracking-tight">
             {watch.brand.name}{" "}
             <span className="font-normal text-muted-foreground">
               {watch.model}
@@ -208,13 +231,16 @@ export default async function WatchViewPage({
           </h1>
           {/* Meta row — status is data, never brass (A1). */}
           <div className="flex flex-wrap items-center gap-3">
-            {watch.reference_number && (
-              <span className="font-mono text-xs text-muted-foreground">
-                {watch.reference_number}
-              </span>
-            )}
-            {watch.reference_number && (
-              <span className="h-3 w-px bg-border" aria-hidden="true" />
+            {/* Suppressed when it only repeats the model — plenty of watches
+                are named by their reference, and printing it twice in one
+                header is noise (§2.5). */}
+            {showReference && (
+              <>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {watch.reference_number}
+                </span>
+                <span className="h-3 w-px bg-border" aria-hidden="true" />
+              </>
             )}
             <span className="rounded-full bg-muted px-[9px] py-[3px] font-mono text-2xs uppercase tracking-[0.1em] text-foreground">
               {status}
@@ -235,7 +261,9 @@ export default async function WatchViewPage({
         {/* Actions — Edit is the only primary action; Delete lives on the
             edit page only (A1). */}
         <div className="flex shrink-0 items-center gap-2.5">
-          {!watch.is_wishlist && <WearTodayButton watchId={watch.id} wearInfo={wearInfo} />}
+          {/* No count beneath it (§2.3): the WEAR card says how many times,
+              once. Three statements of zero on one screen was the defect. */}
+          {!watch.is_wishlist && <WearTodayButton watchId={watch.id} />}
           <Button
             render={<Link href={`/watch/${watch.id}/edit?from=watch`} />}
             className="gap-1.5 bg-brass text-brass-foreground hover:bg-brass/90"
@@ -292,15 +320,16 @@ export default async function WatchViewPage({
               </SpecRow>
             )}
             {watch.dial_color && <SpecRow label="Dial">{watch.dial_color}</SpecRow>}
-            {measurements.length > 0 && (
-              <div className="grid grid-cols-2 gap-x-[18px]">
-                {measurements.map((m) => (
-                  <SpecRow key={m.label} label={m.label}>
-                    <span className="tabular-nums">{m.value}</span>
-                  </SpecRow>
-                ))}
-              </div>
-            )}
+            {/* One rhythm for the card (§2.7): every row is a single
+                label/value pair. The old two-per-row grid for measurements
+                made the card change shape halfway down for no reason the
+                reader could see. */}
+            {measurements.map((m) => (
+              <SpecRow key={m.label} label={m.label}>
+                <span className="tabular-nums">{m.value}</span>
+                <span className="text-muted-foreground"> {m.unit}</span>
+              </SpecRow>
+            ))}
             {complications.length > 0 && (
               <div className="flex items-baseline justify-between gap-4 py-[9px]">
                 <span className="text-xs text-muted-foreground">Complications</span>
@@ -355,8 +384,13 @@ export default async function WatchViewPage({
           <Strip
             href="/wear-log"
             eyebrow="Wear"
-            value={String(wearInfo.count)}
-            valueSuffix={<span className="text-muted-foreground">wears</span>}
+            value={wearInfo.count === 0 ? "never" : String(wearInfo.count)}
+            valueTone={wearInfo.count === 0 ? "invite" : "default"}
+            valueSuffix={
+              wearInfo.count > 0 ? (
+                <span className="text-muted-foreground">wears</span>
+              ) : undefined
+            }
             context={
               wearInfo.lastWorn ? (
                 <>
@@ -365,7 +399,9 @@ export default async function WatchViewPage({
                   {daysAgo(wearInfo.lastWorn)} days ago
                 </>
               ) : (
-                "Not yet worn · log the first wear"
+                // Phase 8's invitation voice, and the ONLY place this screen
+                // states the zero (§2.3).
+                "give it a day"
               )
             }
           />
@@ -385,7 +421,10 @@ export default async function WatchViewPage({
                 {movement?.lift_angle ? ` · lift angle ${movement.lift_angle}°` : ""}
               </>
             ) : (
-              "No runs yet · record one on the edit page"
+              // §2.4 — no empty state names another page in prose. The whole
+              // strip is already a link to the edit form, so it says what
+              // pressing it does.
+              <span className="text-brass">Record a run →</span>
             )
           }
         />

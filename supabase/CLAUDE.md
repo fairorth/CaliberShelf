@@ -6,6 +6,12 @@
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
 - Latest applied migration: `00047_backfill_sale_status.sql` (Phase 5 sales/investment; confirmed applied 2026-08-13). See docs/data-model.md for the table catalog.
+- **AWAITING APPLICATION: `00048_add_photo_dimensions.sql`** — `image_width` /
+  `image_height` on `watch_photos` (Phase 8 step 0, see
+  `design_handoff_v4/13-phase-8-dimensions.md`). Run it in the SQL Editor, then
+  `npm run backfill-photo-dimensions`. Until it is applied the app is fine: every
+  photo reads NULL, which is the supported "3:2 fallback, excluded from aspect
+  comparison" path.
 - Phase 5 set (all applied): `00043_add_cost_basis_lifecycle_ask.sql`, `00044_create_watch_listings.sql`, `00045_create_watch_sales.sql`, `00046_add_valuation_source.sql`, `00047_backfill_sale_status.sql`.
 - `cost_basis_cents` (00043) and `net_proceeds_cents` (00045) are
   `GENERATED ALWAYS … STORED`. Never write them, never re-derive them in a

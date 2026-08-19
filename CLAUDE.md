@@ -56,8 +56,12 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - **Type:** six steps only — 11 / 13 / 15 / 19 / 26 / 38px. Every page `h1` is 26px.
   `font-display` (Fraunces) only at ≥19px. Mono only at 11px and 13px. Never write an
   arbitrary `text-[Npx]`.
-- **Radii:** 8px controls · 14px cards · full pills. Nothing else (physical-object
-  illustrations in watch-hero/display-box excepted).
+- **Radii:** 8px controls · 14px cards · full pills. Nothing else (the `watch-dial`
+  illustration excepted — `watch-hero` and `display-box-home` are gone, Phases 6 and 8).
+- **Materials:** tokens only. Phase 8 §8 withdrew the display box's material-gradient
+  exception; `display-case.tsx` is trays on `--surface-rail` with one inset shadow. The
+  only literal dark surfaces left are photographic ones scoped to their component (the
+  Light Table's film strip and the glance overlay's scrims).
 - **Color:** tokens only. No hex or `white/[0.0x]` literals for surfaces, borders, fields
   or text. Never stack opacity on `--muted-foreground`.
 - **Icons:** lucide-react only, `currentColor`, `aria-hidden`. No emoji in UI — the two

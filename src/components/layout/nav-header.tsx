@@ -15,14 +15,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SearchInput } from "@/components/search-input"
+import { JumpSearch } from "@/components/layout/jump-search"
+import { HeaderClock } from "@/components/layout/header-clock"
 import { signOut } from "@/lib/actions/auth-actions"
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider"
 import { Mark, Wordmark } from "@/components/brand/logo"
-import { NAV_GROUPS, NAV_HOME, isNavItemActive } from "@/components/layout/nav-items"
+import { NAV_GROUPS, isNavItemActive } from "@/components/layout/nav-items"
 import { cn } from "@/lib/utils"
+import type { JumpIndex } from "@/lib/queries/jump"
 
 interface NavHeaderProps {
   userEmail: string
+  /** Everything the jump can reach, handed over once (Phase 8 §6.1). */
+  jumpIndex: JumpIndex
 }
 
 /**
@@ -33,7 +38,7 @@ interface NavHeaderProps {
  * drawer that never moves the page. There is no theme control: the product
  * is light-only (FIXES-ROUND-1 §1).
  */
-export function NavHeader({ userEmail }: NavHeaderProps) {
+export function NavHeader({ userEmail, jumpIndex }: NavHeaderProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const pathname = usePathname()
@@ -74,10 +79,18 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
     return () => window.removeEventListener("keydown", onKey)
   }, [drawerOpen])
 
-  // Global search: jump to the collection filtered by the query. Hidden on
-  // home and the collection list, which carry their own search boxes.
-  const isHome = pathname === "/dashboard"
-  const showSearch = !isHome && !pathname.startsWith("/collection")
+  // The JUMP is present everywhere, including /dashboard — Phase 8 §6.1
+  // removes the old hide-on-home condition, because reaching a watch from the
+  // home page used to mean a trip through the collection, and Enter here goes
+  // straight to /watch/[id] instead.
+  //
+  // The collection keeps its own in-page search box, which owns ?q and filters
+  // the list you are looking at. Two fields side by side on that one screen
+  // would be two different promises, so the jump stands down there.
+  const showJump = !pathname.startsWith("/collection")
+  // The legacy collection-filter field survives only inside the small-screen
+  // drawer, where the jump's result panel has nowhere to open.
+  const showSearch = !pathname.startsWith("/collection")
   const submitSearch = () => {
     const q = searchQuery.trim()
     if (!q) return
@@ -124,19 +137,20 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
             <Wordmark inline className="hidden sm:flex" />
           </Link>
 
-          {showSearch && (
-            <SearchInput
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onSubmit={submitSearch}
-              placeholder="Search collection…"
-              ariaLabel="Search collection"
-              className="hidden w-44 md:block lg:w-[280px]"
+          {showJump && (
+            <JumpSearch
+              index={jumpIndex}
+              className="hidden w-[300px] md:block"
             />
           )}
         </div>
 
         <div className="flex shrink-0 items-center gap-2.5">
+          {/* Right-aligned, before Add Watch (§6.2). Hidden on the narrowest
+              screens, where the header has to choose between the time and the
+              primary action. */}
+          <HeaderClock className="hidden sm:flex" />
+          <span aria-hidden className="hidden h-[18px] w-px bg-border sm:block" />
           <Button
             size="sm"
             render={<Link href="/add" onClick={guardClick("/add")} />}
@@ -207,13 +221,6 @@ export function NavHeader({ userEmail }: NavHeaderProps) {
                 className="mb-3"
               />
             )}
-            <DrawerLink
-              href={NAV_HOME.href}
-              label={NAV_HOME.label}
-              icon={NAV_HOME.icon}
-              active={isNavItemActive(NAV_HOME.href, pathname)}
-              onClick={guardClick(NAV_HOME.href)}
-            />
             {NAV_GROUPS.map((group) => (
               <div key={group.heading} className="mt-4">
                 <div className="px-2.5 pb-2 font-mono text-2xs uppercase leading-[1.5] tracking-[0.14em] text-muted-foreground">

@@ -5,10 +5,12 @@ import { Archive, CalendarDays, CircleDollarSign, Watch } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { caliberTypeLabels } from "@/lib/validations/movement"
+import { caliberLabel } from "@/lib/caliber"
 import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import { WishlistBadge } from "@/components/wishlist-badge"
 import { GuideBadge } from "@/components/guide-badge"
 import { GainValue } from "@/components/gain-value"
+import { WearTodayTileButton } from "./wear-today-tile-button"
 import { cn, formatCurrency } from "@/lib/utils"
 import type { SaleSummary } from "@/lib/queries/sales"
 import type { WatchWithCover } from "@/lib/types/watch"
@@ -55,7 +57,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames, s
           : null
         // Caliber line (bottom-left): manufacturer + caliber name, e.g. "Miyota 8215".
         const caliberLine = watch.movement
-          ? `${watch.movement.manufacturer ? watch.movement.manufacturer + " " : ""}${watch.movement.caliber_name}`.trim()
+          ? caliberLabel(watch.movement)
           : null
         // A sold tile shows what it returned, not what it cost (§3.6).
         const sold = watch.sale_status === "sold"
@@ -69,19 +71,18 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames, s
               : null
         const showFooter = Boolean(caliberLine) || priceLabel !== null
         const wearCount = watch.wear_count ?? 0
-
-        // Frame the cover with the stored dial focal point + zoom, exactly as
-        // the home hero does (B6) — never a bare centred crop.
-        const focalX = watch.dial_focal_x ?? 50
-        const focalY = watch.dial_focal_y ?? 50
-        const zoom = watch.dial_zoom ?? 1
+        // Only a watch you actually own and still have can be worn.
+        const canWear = !sold && !watch.is_wishlist && !watch.is_coming_soon
 
         return (
-        <Link
+        <article
           key={watch.id}
-          href={`/watch/${watch.id}`}
           className={cn(
-            "group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/45 hover:shadow-[0_16px_30px_rgba(0,0,0,0.4)]",
+            // `relative` + the stretched link below: the whole tile is one
+            // click target, but it is NOT an <a> wrapping everything, so the
+            // Wear today button can be a real <button> instead of interactive
+            // content illegally nested inside an anchor.
+            "group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/45 hover:shadow-[0_16px_30px_rgba(0,0,0,0.4)]",
             sold && "opacity-55 [&_img]:grayscale-[0.7]"
           )}
         >
@@ -97,22 +98,37 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames, s
                 // load them straight from Supabase's CDN instead of paying for
                 // (uncacheable, signed-URL) Next image optimization.
                 unoptimized
+                // A plain centre crop (Phase 9 §1.1). The focal point and zoom
+                // are gone with the dial-framing editor: the frame reaching
+                // this tile is already the one nearest 1:1, chosen in the
+                // query, so it survives a square-ish crop without being aimed
+                // by hand. A crop tool bent the photograph to fit the frame;
+                // choosing the right photograph is the same fix without 121
+                // crosshairs.
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
-                style={{
-                  objectPosition: `${focalX}% ${focalY}%`,
-                  transform: zoom > 1 ? `scale(${zoom})` : undefined,
-                }}
               />
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
                 <Watch className="h-8 w-8" aria-hidden="true" />
               </div>
             )}
-            {/* Status badges overlay the photo's top-right on hover — never a
-                permanent strip that outweighs the watch (B6). */}
-            <div className="absolute right-2 top-2 flex items-center gap-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
-              {watch.is_coming_soon && <ComingSoonBadge />}
-              {watch.is_wishlist && <WishlistBadge />}
+
+            {/* Ownership status is PERMANENT, top-left. Coming Soon and Wish
+                List answer "is this even mine?" — that is identity, not
+                incidental metadata, and a tile that only admits it on hover
+                reads as an owned watch until you happen to point at it. The
+                hover strip below keeps everything that genuinely is
+                incidental. */}
+            {(watch.is_coming_soon || watch.is_wishlist) && (
+              <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1.5">
+                {watch.is_coming_soon && <ComingSoonBadge />}
+                {watch.is_wishlist && <WishlistBadge />}
+              </div>
+            )}
+
+            {/* Incidental markers overlay the photo's top-right on hover —
+                never a permanent strip that outweighs the watch (B6). */}
+            <div className="absolute right-2 top-2 flex items-center gap-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
               {watch.is_wishlist && guideNames?.[watch.id] && (
                 <GuideBadge name={guideNames[watch.id]} />
               )}
@@ -137,7 +153,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames, s
               )}
             </div>
           </div>
-          <div className="px-3.5 pb-4 pt-3">
+          <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-3">
             <p className="truncate text-sm font-medium leading-tight">
               {watch.brand.name}
             </p>
@@ -176,8 +192,32 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames, s
                 )}
               </div>
             )}
+
+            {/* Wear today, on the tile. This is what makes tiles-mode filtered
+                to a box actually useful: the box IS the week's rotation, so
+                logging what you put on should not require a trip to the watch
+                page. Owned, unsold watches only — you cannot wear something you
+                do not have. `relative z-10` lifts it above the stretched link. */}
+            {canWear && (
+              <WearTodayTileButton
+                watchId={watch.id}
+                name={`${watch.brand.name} ${watch.model}`}
+                className="relative z-10 mt-2.5"
+              />
+            )}
           </div>
-        </Link>
+
+          {/* The stretched link: last in DOM order so it covers the tile, and
+              below anything that lifts itself with z-10. */}
+          <Link
+            href={`/watch/${watch.id}`}
+            className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+          >
+            <span className="sr-only">
+              {watch.brand.name} {watch.model}
+            </span>
+          </Link>
+        </article>
         )
       })}
     </div>

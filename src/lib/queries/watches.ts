@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { getSignedUrl, getTransformedSignedUrls } from "@/lib/storage"
+import { selectWithPhotoDimensions, squareness } from "./photo-dimensions"
 import type {
   Watch,
   WatchWithCover,
@@ -31,20 +32,50 @@ export async function getWatches(): Promise<WatchWithCover[]> {
 
   if (!watches || watches.length === 0) return []
 
-  // Fetch cover photos for all watches in one query
+  // EVERY photo, not just the covers — the tile frame is now chosen by shape
+  // (Phase 9 §1.1), which needs all the candidates.
   const watchIds = watches.map((w: Watch) => w.id)
-  const { data: coverPhotos } = await supabase
-    .from("watch_photos")
-    .select("*")
-    .in("watch_id", watchIds)
-    .eq("is_cover", true)
+  const { data: allPhotos } = await selectWithPhotoDimensions<
+    WatchPhoto & { image_width?: number | null; image_height?: number | null }
+  >("id, watch_id, storage_path, thumb_path, display_order, is_cover, angle", (columns) =>
+    supabase.from("watch_photos").select(columns).in("watch_id", watchIds)
+  )
 
-  // Build a map of watch_id -> cover image path. Prefer the small thumbnail
-  // (fast); fall back to the full image for photos not yet thumbnailed.
+  /**
+   * Which frame represents a watch in a dense, cropping grid.
+   *
+   * Phase 9 §1.1 replaced the dial-framing editor with this rule: **the frame
+   * whose aspect is nearest 1:1, then centre-crop, hero angle breaking ties.**
+   * A square-ish frame survives a square crop; a 16:9 reclining shot loses its
+   * ends and a tall wrist shot becomes a forearm. No per-watch input, and it
+   * improves on its own as proper angles get shot.
+   *
+   * Unmeasured photos are EXCLUDED from the comparison rather than assumed
+   * square — they must not win by default. When a watch has no measured photo
+   * at all, the user's `is_cover` choice stands, which is exactly the
+   * behaviour before 00048 was applied.
+   */
   const coverMap = new Map<string, string>()
-  if (coverPhotos) {
-    for (const photo of coverPhotos as WatchPhoto[]) {
-      coverMap.set(photo.watch_id, photo.thumb_path ?? photo.storage_path)
+  if (allPhotos) {
+    const byWatch = new Map<string, typeof allPhotos>()
+    for (const photo of allPhotos) {
+      const list = byWatch.get(photo.watch_id) ?? []
+      list.push(photo)
+      byWatch.set(photo.watch_id, list)
+    }
+    for (const [watchId, photos] of byWatch) {
+      const measured = photos
+        .map((p) => ({ p, d: squareness(p.image_width, p.image_height) }))
+        .filter((c): c is { p: (typeof photos)[number]; d: number } => c.d != null)
+        .sort(
+          (a, b) =>
+            a.d - b.d ||
+            Number(b.p.angle === "hero") - Number(a.p.angle === "hero") ||
+            Number(b.p.is_cover) - Number(a.p.is_cover) ||
+            a.p.display_order - b.p.display_order
+        )
+      const chosen = measured[0]?.p ?? photos.find((p) => p.is_cover) ?? null
+      if (chosen) coverMap.set(watchId, chosen.thumb_path ?? chosen.storage_path)
     }
   }
 
@@ -73,7 +104,7 @@ export async function getWatches(): Promise<WatchWithCover[]> {
   // of this URL: the home hero at 560px, gallery tiles at 280px, and the
   // table's 64px thumbnail with pixels to spare on a HiDPI screen. `contain`
   // caps the long edge without cropping, so callers that frame the image
-  // themselves (object-cover, dial_focal_*) still get the whole frame.
+  // themselves with object-cover still get the whole frame.
   //
   // Two sizes, because one cannot serve both ends: the 720px cover is right
   // for a 560px hero and wrong for a 64px table cell, where a ~9:1 downscale

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { buildStoragePath } from "@/lib/storage"
 import { generateThumbnail, thumbPathFor } from "@/lib/thumbnails"
+import { dimensionColumns, readImageDimensions } from "@/lib/image-meta"
 import { PHOTO_ANGLES } from "@/lib/photo-lab"
 import type { PhotoAngle } from "@/lib/types/watch"
 
@@ -77,8 +78,15 @@ export async function uploadWatchPhoto(
     return { error: `Upload failed: ${uploadError.message}` }
   }
 
+  // One read of the bytes serves both the thumbnail and the dimensions.
+  const bytes = await file.arrayBuffer()
+
   // Generate a small thumbnail for fast Collection loading (best-effort).
-  const thumbPath = await generateThumbnail(supabase, storagePath, await file.arrayBuffer())
+  const thumbPath = await generateThumbnail(supabase, storagePath, bytes)
+
+  // Dimensions of the file as stored (00048). Best-effort: an unreadable
+  // image simply records null and takes the 3:2 fallback everywhere.
+  const dims = await readImageDimensions(bytes)
 
   // Check if this is the first photo (make it the cover)
   const { count } = await supabase
@@ -98,6 +106,7 @@ export async function uploadWatchPhoto(
       thumb_path: thumbPath,
       display_order: count ?? 0,
       is_cover: isFirstPhoto,
+      ...dimensionColumns(dims),
     })
     .select("id")
     .single()

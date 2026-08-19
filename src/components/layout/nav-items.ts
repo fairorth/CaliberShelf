@@ -5,12 +5,10 @@ import {
   Camera,
   ChartColumn,
   Compass,
-  House,
   Images,
   Info,
   Link2,
   List,
-  PackagePlus,
   Settings,
   Tag,
   TrendingUp,
@@ -28,10 +26,11 @@ export interface NavGroup {
   items: NavItem[]
 }
 
-/** Home sits above the groups, ungrouped (04-screen-specs §2). */
-export const NAV_HOME: NavItem = { href: "/dashboard", label: "Home", icon: House }
+/** No Home item: the wordmark in the rail (and the mark in the collapsed rail
+ *  and the header) already navigates to `/dashboard`, and two controls one
+ *  above the other going to the same place is one too many. */
 
-/** The four groups with visible headings, in the mockup's exact order.
+/** The five groups with visible headings, in the order they are read.
  *  Capture is reached inside Photo Lab, never as a rail item (§2). */
 export const NAV_GROUPS: NavGroup[] = [
   {
@@ -43,6 +42,19 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // Imagery sits directly under the collection: the photography practice is
+    // the thing this app is really for, so it outranks the analysis tools.
+    heading: "Imagery",
+    items: [
+      { href: "/photo-lab", label: "Photo Lab", icon: Camera },
+      { href: "/inspiration", label: "Inspiration", icon: Images },
+      // Batch Import is hidden pending its likely removal. The route still
+      // exists and still works if you reach it directly — this only takes it
+      // out of the rail, so nothing is deleted while the decision is open.
+      // { href: "/batch-import", label: "Batch Import", icon: PackagePlus },
+    ],
+  },
+  {
     heading: "Analysis",
     items: [
       { href: "/wear-log", label: "Wear Log", icon: CalendarDays },
@@ -51,23 +63,12 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    // Phase 5 §3.1: Deals is market-side and moves in here; the imagery tools
-    // get their own honest group below. (Both headings are short enough for
-    // the rail's 175px — the old "Acquisition & Imagery" needed 191px and
-    // wrapped, which is why that combined group is gone.)
+    // Phase 5 §3.1: Deals is market-side and lives here.
     heading: "Market",
     items: [
       { href: "/market", label: "Market", icon: TrendingUp },
       { href: "/market/sold", label: "Sold Archive", icon: Archive },
       { href: "/deals", label: "Deals", icon: BadgeDollarSign },
-    ],
-  },
-  {
-    heading: "Imagery",
-    items: [
-      { href: "/photo-lab", label: "Photo Lab", icon: Camera },
-      { href: "/inspiration", label: "Inspiration", icon: Images },
-      { href: "/batch-import", label: "Batch Import", icon: PackagePlus },
     ],
   },
   {
