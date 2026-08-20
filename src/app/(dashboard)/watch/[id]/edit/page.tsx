@@ -14,6 +14,7 @@ import { PhotoGallery } from "../_components/photo-gallery"
 import { PhotoUploader } from "../_components/photo-uploader"
 import { TimegrapherPanel } from "../_components/timegrapher-panel"
 import { StrapPanel } from "../_components/strap-panel"
+import { FormJumpList } from "./_components/form-jump-list"
 import { updateWatch } from "@/lib/actions/watch-actions"
 
 export async function generateMetadata({
@@ -105,9 +106,10 @@ export default async function EditWatchPage({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[420px_1fr] lg:items-start lg:gap-[26px]">
-        {/* Left column: Sticky photo gallery */}
+        {/* Left column: sticky photo column + section nav (§3.6) */}
         <div className="lg:self-start lg:sticky lg:top-[calc(3.5rem+1.5rem)]">
-          <div className="space-y-4">
+          <div className="space-y-4" id="photos">
+            <FormJumpList />
             <PhotoGallery
               photos={watch.watch_photos}
               photoUrls={photoUrls}
@@ -140,12 +142,14 @@ export default async function EditWatchPage({
             stickyBar
             cancelHref={returnTo}
           />
+          <div id="timegrapher">
           <TimegrapherPanel
             watchId={watch.id}
             runs={timegrapherRuns}
             liftAngle={watch.movement?.lift_angle ?? null}
             caliberName={watch.movement?.caliber_name ?? null}
           />
+          </div>
         </div>
       </div>
     </div>

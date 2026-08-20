@@ -51,6 +51,7 @@ import {
 import { caseMaterialLabels } from "@/lib/validations/watch"
 import { cn } from "@/lib/utils"
 import { frameAspect } from "@/lib/frame-aspect"
+import { SPROCKET_STYLE, STRIP_BASE, STRIP_CELL } from "@/lib/strip-style"
 import type {
   LightTableFrame,
   LightTableWatch,
@@ -77,21 +78,9 @@ const STAGE_HEIGHT = 470
 const LOUPE_SIZE = 168
 const LOUPE_ZOOM = 2.4
 
-/** The strip's own surfaces (Phase 8 §1.1). Literal, and deliberately so: the
- *  strip is a photographic object, the way the glance overlay is, and the
- *  palette has no token meaning "the inside of a film strip". The film
- *  vocabulary is scoped to these two values and the sprocket gradient — the
- *  page ground stays slate. */
-const STRIP_BASE = "oklch(0.28 0.010 245)"
-const STRIP_CELL = "oklch(0.22 0.008 245)"
-
-/** Sprocket holes: punched in the PAGE background colour so they read as
- *  holes through the strip rather than pale bars painted on it. */
-const SPROCKET_STYLE = {
-  borderRadius: 2,
-  backgroundImage:
-    "repeating-linear-gradient(90deg, var(--background) 0 11px, transparent 11px 24px)",
-} as const
+// The strip's surfaces now live in `lib/strip-style.ts`, shared with the watch
+// page's photo strip (Phase 9 §2.5) so one watch cannot speak two photo
+// languages.
 
 /** One cell of the fixed rack (§1.2). Every watch renders the same five
  *  angles in the same order, filled or empty, so position becomes information

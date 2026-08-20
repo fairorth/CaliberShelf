@@ -379,7 +379,11 @@ export default async function WatchViewPage({
       <MarketPanel watch={watch} valuations={valuations} listing={listing} sale={sale} />
 
       {/* Strips — each renders an empty state rather than disappearing (A1). */}
-      <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* §2.7 — these span the full measure at 1/2 each rather than sitting in
+          a 3-column grid whose third slot is usually empty. The Strap card is
+          conditional, so a fixed 3-up left a hole on most watches; `auto-fit`
+          fills the row with whatever actually exists. */}
+      <div className="grid gap-3.5 sm:grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
         {!watch.is_wishlist && (
           <Strip
             href="/wear-log"

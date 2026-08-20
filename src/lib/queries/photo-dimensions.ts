@@ -10,7 +10,12 @@ import "server-only"
  * empties and every collection tile loses its photograph — a blank app while
  * someone gets round to pasting the SQL.
  *
- * Resolved once per server process: one failed request, then the answer sticks.
+ * A NEGATIVE answer is only cached briefly. Migrations here are pasted into
+ * the SQL editor against a running dev server, so "the column does not exist"
+ * is a temporary truth that resolves without a deploy — caching it forever
+ * meant the app kept using the fallback long after the column arrived, and
+ * only a restart fixed it. A positive answer is cached for good: a column does
+ * not un-exist.
  */
 
 /** The 00048 columns, appended to a caller's own column list. */
@@ -19,7 +24,11 @@ const DIMENSION_COLUMNS = "image_width, image_height"
 /** Postgres `undefined_column`. */
 const UNDEFINED_COLUMN = "42703"
 
+/** How long a "not there" answer stands before it is worth asking again. */
+const NEGATIVE_TTL_MS = 30_000
+
 let available: boolean | null = null
+let checkedAt = 0
 
 interface QueryResult<T> {
   data: T[] | null
@@ -49,6 +58,10 @@ export async function selectWithPhotoDimensions<T>(
     data: (r.data ?? null) as T[] | null,
     error: r.error,
   })
+  // Re-ask once the negative answer goes stale; a positive one is permanent.
+  if (available === false && Date.now() - checkedAt > NEGATIVE_TTL_MS) {
+    available = null
+  }
   if (available !== false) {
     const res = await select(`${baseColumns}, ${DIMENSION_COLUMNS}`)
     if (!res.error) {
@@ -57,6 +70,7 @@ export async function selectWithPhotoDimensions<T>(
     }
     if (res.error.code !== UNDEFINED_COLUMN) return cast(res)
     available = false
+    checkedAt = Date.now()
     console.warn(
       "watch_photos has no image_width/image_height — apply migration " +
         "00048_add_photo_dimensions.sql, then run `npm run backfill-photo-dimensions`. " +

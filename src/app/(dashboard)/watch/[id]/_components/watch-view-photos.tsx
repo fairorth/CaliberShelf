@@ -23,8 +23,15 @@ import {
   uploadWatchPhoto,
 } from "@/lib/actions/photo-actions"
 import { downscaleImage } from "@/lib/images"
-import { photoSortKey } from "@/lib/photo-lab"
+import {
+  ANGLE_HEADINGS,
+  ANGLE_LABELS,
+  PHOTO_ANGLES,
+  photoSortKey,
+} from "@/lib/photo-lab"
 import { toast } from "sonner"
+import { frameAspect } from "@/lib/frame-aspect"
+import { SPROCKET_STYLE, STRIP_BASE, STRIP_CELL } from "@/lib/strip-style"
 import { cn } from "@/lib/utils"
 import type { PhotoAngle, WatchPhoto } from "@/lib/types/watch"
 
@@ -38,6 +45,9 @@ interface WatchViewPhotosProps {
 /** The watch view page's photo column (A1): cover frame large and
  *  object-contain — never cropped — with a filmstrip below and a dashed
  *  add tile. One click opens the lightbox (D2). */
+/** The cover frame's fixed height; the width follows the photograph (§2.2). */
+const COVER_HEIGHT = 460
+
 export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: WatchViewPhotosProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -172,14 +182,39 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
   }
 
   const coverUrl = photoUrls[cover.storage_path]
+  // The same three bands as the home strip (Phase 8 §1.2): `ordered` already
+  // sorts filled slots by rack order then untagged, and the empty shot-list
+  // cells go last — photographs before plus-signs.
+  const shotAngles = new Set(photos.map((p) => p.angle).filter(Boolean))
+  const missingAngles = PHOTO_ANGLES.filter((a) => !shotAngles.has(a))
+
+  const coverAspect = frameAspect({
+    imageWidth: cover.image_width ?? null,
+    imageHeight: cover.image_height ?? null,
+  })
   const lightboxPhoto = lightboxIndex !== null ? ordered[lightboxIndex] : null
 
   return (
     <div className="space-y-2">
       {fileInput}
 
-      {/* Cover frame — the photo is the subject: contain, never crop (§8). */}
-      <div className="group/cover relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-surface-photo">
+      {/* Cover frame (§2.2) — the box takes its shape from the photograph.
+          It was a fixed 4:3 with the photo contained inside, and with no bloom
+          on this page that left flat grey `--surface-photo` bands either side
+          of every portrait frame: the same defect as the home stage, plainer.
+          Fixed height, width follows the stored aspect, capped at the column.
+
+          object-contain still. Always — the box being right is what makes
+          cropping unnecessary, never a licence for it. */}
+      <div
+        className="group/cover relative mx-auto overflow-hidden rounded-xl border border-border bg-surface-photo"
+        style={
+          coverAspect
+            ? { height: COVER_HEIGHT, aspectRatio: `${coverAspect}`, maxWidth: "100%" }
+            : // Unmeasured: the content-width 3:2 fallback (Phase 8 §2.1).
+              { width: "100%", aspectRatio: "3 / 2" }
+        }
+      >
         <button
           type="button"
           onClick={() => coverUrl && setLightboxIndex(coverIndex)}
@@ -198,9 +233,15 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
             />
           )}
         </button>
-        <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-brass/16 px-2.5 py-0.5 font-mono text-2xs uppercase tracking-[0.1em] text-brass">
-          Cover{cover?.angle ? ` · ${cover.angle}` : ""}
-        </span>
+        {/* §2.5 — `COVER` is pre-Phase-6 vocabulary; the concept is the hero
+            ANGLE. Show the angle name, or nothing at all. Neutral, not brass:
+            brass marks meaning, and "this is the cover" is not a meaning worth
+            the only accent in the app. */}
+        {cover?.angle && (
+          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-card/90 px-2.5 py-0.5 font-mono text-2xs font-medium uppercase tracking-[0.1em] text-foreground">
+            {cover.angle}
+          </span>
+        )}
         <button
           type="button"
           onClick={() => coverUrl && setLightboxIndex(coverIndex)}
@@ -211,59 +252,95 @@ export function WatchViewPhotos({ photos, photoUrls, fullPhotoUrls, watchId }: W
         </button>
       </div>
 
-      {/* Filmstrip: drag to reorder (sort_order); angle tag bottom-left. */}
-      <div className="grid grid-cols-6 gap-2">
-        {ordered.map((photo, index) => {
-          const url = photoUrls[photo.storage_path]
-          return (
-            <button
-              key={photo.id}
-              type="button"
-              draggable
-              onDragStart={() => {
-                dragFrom.current = index
-              }}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault()
-                handleTileDrop(index)
-              }}
-              onClick={() => url && setLightboxIndex(index)}
-              aria-label={`View photo ${index + 1}${photo.angle ? ` (${photo.angle})` : ""}`}
-              className={cn(
-                "relative aspect-square overflow-hidden rounded-lg bg-surface-photo transition-colors duration-150",
-                photo.is_cover
-                  ? "border-2 border-brass"
-                  : "border border-border hover:border-brass"
-              )}
-            >
-              {url && (
-                <Image
-                  src={url}
-                  alt={`Photo ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="120px"
-                  unoptimized
-                />
-              )}
-              {photo.angle && (
-                <span className="absolute bottom-1 left-1 rounded bg-black/55 px-1 py-px font-mono text-2xs uppercase text-white/90">
-                  {photo.angle}
+      {/* ── The strip (§2.5) ───────────────────────────────────────
+          The same vocabulary as the home page: film base, sprockets, 3:2
+          frames, the angle name beneath each, and the same filled-before-empty
+          order. The square tiles this replaces were a second photo language
+          for the same watch — and the `+ ADD` tile said only "there could be
+          more", where the shot-list cells say WHICH more, which is the half
+          worth having.
+
+          Drag-to-reorder and the lightbox survive unchanged. */}
+      <div className="overflow-hidden rounded-lg py-2" style={{ background: STRIP_BASE }}>
+        <div aria-hidden className="mx-3 h-2.5" style={SPROCKET_STYLE} />
+        <div className="flex gap-1.5 overflow-x-auto px-3 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {ordered.map((photo, index) => {
+            const url = photoUrls[photo.storage_path]
+            return (
+              <div
+                key={photo.id}
+                className="flex min-w-0 flex-col gap-1"
+                style={{ flex: "1 0 104px" }}
+              >
+                <button
+                  type="button"
+                  draggable
+                  onDragStart={() => {
+                    dragFrom.current = index
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    handleTileDrop(index)
+                  }}
+                  onClick={() => url && setLightboxIndex(index)}
+                  aria-label={`View photo ${index + 1}${photo.angle ? ` (${photo.angle})` : ""} full size`}
+                  className={cn(
+                    // Inset outline so the brass reads as a selected frame ON
+                    // the strip rather than a card floating above it.
+                    "relative block aspect-[3/2] w-full cursor-zoom-in overflow-hidden outline-2 -outline-offset-2",
+                    photo.is_cover ? "outline outline-brass" : "outline-transparent"
+                  )}
+                  style={{ background: STRIP_CELL }}
+                >
+                  {url && (
+                    <Image
+                      src={url}
+                      alt={`Photo ${index + 1}`}
+                      fill
+                      // A thumbnail is a navigation target, so a crop is right
+                      // here — and only here.
+                      className="object-cover"
+                      sizes="140px"
+                      unoptimized
+                    />
+                  )}
+                </button>
+                {/* The label lives inside the strip, under its frame — muted
+                    white, never brass: brass would make an absence look like
+                    an achievement. */}
+                <span className="truncate text-center font-mono text-2xs tracking-[0.06em] text-white/60">
+                  {photo.angle ? ANGLE_HEADINGS[photo.angle] : "UNTAGGED"}
                 </span>
-              )}
-            </button>
-          )
-        })}
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isPending}
-          aria-label="Add a photo"
-          className="flex aspect-square items-center justify-center gap-1 rounded-lg border border-dashed border-border font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:border-brass/60 hover:text-foreground disabled:opacity-50"
-        >
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" /> Add
-        </button>
+              </div>
+            )
+          })}
+
+          {/* Band 3 — the empty shot-list cells, after every photograph, each
+              naming the angle it wants. */}
+          {missingAngles.map((angle) => (
+            <div
+              key={`slot-${angle}`}
+              className="flex min-w-0 flex-col gap-1"
+              style={{ flex: "1 0 104px" }}
+            >
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isPending}
+                aria-label={`${ANGLE_LABELS[angle]} not shot yet — add a photo`}
+                className="flex aspect-[3/2] w-full items-center justify-center border border-dashed border-white/25 text-white/55 transition-colors hover:border-brass hover:text-brass disabled:opacity-50"
+                style={{ background: STRIP_CELL }}
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <span className="truncate text-center font-mono text-2xs tracking-[0.06em] text-white/60">
+                {ANGLE_HEADINGS[angle]}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div aria-hidden className="mx-3 h-2.5" style={SPROCKET_STYLE} />
       </div>
 
       <AlertDialog

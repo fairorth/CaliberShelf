@@ -177,6 +177,12 @@ export interface WatchPhoto {
   angle: PhotoAngle | null
   /** Filmstrip order (00041); falls back to display_order when null. */
   sort_order: number | null
+  /** Stored pixel dimensions of the composite (00048), after EXIF rotation.
+   *  Null when unmeasured — the box falls back to 3:2 and the photo sits out
+   *  aspect comparison. Optional so a select that predates the column still
+   *  type-checks. */
+  image_width?: number | null
+  image_height?: number | null
   created_at: string
 }
 

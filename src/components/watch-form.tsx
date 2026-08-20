@@ -10,7 +10,19 @@ import {
 } from "react"
 import type { MouseEvent } from "react"
 import { useRouter } from "next/navigation"
-import { Check, Cog, FolderOpen, Layers, Ruler, Settings2, Tag, TrendingUp, X } from "lucide-react"
+import {
+  Check,
+  Cog,
+  FolderOpen,
+  Layers,
+  Plus,
+  Ruler,
+  Settings2,
+  Tag,
+  TrendingUp,
+  Wallet,
+  X,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -75,7 +87,18 @@ interface WatchFormProps {
 }
 
 // Filled dark input with a brass focus ring (the redesign's field treatment).
-const FIELD = "bg-input border-border focus-visible:border-brass/55 focus-visible:ring-brass/25"
+// §3.7 — `--card` with a `--border` hairline, for filled and empty alike.
+// This was `bg-input`, a distinctly grey fill (oklch 0.89 against the card's
+// 0.99), which made every field holding a value look read-only — while the one
+// EMPTY field on the page looked like the only editable one. Exactly backwards.
+// Grey fill is now reserved for genuinely disabled controls.
+const FIELD =
+  "bg-card border-border focus-visible:border-brass/55 focus-visible:ring-brass/25"
+
+// §3.4 — selects must fill their grid cell like every other control. The
+// shadcn trigger is `w-fit` by default, which is why Category rendered about a
+// fifth the width of the text input beside it and the row looked broken.
+const SELECT_FIELD = `${FIELD} w-full`
 
 // Neutral spec card — identity comes from icon + title, not a colored edge
 // (E1: brass is never decoration).
@@ -485,6 +508,13 @@ export function WatchForm({
   )
 
   // Track selected movement for preview
+  // §3.5 — collapsed by default, expanded automatically when any acquisition
+  // cost is already recorded, so an existing value can never be hidden behind
+  // a disclosure the reader has no reason to open.
+  const [showAcqCosts, setShowAcqCosts] = useState(
+    Boolean(watch?.acq_shipping_cents || watch?.acq_tax_cents || watch?.acq_duty_cents)
+  )
+
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
     watch?.movement ?? null
   )
@@ -546,15 +576,17 @@ export function WatchForm({
       <input type="hidden" name="complication" value={complicationValue} />
       <input type="hidden" name="purchase_currency" value={watch?.purchase_currency ?? "USD"} />
 
-      {/* ── Card 1: Identity & Ownership ────────────────────────── */}
-      <Card className={CARD}>
+      {/* ── Card 1: Identity (§3.3) ──────────────────────────────
+          Identity and money are two different things and now live in two
+          cards, matching how the view page has always shown them. */}
+      <Card className={CARD} id="identity">
         <CardHeader className={CARD_HEADER}>
           <CardTitle className={CARD_TITLE}>
             <span className={CHIP}><Tag className="h-4 w-4" aria-hidden="true" /></span>
-            Identity & Ownership
+            Identity
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <FormLabel>Brand <span className="text-brass">*</span></FormLabel>
             <BrandCombobox
@@ -600,7 +632,7 @@ export function WatchForm({
                 setSelectedCategoryId(val ?? "")
               }}
             >
-              <SelectTrigger id="category_select" className={FIELD}>
+              <SelectTrigger id="category_select" className={SELECT_FIELD}>
                 <span>
                   {selectedCategoryId
                     ? categories.find((c) => c.id === selectedCategoryId)?.name ?? "Select a category"
@@ -668,18 +700,46 @@ export function WatchForm({
               )}
             />
           </div>
-          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+          {/* §3.4 — half a row, not the full ~970px. A field the width of a
+              paragraph invites a paragraph; this holds a short alphanumeric
+              code. §3.8 — the reassurance is a persistent help line, not a
+              placeholder that vanishes the moment you start typing, which is
+              precisely when it matters. */}
+          <div className="space-y-2">
             <FormLabel htmlFor="serial_number">Serial Number</FormLabel>
             <Input
               id="serial_number"
               name="serial_number"
-              placeholder="Private — only visible to you"
+              placeholder="e.g. 84726591"
               defaultValue={watch?.serial_number ?? ""}
               className={cn(FIELD, "font-mono text-xs")}
+              aria-describedby="serial_number_help"
             />
+            <p id="serial_number_help" className="text-xs text-muted-foreground">
+              Private — only visible to you.
+            </p>
           </div>
 
-          {/* Ownership fields */}
+        </CardContent>
+      </Card>
+
+      {/* ── Card 2: Ownership (§3.3) ─────────────────────────────
+          Split out of the old `Identity & Ownership`. The view page has
+          always shown Specifications and Ownership as separate cards; the edit
+          page merged identity and money into one, so the same data had two
+          shapes depending on which page you were on.
+
+          §3.4 — settled on 2 columns, with deliberate full-width exceptions
+          (the cost row, the ownership tier, notes). The old card changed
+          rhythm five times top to bottom and read as accretion. */}
+      <Card className={CARD} id="ownership">
+        <CardHeader className={CARD_HEADER}>
+          <CardTitle className={CARD_TITLE}>
+            <span className={CHIP}><Wallet className="h-4 w-4" aria-hidden="true" /></span>
+            Ownership
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <FormLabel htmlFor="purchase_date">Purchase Date</FormLabel>
             <Input
@@ -705,33 +765,50 @@ export function WatchForm({
             />
           </div>
 
-          {/* Acquisition costs (00043) — the DB derives cost basis as
-              purchase + these three in a generated column. */}
-          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-            <FormLabel>Acquisition costs ($) — count toward cost basis</FormLabel>
-            <div className="grid grid-cols-3 gap-3">
-              {(
-                [
-                  ["acq_shipping", "Shipping", watch?.acq_shipping_cents],
-                  ["acq_tax", "Tax", watch?.acq_tax_cents],
-                  ["acq_duty", "Duty", watch?.acq_duty_cents],
-                ] as const
-              ).map(([name, label, cents]) => (
-                <div key={name} className="space-y-1">
-                  <span className="text-xs text-muted-foreground">{label}</span>
-                  <Input
-                    id={name}
-                    name={name}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    defaultValue={dollarsDefault(cents)}
-                    className={cn(FIELD, "font-mono")}
-                  />
+          {/* §3.5 — three fields reading 0.00 on every one of 121 watches is a
+              lot of nothing to scroll past. Collapsed by default, and expanded
+              automatically whenever any of them is non-zero, so the Phase 5
+              cost-basis feature costs nothing on the watches that do not use
+              it. The DB derives cost basis from purchase + these three in a
+              generated column (00043). */}
+          <div className="space-y-2 sm:col-span-2">
+            {showAcqCosts ? (
+              <>
+                <FormLabel>Acquisition costs ($) — count toward cost basis</FormLabel>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {(
+                    [
+                      ["acq_shipping", "Shipping", watch?.acq_shipping_cents],
+                      ["acq_tax", "Tax", watch?.acq_tax_cents],
+                      ["acq_duty", "Duty", watch?.acq_duty_cents],
+                    ] as const
+                  ).map(([name, label, cents]) => (
+                    <div key={name} className="space-y-1">
+                      <span className="text-xs text-muted-foreground">{label}</span>
+                      <Input
+                        id={name}
+                        name={name}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        defaultValue={dollarsDefault(cents)}
+                        className={cn(FIELD, "font-mono")}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAcqCosts(true)}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-brass"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Add acquisition costs (shipping, tax, duty)
+              </button>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -744,7 +821,7 @@ export function WatchForm({
                 setBox(val ?? "")
               }}
             >
-              <SelectTrigger id="box" className={FIELD}>
+              <SelectTrigger id="box" className={SELECT_FIELD}>
                 <span>{box ? boxLabel(box, boxDescriptions) : "No box"}</span>
               </SelectTrigger>
               <SelectContent>
@@ -758,14 +835,15 @@ export function WatchForm({
             </Select>
           </div>
 
-          {/* One Status control — a watch is exactly one of these (C3,
+          {/* One Ownership control — a watch is exactly one of these (C3,
               DECISIONS.md §6). The columns stay is_coming_soon/is_wishlist;
-              the control guarantees they are never both true. */}
-          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-            {/* §2.6 — "Ownership", not "Status". The view page's Lifecycle
-                (Owned → Candidate → Listed → Sold) is a different axis that
-                also contains a value called "Owned"; two controls named the
-                same thing, both offering "Owned", is a collision worth ending. */}
+              the control guarantees they are never both true.
+
+              §2.6 — "Ownership", not "Status". The view page's Lifecycle
+              (Owned → Candidate → Listed → Sold) is a different axis that also
+              contains a value called "Owned"; two controls named the same
+              thing, both offering "Owned", is a collision worth ending. */}
+          <div className="space-y-2 sm:col-span-2">
             <FormLabel>Ownership</FormLabel>
             <input type="hidden" name="is_coming_soon" value={status === "coming_soon" ? "on" : ""} />
             <input type="hidden" name="is_wishlist" value={status === "wishlist" ? "on" : ""} />
@@ -797,7 +875,7 @@ export function WatchForm({
             </p>
           </div>
 
-          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+          <div className="space-y-2 sm:col-span-2">
             <FormLabel htmlFor="notes">Notes</FormLabel>
             <Textarea
               id="notes"
@@ -812,7 +890,7 @@ export function WatchForm({
       </Card>
 
       {/* ── Market card (V8, V10): tracking + target ask ────────── */}
-      <Card className={CARD}>
+      <Card className={CARD} id="market">
         <CardHeader className={CARD_HEADER}>
           <CardTitle className={CARD_TITLE}>
             <span className={CHIP}><TrendingUp className="h-4 w-4" aria-hidden="true" /></span>
@@ -871,7 +949,7 @@ export function WatchForm({
       </Card>
 
       {/* ── Card 2: Specifications ──────────────────────────────── */}
-      <Card className={CARD}>
+      <Card className={CARD} id="specifications">
         <CardHeader className={CARD_HEADER}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className={CARD_TITLE}>
@@ -893,10 +971,21 @@ export function WatchForm({
                 className="shrink-0 border-brass/40 text-brass hover:bg-brass/10 hover:text-brass"
                 title="Search the web for this watch's official specs and fill the empty fields"
               >
-                {isFetchingSpecs ? "Searching the web…" : "✨ Auto-fill specs"}
+                {isFetchingSpecs ? "Searching the web…" : "✨ Fill from AI"}
               </Button>
             </div>
           </div>
+          {/* §3.2 — the rule, stated. Both buttons fill EMPTY fields only and
+              never touch a value you entered; the result panel says how many
+              existing values were kept. Two similar buttons with unstated
+              overwrite behaviour is the kind of thing you press once and never
+              again. */}
+          <p className="mt-2 text-xs text-muted-foreground">
+            Both fill <strong>empty fields only</strong> — nothing you have
+            already entered is changed. <em>Look up reference</em> reads the
+            ChronoScout catalog for dimensions (free); <em>Fill from AI</em>
+            searches the web for the full spec sheet.
+          </p>
         </CardHeader>
         <CardContent className="space-y-5">
           {/* Catalog prefill note — dimensions filled from ChronoScout (free) */}
@@ -1238,7 +1327,7 @@ export function WatchForm({
       {/* Category moved up to Identity & Ownership; with nothing else to hold,
           this card is absent entirely when there are no labels to show. */}
       {labels.length > 0 && (
-      <Card className={CARD}>
+      <Card className={CARD} id="labels">
         <CardHeader className={CARD_HEADER}>
           <CardTitle className={CARD_TITLE}>
             <span className={CHIP}><FolderOpen className="h-4 w-4" aria-hidden="true" /></span>
@@ -1290,8 +1379,12 @@ export function WatchForm({
             <span className={cn("text-sm", isDirty ? "text-brass" : "text-muted-foreground")}>
               {isDirty ? "Unsaved changes" : "All changes saved"}
             </span>
-            <div className="ml-auto flex gap-2.5">
-              {watch && (
+            {/* §3.8 — Delete is separated from Save. It sat immediately
+                adjacent to the two safe actions, which is how a misclick
+                becomes an unrecoverable one. Far left, with the save actions
+                pushed to the right by `ml-auto` on their own group. */}
+            {watch && (
+              <div className="mr-auto pl-4">
                 <AlertDialog>
                   <AlertDialogTrigger
                     render={
@@ -1321,14 +1414,18 @@ export function WatchForm({
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-              )}
+              </div>
+            )}
+            <div className="ml-auto flex gap-2.5">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleReturn}
                 disabled={isPending || isDeleting}
               >
-                Return
+                {/* §3.8 — says where it goes, rather than leaving you to
+                    guess what you are returning to. */}
+                Back to watch
               </Button>
               <Button
                 type="submit"
@@ -1352,7 +1449,7 @@ export function WatchForm({
               <AlertDialogFooter>
                 <AlertDialogCancel>Stay</AlertDialogCancel>
                 <AlertDialogAction onClick={() => router.push(cancelHref)}>
-                  Discard &amp; Return
+                  Discard &amp; go back
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

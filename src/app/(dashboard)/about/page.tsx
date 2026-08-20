@@ -116,8 +116,8 @@ const SECTIONS: Section[] = [
       },
       {
         icon: Crosshair,
-        title: "Thumbnail Framing",
-        text: "Fine-tune each cover's focal point and zoom so the square collection tiles crop where you want them. The home page shows frames uncropped, on a light table.",
+        title: "The Frame Fits The Photograph",
+        text: "No cropping tool, because nothing needs cropping. The home stage sizes itself to each photograph's own shape, and square tiles automatically pick whichever frame is closest to square. Shoot the angles; the app does the fitting.",
       },
       {
         icon: Rocket,

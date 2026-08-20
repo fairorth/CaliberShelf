@@ -84,11 +84,11 @@ export function CatalogCombobox({ defaultQuery = "", onApply, disabled }: Catalo
             size="sm"
             disabled={disabled}
             className="shrink-0 border-brass/40 text-brass hover:bg-brass/10 hover:text-brass"
-            title="Find this model in the ChronoScout catalog and fill empty dimensions"
+            title="Look this model up in the ChronoScout catalog and fill EMPTY dimensions only"
           />
         }
       >
-        <Search className="h-3.5 w-3.5" aria-hidden="true" /> Find in catalog
+        <Search className="h-3.5 w-3.5" aria-hidden="true" /> Look up reference
       </PopoverTrigger>
 
       <PopoverContent align="end" className="w-[min(28rem,90vw)] p-0">
