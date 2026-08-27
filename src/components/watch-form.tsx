@@ -35,7 +35,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SectionCard, SectionSubHeading, SECTION_LABEL } from "@/components/section-card"
 import { Input } from "@/components/ui/input"
 import { Label as FormLabel } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -92,8 +92,12 @@ interface WatchFormProps {
 // 0.99), which made every field holding a value look read-only — while the one
 // EMPTY field on the page looked like the only editable one. Exactly backwards.
 // Grey fill is now reserved for genuinely disabled controls.
+// One step down from the default 15px: these are short values — dates, prices,
+// reference codes — and at 15px in a two-column grid the form was mostly white
+// space. `md:text-xs` is needed because the Input base sets `md:text-sm`, which
+// would otherwise win back the size at the breakpoint that matters.
 const FIELD =
-  "bg-card border-border focus-visible:border-brass/55 focus-visible:ring-brass/25"
+  "bg-card border-border text-xs md:text-xs focus-visible:border-brass/55 focus-visible:ring-brass/25"
 
 // §3.4 — selects must fill their grid cell like every other control. The
 // shadcn trigger is `w-fit` by default, which is why Category rendered about a
@@ -102,10 +106,8 @@ const SELECT_FIELD = `${FIELD} w-full`
 
 // Neutral spec card — identity comes from icon + title, not a colored edge
 // (E1: brass is never decoration).
-const CARD = "overflow-hidden rounded-xl"
-const CARD_HEADER = ""
-const CARD_TITLE = "flex items-center gap-2.5 font-display text-md font-semibold"
-const CHIP = "flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground"
+/** Field labels: 13px muted, the same size as the value beneath them. */
+const LABEL = SECTION_LABEL
 
 type WatchStatus = "owned" | "coming_soon" | "wishlist"
 
@@ -148,7 +150,7 @@ function MeasureField({
 }) {
   return (
     <div className="space-y-1.5">
-      <FormLabel htmlFor={id} className="text-xs text-muted-foreground">
+      <FormLabel htmlFor={id} className={LABEL}>
         {label}
       </FormLabel>
       <div className="relative">
@@ -579,16 +581,9 @@ export function WatchForm({
       {/* ── Card 1: Identity (§3.3) ──────────────────────────────
           Identity and money are two different things and now live in two
           cards, matching how the view page has always shown them. */}
-      <Card className={CARD} id="identity">
-        <CardHeader className={CARD_HEADER}>
-          <CardTitle className={CARD_TITLE}>
-            <span className={CHIP}><Tag className="h-4 w-4" aria-hidden="true" /></span>
-            Identity
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <FormLabel>Brand <span className="text-brass">*</span></FormLabel>
+      <SectionCard id="identity" icon={Tag} title="Identity" contentClassName="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <FormLabel className={LABEL}>Brand <span className="text-brass">*</span></FormLabel>
             <BrandCombobox
               brands={brands}
               defaultBrandId={watch?.brand_id}
@@ -598,23 +593,21 @@ export function WatchForm({
               }}
             />
           </div>
-          <div className="space-y-2">
-            <FormLabel htmlFor="model">Model <span className="text-brass">*</span></FormLabel>
+          <div className="space-y-1">
+            <FormLabel className={LABEL} htmlFor="model">Model <span className="text-brass">*</span></FormLabel>
             <Input
               id="model"
               name="model"
-              placeholder="e.g. Speedmaster Professional"
               defaultValue={watch?.model ?? ""}
               required
               className={FIELD}
             />
           </div>
-          <div className="space-y-2">
-            <FormLabel htmlFor="nickname">Nickname</FormLabel>
+          <div className="space-y-1">
+            <FormLabel className={LABEL} htmlFor="nickname">Nickname</FormLabel>
             <Input
               id="nickname"
               name="nickname"
-              placeholder="e.g. Moonwatch"
               defaultValue={watch?.nickname ?? ""}
               className={FIELD}
             />
@@ -623,8 +616,8 @@ export function WatchForm({
               watch *is* (a design archetype), while a label is something you
               stuck on it. Placed just before Reference Number so the two share
               a row on wide screens. */}
-          <div className="space-y-2">
-            <FormLabel htmlFor="category_select">Category <span className="text-brass">*</span></FormLabel>
+          <div className="space-y-1">
+            <FormLabel className={LABEL} htmlFor="category_select">Category <span className="text-brass">*</span></FormLabel>
             <Select
               value={selectedCategoryId}
               onValueChange={(val) => {
@@ -656,7 +649,7 @@ export function WatchForm({
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <FormLabel htmlFor="reference_number">Reference Number</FormLabel>
+              <FormLabel className={LABEL} htmlFor="reference_number">Reference Number</FormLabel>
               {refUnverified && (
                 <>
                   <span className="rounded-full px-2 py-0.5 text-2xs font-medium text-brass ring-1 ring-brass/45">
@@ -683,7 +676,6 @@ export function WatchForm({
             <Input
               id="reference_number"
               name="reference_number"
-              placeholder="e.g. 310.30.42.50.01.001"
               value={refNumber}
               onChange={(e) => {
                 setRefNumber(e.target.value)
@@ -705,23 +697,17 @@ export function WatchForm({
               code. §3.8 — the reassurance is a persistent help line, not a
               placeholder that vanishes the moment you start typing, which is
               precisely when it matters. */}
-          <div className="space-y-2">
-            <FormLabel htmlFor="serial_number">Serial Number</FormLabel>
+          <div className="space-y-1">
+            <FormLabel className={LABEL} htmlFor="serial_number">Serial Number</FormLabel>
             <Input
               id="serial_number"
               name="serial_number"
-              placeholder="e.g. 84726591"
               defaultValue={watch?.serial_number ?? ""}
               className={cn(FIELD, "font-mono text-xs")}
-              aria-describedby="serial_number_help"
             />
-            <p id="serial_number_help" className="text-xs text-muted-foreground">
-              Private — only visible to you.
-            </p>
           </div>
 
-        </CardContent>
-      </Card>
+      </SectionCard>
 
       {/* ── Card 2: Ownership (§3.3) ─────────────────────────────
           Split out of the old `Identity & Ownership`. The view page has
@@ -732,16 +718,9 @@ export function WatchForm({
           §3.4 — settled on 2 columns, with deliberate full-width exceptions
           (the cost row, the ownership tier, notes). The old card changed
           rhythm five times top to bottom and read as accretion. */}
-      <Card className={CARD} id="ownership">
-        <CardHeader className={CARD_HEADER}>
-          <CardTitle className={CARD_TITLE}>
-            <span className={CHIP}><Wallet className="h-4 w-4" aria-hidden="true" /></span>
-            Ownership
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <FormLabel htmlFor="purchase_date">Purchase Date</FormLabel>
+      <SectionCard id="ownership" icon={Wallet} title="Ownership" contentClassName="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <FormLabel className={LABEL} htmlFor="purchase_date">Purchase Date</FormLabel>
             <Input
               id="purchase_date"
               name="purchase_date"
@@ -751,15 +730,14 @@ export function WatchForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <FormLabel htmlFor="purchase_price">Purchase Price ($)</FormLabel>
+          <div className="space-y-1">
+            <FormLabel className={LABEL} htmlFor="purchase_price">Purchase Price ($)</FormLabel>
             <Input
               id="purchase_price"
               name="purchase_price"
               type="number"
               step="0.01"
               min="0"
-              placeholder="e.g. 6500.00"
               defaultValue={purchasePriceDefault}
               className={cn(FIELD, "font-mono")}
             />
@@ -771,10 +749,10 @@ export function WatchForm({
               cost-basis feature costs nothing on the watches that do not use
               it. The DB derives cost basis from purchase + these three in a
               generated column (00043). */}
-          <div className="space-y-2 sm:col-span-2">
+          <div className="space-y-1 sm:col-span-2">
             {showAcqCosts ? (
               <>
-                <FormLabel>Acquisition costs ($) — count toward cost basis</FormLabel>
+                <FormLabel className={LABEL}>Acquisition costs ($) — count toward cost basis</FormLabel>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {(
                     [
@@ -791,7 +769,6 @@ export function WatchForm({
                         type="number"
                         step="0.01"
                         min="0"
-                        placeholder="0.00"
                         defaultValue={dollarsDefault(cents)}
                         className={cn(FIELD, "font-mono")}
                       />
@@ -811,8 +788,8 @@ export function WatchForm({
             )}
           </div>
 
-          <div className="space-y-2">
-            <FormLabel htmlFor="box">Box</FormLabel>
+          <div className="space-y-1">
+            <FormLabel className={LABEL} htmlFor="box">Box</FormLabel>
             <input type="hidden" name="box" value={box} />
             <Select
               value={box}
@@ -822,7 +799,7 @@ export function WatchForm({
               }}
             >
               <SelectTrigger id="box" className={SELECT_FIELD}>
-                <span>{box ? boxLabel(box, boxDescriptions) : "No box"}</span>
+                <span>{box ? boxLabel(box, boxDescriptions) : ""}</span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">No box</SelectItem>
@@ -843,14 +820,14 @@ export function WatchForm({
               (Owned → Candidate → Listed → Sold) is a different axis that also
               contains a value called "Owned"; two controls named the same
               thing, both offering "Owned", is a collision worth ending. */}
-          <div className="space-y-2 sm:col-span-2">
-            <FormLabel>Ownership</FormLabel>
+          <div className="space-y-1">
+            <FormLabel className={LABEL}>Ownership</FormLabel>
             <input type="hidden" name="is_coming_soon" value={status === "coming_soon" ? "on" : ""} />
             <input type="hidden" name="is_wishlist" value={status === "wishlist" ? "on" : ""} />
             <div
               role="radiogroup"
               aria-label="Ownership"
-              className="inline-flex overflow-hidden rounded-lg border border-border"
+              className="flex h-8 w-full overflow-hidden rounded-lg border border-border"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <button
@@ -860,7 +837,7 @@ export function WatchForm({
                   aria-checked={status === opt.value}
                   onClick={() => setStatus(opt.value)}
                   className={cn(
-                    "px-3.5 py-1.5 text-sm font-medium transition-colors [&:not(:first-child)]:border-l [&:not(:first-child)]:border-border",
+                    "flex-1 px-2 text-xs font-medium transition-colors [&:not(:first-child)]:border-l [&:not(:first-child)]:border-border",
                     status === opt.value
                       ? "bg-brass/15 text-brass"
                       : "text-muted-foreground hover:text-foreground"
@@ -870,124 +847,55 @@ export function WatchForm({
                 </button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {STATUS_OPTIONS.find((o) => o.value === status)?.hint}
-            </p>
           </div>
 
-          <div className="space-y-2 sm:col-span-2">
-            <FormLabel htmlFor="notes">Notes</FormLabel>
+          <div className="space-y-1 sm:col-span-2">
+            <FormLabel className={LABEL} htmlFor="notes">Notes</FormLabel>
             <Textarea
               id="notes"
               name="notes"
-              placeholder="Any additional details about this watch..."
               rows={3}
               defaultValue={watch?.notes ?? ""}
               className={FIELD}
             />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Market card (V8, V10): tracking + target ask ────────── */}
-      <Card className={CARD} id="market">
-        <CardHeader className={CARD_HEADER}>
-          <CardTitle className={CARD_TITLE}>
-            <span className={CHIP}><TrendingUp className="h-4 w-4" aria-hidden="true" /></span>
-            Market
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div
-            className={cn(
-              "flex flex-col justify-center gap-1 text-sm",
-              !hasRef && "opacity-50"
-            )}
-          >
-            <label
-              className={cn(
-                "inline-flex w-fit items-center gap-2",
-                hasRef ? "cursor-pointer" : "cursor-not-allowed"
-              )}
-            >
-              <input
-                type="checkbox"
-                name="price_check_enabled"
-                checked={priceCheckEnabled && hasRef}
-                disabled={!hasRef}
-                onChange={(e) => {
-                  setPriceCheckEnabled(e.target.checked)
-                  markDirty()
-                }}
-                className="h-4 w-4 rounded border-border accent-brass"
-              />
-              <span className="font-medium">Track market value</span>
-            </label>
-            <span className="text-xs text-muted-foreground">
-              {hasRef
-                ? "Include in automated market-value updates."
-                : "Requires a reference number."}
-            </span>
-          </div>
-          <div className="space-y-2">
-            <FormLabel htmlFor="target_ask">Target ask ($)</FormLabel>
-            <Input
-              id="target_ask"
-              name="target_ask"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="e.g. 4300.00"
-              defaultValue={dollarsDefault(watch?.target_ask_cents)}
-              className={cn(FIELD, "font-mono")}
-            />
-            <p className="text-xs text-muted-foreground">
-              The number the market has to cross — drawn on the trend chart.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      </SectionCard>
 
       {/* ── Card 2: Specifications ──────────────────────────────── */}
-      <Card className={CARD} id="specifications">
-        <CardHeader className={CARD_HEADER}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <CardTitle className={CARD_TITLE}>
-              <span className={CHIP}><Settings2 className="h-4 w-4" aria-hidden="true" /></span>
-              Specifications
-            </CardTitle>
-            <div className="flex flex-wrap items-center gap-2">
-              <CatalogCombobox
-                defaultQuery={[selectedBrandName, watch?.model].filter(Boolean).join(" ")}
-                onApply={applyCatalogDimensions}
-                disabled={isFetchingSpecs || isPending || isDeleting}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAutofillSpecs}
-                disabled={isFetchingSpecs || isPending || isDeleting}
-                className="shrink-0 border-brass/40 text-brass hover:bg-brass/10 hover:text-brass"
-                title="Search the web for this watch's official specs and fill the empty fields"
-              >
-                {isFetchingSpecs ? "Searching the web…" : "✨ Fill from AI"}
-              </Button>
-            </div>
+      <SectionCard
+        id="specifications"
+        icon={Settings2}
+        title="Specifications"
+        contentClassName="space-y-5"
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <CatalogCombobox
+              defaultQuery={[selectedBrandName, watch?.model].filter(Boolean).join(" ")}
+              onApply={applyCatalogDimensions}
+              disabled={isFetchingSpecs || isPending || isDeleting}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAutofillSpecs}
+              disabled={isFetchingSpecs || isPending || isDeleting}
+              className="shrink-0 border-brass/40 text-brass hover:bg-brass/10 hover:text-brass"
+              title="Search the web for this watch's official specs and fill the empty fields"
+            >
+              {isFetchingSpecs ? "Searching the web…" : "✨ Fill from AI"}
+            </Button>
           </div>
-          {/* §3.2 — the rule, stated. Both buttons fill EMPTY fields only and
-              never touch a value you entered; the result panel says how many
-              existing values were kept. Two similar buttons with unstated
-              overwrite behaviour is the kind of thing you press once and never
-              again. */}
-          <p className="mt-2 text-xs text-muted-foreground">
-            Both fill <strong>empty fields only</strong> — nothing you have
-            already entered is changed. <em>Look up reference</em> reads the
-            ChronoScout catalog for dimensions (free); <em>Fill from AI</em>
-            searches the web for the full spec sheet.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-5">
+        }
+      >
+        {/* §3.2 — the rule, stated. Both buttons fill EMPTY fields only and
+            never touch a value you entered; the result panel says how many
+            existing values were kept. Two similar buttons with unstated
+            overwrite behaviour is the kind of thing you press once and never
+            again. */}
+        <p className="-mt-1 text-xs text-muted-foreground">
+          Both fill empty fields only — your entries are never changed.
+        </p>
           {/* Catalog prefill note — dimensions filled from ChronoScout (free) */}
           {catalogResult && (
             <div className="space-y-1 rounded-lg border border-brass/30 bg-brass/5 px-4 py-3 text-sm">
@@ -1077,13 +985,9 @@ export function WatchForm({
             </div>
           )}
           {/* Movement subsection */}
-          <div className="flex items-center gap-2 pt-1">
-            <Cog className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">Movement</h4>
-            <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
-          </div>
-          <div className="space-y-2">
-            <FormLabel>Movement / Caliber</FormLabel>
+          <SectionSubHeading icon={Cog}>Movement</SectionSubHeading>
+          <div className="space-y-1">
+            <FormLabel className={LABEL}>Movement / Caliber</FormLabel>
             <MovementCombobox
               movements={movements}
               defaultMovementId={watch?.movement_id ?? undefined}
@@ -1100,31 +1004,25 @@ export function WatchForm({
           )}
 
           {/* Case subsection */}
-          <div className="flex items-center gap-2">
-            <Ruler className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">Case</h4>
-            <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
-          </div>
+          <SectionSubHeading icon={Ruler}>Case</SectionSubHeading>
           {/* Selects submit via hidden inputs (controlled value + name prop
               double-submits on some Select implementations) */}
           <input type="hidden" name="case_material" value={specs.case_material} />
           <input type="hidden" name="crystal" value={specs.crystal} />
           <input type="hidden" name="case_shape" value={specs.case_shape} />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-2">
-              <FormLabel htmlFor="case_material">Case Material</FormLabel>
+          <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-1">
+              <FormLabel className={LABEL} htmlFor="case_material">Case Material</FormLabel>
               <Select
                 value={specs.case_material}
                 onValueChange={(val) => setSpec("case_material", val ?? "")}
               >
                 <SelectTrigger
                   id="case_material"
-                  className={cn(FIELD, specHighlight("case_material"))}
+                  className={cn(SELECT_FIELD, specHighlight("case_material"))}
                 >
                   <span>
-                    {specs.case_material
-                      ? caseMaterialLabels[specs.case_material]
-                      : "None selected"}
+                    {specs.case_material ? caseMaterialLabels[specs.case_material] : ""}
                   </span>
                 </SelectTrigger>
                 <SelectContent>
@@ -1138,15 +1036,15 @@ export function WatchForm({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <FormLabel htmlFor="crystal">Crystal</FormLabel>
+            <div className="space-y-1">
+              <FormLabel className={LABEL} htmlFor="crystal">Crystal</FormLabel>
               <Select
                 value={specs.crystal}
                 onValueChange={(val) => setSpec("crystal", val ?? "")}
               >
-                <SelectTrigger id="crystal" className={cn(FIELD, specHighlight("crystal"))}>
+                <SelectTrigger id="crystal" className={cn(SELECT_FIELD, specHighlight("crystal"))}>
                   <span>
-                    {specs.crystal ? crystalLabels[specs.crystal] : "None selected"}
+                    {specs.crystal ? crystalLabels[specs.crystal] : ""}
                   </span>
                 </SelectTrigger>
                 <SelectContent>
@@ -1160,18 +1058,18 @@ export function WatchForm({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <FormLabel htmlFor="case_shape">Case Shape</FormLabel>
+            <div className="space-y-1">
+              <FormLabel className={LABEL} htmlFor="case_shape">Case Shape</FormLabel>
               <Select
                 value={specs.case_shape}
                 onValueChange={(val) => setSpec("case_shape", val ?? "")}
               >
                 <SelectTrigger
                   id="case_shape"
-                  className={cn(FIELD, specHighlight("case_shape"))}
+                  className={cn(SELECT_FIELD, specHighlight("case_shape"))}
                 >
                   <span>
-                    {specs.case_shape ? caseShapeLabels[specs.case_shape] : "None selected"}
+                    {specs.case_shape ? caseShapeLabels[specs.case_shape] : ""}
                   </span>
                 </SelectTrigger>
                 <SelectContent>
@@ -1185,20 +1083,19 @@ export function WatchForm({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <FormLabel htmlFor="dial_color">Dial Color</FormLabel>
+            <div className="space-y-1">
+              <FormLabel className={LABEL} htmlFor="dial_color">Dial Color</FormLabel>
               <Input
                 id="dial_color"
                 name="dial_color"
-                placeholder="e.g. Black"
                 value={specs.dial_color}
                 onChange={(e) => setSpec("dial_color", e.target.value)}
                 className={cn(FIELD, specHighlight("dial_color"))}
               />
             </div>
 
-            <div className="space-y-2">
-              <FormLabel>Bezel</FormLabel>
+            <div className="space-y-1">
+              <FormLabel className={LABEL}>Bezel</FormLabel>
               <label className="flex h-9 items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -1289,11 +1186,7 @@ export function WatchForm({
           </div>
 
           {/* Complications subsection */}
-          <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <h4 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">Complications</h4>
-            <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
-          </div>
+          <SectionSubHeading icon={Layers}>Complications</SectionSubHeading>
           <div className="space-y-3">
             <div className="flex flex-wrap gap-4">
               {KNOWN_COMPLICATIONS.map((name) => (
@@ -1320,21 +1213,13 @@ export function WatchForm({
               ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </SectionCard>
 
       {/* ── Card 3: Labels ──────────────────────────────────────── */}
       {/* Category moved up to Identity & Ownership; with nothing else to hold,
           this card is absent entirely when there are no labels to show. */}
       {labels.length > 0 && (
-      <Card className={CARD} id="labels">
-        <CardHeader className={CARD_HEADER}>
-          <CardTitle className={CARD_TITLE}>
-            <span className={CHIP}><FolderOpen className="h-4 w-4" aria-hidden="true" /></span>
-            Labels
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <SectionCard id="labels" icon={FolderOpen} title="Labels" contentClassName="space-y-6">
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
                 {labels.map((label) => {
@@ -1357,13 +1242,56 @@ export function WatchForm({
                   )
                 })}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Click to toggle labels. Labels can be managed in Config.
-              </p>
             </div>
-        </CardContent>
-      </Card>
+      </SectionCard>
       )}
+
+      {/* ── Market card (V8, V10): tracking + target ask ────────── */}
+      <SectionCard id="market" icon={TrendingUp} title="Market" contentClassName="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+          <div
+            className={cn(
+              "flex flex-col justify-center gap-1 text-sm",
+              !hasRef && "opacity-50"
+            )}
+          >
+            <label
+              className={cn(
+                "inline-flex w-fit items-center gap-2",
+                hasRef ? "cursor-pointer" : "cursor-not-allowed"
+              )}
+            >
+              <input
+                type="checkbox"
+                name="price_check_enabled"
+                checked={priceCheckEnabled && hasRef}
+                disabled={!hasRef}
+                onChange={(e) => {
+                  setPriceCheckEnabled(e.target.checked)
+                  markDirty()
+                }}
+                className="h-4 w-4 rounded border-border accent-brass"
+              />
+              <span className="font-medium">Track market value</span>
+            </label>
+            {!hasRef && (
+              <span className="text-xs text-muted-foreground">
+                Requires a reference number.
+              </span>
+            )}
+          </div>
+          <div className="space-y-1">
+            <FormLabel className={LABEL} htmlFor="target_ask">Target ask ($)</FormLabel>
+            <Input
+              id="target_ask"
+              name="target_ask"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={dollarsDefault(watch?.target_ask_cents)}
+              className={cn(FIELD, "font-mono")}
+            />
+          </div>
+      </SectionCard>
 
       {stickyBar ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 py-3 backdrop-blur">

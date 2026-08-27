@@ -50,6 +50,19 @@ in `scripts/lib/price-research.mjs`). Rate-limited to one run per watch per
 hour; disabled while the watch isn't opted in; refuses sold watches. Runs are
 logged to `agent_runs` with `trigger = 'ui'`.
 
+The run happens **in the background**. `POST` starts it and returns a run id at
+once; the button polls `GET` on the same path and shows each search and fetch
+with its own duration as it happens. You can leave the page — the job lives in
+the server process, and coming back re-attaches to it. See
+[src/lib/price-check-jobs.ts](../src/lib/price-check-jobs.ts) for the registry
+and its one limitation (it assumes a long-running Node process, not a
+serverless host). A run is capped at 8 minutes of wall clock.
+
+When the run finishes, every step is written to `agent_run_items` — one row per
+search/fetch with its outcome and duration — and surfaced as **Run trace** in
+the Market panel, next to Evidence & sources. Evidence answers "where did this
+number come from"; the trace answers "where did the time go".
+
 ### Manually, from the command line
 
 Requires three keys in `.env.local` (never committed):
@@ -61,11 +74,11 @@ npm run price-check                        # all flagged watches
 npm run price-check -- --dry-run           # research + print, no DB write
 npm run price-check -- --limit 3           # first N (highest purchase price first)
 npm run price-check -- --watch <uuid>      # one watch (uuid is in the edit-page URL)
-npm run price-check -- --max-uses 12       # deeper research (default 6 searches + 6 fetches)
+npm run price-check -- --max-uses 14       # deeper research (default 10 searches + 8 fetches)
 ```
 
 Flags combine — e.g. a full-depth re-check of one watch:
-`npm run price-check -- --watch <uuid> --max-uses 12`
+`npm run price-check -- --watch <uuid> --max-uses 14`
 
 ### Manually, from GitHub
 
@@ -102,17 +115,33 @@ reason — trend over months is the signal, a single run is a sample.
 
 ## Cost management
 
-Observed costs (2026-07): a single watch at the default 6/6 depth on Sonnet 5
+Observed costs (2026-07): a single watch at the default depth on Sonnet 5
 uses ~200–400k tokens ≈ **$0.60–1.20**; a 32-watch monthly run ≈ **$25–40**.
 Cost levers, in order of impact:
 
 1. **Which watches are flagged** — the `$$` list *is* the budget.
-2. **`--max-uses`** — 6 (default) vs 12 roughly doubles tokens; identical mid
-   estimates in testing, but more datapoints and higher confidence.
+2. **`--max-uses`** — deeper research means more tokens, but note the caveat
+   below: a cap the model does not know about costs MORE, not less.
 3. **Model** — `MODEL` constant in [scripts/lib/price-research.mjs](../scripts/lib/price-research.mjs).
    `claude-sonnet-5` (current) is ~60% cheaper than `claude-opus-4-8`.
 4. **Anthropic spend limit** — console.anthropic.com → Billing → Limits
    (set to $100/month).
+
+### Why the caps are stated in the prompt
+
+`max_uses` is enforced by the API: a call past the cap comes back
+`max_uses_exceeded` and tells the model nothing. A traced run at the old 6/6
+caps spent its budget, then issued **nine more searches and three constructed
+URLs**, every one rejected, thinking between each — 13 of 22 tool calls wasted,
+19 thinking blocks, 2m38s wall clock for a low-confidence answer.
+
+So `SYSTEM_PROMPT` now states the budget ("you have N searches and M fetches …
+when the budget is gone, STOP and answer with what you have") and the rule that
+`web_fetch` can only open a URL that appeared in a search result. **If you
+change `DEFAULT_MAX_SEARCHES` / `DEFAULT_MAX_FETCHES`, the prompt follows
+automatically** — `buildSystemPrompt()` takes them as arguments, and
+`researchWatch` passes the same numbers to both the prompt and the tools.
+Never set the tool caps without the prompt seeing the same values.
 
 Audit trails: per-watch token counts print in every run log
 (`[N tokens]` — searchable in the Actions log viewer), exact dollar spend at
@@ -185,7 +214,7 @@ and reads whatever pages come back the way a human would. Consequences:
 - **A watch was skipped in a run** — check its `price_check_enabled` flag;
   `--limit N` also cuts the list after the N highest-priced watches.
 - **Low confidence / few datapoints** — thin market or rare variant. Re-run
-  that watch with `--max-uses 12` for a higher-evidence estimate.
+  that watch with `--max-uses 14` for a higher-evidence estimate.
 
 ## Roadmap
 

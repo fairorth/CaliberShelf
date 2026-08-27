@@ -16,8 +16,21 @@ export const MAX_TOKENS = 32000
 export const PRICE_PER_MTOK = { input: 3, output: 15 }
 export const PRICE_PER_SEARCH = 0.01
 // Per-watch cap on web searches and fetches — the main cost lever.
-// 6/6 keeps a typical run under half the tokens of the 12/12 default.
-export const DEFAULT_MAX_USES = 6
+//
+// These are enforced by the API, which REJECTS a call past the cap with
+// `max_uses_exceeded`. A traced run at 6/6 showed the model spending its
+// budget, then issuing nine more searches and getting refused every time,
+// thinking between each one: 13 of 22 tool calls rejected, 19 thinking blocks,
+// 2m38s wall clock. Capping tools without telling the model about the cap does
+// not save money — it buys a flailing loop whose thinking tokens cost more
+// than the searches would have.
+//
+// So the caps are stated in the prompt (see SYSTEM_PROMPT) and set with a
+// little headroom. Searches bill at a cent each; the tokens do not.
+export const DEFAULT_MAX_SEARCHES = 10
+export const DEFAULT_MAX_FETCHES = 8
+/** @deprecated kept so existing callers passing `maxUses` still work. */
+export const DEFAULT_MAX_USES = DEFAULT_MAX_SEARCHES
 
 // ── Output contract for the agent ────────────────────────────────
 export const valuationSchema = z.object({
@@ -43,7 +56,15 @@ export const valuationSchema = z.object({
 
 // Sources are configured in plain English here — guidance, not a boundary
 // (docs/price-check.md). Site and method edits are safe; the JSON block is not.
-export const SYSTEM_PROMPT = `You are a watch market analyst producing structured valuations for a collection-tracking database.
+export function buildSystemPrompt({
+  maxSearches = DEFAULT_MAX_SEARCHES,
+  maxFetches = DEFAULT_MAX_FETCHES,
+} = {}) {
+  return `You are a watch market analyst producing structured valuations for a collection-tracking database.
+
+Your research budget for this task is ${maxSearches} web searches and ${maxFetches} web fetches. These are hard limits enforced by the tools: once spent, every further call is REJECTED and tells you nothing. Plan for them, and when the budget is gone, STOP researching and answer with what you have — a low-confidence estimate from four data points is a useful answer; another rejected search is not.
+
+web_fetch can only open a URL that already appeared in a search result. Never construct or guess a URL — searching for the page is the way to reach it.
 
 Method:
 1. Use web search and web fetch extensively. Prioritize SOLD/completed prices (eBay sold listings, auction results from Grailzee/Bezel/Phillips/Loupe This) over asking prices. Chrono24 and dealer asking prices skew 10-20% high — usable, but discount accordingly and label them "asking".
@@ -66,6 +87,10 @@ Your FINAL message must be RAW JSON ONLY — no markdown fences, no prose before
   "caveats": "<1-3 sentences: variant ambiguity, thin data, market trend>"
 }
 Numbers are whole USD. "market_value_mid_usd" = realistic private-sale value (what it would actually sell for), not dealer retail.`
+}
+
+/** The default-budget prompt, kept as a constant for callers that want it. */
+export const SYSTEM_PROMPT = buildSystemPrompt()
 
 /** The per-watch user prompt. `watch` needs model/reference_number/nickname/
  *  purchase_price_cents and joined brand/movement rows (see WATCH_SELECT). */
@@ -90,34 +115,127 @@ export const WATCH_SELECT =
   "id, user_id, model, reference_number, nickname, purchase_price_cents, brand:brands(name), movement:movements(caliber_name, manufacturer)"
 
 /**
+ * Pull the outcome of a server-tool result block into a flat, loggable shape.
+ * Search results arrive as an array of hits; fetches as one document. Either
+ * can instead be an `*_tool_result_error` object carrying an `error_code` —
+ * that is the case worth seeing in a trace, because a blocked or timed-out
+ * fetch costs wall-clock time and returns nothing.
+ */
+function resultOutcome(block) {
+  const content = block.content
+  if (!content) return { ok: false, detail: "empty result" }
+  if (!Array.isArray(content)) {
+    if (typeof content.type === "string" && content.type.endsWith("_error")) {
+      return { ok: false, detail: content.error_code ?? "error" }
+    }
+    return { ok: true, detail: "fetched" }
+  }
+  if (content.length === 0) return { ok: true, detail: "0 results" }
+  return { ok: true, detail: `${content.length} result${content.length === 1 ? "" : "s"}` }
+}
+
+/**
  * Research one watch with web search + fetch and return the Zod-validated
  * valuation plus token/search usage.
+ *
+ * `onStep` receives one object per traceable event —
+ * `{ seq, kind, label, ok, detail, ms }` — as it happens. It exists because a
+ * run can take tens of minutes and, without it, there is no way to tell a slow
+ * fetch from a long think from a continuation loop. It must never throw; the
+ * caller's failures are swallowed rather than killing the research.
+ *
  * @param {import("@anthropic-ai/sdk").default} anthropic
  * @param {object} watch  row shaped like WATCH_SELECT
- * @param {{ maxUses?: number }} [opts]
+ * @param {{ maxUses?: number, onStep?: (step: object) => void, signal?: AbortSignal }} [opts]
  * @returns {Promise<{ valuation: z.infer<typeof valuationSchema>, usage: { input: number, output: number, searches: number } }>}
  */
-export async function researchWatch(anthropic, watch, { maxUses = DEFAULT_MAX_USES } = {}) {
+export async function researchWatch(
+  anthropic,
+  watch,
+  {
+    maxUses,
+    maxSearches = maxUses ?? DEFAULT_MAX_SEARCHES,
+    maxFetches = maxUses ?? DEFAULT_MAX_FETCHES,
+    onStep,
+    signal,
+  } = {}
+) {
   const messages = [{ role: "user", content: watchPrompt(watch) }]
+  // The numbers in the prompt and the numbers on the tools must be the same
+  // numbers, or the advice is worse than none.
+  const system = buildSystemPrompt({ maxSearches, maxFetches })
   const tools = [
-    { type: "web_search_20260209", name: "web_search", max_uses: maxUses },
-    { type: "web_fetch_20260209", name: "web_fetch", max_uses: maxUses },
+    { type: "web_search_20260209", name: "web_search", max_uses: maxSearches },
+    { type: "web_fetch_20260209", name: "web_fetch", max_uses: maxFetches },
   ]
 
   let response
   let continuations = 0
   const usage = { input: 0, output: 0, searches: 0 }
 
+  let seq = 0
+  let mark = Date.now()
+  /** tool_use_id → { kind, label, startedAt } for calls awaiting their result. */
+  const pending = new Map()
+  const emit = (step) => {
+    if (!onStep) return
+    try {
+      onStep({ seq: ++seq, ...step })
+    } catch {
+      // a trace consumer must never be able to break the research
+    }
+  }
+
   // Server tools run in a server-side loop; resume on pause_turn.
   for (;;) {
-    const stream = anthropic.messages.stream({
-      model: MODEL,
-      max_tokens: MAX_TOKENS,
-      thinking: { type: "adaptive" },
-      system: SYSTEM_PROMPT,
-      tools,
-      messages,
+    const stream = anthropic.messages.stream(
+      {
+        model: MODEL,
+        max_tokens: MAX_TOKENS,
+        thinking: { type: "adaptive" },
+        system,
+        tools,
+        messages,
+      },
+      signal ? { signal } : undefined
+    )
+
+    // Blocks arrive already finalized here, so a server_tool_use block is the
+    // moment the request went out and its matching *_tool_result block is the
+    // moment the answer came back. The gap between them is the tool's real
+    // latency — the number we could not see before.
+    stream.on("contentBlock", (block) => {
+      const now = Date.now()
+      if (block.type === "thinking" || block.type === "redacted_thinking") {
+        emit({ kind: "thinking", label: "Thinking", ok: true, ms: now - mark })
+        mark = now
+        return
+      }
+      if (block.type === "server_tool_use") {
+        const input = block.input ?? {}
+        pending.set(block.id, {
+          kind: block.name === "web_fetch" ? "web_fetch" : "web_search",
+          label: String(input.query ?? input.url ?? block.name),
+          startedAt: now,
+        })
+        mark = now
+        return
+      }
+      if (block.type === "web_search_tool_result" || block.type === "web_fetch_tool_result") {
+        const call = pending.get(block.tool_use_id)
+        pending.delete(block.tool_use_id)
+        const outcome = resultOutcome(block)
+        emit({
+          kind: call?.kind ?? (block.type === "web_fetch_tool_result" ? "web_fetch" : "web_search"),
+          label: call?.label ?? "(unknown)",
+          ok: outcome.ok,
+          detail: outcome.detail,
+          ms: call ? now - call.startedAt : null,
+        })
+        mark = now
+      }
     })
+
     response = await stream.finalMessage()
     usage.input += response.usage.input_tokens
     usage.output += response.usage.output_tokens
@@ -127,6 +245,16 @@ export async function researchWatch(anthropic, watch, { maxUses = DEFAULT_MAX_US
     if (++continuations > 5) {
       throw new Error("Exceeded max pause_turn continuations")
     }
+    // Each continuation is a fresh request that replays the whole transcript,
+    // so it re-bills every prior token. Worth seeing in the trace.
+    emit({
+      kind: "turn",
+      label: `Continuation ${continuations}`,
+      ok: true,
+      detail: "server paused the turn",
+      ms: Date.now() - mark,
+    })
+    mark = Date.now()
     messages.push({ role: "assistant", content: response.content })
   }
 

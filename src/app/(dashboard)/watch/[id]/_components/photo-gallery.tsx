@@ -23,8 +23,8 @@ import { SPROCKET_STYLE, STRIP_BASE, STRIP_CELL } from "@/lib/strip-style"
 import { cn } from "@/lib/utils"
 import type { WatchPhoto } from "@/lib/types/watch"
 
-/** The hero's fixed height; width follows the photograph (§2.2). */
-const HERO_HEIGHT = 380
+/** Cap so a very tall frame cannot run off the screen in the sidebar. */
+const HERO_MAX_HEIGHT = 560
 
 /** The two fields `frameAspect` needs, from a WatchPhoto. */
 function toFrameDims(p: WatchPhoto) {
@@ -132,11 +132,16 @@ export function PhotoGallery({ photos, photoUrls, fullPhotoUrls, watchId }: Phot
             onClick={() => heroUrl && setLightboxIndex(0)}
             aria-label="View the cover photo full size"
             className="group/photo relative block cursor-zoom-in overflow-hidden rounded-lg bg-surface-photo"
+            // Width-driven here, unlike the home stage and the view page.
+            // This is a sidebar preview in a fixed column, so filling the
+            // column is what uses the space; a fixed height would leave a
+            // portrait frame narrow with the column empty either side. The
+            // aspect is still the photograph's own and the cap stops a very
+            // tall frame running off the screen — never a crop.
             style={
               heroAspect
-                ? { height: HERO_HEIGHT, aspectRatio: `${heroAspect}`, maxWidth: "100%" }
-                : // Unmeasured: the 3:2 fallback, exactly as Phase 8 §2.1 has it.
-                  { width: "100%", aspectRatio: "3 / 2" }
+                ? { width: "100%", aspectRatio: `${heroAspect}`, maxHeight: HERO_MAX_HEIGHT }
+                : { width: "100%", aspectRatio: "3 / 2" }
             }
           >
             {heroUrl ? (

@@ -150,32 +150,6 @@ function formatDay(iso: string): string {
   return `${String(Number(d)).padStart(2, "0")} ${MONTHS[Number(m) - 1]} ${y}`
 }
 
-/**
- * "today" · "yesterday" · "12 days ago" · "3 months ago" · "a year ago".
- * Null until the clock mounts, so SSR and hydration render the same markup
- * (the `now`-after-mount pattern). One formatter for both the ACQUIRED age
- * and LAST WORN — extended for months and years rather than duplicated.
- */
-function relativeAge(iso: string, now: Date | null): string | null {
-  if (!now) return null
-  const days = Math.max(
-    0,
-    Math.floor((now.getTime() - new Date(iso + "T00:00:00").getTime()) / 86_400_000)
-  )
-  if (days === 0) return "today"
-  if (days === 1) return "yesterday"
-  if (days < 30) return `${days} days ago`
-  const months = Math.floor(days / 30.44)
-  if (months < 12) return months === 1 ? "a month ago" : `${months} months ago`
-  const years = Math.floor(days / 365.25)
-  return years === 1 ? "a year ago" : `${years} years ago`
-}
-
-/** LAST WORN: the relative age once mounted, the plain date before that. */
-function wornLabel(iso: string, now: Date | null): string {
-  return relativeAge(iso, now) ?? formatDay(iso)
-}
-
 /** "+2 S/D" — the rate, signed, because a watch running fast and one running
  *  slow are not the same fact. Null when the run recorded no rate. */
 function timingShort(w: LightTableWatch): string | null {
@@ -200,11 +174,14 @@ function timingShort(w: LightTableWatch): string | null {
 function specLine(w: LightTableWatch, opts?: { withCase?: boolean }): string {
   const line = [
     w.referenceNumber?.toUpperCase(),
-    w.caliberLine?.toUpperCase(),
-    w.beatRate?.toUpperCase(),
-    w.powerReserve?.toUpperCase(),
-    timingShort(w),
-    // Glance mode has no facts band, so it carries the case size inline.
+    // The movement moved to the SPECS column, so the stage's line no longer
+    // repeats it. Glance mode has no facts band at all, so it still carries
+    // the movement, the timing and the case size inline — there is nowhere
+    // else on that screen for them to go.
+    opts?.withCase ? w.caliberLine?.toUpperCase() : null,
+    opts?.withCase ? w.beatRate?.toUpperCase() : null,
+    opts?.withCase ? w.powerReserve?.toUpperCase() : null,
+    opts?.withCase ? timingShort(w) : null,
     opts?.withCase && w.caseDiameterMm != null ? `${w.caseDiameterMm}MM` : null,
   ]
     .filter(Boolean)
@@ -231,23 +208,83 @@ function specLine(w: LightTableWatch, opts?: { withCase?: boolean }): string {
   return [complications, material].filter(Boolean).join(" · ")
 }
 
-/** "39 × 11.5 mm", or just the diameter when no height is recorded. */
-function caseSize(w: LightTableWatch): string {
-  if (w.caseDiameterMm == null) return "—"
-  if (w.caseHeightMm == null) return `${w.caseDiameterMm} mm`
-  return `${w.caseDiameterMm} × ${w.caseHeightMm} mm`
+/**
+ * "42 × 13 mm · lug 20 · L2L 49" — every case dimension on ONE line.
+ *
+ * The unit is stated once, at the front, and the rest are bare numbers behind
+ * their own labels: at a glance the shape of a watch is four numbers, and
+ * repeating "mm" four times is three more words than the reader needs.
+ */
+function specDimensions(w: LightTableWatch): string {
+  const size =
+    w.caseDiameterMm == null
+      ? null
+      : w.caseHeightMm == null
+        ? `${w.caseDiameterMm} mm`
+        : `${w.caseDiameterMm} × ${w.caseHeightMm} mm`
+  const parts = [
+    size,
+    w.strapWidthMm != null ? `lug ${w.strapWidthMm}` : null,
+    w.lugToLugMm != null ? `L2L ${w.lugToLugMm}` : null,
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(" · ") : "—"
 }
 
-/** "20 mm lugs · 47 mm lug-to-lug" — whichever of the two exists. */
-function caseDetail(w: LightTableWatch): string | null {
-  const parts = [
-    w.strapWidthMm != null ? `${w.strapWidthMm} mm lugs` : null,
-    w.lugToLugMm != null ? `${w.lugToLugMm} mm lug-to-lug` : null,
+/**
+ * The last timegrapher run: "Accuracy: 17 Aug 2026 · +12 s/d / 275°".
+ *
+ * Always returns a line. An unmeasured watch reads `Accuracy: never`, which
+ * pairs with the wear line's `Worn: never` above it and keeps every ACTIVITY
+ * column the same height as the rotation advances.
+ */
+function accuracySummary(w: LightTableWatch): string {
+  const t = w.timing
+  if (!t) return "Accuracy: never"
+  const readings = [
+    t.rateSecPerDay != null
+      ? `${t.rateSecPerDay > 0 ? "+" : ""}${t.rateSecPerDay} s/d`
+      : null,
+    t.amplitudeDeg != null ? `${t.amplitudeDeg}°` : null,
   ].filter(Boolean)
-  return parts.length > 0 ? parts.join(" · ") : null
+  return [`Accuracy: ${formatDay(t.runDate)}`, readings.join(" / ")]
+    .filter((part) => part !== "")
+    .join(" · ")
+}
+
+/** Which of the three ownership states this watch is in. */
+function ownershipLabel(w: LightTableWatch): string {
+  if (w.isWishlist) return "wish list"
+  if (w.isComingSoon) return "coming soon"
+  return "owned"
+}
+
+/** "Worn: 23 Jun 2026 · 12×" — the date it was last on a wrist, then the tally. */
+function wearSummary(w: LightTableWatch): string {
+  if (w.isWishlist) return "Worn: not yet owned"
+  if (w.wearCount === 0) return "Worn: never — give it a day"
+  const parts = [
+    w.lastWornDate ? formatDay(w.lastWornDate) : null,
+    `${w.wearCount}×`,
+  ].filter(Boolean)
+  return `Worn: ${parts.join(" · ")}`
 }
 
 const EYEBROW = "font-mono text-2xs tracking-[0.14em] text-muted-foreground"
+
+/**
+ * The facts band's two text roles — the ONLY two. Declared once so the four
+ * columns cannot drift apart on face, size or colour:
+ *
+ *   caption  · 11px mono, muted   (EYEBROW, above)
+ *   line 1   · 13px mono, foreground
+ *   line 2   · 13px mono, muted
+ *
+ * Nothing in the band is coloured. Brass is the app's action/brand accent and
+ * these are facts, not actions; a single brown value among black ones reads as
+ * a mistake rather than as emphasis.
+ */
+const FACT_VALUE = "font-mono text-xs text-foreground"
+const FACT_DETAIL = "font-mono text-xs text-muted-foreground"
 
 /** The ROTATION menu's groups, in order. The first carries no heading — it is
  *  the standing sets, and a heading over them would only label the obvious. */
@@ -537,13 +574,9 @@ export function LightTable({ sets, seed }: LightTableProps) {
     setDwellSeconds(readHeroDwellSeconds())
   }, [])
 
-  // Clock for the relative LAST WORN label — null until mounted so SSR and
-  // hydration agree (the watch-hero pattern).
-  const [now, setNow] = useState<Date | null>(null)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- the clock only exists client-side, so SSR and hydration agree
-    setNow(new Date())
-  }, [])
+  // No `now`-after-mount clock any more: every date in the facts band is
+  // absolute, so nothing here depends on when the page was rendered. One less
+  // state, one less effect, and no SSR/hydration date to keep in step.
 
   // prefers-reduced-motion freezes the whole stage (lifted from watch-hero):
   // no auto-advance, no ring sweep, no loupe.
@@ -866,9 +899,6 @@ export function LightTable({ sets, seed }: LightTableProps) {
       { width: "100%", aspectRatio: "3 / 2" }
 
   const watchName = `${watch.brandName} ${watch.model}`.trim()
-  // §1.4 — nulls become invitations, on owned watches only.
-  const neverWorn = !watch.isWishlist && watch.wearCount === 0
-  const acquiredAge = watch.purchaseDate ? relativeAge(watch.purchaseDate, now) : null
 
   // The unshot angles are no longer counted here: the strip's empty cells ARE
   // the shot list, and the sentence that used to spell that out was Photo Lab
@@ -924,79 +954,6 @@ export function LightTable({ sets, seed }: LightTableProps) {
           only agree at the top — so the shorter one always ended early and
           left a hole, and a one-frame watch rendered that frame twice at once.
           Nothing sits beside anything else here except the small control row. */}
-
-      {/* The top row holds the rotation control and nothing else. The
-          `On the table` page heading is gone: the phrase survives as the
-          NOW ON THE TABLE eyebrow under the frame, where it labels the actual
-          watch instead of the page. */}
-      <div className="flex justify-end">
-        <div className="flex min-w-0 flex-col items-end gap-1.5">
-          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger
-              render={
-                <button
-                  type="button"
-                  aria-label={`Rotation set: ${set.label}`}
-                  className="flex h-[34px] flex-none items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-foreground transition-colors hover:border-brass/50"
-                />
-              }
-            >
-              <Layers className="size-4 text-muted-foreground" aria-hidden />
-              <span className={EYEBROW}>ROTATION</span>
-              <span className="font-medium">{set.label}</span>
-              <ChevronDown className="size-4 text-muted-foreground" aria-hidden />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[300px]">
-              <DropdownMenuGroup>
-                {/* Three headed groups, in the order they were added to the
-                    app: the standing sets, then the guides, then the boxes.
-                    A group with no members renders nothing at all rather than
-                    an empty heading. */}
-                {ROTATION_GROUPS.map(({ group, heading }) => {
-                  const inGroup = sets.filter((s) => s.group === group)
-                  if (inGroup.length === 0) return null
-                  return (
-                    // Fragment, not a wrapper element: Base UI's menu walks its
-                    // own children for roving focus, and a div between the menu
-                    // and its items breaks arrow-key navigation.
-                    <Fragment key={group}>
-                      {heading && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuLabel className={EYEBROW}>
-                            {heading}
-                          </DropdownMenuLabel>
-                        </>
-                      )}
-                      {inGroup.map((s) => (
-                        <SetItem
-                          key={s.id}
-                          set={s}
-                          active={s.id === requestedSetId}
-                          onChoose={chooseSet}
-                        />
-                      ))}
-                    </Fragment>
-                  )
-                })}
-                <DropdownMenuSeparator />
-                <p className="px-2 py-1.5 text-2xs leading-relaxed text-muted-foreground">
-                  Only watches with photographed frames enter the rotation.
-                </p>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {/* One number, and it is the counter's denominator (Phase 8 §3).
-              The set name is not repeated here — the control above says it. */}
-          <p className={EYEBROW}>{queue.length} IN ROTATION</p>
-          {fellBack && requested && (
-            <p className="text-right text-xs text-muted-foreground">
-              {requested.label} has no photographed frames yet — showing All
-              Watches.
-            </p>
-          )}
-        </div>
-      </div>
 
       {/* ── The frame (Phase 8 §2.1) ───────────────────────────────
           The box takes its shape from the photograph, not the other way round.
@@ -1194,8 +1151,76 @@ export function LightTable({ sets, seed }: LightTableProps) {
             Open watch
             <ArrowUpRight className="size-4" aria-hidden />
           </Link>
+
+          {/* The rotation control belongs WITH the controls that step it.
+              Its count line is gone: the counter three items to the left
+              already reads `01 / 121`, so `121 IN ROTATION` was the same
+              number twice — and losing it lets the control sit on the row's
+              baseline with Previous and Next instead of floating above them. */}
+          <span aria-hidden className="h-4 w-px bg-border" />
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger
+            render={
+              <button
+                type="button"
+                aria-label={`Rotation set: ${set.label}`}
+                className="flex h-[34px] flex-none items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs text-foreground transition-colors hover:border-brass/50"
+              />
+            }
+          >
+            <Layers className="size-4 text-muted-foreground" aria-hidden />
+            <span className={EYEBROW}>ROTATION</span>
+            <span className="font-medium">{set.label}</span>
+            <ChevronDown className="size-4 text-muted-foreground" aria-hidden />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[300px]">
+            <DropdownMenuGroup>
+              {/* Three headed groups, in the order they were added to the
+                  app: the standing sets, then the guides, then the boxes.
+                  A group with no members renders nothing at all rather than
+                  an empty heading. */}
+              {ROTATION_GROUPS.map(({ group, heading }) => {
+                const inGroup = sets.filter((s) => s.group === group)
+                if (inGroup.length === 0) return null
+                return (
+                  // Fragment, not a wrapper element: Base UI's menu walks its
+                  // own children for roving focus, and a div between the menu
+                  // and its items breaks arrow-key navigation.
+                  <Fragment key={group}>
+                    {heading && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className={EYEBROW}>
+                          {heading}
+                        </DropdownMenuLabel>
+                      </>
+                    )}
+                    {inGroup.map((s) => (
+                      <SetItem
+                        key={s.id}
+                        set={s}
+                        active={s.id === requestedSetId}
+                        onChoose={chooseSet}
+                      />
+                    ))}
+                  </Fragment>
+                )
+              })}
+              <DropdownMenuSeparator />
+              <p className="px-2 py-1.5 text-2xs leading-relaxed text-muted-foreground">
+                Only watches with photographed frames enter the rotation.
+              </p>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
+
+      {fellBack && requested && (
+        <p className="text-right text-xs text-muted-foreground">
+          {requested.label} has no photographed frames yet — showing All Watches.
+        </p>
+      )}
 
       {/* ── The strip (Phase 8 §1.1 + §1.2) ────────────────────────
           Replaces the square contact sheet, and is now the ONLY place
@@ -1339,81 +1364,75 @@ export function LightTable({ sets, seed }: LightTableProps) {
       </div>
 
 
-      {/* ── The facts (Phase 8 §1) ─────────────────────────────────
-          Four labelled columns of equal width. The old three-column row was
-          too narrow for the Phase 7 invitation copy, which wrapped mid-phrase
-          (`12 May 2026 · 3` / `months ago`); each column now carries a mono
-          value and a muted second line instead of one crowded string. */}
+      {/* ── The facts ──────────────────────────────────────────────
+          Four labelled columns of equal width, left to right in the order the
+          eye wants them: what it is to you, what it is, what it has been
+          doing, where it lives.
+
+          ONE type scale for the whole band, so nothing reads as a different
+          kind of thing than its neighbour: the caption is 11px mono muted,
+          the first line 13px mono at full strength, the second 13px mono
+          muted. Three of the four second lines used to be set in the sans
+          face, which made those columns look like captioned values while
+          SPECS looked like a spec sheet. */}
       <div className="grid grid-cols-2 gap-4 border-t border-border pt-3.5 sm:grid-cols-4">
         <div className="flex flex-col gap-[3px]">
-          <span className={EYEBROW}>ACQUIRED</span>
-          <span className="font-mono text-xs text-foreground">
-            {watch.isWishlist || !watch.purchaseDate
-              ? "—"
-              : formatDay(watch.purchaseDate)}
-          </span>
-          {!watch.isWishlist && acquiredAge && (
-            <span className="text-xs text-muted-foreground">{acquiredAge}</span>
+          <span className={EYEBROW}>OWNERSHIP</span>
+          <span className={FACT_VALUE}>{ownershipLabel(watch)}</span>
+          {/* The date it was acquired. A wish-list watch has no acquisition
+              date to show, and inventing one would be a lie. */}
+          {!watch.isWishlist && watch.purchaseDate && (
+            <span className={FACT_DETAIL}>{formatDay(watch.purchaseDate)}</span>
           )}
         </div>
 
+        {/* SPECS — the watch itself: its dimensions on one line, and the
+            movement beneath. The movement used to sit on the line under the
+            watch's name; it lives HERE now rather than in both places,
+            because a fact gets one home per screen. */}
         <div className="flex flex-col gap-[3px]">
-          <span className={EYEBROW}>WORN</span>
-          {/* The only null that turns brass: an owned watch never worn is an
-              invitation. Twelve wears is not a call to action, and a wish-list
-              watch is not yours to wear (Phase 7 §1.4). */}
-          <span
-            className={cn(
-              "font-mono text-xs",
-              neverWorn ? "text-brass" : "text-foreground"
-            )}
-          >
-            {watch.isWishlist
-              ? "not yet owned"
-              : neverWorn
-                ? "never"
-                : `${watch.wearCount} ${watch.wearCount === 1 ? "time" : "times"}`}
-          </span>
-          {!watch.isWishlist &&
-            (neverWorn ? (
-              <span className="text-xs text-muted-foreground">give it a day</span>
-            ) : (
-              watch.lastWornDate && (
-                <span className="text-xs text-muted-foreground">
-                  last worn {wornLabel(watch.lastWornDate, now)}
-                </span>
-              )
-            ))}
-        </div>
-
-        {/* CASE, where COVERAGE used to be. A coverage count is a progress bar
-            for the photography backlog — the one thing this screen is not for.
-            The case dimensions are the opposite: they are the watch, and they
-            are what you actually want to know when one you had forgotten comes
-            up in the rotation. */}
-        <div className="flex flex-col gap-[3px]">
-          <span className={EYEBROW}>CASE</span>
-          <span className="font-mono text-xs text-foreground">
-            {caseSize(watch)}
-          </span>
-          {caseDetail(watch) && (
-            <span className="text-xs text-muted-foreground">
-              {caseDetail(watch)}
-            </span>
+          <span className={EYEBROW}>SPECS</span>
+          <span className={FACT_VALUE}>{specDimensions(watch)}</span>
+          {watch.caliberLine && (
+            <span className={FACT_DETAIL}>{watch.caliberLine}</span>
           )}
         </div>
 
-        <div className="flex flex-col gap-[3px]">
-          <span className={EYEBROW}>STORED IN</span>
-          <span className="font-mono text-xs text-foreground">
-            {watch.box ?? "—"}
-          </span>
-          {watch.boxDescription && (
-            <span className="text-xs text-muted-foreground">
-              {watch.boxDescription}
-            </span>
-          )}
-        </div>
+        {/* ACTIVITY and STORED IN are blank for a wish-list watch — caption
+            and all. You cannot wear a watch you do not own, you have not put
+            it in a box, and printing `never` against both would read as a
+            reproach for not having bought it yet. */}
+        {watch.isWishlist ? (
+          <>
+            <div aria-hidden />
+            <div aria-hidden />
+          </>
+        ) : (
+          <>
+            {/* ACTIVITY — what this watch has been doing. Wear history on the
+                first line, the last timegrapher run on the second: both are
+                records of the watch running, and neither filled a column
+                alone. */}
+            <div className="flex flex-col gap-[3px]">
+              <span className={EYEBROW}>ACTIVITY</span>
+              {/* No brass here. Phase 7 §1.4 made a never-worn watch an
+                  invitation by colouring it, but it was the single brown value
+                  in a band of black ones, so it read as an inconsistency
+                  before it read as an invitation. The words still invite —
+                  `never — give it a day` — without breaking the band. */}
+              <span className={FACT_VALUE}>{wearSummary(watch)}</span>
+              <span className={FACT_DETAIL}>{accuracySummary(watch)}</span>
+            </div>
+
+            <div className="flex flex-col gap-[3px]">
+              <span className={EYEBROW}>STORED IN</span>
+              <span className={FACT_VALUE}>{watch.box ?? "—"}</span>
+              {watch.boxDescription && (
+                <span className={FACT_DETAIL}>{watch.boxDescription}</span>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {watch.guideChapter && (

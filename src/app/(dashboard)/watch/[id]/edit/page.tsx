@@ -14,7 +14,6 @@ import { PhotoGallery } from "../_components/photo-gallery"
 import { PhotoUploader } from "../_components/photo-uploader"
 import { TimegrapherPanel } from "../_components/timegrapher-panel"
 import { StrapPanel } from "../_components/strap-panel"
-import { FormJumpList } from "./_components/form-jump-list"
 import { updateWatch } from "@/lib/actions/watch-actions"
 
 export async function generateMetadata({
@@ -91,7 +90,7 @@ export default async function EditWatchPage({
   }
 
   return (
-    <div className="space-y-6 pb-28">
+    <div className="mx-auto max-w-[1180px] space-y-6 pb-28">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <h1 className="font-display text-lg font-semibold tracking-tight">
           {watch.brand.name}{" "}
@@ -105,11 +104,17 @@ export default async function EditWatchPage({
             where an action that is not editing belongs. */}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[420px_1fr] lg:items-start lg:gap-[26px]">
-        {/* Left column: sticky photo column + section nav (§3.6) */}
-        <div className="lg:self-start lg:sticky lg:top-[calc(3.5rem+1.5rem)]">
+      {/* Wider photo column, narrower form. The fields were running to ~970px
+          for values eight characters long, so the form was mostly white space
+          while the watch itself sat in a 420px box. */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(420px,38%)_1fr] lg:items-start lg:gap-[26px]">
+        {/* Left column: the sticky photo column, given real width. The
+            section jump list that briefly lived here is gone — it pushed the
+            photograph down the page to save scrolling that the form does not
+            really cost, and the photograph is the more useful thing to keep in
+            view while editing. */}
+        <div className="lg:sticky lg:top-[calc(3.5rem+1.5rem)] lg:max-h-[calc(100dvh-5.5rem)] lg:self-start lg:overflow-y-auto">
           <div className="space-y-4" id="photos">
-            <FormJumpList />
             <PhotoGallery
               photos={watch.watch_photos}
               photoUrls={photoUrls}
@@ -123,11 +128,22 @@ export default async function EditWatchPage({
               straps={straps}
               strapLabels={strapLabels}
             />
+            {/* Same grouping as the view page: how the watch behaves lives
+                with the photograph, not under the form. */}
+            <div id="timegrapher">
+              <TimegrapherPanel
+                watchId={watch.id}
+                runs={timegrapherRuns}
+                liftAngle={watch.movement?.lift_angle ?? null}
+                caliberName={watch.movement?.caliber_name ?? null}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Right column: Scrollable form + timegrapher */}
-        <div className="space-y-6">
+        {/* Right column: Scrollable form + timegrapher. min-w-0 for the same
+            reason as the view page — this is the `1fr` track. */}
+        <div className="min-w-0 space-y-6">
           <WatchForm
             action={boundUpdateWatch}
             watch={watch}
@@ -142,14 +158,6 @@ export default async function EditWatchPage({
             stickyBar
             cancelHref={returnTo}
           />
-          <div id="timegrapher">
-          <TimegrapherPanel
-            watchId={watch.id}
-            runs={timegrapherRuns}
-            liftAngle={watch.movement?.lift_angle ?? null}
-            caliberName={watch.movement?.caliber_name ?? null}
-          />
-          </div>
         </div>
       </div>
     </div>

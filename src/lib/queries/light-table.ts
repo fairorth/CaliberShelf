@@ -80,6 +80,8 @@ export interface LightTableWatch {
   wearCount: number
   lastWornDate: string | null
   isWishlist: boolean
+  /** Ordered but not arrived — the third ownership state (00018). */
+  isComingSoon: boolean
   /** "Grand Seiko · chapter 4, The Shunbun texture dial" — first linked guide. */
   guideChapter: string | null
   /** watches.box — the numbered label only ("Box4"), free text, may be null. */
@@ -128,6 +130,7 @@ interface RawWatch {
   complication: string | null
   purchase_date: string | null
   is_wishlist: boolean
+  is_coming_soon: boolean
   sale_status: string
   box: string | null
   brand: { name: string } | null
@@ -280,7 +283,7 @@ export async function getLightTableSets(): Promise<RotationSet[]> {
     supabase
       .from("watches")
       .select(
-        "id, model, nickname, reference_number, case_diameter_mm, case_height_mm, lug_to_lug_mm, strap_width_mm, case_material, complication, purchase_date, is_wishlist, sale_status, box, brand:brands(name), movement:movements(caliber_type, manufacturer, caliber_name, beat_rate, power_reserve)"
+        "id, model, nickname, reference_number, case_diameter_mm, case_height_mm, lug_to_lug_mm, strap_width_mm, case_material, complication, purchase_date, is_wishlist, is_coming_soon, sale_status, box, brand:brands(name), movement:movements(caliber_type, manufacturer, caliber_name, beat_rate, power_reserve)"
       ),
     selectWithPhotoDimensions<RawPhoto>(PHOTO_COLUMNS, (columns) =>
       supabase.from("watch_photos").select(columns)
@@ -461,6 +464,7 @@ export async function getLightTableSets(): Promise<RotationSet[]> {
       wearCount: wearCount.get(w.id) ?? 0,
       lastWornDate: lastWorn.get(w.id) ?? null,
       isWishlist: w.is_wishlist,
+      isComingSoon: w.is_coming_soon,
       box: w.box,
       boxDescription: w.box ? boxConfig.descriptions[w.box] ?? null : null,
       guideChapter: chapterByWatch.get(w.id) ?? null,

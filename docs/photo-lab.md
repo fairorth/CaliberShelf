@@ -15,6 +15,15 @@ How this document is maintained:
   **archived originals** (frozen; mostly static R10/EOS Utility mechanics with
   figures). Read them for depth and pictures; never update them.
 
+**Scope.** This file is the craft: camera, lens, light, EOS Utility. Two
+companions cover the rest, and each is the single source of truth for its half:
+
+- [`photo-lab-app.md`](photo-lab-app.md) — the **software**: the Coverage /
+  Session / Review screens, the scripts, the data model, and the current
+  known gaps.
+- [`photo-lab-game-plan.md`](photo-lab-game-plan.md) — the **tutorial and
+  campaign plan** for shooting the whole collection.
+
 ## Hardware
 
 | Component | Notes |
@@ -38,11 +47,31 @@ lab-verified fix for the RF100mm silently refusing AF after a large focus jump
 To improve the recipe: change it in a normal creative mode, verify, then
 re-register C1 (MENU → Set-up → Custom shooting mode → Register settings).
 
-**Overhead geometry:** sensor plane ~16–20″ from the watch (18″ starting
-point) · dial parallel to sensor for flat catalog shots · watch fills ~70–80%
-of frame, leaving margin for straightening and depth-composite cropping. The
-RF100mm's minimum focus distance is ~10.2″ sensor-to-subject; full-watch shots
-want more.
+**Overhead geometry:** sensor plane ~18–20″ from the watch · dial parallel to
+sensor for flat catalog shots · watch fills ~70–80% of frame, leaving margin
+for straightening and depth-composite cropping. The RF100mm's minimum focus
+distance is ~10.2″ sensor-to-subject; full-watch shots want much more.
+
+**Working distance table** (100mm on APS-C, circle of confusion 0.019 mm,
+sensor plane to watch). Computed 2026-08-22; it corrects the old "16–20″"
+figure, which does not frame a whole watch at its near end:
+
+| Distance | Frame width | DoF @ f/8 | @ f/11 | Use |
+|---|---|---|---|---|
+| 16″ | 29 mm | 0.9 mm | 1.2 mm | Macro detail only — a 40 mm watch does not fit |
+| 18″ | 47 mm | 2.0 mm | 2.7 mm | Flat dial-on, tight (40 mm head = 85% of width) |
+| 20″ | 60 mm | 3.1 mm | 4.2 mm | Flat dial-on, comfortable (67%) |
+| 24″ | 86 mm | 5.6 mm | 7.8 mm | Profile, caseback |
+| 28″ | 109 mm | 8.8 mm | 12.1 mm | Laid-down hero, tight |
+| 32″ | 133 mm | 12.6 mm | 17.3 mm | **Laid-down hero, standard** |
+| 36″ | 156 mm | 17.0 mm | 23.4 mm | Hero with a long strap sweep |
+
+Two consequences worth internalising: depth of field at the dial-shot distance
+is about **two millimetres** against a watch head roughly twelve millimetres
+thick — which is why anything angled must be stacked, and why a couple of
+degrees of tilt costs you one side of the dial. And the hero shot is taken from
+**much further back** than the dial shot, where the depth-of-field problem
+largely solves itself.
 
 ## EOS Utility operations (the parts that matter)
 
@@ -72,7 +101,10 @@ marker edges, crystal dust, bezel reflections, clipped highlights).
 
 ## Focus stacking
 
-For angled/hero shots (flat dial-on often doesn't need it). In-camera Focus
+For angled/hero shots. Flat dial-on needs it less — the dial sits in one plane —
+but note from the distance table that f/8 at 18" buys about 2 mm, and the hands
+ride 2-4 mm above the dial, so a five-frame stack is cheap insurance whenever
+you want hand tips AND dial printing crisp. In-camera Focus
 Bracketing starting point: **30 shots · increment 3 · exposure smoothing ON ·
 Depth Composite ON (while learning) · crop ON**. Start focus on the *nearest*
 plane that must be sharp; the camera walks focus farther. Trigger once and
@@ -94,8 +126,29 @@ routing is the TenTenLoupe linkage.
 
 A session folder typically contains: `.CR3` frames (singles + stack sources),
 `.JPG`/`.HEIF` in-camera composites (stacked shots), and finished Luminar Neo
-exports. Cover-photo output target: 2000px-long-edge JPEG (pairs with the dial
-focal-point framing editor on the watch edit page).
+exports. Cover-photo output target: **2000px-long-edge JPEG at quality 85** —
+which is exactly what Review's Accept produces from whatever you point it at.
+
+(The old note here paired this target with "the dial focal-point framing editor
+on the watch edit page". That editor is gone: Phase 9 stopped writing
+`dial_focal_x/y` and `dial_zoom`, and every photo surface is now
+`object-contain` with no crop or focal point anywhere.)
+
+## The laid-down hero (the cover shot)
+
+Landscape orientation, watch laid on its caseback, camera 20–30° off vertical
+at 30–32″, strap or bracelet arranged in a lazy S that fills the frame width.
+Head at roughly one third in, crown side toward camera, hands at 10:10, watch
+and strap filling 75–85% of the width.
+
+This is the shot the app is built to reward: the watch page hero renders
+`object-contain` at a fixed 460 px height (a 3:2 frame fills 690 × 460), and
+the home Light Table picks its landing frame by **widest aspect ratio**, with
+the hero angle only breaking ties. When image dimensions were backfilled the
+collection measured 114 portrait, 31 square, 20 landscape, 4 wide — so almost
+every watch currently lands on a portrait frame in a layout that wants a wide
+one. Full technique in
+[`photo-lab-game-plan.md`](photo-lab-game-plan.md) Part 4.
 
 ## Lighting principles (the current frontier)
 
@@ -137,6 +190,11 @@ dials change with tiny light-angle moves.
 - Fixed white balance has no concrete recipe yet (grey-card step or Kelvin value).
 - No polarizer (CPL) guidance; glare control currently relies on diffusion/flags.
 - Lighting recipes are principles-only so far — no documented setups per watch style.
+- The C1 checklist is duplicated as `C1_CHECKLIST` in `session-view.tsx` so the
+  Session screen can show it. **Change the recipe here, change it there too.**
+- Software-side gaps (Track B unbuilt, no shot card for the hero ¾, no bulk
+  angle tagging) are catalogued in
+  [`photo-lab-app.md`](photo-lab-app.md) §7 — not here.
 
 ## Appendix: non-lab presets
 

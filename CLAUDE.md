@@ -78,6 +78,14 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   the hero auto-advance, the ring sweep and hover scales.
 - **Text hierarchy:** exactly one full-`--foreground` value per surface; everything else
   `--muted-foreground` at 13px+.
+- **Say each fact once per screen.** A value gets exactly one home. `OWNED` in a
+  header pill *and* in the lifecycle strip, `Box3` as a pill *and* as "Stored
+  in", `Paid` *and* `COST BASIS` — each was the same fact twice, and every
+  duplicate is a place the two can disagree later. When two surfaces both want
+  a value, decide which one owns it and delete the other; if the second
+  placement is genuinely needed, it is a sign the first is in the wrong place.
+  Applies to a page, not the app: the same fact may appear on the home stage and
+  on the watch page.
 
 ## Zod v4 Notes
 - This project uses Zod v4 (package `zod@^4.x`)
@@ -126,6 +134,23 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - The Brand and Category **cells** filter the collection; the rest of the row opens the watch. This deliberately narrows "one row, one destination" — see DECISIONS.md §8.
 - Column widths are explicit pixels, resizable, persisted per device. Any column may be resized; the table sizes itself to their sum.
 
+## Photo Lab — see docs/photo-lab-app.md
+Three documents, each the source of truth for its half: **`photo-lab.md`** is
+the craft (camera, lens, light, EOS Utility), **`photo-lab-app.md`** is the
+software (Coverage/Session/Review, scripts, data model, known gaps), and
+**`photo-lab-game-plan.md`** is the tutorial and the campaign plan.
+- `profiles.watch_images_path` (Config → Settings, migration 00035) gates the
+  ENTIRE tethered half — scorer, folder sync, frame API, and Review's Accept.
+  While it is null those screens have nothing to show and say so only obliquely.
+- Review's **Accept** (`promoteScoredFrame`) is publication: reads the original
+  from disk, re-encodes to a 2000px JPEG, uploads, thumbnails, records the
+  COMPOSITE's dimensions (00048), tags the angle, optionally sets cover.
+  It only works on the machine holding the capture folders.
+- The five `PHOTO_ANGLES` and the scorer's four `SHOT_CARDS` are different
+  vocabularies with no mapping between them; there is no card for the hero ¾.
+- `watchFolderName()` in `lib/photo-lab.ts` duplicates the naming in
+  `scripts/sync-watch-folders.mjs` — they must stay byte-identical.
+
 ## Agents — see docs/agents.md
 Full fleet reference (what each agent does, how it's initiated, observed
 costs, cost levers): `docs/agents.md`. Observed costs: valuation ~$1-1.5/watch
@@ -145,7 +170,14 @@ script (or `route.ts` for spec-fetch).
   The per-watch research call lives in **`scripts/lib/price-research.mjs`**,
   shared with `POST /api/price-check/[watchId]` (the "Check price now" button)
   so the prompt exists once — edit sources/method THERE. The route requires
-  opt-in, refuses sold watches, and allows one run per watch per hour.
+  opt-in, refuses sold watches, and allows one run per watch per hour. It runs
+  as a BACKGROUND job (POST returns a run id, the button polls GET; registry in
+  `src/lib/price-check-jobs.ts`, 8-minute cap) and writes a per-step trace to
+  `agent_run_items`, shown as "Run trace" in the Market panel.
+  **The web-search/fetch caps are stated in the prompt** — a cap the model does
+  not know about produces a flailing loop of `max_uses_exceeded` calls that
+  costs more than the searches saved. `buildSystemPrompt()` takes the budgets
+  as arguments; never change the tool caps without the prompt seeing them.
   Operator guide: `docs/price-check.md`.
 - **deal-check** (`scripts/deal-check.mjs`) → `wishlist_deals` from each brand's
   Shopify `products.json`; deterministic; daily `deal-check.yml`. `best_used_*`
@@ -158,7 +190,11 @@ script (or `route.ts` for spec-fetch).
   CV triage over `\WatchImages` capture folders (stack collapse, dial-ROI
   sharpness, dup clustering) + Track A shot-card grading (Haiku,
   ~$0.0015/frame, `--no-ai` = free) + local `_photo-report.html` with
-  coverage matrix/reshoot list; local-only.
+  coverage matrix/reshoot list; local-only. **Track B (Phase 3) is NOT built:
+  nothing computes `angle_class` or `composite_score` — both are only carried
+  forward — so scored frames contribute nothing to the Coverage matrix and no
+  cell ever shows a grade. Coverage is driven entirely by `watch_photos.angle`,
+  which is set by hand in Review or the watch-page lightbox.**
 - **chronoscout-sync** (`scripts/chronoscout-sync.mjs`) → `chronoscout_*` mirror
   (00027); catalog-only API (no prices/refs/alerts) — does NOT power Phase B;
   weekly `chronoscout-sync.yml`. Licensing: display in-app only, attribute
@@ -177,6 +213,13 @@ or a direct insert (the spec-fetch and price-check routes; the latter logs
 Review** report (`/reports/agents`). Logging is best-effort and must NEVER break
 an agent (all writes are wrapped). `npm run backfill-agent-runs` imports past
 valuation runs.
+
+**`agent_runs` has SELECT and INSERT policies but NO UPDATE policy.** An
+insert-a-`running`-row-then-update-it pattern silently matches zero rows under a
+user session, leaving every run stuck at `status = 'running'` with zeroed
+counters. From a route, write the row ONCE when the run finishes. The CLI's
+`startRun`/`finishRun` pair works only because cron scripts run under the
+service role, which bypasses RLS.
 
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000

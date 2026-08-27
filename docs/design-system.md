@@ -46,6 +46,15 @@ and the photo-selection ring. Two accents at equal weight = no accent.
 **Update the comments in `globals.css`** so the file no longer states the old rule.
 The comment lying to the next reader is how E1 happened.
 
+**Newly added shadcn primitives arrive wired to `--primary`.** `switch.tsx` shipped
+with `data-checked:bg-primary` — a steel-blue "on" state, i.e. an action control
+painted in the data colour. Fix it in `components/ui/` (they are project-owned), not
+with a per-instance override, so every future switch is right by default. Two traps
+when you do: Base UI uses `data-checked:`, **not** `data-[state=checked]:`, so a
+Radix-shaped override class silently does nothing; and `cn()` merge order means an
+instance-level class is the wrong place for it anyway. Grep any newly-added `ui/`
+component for `bg-primary` / `text-primary` before using it.
+
 ## 2. Type scale (finding E3)
 
 Six steps. No other font sizes in the app. Add to `@theme inline` in `globals.css`:
@@ -133,6 +142,12 @@ and neither is a material gradient standing in for a physical object.
 `--muted-foreground` (`#8c95a0`) currently carries nearly all text in tables, tiles and
 the hero caption, frequently with an extra `/70` or `/80` opacity on top.
 
+- **Say each fact once per screen.** A value gets exactly one home. `OWNED` in a
+  header pill *and* in the lifecycle strip, `Box3` as a pill *and* as "Stored in",
+  `Paid` *and* `COST BASIS` — each was the same fact twice, and every duplicate is a
+  place the two can disagree later. When two surfaces both want a value, decide which
+  owns it and delete the other; needing the second placement usually means the first
+  is in the wrong place.
 - **One primary value per surface** at full `--foreground`: brand + model in a table row;
   brand in a gallery tile; brand + model in the hero caption.
 - **Never stack opacity on `--muted-foreground`.** No `text-muted-foreground/70`.

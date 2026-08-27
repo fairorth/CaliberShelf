@@ -93,6 +93,8 @@ export function LifecycleControls(props: LifecycleControlsProps) {
   } = props
   const router = useRouter()
   const [candidateOpen, setCandidateOpen] = useState(false)
+  /** Owned watches hide the sale controls until asked (see below). */
+  const [sellingOpen, setSellingOpen] = useState(false)
   const [note, setNote] = useState("")
   const [listOpen, setListOpen] = useState(false)
   const [editListingOpen, setEditListingOpen] = useState(false)
@@ -118,29 +120,54 @@ export function LifecycleControls(props: LifecycleControlsProps) {
       ? ((listing.ask_price_cents - props.latestMidCents) / props.latestMidCents) * 100
       : null
 
+  // An owned watch is not "in" a sale process, and most never will be. The
+  // four-step breadcrumb and two sale buttons were permanent furniture for a
+  // path the owner rarely takes — and worse, its first step is also called
+  // "Owned", colliding with the Ownership section's own Owned / Coming soon /
+  // Wish list. So: nothing but one quiet link until you say you are selling.
+  const inSaleFlow = saleStatus !== "owned"
+
+  if (!inSaleFlow && !sellingOpen) {
+    return (
+      <div className="flex flex-1 items-start">
+        <button
+          type="button"
+          onClick={() => setSellingOpen(true)}
+          className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+        >
+          Thinking of selling this one?
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-1 flex-col items-start gap-2.5">
       <p className="font-mono text-2xs uppercase tracking-[0.14em] text-muted-foreground">
-        Lifecycle
+        Selling
       </p>
 
-      {/* The linear breadcrumb — current step is the one full-foreground value. */}
-      <div className="flex items-center gap-2 text-xs">
-        {STEPS.map((step, i) => (
-          <span key={step.value} className="flex items-center gap-2">
-            {i > 0 && <span className="text-muted-foreground/60">→</span>}
-            <span
-              className={cn(
-                step.value === saleStatus
-                  ? "font-medium text-foreground"
-                  : "text-muted-foreground/60"
-              )}
-            >
-              {step.label}
+      {/* The linear breadcrumb, shown only once the watch is actually in the
+          sale flow — before that it describes four states none of which have
+          happened. */}
+      {inSaleFlow && (
+        <div className="flex items-center gap-2 text-xs">
+          {STEPS.map((step, i) => (
+            <span key={step.value} className="flex items-center gap-2">
+              {i > 0 && <span className="text-muted-foreground/60">→</span>}
+              <span
+                className={cn(
+                  step.value === saleStatus
+                    ? "font-medium text-foreground"
+                    : "text-muted-foreground/60"
+                )}
+              >
+                {step.label}
+              </span>
             </span>
-          </span>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {saleStatus === "owned" && (
         <>
@@ -157,6 +184,13 @@ export function LifecycleControls(props: LifecycleControlsProps) {
             className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
           >
             List for sale…
+          </button>
+          <button
+            type="button"
+            onClick={() => setSellingOpen(false)}
+            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            Never mind
           </button>
         </>
       )}
