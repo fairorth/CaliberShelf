@@ -13,7 +13,7 @@ interface CheckPriceButtonProps {
 }
 
 interface QuickCheckResult {
-  status: "success" | "failed"
+  status: "success" | "failed" | "no_data"
   elapsedMs: number
   valueMidCents?: number
   confidence?: string
@@ -57,7 +57,14 @@ export function CheckPriceButton({ watchId, trackingEnabled }: CheckPriceButtonP
     try {
       const res = await fetch(`/api/price-check/${watchId}`, { method: "POST" })
       const body = (await res.json().catch(() => null)) as QuickCheckResult | null
-      if (res.ok && body?.status === "success") {
+      if (res.ok && body?.status === "no_data") {
+        // The evidence gate held: nothing real came back, nothing was saved.
+        toast.warning(
+          body.error ??
+            "No usable market data found — existing estimate left unchanged."
+        )
+        router.refresh()
+      } else if (res.ok && body?.status === "success") {
         const mid =
           body.valueMidCents != null
             ? ` — $${Math.round(body.valueMidCents / 100).toLocaleString()}`

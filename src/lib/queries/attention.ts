@@ -94,6 +94,9 @@ export async function getAttentionReport(): Promise<AttentionReport> {
     if (w.case_diameter_mm == null) missing.push("Case diameter")
     if (w.case_height_mm == null) missing.push("Case height")
     if (w.strap_width_mm == null) missing.push("Strap width")
+    // Set when a valuation run produced no usable evidence (00050): the
+    // estimate was NOT updated — log a value manually or re-run the agent.
+    if (w.needs_value_review) missing.push("Market value")
     // Box is a physical storage slot — only meaningful for watches in hand.
     if (!w.is_wishlist && !w.is_coming_soon && !w.box) missing.push("Box")
     if (missing.length > 0) {

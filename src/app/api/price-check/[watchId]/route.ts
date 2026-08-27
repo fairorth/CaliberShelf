@@ -5,6 +5,7 @@ import {
   MODEL,
   PROFILES,
   WATCH_SELECT,
+  assessEvidence,
   researchWatch,
   researchCostUsd,
   valuationInsertRow,
@@ -130,6 +131,7 @@ export async function POST(
   const startedAt = Date.now()
   const steps: TraceStep[] = []
   let status: "success" | "failed" = "failed"
+  let noData = false
   let error: string | undefined
   let valueMidCents: number | undefined
   let confidence: string | undefined
@@ -147,16 +149,36 @@ export async function POST(
     usage = result.usage
     const valuation = result.valuation
 
-    const { error: insertError } = await supabase
-      .from("watch_valuations")
-      .insert(valuationInsertRow(watch, valuation, { runMode: "quick" }))
-    if (insertError) {
-      throw new Error(`The estimate could not be saved: ${insertError.message}`)
-    }
+    // Evidence gate: a well-formed JSON valuation is not research. If the
+    // tools returned nothing real, the existing estimate STANDS and the watch
+    // is flagged for review instead (Breguet 7097 incident, 00050).
+    const verdict = assessEvidence(valuation, result.evidence)
+    if (!verdict.ok) {
+      noData = true
+      error = `No usable market data (${verdict.reason}). Existing estimate left unchanged; flagged for review.`
+      await supabase
+        .from("watches")
+        .update({ needs_value_review: true })
+        .eq("id", watchId)
+        .eq("user_id", user.id)
+    } else {
+      const { error: insertError } = await supabase
+        .from("watch_valuations")
+        .insert(valuationInsertRow(watch, valuation, { runMode: "quick" }))
+      if (insertError) {
+        throw new Error(`The estimate could not be saved: ${insertError.message}`)
+      }
+      // A trusted estimate resolves any earlier review flag.
+      await supabase
+        .from("watches")
+        .update({ needs_value_review: false })
+        .eq("id", watchId)
+        .eq("user_id", user.id)
 
-    status = "success"
-    valueMidCents = Math.round(valuation.market_value_mid_usd * 100)
-    confidence = valuation.confidence
+      status = "success"
+      valueMidCents = Math.round(valuation.market_value_mid_usd * 100)
+      confidence = valuation.confidence
+    }
   } catch (err) {
     if (controller.signal.aborted) {
       error = `Gave up after ${Math.round(QUICK_CAP_MS / 1000)} seconds — try again, or wait for a deep run.`
@@ -197,7 +219,9 @@ export async function POST(
         output_tokens: usage.output,
         web_searches: usage.searches,
         cost_usd_micros: Math.round(costUsd * 1_000_000),
-        notes: error ? `${watchLabel} — ${error}` : `${watchLabel} (quick)`,
+        notes: error
+          ? `${watchLabel} — ${error}`
+          : `${watchLabel} (quick)`,
       })
       .select("id")
       .single()
@@ -223,6 +247,16 @@ export async function POST(
     // logging is optional; ignore failures
   }
 
+  if (noData) {
+    // The run worked; the market didn't answer. Not an HTTP failure — the
+    // client shows a warning and the Attention report picks the watch up.
+    return NextResponse.json({
+      status: "no_data",
+      error,
+      elapsedMs: finishedAt - startedAt,
+      costUsd: Math.round(costUsd * 100) / 100,
+    })
+  }
   if (status === "failed") {
     return NextResponse.json(
       { status, error: error ?? "The price check failed.", elapsedMs: finishedAt - startedAt },

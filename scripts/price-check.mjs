@@ -28,6 +28,7 @@ import {
   MODEL,
   DEFAULT_MAX_USES,
   WATCH_SELECT,
+  assessEvidence,
   researchWatch,
   researchCostUsd,
   valuationInsertRow,
@@ -131,18 +132,46 @@ async function main() {
     const label = `${watch.brand?.name ?? "?"} ${watch.model}`
     process.stdout.write(`→ ${label} ... `)
     try {
-      const { valuation: v, usage } = await researchWatch(anthropic, watch, {
+      const { valuation: v, usage, evidence } = await researchWatch(anthropic, watch, {
         maxUses: MAX_USES,
       })
       totals.input += usage.input
       totals.output += usage.output
       totals.searches += usage.searches
 
+      // Evidence gate (00050): a result with no real observations is
+      // discarded — the previous valuation stands and the watch is flagged
+      // for review rather than silently repriced from thin air.
+      const verdict = assessEvidence(v, evidence)
+      if (!verdict.ok) {
+        failed++
+        console.log(`NO DATA: ${verdict.reason} — existing valuation left unchanged`)
+        if (!DRY_RUN) {
+          await supabase
+            .from("watches")
+            .update({ needs_value_review: true })
+            .eq("id", watch.id)
+        }
+        runItems.push({
+          entityType: "watch",
+          entityId: watch.id,
+          label,
+          action: "failed",
+          field: "valuation",
+          detail: `insufficient evidence: ${verdict.reason}`,
+        })
+        continue
+      }
+
       if (!DRY_RUN) {
         const { error: insertError } = await supabase
           .from("watch_valuations")
           .insert(valuationInsertRow(watch, v))
         if (insertError) throw new Error(`DB insert failed: ${insertError.message}`)
+        await supabase
+          .from("watches")
+          .update({ needs_value_review: false })
+          .eq("id", watch.id)
       }
 
       ok++

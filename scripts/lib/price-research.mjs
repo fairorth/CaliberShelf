@@ -112,6 +112,8 @@ web_fetch can only open a URL that already appeared in a search result. Never co
 
 ${method}
 
+If tool failures leave you with no real market observations, do NOT estimate from memory or general knowledge: report the datapoints you actually observed (an empty array if none), confidence "low", and say plainly in method_notes that no live data was gathered. Results without real datapoints are discarded by the caller — an invented number is worse than no number.
+
 Your FINAL message must be RAW JSON ONLY — no markdown fences, no prose before or after — matching exactly:
 {
   "assumed_variant": "<metal/dial/ref you assumed, or 'exact reference given'>",
@@ -186,7 +188,7 @@ function resultOutcome(block) {
  * @param {import("@anthropic-ai/sdk").default} anthropic
  * @param {object} watch  row shaped like WATCH_SELECT
  * @param {{ mode?: "quick" | "deep", maxUses?: number, onStep?: (step: object) => void, signal?: AbortSignal }} [opts]
- * @returns {Promise<{ valuation: z.infer<typeof valuationSchema>, usage: { input: number, output: number, searches: number } }>}
+ * @returns {Promise<{ valuation: z.infer<typeof valuationSchema>, usage: { input: number, output: number, searches: number }, evidence: { successfulSearches: number, successfulFetches: number, toolErrors: number } }>}
  */
 export async function researchWatch(
   anthropic,
@@ -213,6 +215,9 @@ export async function researchWatch(
   let response
   let continuations = 0
   const usage = { input: 0, output: 0, searches: 0 }
+  // Deterministic evidence tally — what the tools actually returned, counted
+  // by us, not claimed by the model. assessEvidence() gates inserts on it.
+  const evidence = { successfulSearches: 0, successfulFetches: 0, toolErrors: 0 }
 
   let seq = 0
   let mark = Date.now()
@@ -286,6 +291,13 @@ export async function researchWatch(
         const call = pending.get(block.tool_use_id)
         pending.delete(block.tool_use_id)
         const outcome = resultOutcome(block)
+        if (!outcome.ok) {
+          evidence.toolErrors++
+        } else if (block.type === "web_fetch_tool_result") {
+          evidence.successfulFetches++
+        } else if (Array.isArray(block.content) && block.content.length > 0) {
+          evidence.successfulSearches++
+        }
         emit({
           kind: call?.kind ?? (block.type === "web_fetch_tool_result" ? "web_fetch" : "web_search"),
           label: call?.label ?? "(unknown)",
@@ -343,7 +355,35 @@ export async function researchWatch(
   if (!parsed.success) {
     throw new Error(`Schema validation failed: ${parsed.error.issues[0].message}`)
   }
-  return { valuation: parsed.data, usage }
+  return { valuation: parsed.data, usage, evidence }
+}
+
+/**
+ * The guardrail between a research result and the database. A well-formed
+ * JSON valuation is NOT evidence — when the Breguet 7097 quick run burned its
+ * whole budget on tool errors, the model produced an honest general-knowledge
+ * placeholder and the pipeline saved it as if it were research. A result is
+ * only insertable when it carries real observations AND the tools actually
+ * returned something to observe.
+ *
+ * @returns {{ ok: boolean, reason: string | null }}
+ */
+export function assessEvidence(valuation, evidence) {
+  const hits =
+    (evidence?.successfulSearches ?? 0) + (evidence?.successfulFetches ?? 0)
+  if (hits === 0) {
+    return {
+      ok: false,
+      reason: "no successful searches or fetches — nothing real was observed",
+    }
+  }
+  if (!Array.isArray(valuation.datapoints) || valuation.datapoints.length < 2) {
+    return {
+      ok: false,
+      reason: `only ${valuation.datapoints?.length ?? 0} datapoint(s) — below the minimum of 2`,
+    }
+  }
+  return { ok: true, reason: null }
 }
 
 const toCents = (usd) => Math.round(usd * 100)

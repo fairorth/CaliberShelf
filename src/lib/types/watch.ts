@@ -153,6 +153,8 @@ export interface Watch {
   is_coming_soon: boolean
   is_wishlist: boolean
   price_check_enabled: boolean
+  /** A valuation run produced no usable evidence — estimate needs a human (00050). */
+  needs_value_review: boolean
   dial_focal_x: number
   dial_focal_y: number
   dial_zoom: number

@@ -477,6 +477,14 @@ export async function logManualValuation(
   })
   if (error) return { error: error.message }
 
+  // A human-entered value resolves the "needs review" flag a no-evidence
+  // agent run may have raised (00050).
+  await supabase
+    .from("watches")
+    .update({ needs_value_review: false })
+    .eq("id", watchId)
+    .eq("user_id", user.id)
+
   revalidatePath(`/watch/${watchId}`)
   revalidatePath("/market")
   return { success: true }
