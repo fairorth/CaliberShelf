@@ -169,11 +169,16 @@ script (or `route.ts` for spec-fetch).
   reference_number to enable (Zod refine + DB CHECK); monthly `price-check.yml`.
   The per-watch research call lives in **`scripts/lib/price-research.mjs`**,
   shared with `POST /api/price-check/[watchId]` (the "Check price now" button)
-  so the prompt exists once — edit sources/method THERE. The route requires
-  opt-in, refuses sold watches, and allows one run per watch per hour. It runs
-  as a BACKGROUND job (POST returns a run id, the button polls GET; registry in
-  `src/lib/price-check-jobs.ts`, 8-minute cap) and writes a per-step trace to
-  `agent_run_items`, shown as "Run trace" in the Market panel.
+  so the prompt exists once — edit sources/method THERE. Two research
+  PROFILES (V10): the button runs 'quick' (3 searches / 1 fetch / effort low /
+  6k max tokens, ~1 min, `watch_valuations.run_mode='quick'`, 00049)
+  SYNCHRONOUSLY in the route (maxDuration 180, 150s abort — the old
+  background-job registry is deleted; it died on serverless anyway); the CLI
+  runs 'deep' (10/8, monthly cron; overnight queue = rollout #2, not built).
+  The route requires opt-in, refuses sold watches, allows one run per watch
+  per hour, and writes a per-step trace to `agent_run_items` ("Run trace" in
+  the Market panel) with numeric `duration_ms` (00049) including "model" rows
+  for generation time — trace rows now sum ≈ wall clock.
   **The web-search/fetch caps are stated in the prompt** — a cap the model does
   not know about produces a flailing loop of `max_uses_exceeded` calls that
   costs more than the searches saved. `buildSystemPrompt()` takes the budgets

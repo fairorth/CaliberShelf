@@ -207,6 +207,11 @@ export function MarketPanel({
                 >
                   {row.detail}
                 </span>
+                {row.durationMs != null && (
+                  <span className="w-12 shrink-0 text-right font-mono tabular-nums text-muted-foreground">
+                    {(row.durationMs / 1000).toFixed(1)}s
+                  </span>
+                )}
               </li>
             ))}
           </ol>

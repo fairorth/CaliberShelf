@@ -32,6 +32,27 @@ export const DEFAULT_MAX_FETCHES = 8
 /** @deprecated kept so existing callers passing `maxUses` still work. */
 export const DEFAULT_MAX_USES = DEFAULT_MAX_SEARCHES
 
+// Two research profiles, one engine (V10 redesign). "deep" is the full
+// methodology (monthly cron; overnight queue later). "quick" is the in-app
+// button: a ~1-minute market snapshot — search snippets over page fetches
+// (each fetch ingests a 15-20k-token page the model then re-reads on every
+// later step, which is where the old 7-minute runs went), low effort, small
+// output ceiling. Same JSON contract for both.
+export const PROFILES = {
+  deep: {
+    maxSearches: DEFAULT_MAX_SEARCHES,
+    maxFetches: DEFAULT_MAX_FETCHES,
+    maxTokens: MAX_TOKENS,
+    effort: null, // model default
+  },
+  quick: {
+    maxSearches: 3,
+    maxFetches: 1,
+    maxTokens: 6000,
+    effort: "low",
+  },
+}
+
 // ── Output contract for the agent ────────────────────────────────
 export const valuationSchema = z.object({
   assumed_variant: z.string(),
@@ -59,19 +80,37 @@ export const valuationSchema = z.object({
 export function buildSystemPrompt({
   maxSearches = DEFAULT_MAX_SEARCHES,
   maxFetches = DEFAULT_MAX_FETCHES,
+  mode = "deep",
 } = {}) {
+  const method =
+    mode === "quick"
+      ? `Method — this is a QUICK SNAPSHOT, not a full valuation. The owner is
+waiting at the screen; target well under a minute of work:
+1. Work from search-result snippets. Spend a fetch only if the snippets truly
+   cannot support an estimate — a fetched page costs far more time than a
+   search.
+2. Asking prices (eBay, Chrono24, dealers) are acceptable evidence — label
+   them "asking" and set your mid 10-15% below the asking average. Use SOLD
+   prices when a snippet happens to show one.
+3. 3-5 data points are enough. Do not chase completeness.
+4. Report confidence honestly — a quick snapshot is usually "low" or
+   "medium". A wide range with honest caveats is the expected outcome; a
+   deeper run can be queued for anything that matters.
+5. NEVER fabricate data points.`
+      : `Method:
+1. Use web search and web fetch extensively. Prioritize SOLD/completed prices (eBay sold listings, auction results from Grailzee/Bezel/Phillips/Loupe This) over asking prices. Chrono24 and dealer asking prices skew 10-20% high — usable, but discount accordingly and label them "asking".
+2. Also check WatchCharts, The 1916 Company, WatchUSeek sales corner, and r/Watchexchange for recent transactions. For Japanese independents, include Yahoo! Auctions Japan and Mercari Japan (convert JPY at the current rate and note it).
+3. Collect 4-8 recent (ideally last 6 months) data points where the market allows.
+4. Exclude obvious outliers (damage, franken/replica risk, wrong variant). eBay best-offer "sold" prices display the LIST price, not the accepted amount — treat them as upper bounds.
+5. If data is thin, report low confidence and a wide range. NEVER fabricate data points.`
+
   return `You are a watch market analyst producing structured valuations for a collection-tracking database.
 
 Your research budget for this task is ${maxSearches} web searches and ${maxFetches} web fetches. These are hard limits enforced by the tools: once spent, every further call is REJECTED and tells you nothing. Plan for them, and when the budget is gone, STOP researching and answer with what you have — a low-confidence estimate from four data points is a useful answer; another rejected search is not.
 
 web_fetch can only open a URL that already appeared in a search result. Never construct or guess a URL — searching for the page is the way to reach it.
 
-Method:
-1. Use web search and web fetch extensively. Prioritize SOLD/completed prices (eBay sold listings, auction results from Grailzee/Bezel/Phillips/Loupe This) over asking prices. Chrono24 and dealer asking prices skew 10-20% high — usable, but discount accordingly and label them "asking".
-2. Also check WatchCharts, The 1916 Company, WatchUSeek sales corner, and r/Watchexchange for recent transactions. For Japanese independents, include Yahoo! Auctions Japan and Mercari Japan (convert JPY at the current rate and note it).
-3. Collect 4-8 recent (ideally last 6 months) data points where the market allows.
-4. Exclude obvious outliers (damage, franken/replica risk, wrong variant). eBay best-offer "sold" prices display the LIST price, not the accepted amount — treat them as upper bounds.
-5. If data is thin, report low confidence and a wide range. NEVER fabricate data points.
+${method}
 
 Your FINAL message must be RAW JSON ONLY — no markdown fences, no prose before or after — matching exactly:
 {
@@ -146,24 +185,26 @@ function resultOutcome(block) {
  *
  * @param {import("@anthropic-ai/sdk").default} anthropic
  * @param {object} watch  row shaped like WATCH_SELECT
- * @param {{ maxUses?: number, onStep?: (step: object) => void, signal?: AbortSignal }} [opts]
+ * @param {{ mode?: "quick" | "deep", maxUses?: number, onStep?: (step: object) => void, signal?: AbortSignal }} [opts]
  * @returns {Promise<{ valuation: z.infer<typeof valuationSchema>, usage: { input: number, output: number, searches: number } }>}
  */
 export async function researchWatch(
   anthropic,
   watch,
   {
+    mode = "deep",
     maxUses,
-    maxSearches = maxUses ?? DEFAULT_MAX_SEARCHES,
-    maxFetches = maxUses ?? DEFAULT_MAX_FETCHES,
+    maxSearches = maxUses ?? PROFILES[mode].maxSearches,
+    maxFetches = maxUses ?? PROFILES[mode].maxFetches,
     onStep,
     signal,
   } = {}
 ) {
+  const profile = PROFILES[mode] ?? PROFILES.deep
   const messages = [{ role: "user", content: watchPrompt(watch) }]
   // The numbers in the prompt and the numbers on the tools must be the same
   // numbers, or the advice is worse than none.
-  const system = buildSystemPrompt({ maxSearches, maxFetches })
+  const system = buildSystemPrompt({ maxSearches, maxFetches, mode })
   const tools = [
     { type: "web_search_20260209", name: "web_search", max_uses: maxSearches },
     { type: "web_fetch_20260209", name: "web_fetch", max_uses: maxFetches },
@@ -191,8 +232,9 @@ export async function researchWatch(
     const stream = anthropic.messages.stream(
       {
         model: MODEL,
-        max_tokens: MAX_TOKENS,
+        max_tokens: profile.maxTokens,
         thinking: { type: "adaptive" },
+        ...(profile.effort ? { output_config: { effort: profile.effort } } : {}),
         system,
         tools,
         messages,
@@ -203,7 +245,20 @@ export async function researchWatch(
     // Blocks arrive already finalized here, so a server_tool_use block is the
     // moment the request went out and its matching *_tool_result block is the
     // moment the answer came back. The gap between them is the tool's real
-    // latency — the number we could not see before.
+    // latency.
+    //
+    // The gaps BETWEEN those events are the model generating tokens — writing
+    // the next query, or writing the final JSON over everything it has read.
+    // The old trace dropped them entirely, which is how a 7½-minute run showed
+    // 50 seconds of steps. Now every gap ≥ 1s is emitted as a "model" row, so
+    // the rows account for the header's wall clock.
+    const emitModelGap = (now, label) => {
+      const ms = now - mark
+      if (ms >= 1000) {
+        emit({ kind: "model", label, ok: true, ms })
+      }
+      mark = now
+    }
     stream.on("contentBlock", (block) => {
       const now = Date.now()
       if (block.type === "thinking" || block.type === "redacted_thinking") {
@@ -211,14 +266,20 @@ export async function researchWatch(
         mark = now
         return
       }
+      if (block.type === "text") {
+        // Narration between tools, or the final JSON answer — the single
+        // biggest previously-invisible interval.
+        emitModelGap(now, "Writing")
+        return
+      }
       if (block.type === "server_tool_use") {
         const input = block.input ?? {}
+        emitModelGap(now, "Composing tool call")
         pending.set(block.id, {
           kind: block.name === "web_fetch" ? "web_fetch" : "web_search",
           label: String(input.query ?? input.url ?? block.name),
           startedAt: now,
         })
-        mark = now
         return
       }
       if (block.type === "web_search_tool_result" || block.type === "web_fetch_tool_result") {
@@ -288,11 +349,15 @@ export async function researchWatch(
 const toCents = (usd) => Math.round(usd * 100)
 
 /** The watch_valuations insert payload for a research result — shared so the
- *  CLI and the route can never drift on column mapping. */
-export function valuationInsertRow(watch, v) {
+ *  CLI and the route can never drift on column mapping. `runMode` marks the
+ *  research depth ('quick' snapshot vs full 'deep' methodology, 00049). */
+export function valuationInsertRow(watch, v, { runMode = "deep" } = {}) {
   return {
     watch_id: watch.id,
     user_id: watch.user_id,
+    // 'deep' is the column default — omitted so pre-00049 databases still
+    // accept CLI inserts. Only the quick path hard-requires the migration.
+    ...(runMode !== "deep" ? { run_mode: runMode } : {}),
     value_low_cents: toCents(v.market_value_low_usd),
     value_mid_cents: toCents(v.market_value_mid_usd),
     value_high_cents: toCents(v.market_value_high_usd),

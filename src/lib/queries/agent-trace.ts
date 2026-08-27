@@ -10,10 +10,12 @@ import { createClient } from "@/lib/supabase/server"
  */
 export interface TraceRow {
   label: string
-  /** web_search · web_fetch · thinking · turn (or 'valuation' for CLI runs). */
+  /** web_search · web_fetch · thinking · model · turn (or 'valuation' for CLI runs). */
   kind: string | null
   ok: boolean
   detail: string | null
+  /** Step duration (00049). Older rows carry it in `detail` text instead. */
+  durationMs: number | null
 }
 
 export interface AgentTrace {
@@ -58,7 +60,7 @@ export async function getLatestPriceCheckTrace(
 
   const { data: items } = await supabase
     .from("agent_run_items")
-    .select("label, field, action, detail")
+    .select("label, field, action, detail, duration_ms")
     .eq("run_id", newest.run_id)
     .eq("entity_id", watchId)
     .order("created_at", { ascending: true })
@@ -75,6 +77,7 @@ export async function getLatestPriceCheckTrace(
       kind: it.field,
       ok: it.action !== "failed",
       detail: it.detail,
+      durationMs: (it as { duration_ms?: number | null }).duration_ms ?? null,
     })),
   }
 }

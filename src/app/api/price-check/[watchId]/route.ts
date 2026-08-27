@@ -2,43 +2,35 @@ import { NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
 import { createClient } from "@/lib/supabase/server"
 import {
-  finishJob,
-  getJobForWatch,
-  getRunningJob,
-  registerJob,
-  type PriceCheckJob,
-  type TraceStep,
-} from "@/lib/price-check-jobs"
-import {
   MODEL,
+  PROFILES,
   WATCH_SELECT,
   researchWatch,
   researchCostUsd,
   valuationInsertRow,
 } from "../../../../../scripts/lib/price-research.mjs"
 
-// The in-app "Check price now" run (Phase 5, V6). Same research call as the
-// CLI agent — scripts/lib/price-research.mjs is the single implementation of
-// the prompt and the output contract. Model + pricing constants live there.
+// The in-app "Check price now" run (V10 redesign): a QUICK market snapshot —
+// 3 searches / 1 fetch / low effort, targeting well under two minutes — run
+// SYNCHRONOUSLY in this request. The old background-job-and-poll design
+// (registry in price-check-jobs.ts, since deleted) existed because the button
+// ran the full batch-depth research (7-30+ min); it also silently died on
+// serverless, where the instance freezes once the POST returns. A quick
+// profile fits inside one request, so the whole registry/poll apparatus is
+// gone. Deep research remains the monthly CLI run (and the overnight queue,
+// rollout #2).
 //
-// POST starts a background job and returns its run id immediately; GET polls
-// it. See src/lib/price-check-jobs.ts for why the run cannot be the body of
-// the request.
+// Same research engine as the CLI — scripts/lib/price-research.mjs is the
+// single implementation of the prompt, budgets, and output contract.
 
-// POST returns in milliseconds now, so this only guards the validation path.
-export const maxDuration = 60
+// The request IS the run now. QUICK_CAP_MS aborts the research; maxDuration
+// gives the route headroom to abort gracefully and still log the failure.
+export const maxDuration = 180
+const QUICK_CAP_MS = 150 * 1000
 
 /** One run per watch per hour (§3.3) — a re-run inside the window can only
  *  burn money to restate the same thin market. */
 const RATE_LIMIT_MS = 60 * 60 * 1000
-
-/**
- * Wall-clock ceiling on one run. The log had a 33-minute run that finished
- * successfully; nothing in the loop bounded it, because `max_uses` caps how
- * MANY tools are called, not how long each takes. A run past this point has
- * stopped being worth its own latency.
- */
-const HARD_CAP_MS = 8 * 60 * 1000
 
 interface ResearchWatch {
   id: string
@@ -53,39 +45,13 @@ interface ResearchWatch {
   sale_status: string
 }
 
-/** The public shape of a job — what the polling client renders. */
-function jobView(job: PriceCheckJob) {
-  return {
-    runId: job.runId,
-    status: job.status,
-    elapsedMs: (job.finishedAt ?? Date.now()) - job.startedAt,
-    steps: job.steps,
-    error: job.error ?? null,
-    valueMidCents: job.valueMidCents ?? null,
-    confidence: job.confidence ?? null,
-  }
-}
-
-/** GET /api/price-check/[watchId] — poll the current or most recent run. */
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ watchId: string }> }
-) {
-  const { watchId } = await params
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated." }, { status: 401 })
-  }
-
-  const job = getJobForWatch(watchId)
-  // A server restart drops the registry. Say so plainly rather than reporting
-  // a run that vanished as still running — the client stops polling and
-  // reloads, which is the honest outcome.
-  if (!job) return NextResponse.json({ status: "unknown" })
-  return NextResponse.json(jobView(job))
+interface TraceStep {
+  seq: number
+  kind: string
+  label: string
+  ok: boolean
+  detail?: string
+  ms: number | null
 }
 
 export async function POST(
@@ -108,14 +74,6 @@ export async function POST(
       { error: "ANTHROPIC_API_KEY is not configured on the server." },
       { status: 500 }
     )
-  }
-
-  // Pressing the button again while a run is going rejoins it instead of
-  // starting a second one. Two concurrent runs on the same watch would cost
-  // twice and race each other's insert.
-  const running = getRunningJob(watchId)
-  if (running) {
-    return NextResponse.json({ ...jobView(running), resumed: true })
   }
 
   const { data: watchRow } = await supabase
@@ -165,44 +123,12 @@ export async function POST(
   }
 
   const watchLabel = `${watch.brand?.name ?? ""} ${watch.model}`.trim()
-
-  // The agent_runs row is written once, when the run FINISHES.
-  //
-  // The obvious shape — insert "running" up front, update it at the end —
-  // does not work here: migration 00028 gives agent_runs SELECT and INSERT
-  // policies but no UPDATE policy, so the finalizing update silently matches
-  // zero rows and every run is left looking like it is still going. An
-  // in-flight run is visible through the poll endpoint anyway, which is the
-  // better place for it, so nothing is lost by writing the row at the end.
-  const job: PriceCheckJob = {
-    runId: null,
-    watchId,
-    watchLabel,
-    startedAt: Date.now(),
-    finishedAt: null,
-    status: "running",
-    steps: [],
-  }
-  registerJob(job)
-
-  // Deliberately not awaited: the whole point is that the response returns
-  // now and the research continues in this process.
-  void research(job, watch, user.id, supabase)
-
-  return NextResponse.json(jobView(job), { status: 202 })
-}
-
-/** The background run. Never throws — every exit path finalizes the job. */
-async function research(
-  job: PriceCheckJob,
-  watch: ResearchWatch,
-  userId: string,
-  supabase: Awaited<ReturnType<typeof createClient>>
-) {
   const anthropic = new Anthropic() // reads ANTHROPIC_API_KEY
   const controller = new AbortController()
-  const capTimer = setTimeout(() => controller.abort(), HARD_CAP_MS)
+  const capTimer = setTimeout(() => controller.abort(), QUICK_CAP_MS)
 
+  const startedAt = Date.now()
+  const steps: TraceStep[] = []
   let status: "success" | "failed" = "failed"
   let error: string | undefined
   let valueMidCents: number | undefined
@@ -211,9 +137,10 @@ async function research(
 
   try {
     const result = await researchWatch(anthropic, watch, {
+      mode: "quick",
       // The .mjs module is untyped, so its callback signature is `object`.
       onStep: (step: object) => {
-        job.steps.push(step as TraceStep)
+        steps.push(step as TraceStep)
       },
       signal: controller.signal,
     })
@@ -222,7 +149,7 @@ async function research(
 
     const { error: insertError } = await supabase
       .from("watch_valuations")
-      .insert(valuationInsertRow(watch, valuation))
+      .insert(valuationInsertRow(watch, valuation, { runMode: "quick" }))
     if (insertError) {
       throw new Error(`The estimate could not be saved: ${insertError.message}`)
     }
@@ -232,7 +159,7 @@ async function research(
     confidence = valuation.confidence
   } catch (err) {
     if (controller.signal.aborted) {
-      error = `Gave up after ${Math.round(HARD_CAP_MS / 60_000)} minutes — see the run trace for where the time went.`
+      error = `Gave up after ${Math.round(QUICK_CAP_MS / 1000)} seconds — try again, or wait for a deep run.`
     } else if (err instanceof Anthropic.RateLimitError) {
       error = "Anthropic rate limit hit — try again in a minute."
     } else if (err instanceof Anthropic.APIError) {
@@ -248,18 +175,20 @@ async function research(
   const costUsd = researchCostUsd(usage)
 
   // Flush the run and its trace. Best-effort, as everywhere else: a logging
-  // failure must not change what the user sees happened.
+  // failure must not change what the user sees happened. The agent_runs row
+  // is written once, at the end — 00028 has no UPDATE policy, so an
+  // insert-running-then-update shape would silently strand every run.
   try {
     const { data: runRow } = await supabase
       .from("agent_runs")
       .insert({
-        user_id: userId,
+        user_id: user.id,
         agent: "price-check",
         trigger: "ui",
         status,
-        started_at: new Date(job.startedAt).toISOString(),
+        started_at: new Date(startedAt).toISOString(),
         finished_at: new Date(finishedAt).toISOString(),
-        duration_ms: finishedAt - job.startedAt,
+        duration_ms: finishedAt - startedAt,
         model: MODEL,
         items_processed: 1,
         items_updated: status === "success" ? 1 : 0,
@@ -268,27 +197,25 @@ async function research(
         output_tokens: usage.output,
         web_searches: usage.searches,
         cost_usd_micros: Math.round(costUsd * 1_000_000),
-        notes: error ? `${job.watchLabel} — ${error}` : job.watchLabel,
+        notes: error ? `${watchLabel} — ${error}` : `${watchLabel} (quick)`,
       })
       .select("id")
       .single()
-    job.runId = runRow?.id ?? null
 
-    if (runRow && job.steps.length > 0) {
+    if (runRow && steps.length > 0) {
       await supabase.from("agent_run_items").insert(
-        job.steps.map((step) => ({
+        steps.map((step) => ({
           run_id: runRow.id,
-          user_id: userId,
+          user_id: user.id,
           entity_type: "watch",
-          entity_id: job.watchId,
+          entity_id: watchId,
           label: step.label.slice(0, 500),
           // The report colours 'updated' brass and 'failed' destructive and
           // falls through to neutral otherwise, so these read correctly there.
           action: step.ok ? "updated" : "failed",
           field: step.kind,
-          detail: [step.detail, step.ms != null ? `${(step.ms / 1000).toFixed(1)}s` : null]
-            .filter(Boolean)
-            .join(" · "),
+          detail: step.detail ?? null,
+          duration_ms: step.ms != null ? Math.round(step.ms) : null,
         }))
       )
     }
@@ -296,5 +223,19 @@ async function research(
     // logging is optional; ignore failures
   }
 
-  finishJob(job, { status, error, valueMidCents, confidence })
+  if (status === "failed") {
+    return NextResponse.json(
+      { status, error: error ?? "The price check failed.", elapsedMs: finishedAt - startedAt },
+      { status: 502 }
+    )
+  }
+  return NextResponse.json({
+    status,
+    elapsedMs: finishedAt - startedAt,
+    valueMidCents,
+    confidence,
+    costUsd: Math.round(costUsd * 100) / 100,
+    searches: usage.searches,
+    profile: PROFILES.quick,
+  })
 }
