@@ -325,16 +325,31 @@ function TileAction({
   onClick: () => void
   disabled?: boolean
 }) {
+  // NOT a real <button>: this control sits inside the hero tile, which is
+  // itself a <button> — nesting them is invalid HTML and a hydration error.
+  // Same role="button" span pattern as the strip's cover star, including
+  // stopPropagation so a delete click can't also open the lightbox.
   return (
-    <button
-      type="button"
+    <span
+      role="button"
+      tabIndex={disabled ? -1 : 0}
       aria-label={label}
       title={label}
-      onClick={onClick}
-      disabled={disabled}
-      className="flex h-8 w-8 items-center justify-center rounded-md bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60 focus-visible:opacity-100 disabled:opacity-40"
+      aria-disabled={disabled || undefined}
+      onClick={(e) => {
+        e.stopPropagation()
+        if (!disabled) onClick()
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!disabled) onClick()
+        }
+      }}
+      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60 focus-visible:opacity-100 aria-disabled:cursor-default aria-disabled:opacity-40"
     >
       {children}
-    </button>
+    </span>
   )
 }
