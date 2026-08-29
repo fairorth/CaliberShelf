@@ -30,6 +30,7 @@ import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import { WishlistBadge } from "@/components/wishlist-badge"
 import { GuideBadge } from "@/components/guide-badge"
 import { GainValue } from "@/components/gain-value"
+import { gainVersusBasis } from "@/lib/queries/gain"
 import { caliberLabel } from "@/lib/caliber"
 import { cn, formatCurrency } from "@/lib/utils"
 import type { SaleSummary } from "@/lib/queries/sales"
@@ -57,11 +58,24 @@ interface CollectionTableProps {
   chosenColumns: ColumnId[]
   /** watch_id → net proceeds + realized gain for sold watches (§3.6). */
   saleSummaries?: Record<string, SaleSummary>
+  /** watch_id → latest agent valuation mid (cents) — drives Value + Gain. */
+  valuationMids?: Record<string, number>
 }
 
 function priceLabel(watch: WatchWithCover): string {
   return watch.purchase_price_cents !== null
     ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
+    : "—"
+}
+
+/** "Aug 12, 2026" — the T00:00:00 suffix avoids the UTC off-by-one. */
+function purchasedLabel(watch: WatchWithCover): string {
+  return watch.purchase_date
+    ? new Date(watch.purchase_date + "T00:00:00").toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
     : "—"
 }
 
@@ -86,7 +100,10 @@ export type TableSortKey =
   | "caliber"
   | "box"
   | "wearCount"
+  | "purchaseDate"
   | "price"
+  | "value"
+  | "gain"
 export type TableSortDir = "asc" | "desc"
 
 // ── Column widths (resizable, persisted) ───────────────────────────
@@ -102,7 +119,13 @@ export type ColumnId =
   | "caliber"
   | "box"
   | "worn"
+  | "purchased"
   | "price"
+  | "value"
+  | "gain"
+
+/** Money columns share Price's gate: hidden unless Config → "show cost". */
+const MONEY_COLUMNS: ColumnId[] = ["price", "value", "gain"]
 
 const COLUMN_WIDTHS_KEY = "collection-col-widths"
 const MIN_COL_WIDTH = 56
@@ -123,7 +146,10 @@ const COLUMN_ORDER: ColumnId[] = [
   "caliber",
   "box",
   "worn",
+  "purchased",
   "price",
+  "value",
+  "gain",
 ]
 // Seven by default. Movement Type was the eighth (DECISIONS §7) but is empty
 // in 101 of 161 rows — nine of the first twelve on screen — so it read as a
@@ -151,7 +177,10 @@ const COLUMN_LABELS: Record<ColumnId, string> = {
   caliber: "Caliber",
   box: "Box",
   worn: "Worn",
+  purchased: "Purchased",
   price: "Price",
+  value: "Value",
+  gain: "Gain",
 }
 
 /**
@@ -218,10 +247,10 @@ export function ColumnsMenu({
               key={id}
               checked={chosenColumns.includes(id)}
               onCheckedChange={() => toggleColumn(id)}
-              disabled={id === "price" && !showCost}
+              disabled={MONEY_COLUMNS.includes(id) && !showCost}
             >
               {COLUMN_LABELS[id]}
-              {id === "price" && !showCost && " (enable in Config)"}
+              {MONEY_COLUMNS.includes(id) && !showCost && " (enable in Config)"}
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuGroup>
@@ -261,7 +290,11 @@ const DEFAULT_WIDTHS: Record<ColumnId, number> = {
   caliber: 136,
   box: 112,
   worn: 72,
+  // "Aug 12, 2026" in 12px mono plus padding.
+  purchased: 112,
   price: 104,
+  value: 100,
+  gain: 100,
 }
 
 // Below 1200px the eight-column default stops fitting. Fall back to a
@@ -530,6 +563,7 @@ export function CollectionTable({
   onSortChange,
   chosenColumns,
   saleSummaries,
+  valuationMids,
 }: CollectionTableProps) {
   const router = useRouter()
 
@@ -617,7 +651,7 @@ export function CollectionTable({
     ? chosenColumns.filter((id) => NARROW_VISIBLE.includes(id))
     : chosenColumns
   const visibleColumns: ColumnId[] = COLUMN_ORDER.filter(
-    (id) => effectiveChosen.includes(id) && (id !== "price" || showCost)
+    (id) => effectiveChosen.includes(id) && (!MONEY_COLUMNS.includes(id) || showCost)
   )
   const isVisible = (id: ColumnId) => visibleColumns.includes(id)
 
@@ -710,9 +744,12 @@ export function CollectionTable({
                 {isVisible("caliber") && <SortableHeader label="Caliber" sortKey="caliber" colId="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("box") && <SortableHeader label="Box" sortKey="box" colId="box" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("worn") && <SortableHeader label="Worn" sortKey="wearCount" colId="worn" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
+                {isVisible("purchased") && <SortableHeader label="Purchased" sortKey="purchaseDate" colId="purchased" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
                 {isVisible("price") && (
                   <SortableHeader label="Price" sortKey="price" colId="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />
                 )}
+                {isVisible("value") && <SortableHeader label="Value" sortKey="value" colId="value" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
+                {isVisible("gain") && <SortableHeader label="Gain" sortKey="gain" colId="gain" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -847,6 +884,11 @@ export function CollectionTable({
                       {watch.wear_count ?? 0}
                     </TableCell>
                   )}
+                  {isVisible("purchased") && (
+                    <TableCell className="text-right font-mono text-xs tabular-nums text-muted-foreground">
+                      {purchasedLabel(watch)}
+                    </TableCell>
+                  )}
                   {isVisible("price") && (
                     <TableCell className="text-right font-mono text-xs font-medium tabular-nums text-foreground">
                       {/* A sold row shows what it actually returned, with the
@@ -865,6 +907,27 @@ export function CollectionTable({
                       ) : (
                         priceLabel(watch)
                       )}
+                    </TableCell>
+                  )}
+                  {/* Value + Gain are unrealized-market columns: sold watches
+                      show — here (their realized story lives in Price, §3.6). */}
+                  {isVisible("value") && (
+                    <TableCell className="text-right font-mono text-xs font-medium tabular-nums text-foreground">
+                      {watch.sale_status !== "sold" && valuationMids?.[watch.id] != null
+                        ? formatCurrency(valuationMids[watch.id], "USD", true)
+                        : "—"}
+                    </TableCell>
+                  )}
+                  {isVisible("gain") && (
+                    <TableCell className="text-right font-mono text-xs tabular-nums">
+                      <GainValue
+                        gain={
+                          watch.sale_status !== "sold" && valuationMids?.[watch.id] != null
+                            ? gainVersusBasis(valuationMids[watch.id], watch)
+                            : null
+                        }
+                        wholeDollars
+                      />
                     </TableCell>
                   )}
                 </TableRow>

@@ -28,6 +28,7 @@ import {
   type CollectionFilters,
 } from "./collection-filters"
 import type { SaleSummary } from "@/lib/queries/sales"
+import { gainVersusBasis } from "@/lib/queries/gain"
 import { cn, formatCurrency } from "@/lib/utils"
 import { COLLECTION_RETURN_KEY, SHOW_COST_KEY } from "@/lib/preferences"
 import { KNOWN_COMPLICATIONS } from "@/lib/validations/watch"
@@ -65,7 +66,7 @@ const TILE_DENSITIES = [
 
 // One sort owner (B3): a single {key, dir} lives here and covers both the
 // tile-view dropdown keys and every table header key.
-type SortKey = "default" | "purchaseDate" | "caseDiameter" | TableSortKey
+type SortKey = "default" | "caseDiameter" | TableSortKey
 type SortDir = "asc" | "desc"
 
 // The tile-view dropdown offers this curated subset…
@@ -94,6 +95,8 @@ const SORT_LABELS: Record<SortKey, string> = {
   movementType: "Sort: Movement type",
   caliber: "Sort: Caliber",
   box: "Sort: Box",
+  value: "Sort: Value",
+  gain: "Sort: Gain",
 }
 
 const ALL_SORT_KEYS = Object.keys(SORT_LABELS) as SortKey[]
@@ -204,7 +207,11 @@ function applyFilters(
   })
 }
 
-function sortValue(w: WatchWithCover, key: SortKey): string | number | null {
+function sortValue(
+  w: WatchWithCover,
+  key: SortKey,
+  valuationMids: Record<string, number>
+): string | number | null {
   switch (key) {
     case "brand":
       return w.brand.name.toLowerCase()
@@ -212,6 +219,12 @@ function sortValue(w: WatchWithCover, key: SortKey): string | number | null {
       return w.purchase_price_cents
     case "purchaseDate":
       return w.purchase_date // "YYYY-MM-DD" sorts lexically
+    case "value":
+      return valuationMids[w.id] ?? null
+    case "gain": {
+      const mid = valuationMids[w.id]
+      return mid != null ? (gainVersusBasis(mid, w)?.cents ?? null) : null
+    }
     case "caseDiameter":
       return w.case_diameter_mm
     case "wearCount":
@@ -237,7 +250,12 @@ function sortValue(w: WatchWithCover, key: SortKey): string | number | null {
   }
 }
 
-function sortWatches(watches: WatchWithCover[], key: SortKey, dir: SortDir): WatchWithCover[] {
+function sortWatches(
+  watches: WatchWithCover[],
+  key: SortKey,
+  dir: SortDir,
+  valuationMids: Record<string, number>
+): WatchWithCover[] {
   // Sold watches group to the bottom regardless of the active sort (§3.6) —
   // they are history, and interleaving them would break every column's
   // reading order. This runs even with no sort applied.
@@ -248,8 +266,8 @@ function sortWatches(watches: WatchWithCover[], key: SortKey, dir: SortDir): Wat
   return [...watches].sort((a, b) => {
     const bySold = soldLast(a, b)
     if (bySold !== 0) return bySold
-    const va = sortValue(a, key)
-    const vb = sortValue(b, key)
+    const va = sortValue(a, key, valuationMids)
+    const vb = sortValue(b, key, valuationMids)
     // Push missing values to the bottom regardless of direction.
     if (va === null && vb === null) return 0
     if (va === null) return 1
@@ -482,8 +500,8 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
     [afterFilters, query]
   )
   const displayed = useMemo(
-    () => sortWatches(afterSearch, sortKey, sortDir),
-    [afterSearch, sortKey, sortDir]
+    () => sortWatches(afterSearch, sortKey, sortDir, valuationMids),
+    [afterSearch, sortKey, sortDir, valuationMids]
   )
 
   // Sold watches are excluded from every money total (§3.6) — their value is
@@ -733,11 +751,12 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           onCategoryClick={(categoryId) =>
             updateFilters({ ...filters, categoryIds: [categoryId] })
           }
-          sortKey={sortKey === "default" || sortKey === "purchaseDate" || sortKey === "caseDiameter" ? null : sortKey}
+          sortKey={sortKey === "default" || sortKey === "caseDiameter" ? null : sortKey}
           sortDir={sortDir}
           onSortChange={handleTableSort}
           chosenColumns={chosenColumns}
           saleSummaries={saleSummaries}
+          valuationMids={valuationMids}
         />
       ) : (
         <GalleryGrid
