@@ -44,7 +44,17 @@ export function AddWearDialog({
   const formRef = useRef<HTMLFormElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
 
+  // Each action produces a NEW state object; between renders the reference is
+  // stable. Guarding on identity makes this fire exactly once per submit.
+  // Without it, the callback deps below (inline arrows from the calendar)
+  // change identity on every parent re-render — and since closing the dialog
+  // re-renders the parent, a successful submit re-ran this effect endlessly:
+  // toast → onOpenChange → parent state → new callbacks → toast → … until
+  // the tab died.
+  const handledState = useRef<WearLogActionState | null>(null)
   useEffect(() => {
+    if (handledState.current === state) return
+    handledState.current = state
     if (state.success) {
       toast.success("Wear logged!")
       formRef.current?.reset()
