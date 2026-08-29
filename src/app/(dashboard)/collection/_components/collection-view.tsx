@@ -2,13 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowDown, ArrowUp, LayoutGrid, Table as TableIcon } from "lucide-react"
+import { ArrowDown, ArrowUp, Download, LayoutGrid, Table as TableIcon } from "lucide-react"
 import {
   CollectionTable,
   ColumnsMenu,
+  MONEY_COLUMNS,
   useColumnVisibility,
   type TableSortKey,
 } from "@/components/collection-table"
+import { collectionCsv, downloadCsv } from "@/lib/collection-csv"
+import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { caliberLabel } from "@/lib/caliber"
 import {
@@ -726,6 +729,29 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
               showCost={showCost}
             />
           )}
+          {/* Export what's on screen: displayed rows (filtered + sorted) ×
+              chosen columns, money columns gated the same as the table. */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() =>
+              downloadCsv(
+                collectionCsv(
+                  displayed,
+                  chosenColumns.filter(
+                    (id) => !MONEY_COLUMNS.includes(id) || showCost
+                  ),
+                  valuationMids,
+                  saleSummaries
+                ),
+                `tentenloupe-collection-${new Date().toISOString().slice(0, 10)}.csv`
+              )
+            }
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+            CSV
+          </Button>
         </div>
       )}
 

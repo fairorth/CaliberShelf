@@ -125,7 +125,7 @@ export type ColumnId =
   | "gain"
 
 /** Money columns share Price's gate: hidden unless Config → "show cost". */
-const MONEY_COLUMNS: ColumnId[] = ["price", "value", "gain"]
+export const MONEY_COLUMNS: ColumnId[] = ["price", "value", "gain"]
 
 const COLUMN_WIDTHS_KEY = "collection-col-widths"
 const MIN_COL_WIDTH = 56
@@ -166,7 +166,7 @@ const DEFAULT_VISIBLE: ColumnId[] = [
   "box",
   "worn",
 ]
-const COLUMN_LABELS: Record<ColumnId, string> = {
+export const COLUMN_LABELS: Record<ColumnId, string> = {
   photo: "Photo",
   category: "Category",
   brand: "Brand",
@@ -199,8 +199,11 @@ export function useColumnVisibility() {
       const parsed = JSON.parse(saved) as ColumnId[]
       if (Array.isArray(parsed)) {
         const valid = parsed.filter((id) => COLUMN_ORDER.includes(id))
+        // Photo is a normal toggleable column now (perf: with it off, no
+        // thumbnails mount). Legacy saved arrays always contained it, so
+        // nothing changes for existing devices until they untick it.
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (valid.length > 0) setChosenColumns(valid.includes("photo") ? valid : ["photo", ...valid])
+        if (valid.length > 0) setChosenColumns(valid)
       }
     } catch {
       // ignore malformed stored value
@@ -242,7 +245,7 @@ export function ColumnsMenu({
         <DropdownMenuGroup>
           <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {COLUMN_ORDER.filter((id) => id !== "photo").map((id) => (
+          {COLUMN_ORDER.map((id) => (
             <DropdownMenuCheckboxItem
               key={id}
               checked={chosenColumns.includes(id)}
@@ -727,14 +730,16 @@ export function CollectionTable({
             </colgroup>
             <TableHeader>
               <TableRow>
-                <TableHead className="relative text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-                  Photo
-                  <ResizeHandle
-                    label="Photo"
-                    onPointerDown={(e) => handleResizeStart(e, "photo")}
-                    onKeyResize={(delta) => handleKeyResize("photo", delta)}
-                  />
-                </TableHead>
+                {isVisible("photo") && (
+                  <TableHead className="relative text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                    Photo
+                    <ResizeHandle
+                      label="Photo"
+                      onPointerDown={(e) => handleResizeStart(e, "photo")}
+                      onKeyResize={(delta) => handleKeyResize("photo", delta)}
+                    />
+                  </TableHead>
+                )}
                 {isVisible("category") && <SortableHeader label="Category" sortKey="category" colId="category" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("brand") && <SortableHeader label="Brand" sortKey="brand" colId="brand" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("model") && <SortableHeader label="Model" sortKey="model" colId="model" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
@@ -776,14 +781,16 @@ export function CollectionTable({
                       : "hover:bg-accent/40 hover:shadow-[inset_2px_0_0_var(--brass)]"
                   )}
                 >
-                  <TableCell className="py-2">
-                    <HoverPhoto
-                      url={watch.cover_photo_url}
-                      thumbUrl={watch.cover_thumb_url}
-                      alt={`${watch.brand.name} ${watch.model}`}
-                      size="sm"
-                    />
-                  </TableCell>
+                  {isVisible("photo") && (
+                    <TableCell className="py-2">
+                      <HoverPhoto
+                        url={watch.cover_photo_url}
+                        thumbUrl={watch.cover_thumb_url}
+                        alt={`${watch.brand.name} ${watch.model}`}
+                        size="sm"
+                      />
+                    </TableCell>
+                  )}
                   {isVisible("category") && (
                     <FilterCell
                       className="text-muted-foreground"
