@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -13,6 +14,10 @@ interface SearchInputProps {
   ariaLabel?: string
   /** Wrapper (form) classes — set the width here. */
   className?: string
+  /** Opt-in: `/` focuses this field (with a kbd badge advertising it).
+   *  Enable only where the header's JumpSearch stands down (the collection),
+   *  or two listeners would race for the same key. */
+  slashShortcut?: boolean
 }
 
 /**
@@ -28,7 +33,34 @@ export function SearchInput({
   autoFocus,
   ariaLabel,
   className,
+  slashShortcut = false,
 }: SearchInputProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Same contract as JumpSearch: `/` focuses the field from anywhere —
+  // except while the user is already typing into something, where a slash
+  // is a slash.
+  useEffect(() => {
+    if (!slashShortcut) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return
+      const el = document.activeElement
+      const tag = el?.tagName
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        (el as HTMLElement | null)?.isContentEditable
+      ) {
+        return
+      }
+      e.preventDefault()
+      inputRef.current?.focus()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [slashShortcut])
+
   return (
     <form
       role="search"
@@ -40,6 +72,7 @@ export function SearchInput({
     >
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <input
+        ref={inputRef}
         type="search"
         value={value}
         autoFocus={autoFocus}
@@ -53,6 +86,13 @@ export function SearchInput({
           "[&::-webkit-search-cancel-button]:appearance-none"
         )}
       />
+      {/* The ✕ takes this spot once there's a query, so the hint only shows
+          while the field is empty — which is also when it's useful. */}
+      {slashShortcut && !value && (
+        <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border border-border px-1.5 py-px font-mono text-2xs text-muted-foreground sm:block">
+          /
+        </kbd>
+      )}
       {value && (
         <button
           type="button"

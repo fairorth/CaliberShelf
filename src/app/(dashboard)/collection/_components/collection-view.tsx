@@ -588,6 +588,9 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
           placeholder={`Filter these ${afterFilters.length} ${afterFilters.length === 1 ? "watch" : "watches"}…`}
           ariaLabel="Filter the collection"
           className="w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-md"
+          // The header's JumpSearch stands down on /collection, so `/` is
+          // free here — same muscle memory, this page's own search box.
+          slashShortcut
         />
 
         <CollectionFiltersDialog
