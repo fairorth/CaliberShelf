@@ -106,6 +106,13 @@ export default async function ReportsPage() {
 
   const analyses: ReportLink[] = [
     {
+      slug: "watch-list",
+      title: "Watch List",
+      description:
+        "The full schedule — every watch with reference, cost and current value. Prints to PDF; exports CSV/Excel.",
+      available: true,
+    },
+    {
       slug: "collection-map",
       title: "Collection Map",
       description:
