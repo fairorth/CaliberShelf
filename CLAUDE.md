@@ -133,6 +133,9 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - The **Sale status** filter (`?sale=`) has view-specific defaults: an *absent* param means "Owned only" in tiles and "All" in the table, so `""` is unset and `"all"` is the explicit everything choice (clearing the chip writes `all`, otherwise the default would silently reapply). Sold watches always sort to the bottom, whatever the active sort.
 - The Brand and Category **cells** filter the collection; the rest of the row opens the watch. This deliberately narrows "one row, one destination" — see DECISIONS.md §8.
 - Column widths are explicit pixels, resizable, persisted per device. Any column may be resized; the table sizes itself to their sum.
+- **Purchased / Value / Gain** are optional picker columns (v1.9.24); Price, Value and Gain are `MONEY_COLUMNS`, gated by the show-cost setting in both the menu and the table. **Photo is a normal toggleable column** (untick = no thumbnails mount — the render-perf lever). A NEW ColumnId never auto-appears on a device with saved column prefs — users must tick it in the Columns menu.
+- The toolbar **CSV button** exports the on-screen view — displayed (filtered+sorted) rows × chosen columns, sold rows exporting net proceeds — via `src/lib/collection-csv.ts` (UTF-8 BOM, Excel-ready). DECISION: the collection owns ad-hoc data exports; the **Watch List report** (`/reports/watch-list`, sortable, wish-list excluded by default) stays the print/insurance schedule.
+- **"/" focuses the collection's own filter box** (`SearchInput slashShortcut`) because the header JumpSearch deliberately stands down on /collection. Never enable both listeners on one page.
 
 ## Photo Lab — see docs/photo-lab-app.md
 Three documents, each the source of truth for its half: **`photo-lab.md`** is

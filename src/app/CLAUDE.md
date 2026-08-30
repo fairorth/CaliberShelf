@@ -42,6 +42,14 @@ const [state, formAction, isPending] = useActionState<MyState, FormData>(myActio
 // Use: <form action={formAction}>
 ```
 - NOTE: `useActionState` replaces the deprecated `useFormState` from `react-dom`
+- **Success-effect guard (wear-log toast-loop lesson, v1.9.27):** an effect
+  that reacts to the action state must fire once per SUBMIT, not once per
+  dependency change. If the effect's deps include parent callbacks (inline
+  arrows change identity every render) while `state.success` stays true,
+  toast + parent-update loops forever. Either dep on `[state]` alone, or
+  ref-guard on the state object's identity (`if (handled.current === state)
+  return`) — `useActionState` returns a new object per action, stable
+  between renders. See add-wear-dialog.tsx.
 
 ## Route Groups
 - `(auth)` - Unauthenticated pages (login, signup). No sidebar or nav.

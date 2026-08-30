@@ -30,6 +30,13 @@
 - Color maps: define a `Record<ColorName, { bg: string; text: string }>` with Tailwind classes for consistent badge/tag styling
 - Watch dial (`watch-dial.tsx`): 12 hour positions hold random unique watches (NOT category-based anymore), index 0=12 o'clock. Dressed as a full wristwatch — smoked-blue sunburst face, polished domed silver bezel, leather strap (top+bottom), four lugs, and a fluted crown at 3 o'clock. Strap/lugs/crown render before the bezel in DOM so the round case paints over their inner ends.
 
+## Nested Interactive Elements
+- A clickable photo tile is a `<button>` — overlay controls INSIDE it (delete,
+  set-as-cover) must be `role="button"` **spans** with tabIndex + Enter/Space
+  handling + `stopPropagation`, never real `<button>`s: button-in-button is
+  invalid HTML and a hydration error (photo-gallery TileAction lesson,
+  v1.9.28). The strip cover-star and TileAction are the reference pattern.
+
 ## Stacking Context Gotchas
 - `transform: translate(...)` / `scale(...)` on a positioned element creates a new stacking context, **trapping** inner `z-index`. To lift an element above its siblings on hover, set `hover:z-50` on the transformed wrapper itself, not on a child.
 - z-index requires `position` non-static — `hover:z-50` on a class with no position (e.g. a default-flow `<Link>`) is silently ignored.
