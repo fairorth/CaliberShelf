@@ -6,11 +6,11 @@ import { dollarsToCents } from "@/lib/utils"
 import {
   listingFormSchema,
   manualValuationSchema,
-  markCandidateSchema,
+  saleEditSchema,
   saleFormSchema,
   type ListingFormValues,
   type ManualValuationValues,
-  type MarkCandidateValues,
+  type SaleEditValues,
   type SaleFormValues,
 } from "@/lib/validations/sale"
 import { todayDate } from "@/lib/queries/sales"
@@ -23,18 +23,20 @@ export type SaleActionState = {
 
 // ── The transition table (spec §2) — enforced HERE, not in the DB ──
 //
-//   owned     → candidate | listed
-//   candidate → listed | owned            (owned = "changed my mind")
-//   listed    → sold | candidate | owned  (back = withdrawn, listing row closed)
-//   sold      → owned                     (undo, deletes the sale row)
+//   owned  → listed          (mark for sale — opens a listing row)
+//   listed → sold | owned    (owned = withdrawn, listing row closed)
+//   sold   → owned           (undo, deletes the sale row)
+//
+// Candidate was retired in 00051: "thinking about it" was a state the app
+// tracked and the owner never used. A watch is either for sale — with a
+// venue, a date and an ask — or it is not.
 //
 // Every status write in this file goes through assertTransition. The app owns
 // the lifecycle; the DB deliberately has no CHECK so backfills stay possible.
 
 const TRANSITIONS: Record<SaleStatus, readonly SaleStatus[]> = {
-  owned: ["candidate", "listed"],
-  candidate: ["listed", "owned"],
-  listed: ["sold", "candidate", "owned"],
+  owned: ["listed"],
+  listed: ["sold", "owned"],
   sold: ["owned"],
 }
 
@@ -48,7 +50,6 @@ interface WatchState {
   id: string
   sale_status: SaleStatus
   target_ask_cents: number | null
-  candidate_since: string | null
 }
 
 async function getWatchState(
@@ -58,7 +59,7 @@ async function getWatchState(
 ): Promise<WatchState | null> {
   const { data } = await supabase
     .from("watches")
-    .select("id, sale_status, target_ask_cents, candidate_since")
+    .select("id, sale_status, target_ask_cents")
     .eq("id", watchId)
     .eq("user_id", userId)
     .maybeSingle()
@@ -72,83 +73,12 @@ function revalidateSaleSurfaces(watchId: string) {
   revalidatePath("/market")
   revalidatePath("/market/sold")
   revalidatePath("/collection")
-  revalidatePath("/reports/realized-gains")
+  revalidatePath("/reports/sales")
   revalidatePath("/reports/annual-summary")
+  revalidatePath("/reports/watch-list")
 }
 
-// ── owned → candidate ───────────────────────────────────────────
-
-export async function markCandidate(
-  watchId: string,
-  input: MarkCandidateValues
-): Promise<SaleActionState> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return { error: "You must be logged in." }
-
-  const parsed = markCandidateSchema.safeParse(input)
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
-
-  const watch = await getWatchState(supabase, user.id, watchId)
-  if (!watch) return { error: "Watch not found." }
-  const blocked = assertTransition(watch.sale_status, "candidate")
-  if (blocked) return { error: blocked }
-
-  const { error } = await supabase
-    .from("watches")
-    .update({
-      sale_status: "candidate",
-      candidate_since: todayDate(),
-      candidate_note: parsed.data.candidate_note.trim() || null,
-    })
-    .eq("id", watchId)
-    .eq("user_id", user.id)
-  if (error) return { error: error.message }
-
-  revalidateSaleSurfaces(watchId)
-  return { success: true }
-}
-
-// ── candidate → owned ("changed my mind") ───────────────────────
-// The transition table's candidate → owned edge; listed → owned goes through
-// withdrawListing (the listing row must be closed) and sold → owned through
-// undoSale (the sale row must be deleted).
-
-export async function revertToOwned(watchId: string): Promise<SaleActionState> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return { error: "You must be logged in." }
-
-  const watch = await getWatchState(supabase, user.id, watchId)
-  if (!watch) return { error: "Watch not found." }
-  if (watch.sale_status !== "candidate") {
-    // owned→owned is a no-op; listed and sold have their own paths back.
-    const blocked = assertTransition(watch.sale_status, "owned")
-    if (blocked) return { error: blocked }
-    return {
-      error:
-        watch.sale_status === "listed"
-          ? "Withdraw the listing instead."
-          : "Undo the sale instead.",
-    }
-  }
-
-  const { error } = await supabase
-    .from("watches")
-    .update({ sale_status: "owned", candidate_since: null, candidate_note: null })
-    .eq("id", watchId)
-    .eq("user_id", user.id)
-  if (error) return { error: error.message }
-
-  revalidateSaleSurfaces(watchId)
-  return { success: true }
-}
-
-// ── owned | candidate → listed (§3.4) ───────────────────────────
+// ── owned → listed: mark for sale (§3.4) ────────────────────────
 
 export async function listForSale(
   watchId: string,
@@ -252,12 +182,12 @@ export async function updateListing(
   return { success: true }
 }
 
-// ── listed → candidate | owned (withdraw) ───────────────────────
+// ── listed → owned (withdraw) ───────────────────────────────────
+// With Candidate retired there is one way back: the listing closes as
+// withdrawn and the watch is plainly owned again. The listing row survives —
+// it is where days-on-market and price history live.
 
-export async function withdrawListing(
-  watchId: string,
-  backTo: "candidate" | "owned"
-): Promise<SaleActionState> {
+export async function withdrawListing(watchId: string): Promise<SaleActionState> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -267,9 +197,9 @@ export async function withdrawListing(
   const watch = await getWatchState(supabase, user.id, watchId)
   if (!watch) return { error: "Watch not found." }
   if (watch.sale_status !== "listed") {
-    return { error: "Only a listed watch can be withdrawn." }
+    return { error: "Only a watch that is for sale can be withdrawn." }
   }
-  const blocked = assertTransition(watch.sale_status, backTo)
+  const blocked = assertTransition(watch.sale_status, "owned")
   if (blocked) return { error: blocked }
 
   const { error: closeError } = await supabase
@@ -282,16 +212,7 @@ export async function withdrawListing(
 
   const { error: updateError } = await supabase
     .from("watches")
-    .update(
-      backTo === "candidate"
-        ? {
-            sale_status: "candidate",
-            // Keep an existing on-the-block date; stamp one for a watch that
-            // was listed straight from owned.
-            candidate_since: watch.candidate_since ?? todayDate(),
-          }
-        : { sale_status: "owned", candidate_since: null, candidate_note: null }
-    )
+    .update({ sale_status: "owned" })
     .eq("id", watchId)
     .eq("user_id", user.id)
   if (updateError) return { error: updateError.message }
@@ -385,6 +306,62 @@ export async function recordSale(
       .eq("id", listing.id)
     return { error: updateError.message }
   }
+
+  revalidateSaleSurfaces(watchId)
+  return { success: true }
+}
+
+// ── Edit a recorded sale (no transition) ────────────────────────
+// A sale is a record, and records get corrected: a fee lands late, the buyer
+// turns out to have paid a different way, the date was a day out. Before
+// this the only way to change any of it was to undo the sale — deleting the
+// row, reopening the listing and re-entering everything — which is a
+// destructive operation to fix a typo. Venue is editable here (unlike when
+// recording, where it copies from the listing) because the listing may be
+// long closed and the sale is now the only place the venue lives.
+
+export async function updateSale(
+  watchId: string,
+  input: SaleEditValues
+): Promise<SaleActionState> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: "You must be logged in." }
+
+  const parsed = saleEditSchema.safeParse(input)
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+  const data = parsed.data
+
+  const watch = await getWatchState(supabase, user.id, watchId)
+  if (!watch) return { error: "Watch not found." }
+  if (watch.sale_status !== "sold") {
+    return { error: "Only a sold watch has a sale to edit." }
+  }
+
+  // net_proceeds_cents is GENERATED — it re-derives itself from the price and
+  // the four fee columns. Nothing here writes it.
+  const { error } = await supabase
+    .from("watch_sales")
+    .update({
+      sold_at: data.sold_at,
+      sale_price_cents: dollarsToCents(data.sale_price),
+      venue: data.venue,
+      venue_other: data.venue === "other" ? data.venue_other.trim() : null,
+      buyer_name: data.buyer_name.trim() || null,
+      buyer_handle: data.buyer_handle.trim() || null,
+      payment_method: data.payment_method.trim() || null,
+      tracking_number: data.tracking_number.trim() || null,
+      venue_fee_cents: dollarsToCents(data.venue_fee),
+      processing_fee_cents: dollarsToCents(data.processing_fee),
+      shipping_cost_cents: dollarsToCents(data.shipping_cost),
+      insurance_cents: dollarsToCents(data.insurance),
+      notes: data.notes.trim() || null,
+    })
+    .eq("watch_id", watchId)
+    .eq("user_id", user.id)
+  if (error) return { error: error.message }
 
   revalidateSaleSurfaces(watchId)
   return { success: true }

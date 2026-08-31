@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { caliberTypeLabels } from "@/lib/validations/movement"
+import { attachmentLabels } from "@/lib/validations/watch"
 import { labelColorMap } from "@/lib/validations/label"
 import { ComingSoonBadge } from "@/components/coming-soon-badge"
 import { WishlistBadge } from "@/components/wishlist-badge"
@@ -86,6 +87,11 @@ function movementTypeLabel(watch: WatchWithCover): string {
   return caliberTypeLabels[ct] ?? ct
 }
 
+/** Attachment column text — the label, or an em-dash when unrated. */
+function attachmentLabel(watch: WatchWithCover): string {
+  return watch.attachment ? attachmentLabels[watch.attachment] : "—"
+}
+
 // ── Sorting ────────────────────────────────────────────────────────
 // The table renders headers only; sort state and the actual ordering live
 // in the collection view — one sort owner (B3).
@@ -99,6 +105,7 @@ export type TableSortKey =
   | "movementType"
   | "caliber"
   | "box"
+  | "attachment"
   | "wearCount"
   | "purchaseDate"
   | "price"
@@ -118,6 +125,7 @@ export type ColumnId =
   | "movementType"
   | "caliber"
   | "box"
+  | "attachment"
   | "worn"
   | "purchased"
   | "price"
@@ -145,6 +153,7 @@ const COLUMN_ORDER: ColumnId[] = [
   "movementType",
   "caliber",
   "box",
+  "attachment",
   "worn",
   "purchased",
   "price",
@@ -176,6 +185,7 @@ export const COLUMN_LABELS: Record<ColumnId, string> = {
   movementType: "Movement Type",
   caliber: "Caliber",
   box: "Box",
+  attachment: "Attachment",
   worn: "Worn",
   purchased: "Purchased",
   price: "Price",
@@ -292,6 +302,8 @@ const DEFAULT_WIDTHS: Record<ColumnId, number> = {
   movementType: 132,
   caliber: 136,
   box: 112,
+  // Sized by its own header, not its values — the longest is "Medium".
+  attachment: 116,
   worn: 72,
   // "Aug 12, 2026" in 12px mono plus padding.
   purchased: 112,
@@ -748,6 +760,7 @@ export function CollectionTable({
                 {isVisible("movementType") && <SortableHeader label="Movement Type" sortKey="movementType" colId="movementType" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("caliber") && <SortableHeader label="Caliber" sortKey="caliber" colId="caliber" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("box") && <SortableHeader label="Box" sortKey="box" colId="box" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
+                {isVisible("attachment") && <SortableHeader label="Attachment" sortKey="attachment" colId="attachment" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("worn") && <SortableHeader label="Worn" sortKey="wearCount" colId="worn" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
                 {isVisible("purchased") && <SortableHeader label="Purchased" sortKey="purchaseDate" colId="purchased" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
                 {isVisible("price") && (
@@ -830,12 +843,7 @@ export function CollectionTable({
                         )}
                         {watch.sale_status === "listed" && (
                           <span className="shrink-0 rounded-full px-2 py-0.5 align-middle font-mono text-2xs uppercase tracking-wide text-brass ring-1 ring-brass/45">
-                            Listed
-                          </span>
-                        )}
-                        {watch.sale_status === "candidate" && (
-                          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 align-middle font-mono text-2xs uppercase tracking-wide text-muted-foreground ring-1 ring-border">
-                            Candidate
+                            For Sale
                           </span>
                         )}
                         {watch.is_coming_soon && <ComingSoonBadge className="shrink-0 align-middle" />}
@@ -884,6 +892,11 @@ export function CollectionTable({
                   {isVisible("box") && (
                     <TableCell className="truncate text-xs text-muted-foreground">
                       {watch.box || "\u2014"}
+                    </TableCell>
+                  )}
+                  {isVisible("attachment") && (
+                    <TableCell className="truncate text-xs text-muted-foreground">
+                      {attachmentLabel(watch)}
                     </TableCell>
                   )}
                   {isVisible("worn") && (

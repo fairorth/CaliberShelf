@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getAttentionReport } from "@/lib/queries/attention"
 import { getAgentReview, formatUsdMicros } from "@/lib/queries/agent-runs"
 import { getAllValuations, valuationRunDate } from "@/lib/queries/valuations"
-import { getRealizedGains } from "@/lib/queries/sales"
+import { getForSaleReport, getRealizedGains } from "@/lib/queries/sales"
 import { GainValue } from "@/components/gain-value"
+import { formatCurrency } from "@/lib/utils"
 
 export const metadata: Metadata = {
   title: "Reports | TenTenLoupe",
@@ -69,12 +70,14 @@ function ReportCard({ report }: { report: ReportLink }) {
 }
 
 export default async function ReportsPage() {
-  const [attention, agentReview, valuations, realizedGains] = await Promise.all([
-    getAttentionReport(),
-    getAgentReview(),
-    getAllValuations(),
-    getRealizedGains(),
-  ])
+  const [attention, agentReview, valuations, realizedGains, forSale] =
+    await Promise.all([
+      getAttentionReport(),
+      getAgentReview(),
+      getAllValuations(),
+      getRealizedGains(),
+      getForSaleReport(),
+    ])
 
   const attentionCount =
     attention.brands.length + attention.movements.length + attention.watches.length
@@ -151,17 +154,28 @@ export default async function ReportsPage() {
         : undefined,
     },
     {
-      slug: "realized-gains",
-      title: "Realized Gains",
+      slug: "sales",
+      title: "Watch Sales",
       description:
-        "Per-sale P&L grouped by year — gross, fees, net, and realized gain against cost basis.",
+        "Everything on the market now, and per-sale P&L by year — gross, fees, net, and realized gain against cost basis.",
       available: true,
       live:
-        realizedGains.lifetime.salesCount > 0 ? (
+        forSale.totals.count > 0 || realizedGains.lifetime.salesCount > 0 ? (
           <>
-            LIFETIME <GainValue gain={realizedGains.lifetime.gain} wholeDollars /> ·{" "}
-            {realizedGains.lifetime.salesCount} SALE
-            {realizedGains.lifetime.salesCount === 1 ? "" : "S"}
+            {forSale.totals.count > 0 && (
+              <>
+                {forSale.totals.count} FOR SALE ·{" "}
+                {formatCurrency(forSale.totals.askCents, "USD", true)} ASKING
+                {realizedGains.lifetime.salesCount > 0 ? " · " : ""}
+              </>
+            )}
+            {realizedGains.lifetime.salesCount > 0 && (
+              <>
+                LIFETIME <GainValue gain={realizedGains.lifetime.gain} wholeDollars /> ·{" "}
+                {realizedGains.lifetime.salesCount} SALE
+                {realizedGains.lifetime.salesCount === 1 ? "" : "S"}
+              </>
+            )}
           </>
         ) : undefined,
     },

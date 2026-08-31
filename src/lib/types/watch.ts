@@ -33,11 +33,17 @@ export type CaseShape =
 
 export type BrandType = "major" | "micro" | "indie"
 
-// ── Sale lifecycle (Phase 5, migrations 00043–00045) ────────────
+// ── Sale lifecycle (Phase 5, migrations 00043–00045; 00051) ─────
 
 /** Linear lifecycle, one status per watch. Transitions are enforced in
- *  src/lib/actions/sales.ts — see the transition table there. */
-export type SaleStatus = "owned" | "candidate" | "listed" | "sold"
+ *  src/lib/actions/sales.ts — see the transition table there.
+ *  'candidate' was retired in 00051: the value still exists in the Postgres
+ *  enum but no row holds it and nothing can write it. */
+export type SaleStatus = "owned" | "listed" | "sold"
+
+/** How attached the owner is to a watch (00051). NULL = unrated.
+ *  The one field on a watch that argues back at the Market section. */
+export type Attachment = "max" | "high" | "medium" | "low"
 
 export type SaleVenue =
   | "watchexchange"
@@ -136,9 +142,6 @@ export interface Watch {
   purchase_currency: string
   // Sale lifecycle + cost basis (00043)
   sale_status: SaleStatus
-  candidate_since: string | null
-  /** why it's on the block (≤200 chars) */
-  candidate_note: string | null
   target_ask_cents: number | null
   acq_shipping_cents: number | null
   acq_tax_cents: number | null
@@ -146,6 +149,8 @@ export interface Watch {
   /** GENERATED: purchase + shipping + tax + duty, nulls as 0. Never re-derive.
    *  0 when purchase_price_cents is null — the UI shows "—" for gain then. */
   cost_basis_cents: number
+  /** How attached the owner is (00051). Null = unrated. */
+  attachment: Attachment | null
   /** free-text storage location — which watch case/box holds this watch */
   box: string | null
   notes: string | null

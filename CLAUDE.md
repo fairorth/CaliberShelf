@@ -110,9 +110,19 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - `table-layout: fixed` treats `<colgroup>` widths as **ratios, not pixels**, whenever the table is wider than their sum: the surplus is shared out proportionally and every column inflates together. For literal widths, size the table explicitly (`width: sum-of-columns`) rather than letting it fill. Don't "fix" this with one `width: auto` flex column — a flex column absorbs width released by any other column, which silently inverts the drag direction of every resize handle to its right.
 
 ## Sales & investment (Phase 5) — see docs/data-model.md
-- **Lifecycle** is linear and one-per-watch: `owned → candidate → listed → sold`.
+- **Lifecycle** is linear and one-per-watch: `owned → listed → sold`.
   Transitions are enforced in `src/lib/actions/sales.ts` against the table in the spec,
   NOT by a DB constraint. Every status write goes through `assertTransition`.
+  **`candidate` was retired in 00051** — the value is still in the Postgres enum
+  (dropping one means recreating the type) but no row holds it and nothing writes it.
+  Don't bring it back: "thinking about it" was a state the owner never used.
+- **A recorded sale is editable in place** (`updateSale` + `EditSaleDialog`). `undoSale`
+  DELETES the record and is not the way to fix a fee or a date. Venue is editable only
+  on the sale — a sale outlives its listing and ends up the only place it lives.
+- **`watches.attachment`** (00051, `max|high|medium|low`, nullable) is how much the owner
+  loves a watch — the counterweight to every number in Market. TEXT + CHECK, not an enum,
+  precisely because retiring `candidate` showed what an enum value costs. Order lives once,
+  in `ATTACHMENT_LEVELS`; sort by its index, never alphabetically (High would beat Max).
 - **`cost_basis_cents` and `net_proceeds_cents` are generated columns.** Nothing in code
   re-derives them. A watch with no purchase price has basis 0 → every gain shows `—`.
 - **All gain math lives in `queries/gain.ts`** (pure), re-exported by `queries/sales.ts`
@@ -124,7 +134,12 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   the price cell. They are excluded from current-value totals, price-check runs, Photo Lab
   coverage targets and never-worn prompts; they stay in counts, search and every report.
 - **Market section** owns `/market` (portfolio strip, value-over-time chart, pipeline,
-  attention) and `/market/sold` (the archive with footer totals).
+  attention) and `/market/sold` (the archive with footer totals). The watch page's
+  **Market panel owns the sale record** — status, venue, dates, ask, net proceeds and
+  every control — injected as `saleControls` so the panel stays a Server Component.
+- **`/reports/sales` (Watch Sales) is the one sale report**: section 1 currently for sale,
+  section 2 completed sales by year. It absorbed Realized Gains, whose slug now
+  `permanentRedirect`s to it.
 - **No `npm run …` in UI copy** — the in-app "Check price now" button is the answer
   (finding V9).
 

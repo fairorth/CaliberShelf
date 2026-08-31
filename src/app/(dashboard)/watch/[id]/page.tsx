@@ -16,7 +16,7 @@ import { SectionCard, SectionSubHeading, SECTION_LABEL } from "@/components/sect
 import { getWatchById } from "@/lib/queries/watches"
 import { getWearCountForWatch } from "@/lib/queries/wear-logs"
 import { getValuationsForWatch } from "@/lib/queries/valuations"
-import { getActiveListing, getSaleForWatch, daysBetween, todayDate } from "@/lib/queries/sales"
+import { getActiveListing, getSaleForWatch, daysBetween, todayDate, LISTING_AGING_DAYS } from "@/lib/queries/sales"
 import { getLabelsForWatch } from "@/lib/queries/labels"
 import { gainVersusBasis } from "@/lib/queries/portfolio"
 import { GainValue } from "@/components/gain-value"
@@ -41,6 +41,7 @@ import { WatchViewPhotos } from "./_components/watch-view-photos"
 import { WearTodayButton } from "./_components/wear-today-button"
 import { CollectionBackLink } from "./_components/collection-back-link"
 import { MarketPanel } from "./_components/market-panel"
+import { attachmentLabels } from "@/lib/validations/watch"
 import { LifecycleControls } from "./_components/lifecycle-controls"
 import { TimegrapherPanel } from "./_components/timegrapher-panel"
 
@@ -195,10 +196,8 @@ export default async function WatchViewPage({
       : watch.sale_status === "sold"
         ? "SOLD"
         : watch.sale_status === "listed"
-          ? "LISTED"
-          : watch.sale_status === "candidate"
-            ? "SALE CANDIDATE"
-            : "OWNED"
+          ? "FOR SALE"
+          : "OWNED"
 
   // The Ownership section's own value — the same three-way choice the edit
   // form offers, not the sale lifecycle (which the Market section owns).
@@ -461,34 +460,20 @@ export default async function WatchViewPage({
             <ViewField label="Box">
               {watch.box ? boxLabel(watch.box, boxConfig.descriptions) : null}
             </ViewField>
-            {/* Whether you are keeping it sits with whether you own it. The
-                sale controls used to live at the foot of the Market section,
-                two cards away from the only other place the word "owned"
-                appears — and Market is about what it is worth, not about
-                whether you intend to part with it. */}
+            {/* Whether you own it. The sale controls that used to sit under
+                this label now live in Market, where the rest of the sale
+                record is — one home per fact. */}
             <div className="space-y-1">
               <p className={SECTION_LABEL}>Ownership</p>
               <div className="min-h-[1.35rem] text-xs text-foreground">{ownership}</div>
-              {showLifecycle && (
-                <LifecycleControls
-                  watchId={watch.id}
-                  watchName={`${watch.brand.name} ${watch.model}`.trim()}
-                  referenceNumber={watch.reference_number}
-                  saleStatus={watch.sale_status}
-                  candidateSince={watch.candidate_since}
-                  candidateNote={watch.candidate_note}
-                  costBasisCents={watch.cost_basis_cents}
-                  purchasePriceKnown={watch.purchase_price_cents != null}
-                  purchaseDate={watch.purchase_date}
-                  latestMidCents={latestAgentValuation?.value_mid_cents ?? null}
-                  latestLowCents={latestAgentValuation?.value_low_cents ?? null}
-                  latestHighCents={latestAgentValuation?.value_high_cents ?? null}
-                  listing={listing}
-                  daysListed={daysListed}
-                  sale={sale}
-                />
-              )}
             </div>
+            {/* Attachment (00051) — how much you love it. It belongs with
+                ownership, not with Market: it is the reason a watch survives
+                a bad valuation, and putting it beside the money would read as
+                a rating OF the money. */}
+            <ViewField label="Attachment">
+              {watch.attachment ? attachmentLabels[watch.attachment] : null}
+            </ViewField>
             <ViewField label="Notes" className="sm:col-span-2">
               {watch.notes ? (
                 <span className="whitespace-pre-wrap">{watch.notes}</span>
@@ -588,13 +573,35 @@ export default async function WatchViewPage({
             </SectionCard>
           )}
 
-          {/* Market panel (§3.3) — estimate, trend, actions, basis + lifecycle. */}
+          {/* Market panel (§3.3) — estimate, actions, and the sale record.
+              The sale controls are passed in rather than imported there so
+              the panel stays a Server Component. */}
           <MarketPanel
             watch={watch}
             valuations={valuations}
             listing={listing}
             sale={sale}
             trace={priceCheckTrace}
+            saleControls={
+              showLifecycle ? (
+                <LifecycleControls
+                  watchId={watch.id}
+                  watchName={`${watch.brand.name} ${watch.model}`.trim()}
+                  referenceNumber={watch.reference_number}
+                  saleStatus={watch.sale_status}
+                  costBasisCents={watch.cost_basis_cents}
+                  purchasePriceKnown={watch.purchase_price_cents != null}
+                  purchaseDate={watch.purchase_date}
+                  latestMidCents={latestAgentValuation?.value_mid_cents ?? null}
+                  latestLowCents={latestAgentValuation?.value_low_cents ?? null}
+                  latestHighCents={latestAgentValuation?.value_high_cents ?? null}
+                  listing={listing}
+                  daysListed={daysListed}
+                  listingAging={daysListed != null && daysListed > LISTING_AGING_DAYS}
+                  sale={sale}
+                />
+              ) : null
+            }
           />
 
         </div>

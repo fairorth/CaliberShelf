@@ -117,7 +117,7 @@ export function ListForSaleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[460px]">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit listing" : "List for sale"}</DialogTitle>
+          <DialogTitle>{editing ? "Edit sale details" : "Mark for sale"}</DialogTitle>
           <DialogDescription>
             {watchName}
             {referenceNumber ? ` · ${referenceNumber}` : ""}

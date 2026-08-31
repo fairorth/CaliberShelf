@@ -20,6 +20,9 @@ interface MarketPanelProps {
   trace: AgentTrace | null
   listing: WatchListing | null
   sale: WatchSale | null
+  /** The sale zone (client component), injected by the page so this panel
+   *  stays a Server Component. Null for wish-list and coming-soon watches. */
+  saleControls?: React.ReactNode
 }
 
 /** Section eyebrow — the caption above each figure in this panel. */
@@ -50,6 +53,7 @@ export function MarketPanel({
   listing,
   sale,
   trace,
+  saleControls,
 }: MarketPanelProps) {
   const agentRows = valuations.filter((v) => v.source === "agent")
   const latest = agentRows[0] ?? null
@@ -67,10 +71,8 @@ export function MarketPanel({
   const statusPill =
     watch.sale_status === "listed" && daysListed != null ? (
       <StatusPill tone={daysListed > LISTING_AGING_DAYS ? "warning" : "neutral"}>
-        Listed · Day {daysListed}
+        For sale · Day {daysListed}
       </StatusPill>
-    ) : watch.sale_status === "candidate" ? (
-      <StatusPill tone="neutral">Candidate</StatusPill>
     ) : watch.sale_status === "sold" ? (
       <StatusPill tone="neutral">Sold</StatusPill>
     ) : null
@@ -145,11 +147,12 @@ export function MarketPanel({
         )}
         {watch.sale_status === "sold" && sale && (
           <span className="text-xs text-muted-foreground">
-            Sold — see{" "}
-            <Link href="/market/sold" className="underline-offset-2 hover:underline">
-              the sold archive
-            </Link>{" "}
-            for the realized figures.
+            Sold. The realized figures are in the sale record below, and
+            alongside every other sale in the{" "}
+            <Link href="/reports/sales" className="underline-offset-2 hover:underline">
+              Watch Sales report
+            </Link>
+            .
           </span>
         )}
       </div>
@@ -218,6 +221,15 @@ export function MarketPanel({
         </details>
       )}
 
+      {/* ── The sale record ───────────────────────────────────
+          Where the watch is in the sale flow, and every fact about the
+          listing or the completed sale. This lived under Ownership until the
+          sale record grew past a one-line summary; a venue, a date, an ask,
+          days on market and a net-proceeds figure are market facts and belong
+          in the section that owns the money. */}
+      {saleControls && (
+        <div className="border-t border-border/60 pt-[18px]">{saleControls}</div>
+      )}
     </SectionCard>
   )
 }

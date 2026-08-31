@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import type { WatchListRow, WatchListReport } from "@/lib/queries/watch-list"
+import { ATTACHMENT_LEVELS, attachmentLabels } from "@/lib/validations/watch"
 import { formatCurrency, cn } from "@/lib/utils"
 import { WatchListExport } from "./watch-list-export"
 
@@ -23,6 +24,7 @@ function watchListCsv(rows: WatchListRow[]): string {
       "nickname",
       "reference",
       "status",
+      "attachment",
       "purchase_date",
       "purchase_price",
       "current_value",
@@ -34,6 +36,7 @@ function watchListCsv(rows: WatchListRow[]): string {
       r.nickname,
       r.reference,
       r.status,
+      r.attachment ? attachmentLabels[r.attachment] : null,
       r.purchaseDate,
       r.purchasePriceCents,
       r.currentValueCents,
@@ -64,6 +67,7 @@ type SortKey =
   | "nickname"
   | "reference"
   | "status"
+  | "attachment"
   | "purchaseDate"
   | "paid"
   | "current"
@@ -82,6 +86,10 @@ function sortValue(r: WatchListRow, key: SortKey): string | number | null {
       return r.reference?.toLowerCase() ?? null
     case "status":
       return r.status
+    // Rank, not label: sorting the words puts High above Max. Ascending is
+    // strongest-first, which is how the scale reads.
+    case "attachment":
+      return r.attachment ? ATTACHMENT_LEVELS.indexOf(r.attachment) : null
     case "purchaseDate":
       return r.purchaseDate
     case "paid":
@@ -99,6 +107,7 @@ const HEADERS: Array<{ key: SortKey; label: string; align?: "right" }> = [
   { key: "nickname", label: "Nickname" },
   { key: "reference", label: "Reference" },
   { key: "status", label: "Status" },
+  { key: "attachment", label: "Attachment" },
   { key: "purchaseDate", label: "Purchased", align: "right" },
   { key: "paid", label: "Paid", align: "right" },
   { key: "current", label: "Current", align: "right" },
@@ -235,6 +244,9 @@ export function WatchListTable({ report }: { report: WatchListReport }) {
                   <td className="px-3 py-2 text-xs text-muted-foreground">
                     {r.status}
                   </td>
+                  <td className="px-3 py-2 text-xs text-muted-foreground">
+                    {r.attachment ? attachmentLabels[r.attachment] : "—"}
+                  </td>
                   <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
                     {fmtDate(r.purchaseDate)}
                   </td>
@@ -254,7 +266,7 @@ export function WatchListTable({ report }: { report: WatchListReport }) {
               <tr className="border-t border-border font-mono tabular-nums">
                 <td
                   className="px-3 py-2.5 text-2xs uppercase tracking-[0.12em] text-muted-foreground"
-                  colSpan={6}
+                  colSpan={7}
                 >
                   Totals · owned &amp; unsold ({report.totals.ownedCount})
                 </td>

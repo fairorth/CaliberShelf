@@ -33,6 +33,13 @@ export const caseShapeSchema = z.enum([
   "other",
 ])
 
+/** How attached the owner is to a watch (00051). Ordered strongest-first —
+ *  the segmented control, the table's sort and the report all read this
+ *  array, so the order lives here and nowhere else. */
+export const ATTACHMENT_LEVELS = ["max", "high", "medium", "low"] as const
+
+export const attachmentSchema = z.enum(ATTACHMENT_LEVELS)
+
 // Main watch form schema — validates user input for create/update
 export const watchFormSchema = z.object({
   // Required FK fields
@@ -59,6 +66,9 @@ export const watchFormSchema = z.object({
   notes: z.string().optional().default(""),
   // Storage location — which watch case/box holds it
   box: z.string().optional().default(""),
+  // How attached you are (00051). "" = unrated, same empty-string-as-null
+  // convention the other optional selects use.
+  attachment: z.union([attachmentSchema, z.literal("")]).optional().default(""),
 
   // Agent-supplied reference awaiting human verification (hidden input "on"/"")
   reference_unverified: z
@@ -245,6 +255,13 @@ export const caseShapeLabels: Record<string, string> = {
   oval: "Oval",
   octagonal: "Octagonal",
   other: "Other",
+}
+
+export const attachmentLabels: Record<string, string> = {
+  max: "Max",
+  high: "High",
+  medium: "Medium",
+  low: "Low",
 }
 
 export const KNOWN_COMPLICATIONS = [

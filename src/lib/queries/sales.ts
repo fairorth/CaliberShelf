@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { getTransformedSignedUrls } from "@/lib/storage"
-import type { SaleVenue, WatchListing, WatchSale } from "@/lib/types/watch"
+import type { Attachment, SaleVenue, WatchListing, WatchSale } from "@/lib/types/watch"
 import {
   aggregateGain,
   daysBetween,
@@ -58,14 +58,13 @@ interface JoinedWatch {
   purchase_price_cents: number | null
   cost_basis_cents: number
   target_ask_cents: number | null
-  candidate_since: string | null
-  candidate_note: string | null
+  attachment: Attachment | null
   sale_status: string
   brand: { name: string } | null
 }
 
 const WATCH_JOIN =
-  "id, model, nickname, purchase_date, purchase_price_cents, cost_basis_cents, target_ask_cents, candidate_since, candidate_note, sale_status, brand:brands(name)"
+  "id, model, nickname, purchase_date, purchase_price_cents, cost_basis_cents, target_ask_cents, attachment, sale_status, brand:brands(name)"
 
 function watchName(w: JoinedWatch): string {
   return `${w.brand?.name ?? ""} ${w.model}`.trim()
@@ -182,12 +181,6 @@ export async function getSaleSummaries(): Promise<Record<string, SaleSummary>> {
 
 // ── Pipeline (§3.2 block 3) ─────────────────────────────────────
 
-export interface CandidateCard extends SaleWatchRef {
-  targetAskCents: number | null
-  candidateSince: string | null
-  candidateNote: string | null
-}
-
 export interface ListedCard extends SaleWatchRef {
   askPriceCents: number
   listedAt: string
@@ -205,22 +198,17 @@ export interface RecentlySoldCard extends SaleWatchRef {
 }
 
 export interface SalePipeline {
-  candidates: CandidateCard[]
   listed: ListedCard[]
   recentlySold: RecentlySoldCard[]
 }
 
-/** The three Market pipeline columns: Candidates, Listed, Recently sold. */
+/** The two Market pipeline columns: For sale, Recently sold. Candidates was
+ *  the third until 00051 retired the status. */
 export async function getSalePipeline(): Promise<SalePipeline> {
   const supabase = await createClient()
   const today = todayDate()
 
-  const [candidatesRes, listingsRes, salesRes] = await Promise.all([
-    supabase
-      .from("watches")
-      .select(WATCH_JOIN)
-      .eq("sale_status", "candidate")
-      .order("candidate_since", { ascending: true, nullsFirst: false }),
+  const [listingsRes, salesRes] = await Promise.all([
     supabase
       .from("watch_listings")
       .select(`*, watch:watches(${WATCH_JOIN})`)
@@ -232,7 +220,6 @@ export async function getSalePipeline(): Promise<SalePipeline> {
       .order("sold_at", { ascending: false }),
   ])
 
-  const candidates = (candidatesRes.data ?? []) as unknown as JoinedWatch[]
   const listings = (listingsRes.data ?? []) as unknown as (WatchListing & {
     watch: JoinedWatch
   })[]
@@ -242,21 +229,11 @@ export async function getSalePipeline(): Promise<SalePipeline> {
   })[]).filter((s) => Date.parse(s.sold_at) >= recentCutoff)
 
   const thumbs = await coverThumbUrls(supabase, [
-    ...candidates.map((w) => w.id),
     ...listings.map((l) => l.watch.id),
     ...sales.map((s) => s.watch.id),
   ])
 
   return {
-    candidates: candidates.map((w) => ({
-      watchId: w.id,
-      name: watchName(w),
-      nickname: w.nickname,
-      thumbUrl: thumbs.get(w.id) ?? null,
-      targetAskCents: w.target_ask_cents,
-      candidateSince: w.candidate_since,
-      candidateNote: w.candidate_note,
-    })),
     listed: listings.map((l) => ({
       watchId: l.watch.id,
       name: watchName(l.watch),
@@ -515,6 +492,141 @@ export async function getRealizedGains(): Promise<RealizedGains> {
     lifetime: {
       ...totalsFor(rows),
       winCount: rows.filter((r) => r.gain !== null && r.gain.cents > 0).length,
+    },
+  }
+}
+
+// ── Watch Sales report, section 1: currently for sale ───────────
+//
+// The companion to getRealizedGains (section 2). Everything a decision about
+// an open listing needs on one row: how long it has been out, what you are
+// asking, what the agent thinks it is worth, and what you would clear over
+// basis if it sold at the ask. Fees are unknown until the sale happens, so
+// the gain here is gross — the column says so.
+
+export interface ForSaleRow extends SaleWatchRef {
+  listingId: string
+  listedAt: string
+  daysOnMarket: number
+  /** true past LISTING_AGING_DAYS — the row reads amber. */
+  aging: boolean
+  venue: SaleVenue
+  venueOther: string | null
+  listingUrl: string | null
+  askPriceCents: number
+  costBasisCents: number
+  /** false = purchase price unknown, so every gain on this row renders "—". */
+  basisKnown: boolean
+  /** latest AGENT valuation mid; manual rows never stand in (portfolio rule). */
+  currentValueCents: number | null
+  valuedOn: string | null
+  /** ask measured against the latest estimate, as a percentage. Null with no
+   *  estimate. Positive = asking above the market. */
+  askVsValuePct: number | null
+  /** ask − basis, BEFORE fees. Null when the basis is unknown. */
+  gainAtAsk: GainFigure | null
+  attachment: Attachment | null
+}
+
+export interface ForSaleReport {
+  rows: ForSaleRow[]
+  totals: {
+    count: number
+    askCents: number
+    costBasisCents: number
+    currentValueCents: number
+    /** summed ask vs summed basis over rows with a known basis. */
+    gainAtAsk: GainFigure | null
+  }
+}
+
+/** Every open listing, longest on the market first (§5, the Watch Sales report). */
+export async function getForSaleReport(): Promise<ForSaleReport> {
+  const supabase = await createClient()
+  const today = todayDate()
+
+  const [listingsRes, valuationsRes] = await Promise.all([
+    supabase
+      .from("watch_listings")
+      .select(`*, watch:watches(${WATCH_JOIN})`)
+      .eq("status", "active")
+      .order("listed_at", { ascending: true }),
+    supabase
+      .from("watch_valuations")
+      .select("watch_id, value_mid_cents, valued_at")
+      .eq("source", "agent")
+      .order("valued_at", { ascending: false }),
+  ])
+  if (listingsRes.error) {
+    console.error("Failed to fetch open listings:", listingsRes.error.message)
+  }
+
+  const listings = (listingsRes.data ?? []) as unknown as (WatchListing & {
+    watch: JoinedWatch
+  })[]
+
+  // Latest agent valuation per watch (rows arrive newest-first).
+  const latest = new Map<string, { mid: number; at: string }>()
+  for (const v of (valuationsRes.data ?? []) as Array<{
+    watch_id: string
+    value_mid_cents: number
+    valued_at: string
+  }>) {
+    if (!latest.has(v.watch_id)) {
+      latest.set(v.watch_id, { mid: v.value_mid_cents, at: v.valued_at.slice(0, 10) })
+    }
+  }
+
+  const thumbs = await coverThumbUrls(
+    supabase,
+    listings.map((l) => l.watch.id)
+  )
+
+  const rows: ForSaleRow[] = listings.map((l) => {
+    const w = l.watch
+    const days = daysBetween(l.listed_at, today) ?? 0
+    const value = latest.get(w.id) ?? null
+    return {
+      listingId: l.id,
+      watchId: w.id,
+      name: watchName(w),
+      nickname: w.nickname,
+      thumbUrl: thumbs.get(w.id) ?? null,
+      listedAt: l.listed_at,
+      daysOnMarket: days,
+      aging: days > LISTING_AGING_DAYS,
+      venue: l.venue,
+      venueOther: l.venue_other,
+      listingUrl: l.listing_url,
+      askPriceCents: l.ask_price_cents,
+      costBasisCents: w.cost_basis_cents,
+      basisKnown: w.purchase_price_cents != null,
+      currentValueCents: value?.mid ?? null,
+      valuedOn: value?.at ?? null,
+      askVsValuePct: value
+        ? ((l.ask_price_cents - value.mid) / value.mid) * 100
+        : null,
+      gainAtAsk: gainVersusBasis(l.ask_price_cents, w),
+      attachment: w.attachment,
+    }
+  })
+
+  return {
+    rows,
+    totals: {
+      count: rows.length,
+      askCents: rows.reduce((sum, r) => sum + r.askPriceCents, 0),
+      costBasisCents: rows.reduce((sum, r) => sum + r.costBasisCents, 0),
+      currentValueCents: rows.reduce((sum, r) => sum + (r.currentValueCents ?? 0), 0),
+      gainAtAsk: aggregateGain(
+        rows.map((r) => ({
+          valueCents: r.askPriceCents,
+          watch: {
+            cost_basis_cents: r.costBasisCents,
+            purchase_price_cents: r.basisKnown ? 0 : null,
+          },
+        }))
+      ),
     },
   }
 }

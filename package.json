@@ -1,6 +1,6 @@
 {
   "name": "tentenloupe",
-  "version": "1.9.28",
+  "version": "1.10.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

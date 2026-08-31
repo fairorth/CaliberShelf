@@ -4,7 +4,8 @@ import { z } from "zod"
 // dialogs and stay dollars here — the server actions convert to BIGINT cents
 // via dollarsToCents, matching the watch form's convention.
 
-export const saleStatusSchema = z.enum(["owned", "candidate", "listed", "sold"])
+// 'candidate' was retired in 00051 — the lifecycle is owned → listed → sold.
+export const saleStatusSchema = z.enum(["owned", "listed", "sold"])
 
 export const saleVenueSchema = z.enum([
   "watchexchange",
@@ -47,20 +48,9 @@ const feeDollars = z
   .transform((val) => (val.trim() === "" ? 0 : parseFloat(val)))
   .pipe(z.number().min(0, "Must be zero or more").finite())
 
-// ── Mark as sale candidate ──────────────────────────────────────
-
-export const markCandidateSchema = z.object({
-  candidate_note: z
-    .string()
-    .max(200, "Keep the note under 200 characters")
-    .optional()
-    .default(""),
-})
-
-export type MarkCandidateValues = z.input<typeof markCandidateSchema>
-export type MarkCandidateParsed = z.output<typeof markCandidateSchema>
-
-// ── List for sale (§3.4) ────────────────────────────────────────
+// ── Mark for sale (§3.4) ────────────────────────────────────────
+// The single entry point into the sale flow now that Candidate is gone: to
+// put a watch up you say where, when and for how much.
 
 export const listingFormSchema = z
   .object({
@@ -104,6 +94,25 @@ export const saleFormSchema = z.object({
 
 export type SaleFormValues = z.input<typeof saleFormSchema>
 export type SaleFormParsed = z.output<typeof saleFormSchema>
+
+// ── Edit a recorded sale ────────────────────────────────────────
+// Same fields as recording one, plus the venue: a sale outlives its listing,
+// so once it exists the venue has to be editable here or it is frozen at
+// whatever the listing said. Correcting a fee or a sold date must not mean
+// undoing the sale and re-entering it, which is what the old flow required.
+
+export const saleEditSchema = saleFormSchema
+  .extend({
+    venue: saleVenueSchema,
+    venue_other: z.string().optional().default(""),
+  })
+  .refine((data) => data.venue !== "other" || data.venue_other.trim() !== "", {
+    message: "Name the venue",
+    path: ["venue_other"],
+  })
+
+export type SaleEditValues = z.input<typeof saleEditSchema>
+export type SaleEditParsed = z.output<typeof saleEditSchema>
 
 // ── Log a value (manual valuation, V7 / 00046) ──────────────────
 // Manual rows require mid value, confidence and a note; agent_model stays

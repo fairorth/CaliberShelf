@@ -5,13 +5,18 @@
 - Each migration is a single logical change (one table or set of related policies)
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
-- Latest applied migration: `00047_backfill_sale_status.sql` (Phase 5 sales/investment; confirmed applied 2026-08-13). See docs/data-model.md for the table catalog.
-- **AWAITING APPLICATION: `00048_add_photo_dimensions.sql`** — `image_width` /
-  `image_height` on `watch_photos` (Phase 8 step 0, see
-  `design_handoff_v4/13-phase-8-dimensions.md`). Run it in the SQL Editor, then
-  `npm run backfill-photo-dimensions`. Until it is applied the app is fine: every
-  photo reads NULL, which is the supported "3:2 fallback, excluded from aspect
-  comparison" path.
+- Latest applied migration: `00051_add_attachment_retire_candidate.sql`
+  (confirmed applied 2026-08-30 — everything through 00051 is live). See
+  docs/data-model.md for the table catalog.
+- `00051` added `watches.attachment` (TEXT + CHECK: max|high|medium|low,
+  nullable), moved every `sale_status = 'candidate'` row back to `'owned'`, and
+  DROPPED `candidate_since` / `candidate_note`. The `'candidate'` value remains
+  in the `sale_status` enum deliberately — dropping an enum value means
+  recreating the type — but no row holds it and no code path can write it.
+- `00048` is applied; **`npm run backfill-photo-dimensions` may still be
+  outstanding.** Until it runs, existing photos read NULL width/height, which
+  is the supported "3:2 fallback, excluded from aspect comparison" path — the
+  app is correct, just not measured.
 - Phase 5 set (all applied): `00043_add_cost_basis_lifecycle_ask.sql`, `00044_create_watch_listings.sql`, `00045_create_watch_sales.sql`, `00046_add_valuation_source.sql`, `00047_backfill_sale_status.sql`.
 - `cost_basis_cents` (00043) and `net_proceeds_cents` (00045) are
   `GENERATED ALWAYS … STORED`. Never write them, never re-derive them in a

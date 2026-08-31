@@ -174,7 +174,7 @@ export default async function MarketPage() {
     getMarketAttention(),
   ])
 
-  const onTheBlock = pipeline.candidates.length + pipeline.listed.length
+  const onTheBlock = pipeline.listed.length
   const chartPoints = series.points.map((p) => ({
     // "T00:00:00" pins the calendar date to LOCAL midnight. Bare "YYYY-MM-DD"
     // parses as UTC, which renders a day earlier west of Greenwich — the Aug 1
@@ -287,43 +287,15 @@ export default async function MarketPage() {
         )}
       </div>
 
-      {/* 3 — Pipeline */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* 3 — Pipeline. Two columns since 00051 retired Candidates. */}
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-2.5">
-          <ColumnHeading label="Candidates" meta={String(pipeline.candidates.length)} />
-          {pipeline.candidates.length === 0 ? (
+          <ColumnHeading label="For sale" meta={String(pipeline.listed.length)} />
+          {pipeline.listed.length === 0 ? (
             <EmptyColumn>
-              Nothing on the block. Mark a watch as a sale candidate from its Market
+              Nothing for sale right now. Mark a watch for sale from its Market
               panel.
             </EmptyColumn>
-          ) : (
-            pipeline.candidates.map((c) => (
-              <PipelineCard
-                key={c.watchId}
-                href={`/watch/${c.watchId}`}
-                thumbUrl={c.thumbUrl}
-                name={c.name}
-                subtitle={
-                  <span className="truncate">
-                    {c.candidateSince ? `since ${shortDate(c.candidateSince)}` : "candidate"}
-                    {c.candidateNote ? ` · ${c.candidateNote}` : ""}
-                  </span>
-                }
-                value={
-                  c.targetAskCents != null
-                    ? formatCurrency(c.targetAskCents, "USD", true)
-                    : "—"
-                }
-                valueLabel="Target"
-              />
-            ))
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2.5">
-          <ColumnHeading label="Listed" meta={String(pipeline.listed.length)} />
-          {pipeline.listed.length === 0 ? (
-            <EmptyColumn>Nothing listed right now.</EmptyColumn>
           ) : (
             pipeline.listed.map((l) => (
               <PipelineCard

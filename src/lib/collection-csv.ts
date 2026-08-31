@@ -5,6 +5,7 @@ import type { SaleSummary } from "@/lib/queries/sales"
 import { gainVersusBasis } from "@/lib/queries/gain"
 import { caliberLabel } from "@/lib/caliber"
 import { caliberTypeLabels } from "@/lib/validations/movement"
+import { attachmentLabels } from "@/lib/validations/watch"
 
 // ── Collection → CSV (what you see is what exports) ─────────────
 //
@@ -50,6 +51,8 @@ function columnValue(
       return w.movement ? caliberLabel(w.movement) : null
     case "box":
       return w.box ?? null
+    case "attachment":
+      return w.attachment ? attachmentLabels[w.attachment] : null
     case "worn":
       return w.wear_count ?? 0
     case "purchased":

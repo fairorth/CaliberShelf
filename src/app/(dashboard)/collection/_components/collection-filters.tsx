@@ -30,13 +30,12 @@ export type PriceTracking = "" | "tracked" | "untracked" // "" = all watches
  * choice, which is what removing the chip sets — otherwise clearing the chip
  * would just re-apply the view's default and the sold rows would stay hidden.
  */
-export type SaleStatusFilter = "" | "all" | "unsold" | "candidate" | "listed" | "sold"
+export type SaleStatusFilter = "" | "all" | "unsold" | "listed" | "sold"
 
 export const SALE_STATUS_OPTIONS: { value: Exclude<SaleStatusFilter, "">; label: string }[] = [
   { value: "all", label: "All" },
   { value: "unsold", label: "Owned only" },
-  { value: "candidate", label: "Candidates" },
-  { value: "listed", label: "Listed" },
+  { value: "listed", label: "For sale" },
   { value: "sold", label: "Sold" },
 ]
 

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import type { Attachment } from "@/lib/types/watch"
 
 // ── The Watch List report (schedule/export view) ────────────────
 //
@@ -13,8 +14,10 @@ export interface WatchListRow {
   model: string
   nickname: string | null
   reference: string | null
-  /** Display label: Owned · Coming Soon · Wish List · Sale Candidate · Listed · Sold */
+  /** Display label: Owned · Coming Soon · Wish List · For Sale · Sold */
   status: string
+  /** How attached the owner is (00051). Null = unrated. */
+  attachment: Attachment | null
   isWishlist: boolean
   isSold: boolean
   purchaseDate: string | null
@@ -44,6 +47,7 @@ interface WatchRow {
   purchase_date: string | null
   purchase_price_cents: number | null
   sale_status: string
+  attachment: Attachment | null
   is_wishlist: boolean
   is_coming_soon: boolean
   brand: { name: string } | null
@@ -53,8 +57,7 @@ function statusLabel(w: WatchRow): string {
   if (w.sale_status === "sold") return "Sold"
   if (w.is_wishlist) return "Wish List"
   if (w.is_coming_soon) return "Coming Soon"
-  if (w.sale_status === "listed") return "Listed"
-  if (w.sale_status === "candidate") return "Sale Candidate"
+  if (w.sale_status === "listed") return "For Sale"
   return "Owned"
 }
 
@@ -65,7 +68,7 @@ export async function getWatchListReport(): Promise<WatchListReport> {
     supabase
       .from("watches")
       .select(
-        "id, model, nickname, reference_number, purchase_date, purchase_price_cents, sale_status, is_wishlist, is_coming_soon, brand:brands(name)"
+        "id, model, nickname, reference_number, purchase_date, purchase_price_cents, sale_status, attachment, is_wishlist, is_coming_soon, brand:brands(name)"
       ),
     supabase
       .from("watch_valuations")
@@ -104,12 +107,13 @@ export async function getWatchListReport(): Promise<WatchListReport> {
         nickname: w.nickname,
         reference: w.reference_number,
         status: statusLabel(w),
+        attachment: w.attachment,
         isWishlist: w.is_wishlist,
         isSold,
         purchaseDate: w.purchase_date,
         purchasePriceCents: w.purchase_price_cents,
         // A sold watch's current value is its sale record, not a market
-        // estimate — the Realized Gains report owns that story.
+        // estimate — the Watch Sales report owns that story.
         currentValueCents: isSold ? null : (val?.mid ?? null),
         valuedOn: isSold ? null : (val?.at.slice(0, 10) ?? null),
       }

@@ -46,6 +46,8 @@ import {
   SelectTrigger,
 } from "@/components/ui/select"
 import {
+  ATTACHMENT_LEVELS,
+  attachmentLabels,
   caseMaterialLabels,
   crystalLabels,
   caseShapeLabels,
@@ -110,6 +112,13 @@ const SELECT_FIELD = `${FIELD} w-full`
 const LABEL = SECTION_LABEL
 
 type WatchStatus = "owned" | "coming_soon" | "wishlist"
+
+// Attachment (00051) — how much you love it, strongest first. The order is
+// ATTACHMENT_LEVELS; it is repeated nowhere.
+const ATTACHMENT_OPTIONS = ATTACHMENT_LEVELS.map((value) => ({
+  value,
+  label: attachmentLabels[value],
+}))
 
 const STATUS_OPTIONS: { value: WatchStatus; label: string; hint: string }[] = [
   { value: "owned", label: "Owned", hint: "In the collection and counted in totals." },
@@ -266,6 +275,7 @@ export function WatchForm({
   // Box is a dropdown of numbered boxes (Box1..BoxN). Preserve any legacy or
   // custom free-text value already on the watch so nothing is silently dropped.
   const [box, setBox] = useState(watch?.box ?? "")
+  const [attachment, setAttachment] = useState<string>(watch?.attachment ?? "")
   const boxChoices = boxOptions(boxCount)
   const boxSelectOptions =
     box && !boxChoices.includes(box) ? [box, ...boxChoices] : boxChoices
@@ -847,6 +857,46 @@ export function WatchForm({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Attachment (00051) — the one field on a watch that argues with
+              the Market section. Same segmented shape as Ownership because it
+              is the same kind of choice: exactly one of a short fixed list.
+              Clicking the active step clears it back to unrated; a scale you
+              cannot un-answer is a scale people stop trusting. */}
+          <div className="space-y-1">
+            <FormLabel className={LABEL}>Attachment</FormLabel>
+            <input type="hidden" name="attachment" value={attachment} />
+            <div
+              role="radiogroup"
+              aria-label="Attachment"
+              className="flex h-8 w-full overflow-hidden rounded-lg border border-border"
+            >
+              {ATTACHMENT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={attachment === opt.value}
+                  onClick={() => {
+                    markDirty()
+                    setAttachment((cur) => (cur === opt.value ? "" : opt.value))
+                  }}
+                  className={cn(
+                    "flex-1 px-2 text-xs font-medium transition-colors [&:not(:first-child)]:border-l [&:not(:first-child)]:border-border",
+                    attachment === opt.value
+                      ? "bg-brass/15 text-brass"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-2xs text-muted-foreground">
+              How much you love it. Leave unset, or click the active step to
+              clear.
+            </p>
           </div>
 
           <div className="space-y-1 sm:col-span-2">

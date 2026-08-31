@@ -60,7 +60,7 @@ mirror — they are **not** foreign-keyed to the user's `brands`/`watches`; the
 | `categories` | owner | app | display grouping (renamed from display_cases); `name`, `color` |
 | `labels` | owner | app | free tags; `name`, `color` |
 | `watch_labels` | via watch | app | junction watch↔label (composite PK) |
-| `watches` | owner | app + `find-references` (ref) | the core record; specs, `rotating_bezel` (00029), `box` (00031, free-text storage location), `is_wishlist`, `is_coming_soon`, `price_check_enabled`, `reference_unverified`; Phase 5 (00043) adds `sale_status`, `candidate_since`/`candidate_note`, `target_ask_cents`, the three `acq_*_cents` acquisition costs, and **generated** `cost_basis_cents` |
+| `watches` | owner | app + `find-references` (ref) | the core record; specs, `rotating_bezel` (00029), `box` (00031, free-text storage location), `is_wishlist`, `is_coming_soon`, `price_check_enabled`, `reference_unverified`; Phase 5 (00043) adds `sale_status`, `target_ask_cents`, the three `acq_*_cents` acquisition costs, and **generated** `cost_basis_cents`; 00051 adds `attachment` (max\|high\|medium\|low, nullable) and drops `candidate_since`/`candidate_note` |
 | `watch_photos` | owner | app | storage paths + `is_cover`, `thumb_path` |
 | `wear_logs` | owner | app | one row per wear-day; `worn_date` |
 | `timegrapher_runs` | owner | app | accuracy measurements; rate/amplitude/beat error |
@@ -83,16 +83,28 @@ mirror — they are **not** foreign-keyed to the user's `brands`/`watches`; the
 ## The sale lifecycle (Phase 5)
 
 Linear, one status per watch, held in `watches.sale_status`:
-`owned → candidate → listed → sold`. **Transitions are enforced in
+`owned → listed → sold`. **Transitions are enforced in
 `src/lib/actions/sales.ts`**, deliberately not by a DB CHECK — the app owns the
 lifecycle and a constraint here would block backfills. The permitted moves are:
 
 ```
-owned     → candidate | listed
-candidate → listed | owned            (owned = "changed my mind")
-listed    → sold | candidate | owned  (back = withdrawn, listing row closed)
-sold      → owned                     (undo: deletes the sale row)
+owned  → listed          (mark for sale — opens a watch_listings row)
+listed → sold | owned    (owned = withdrawn, listing row closed)
+sold   → owned           (undo: deletes the sale row)
 ```
+
+**`candidate` was retired in 00051.** "Thinking about it" was a state the app
+tracked and the owner never used: a watch is either for sale — with a venue, a
+date and an ask — or it is not. The migration moved every candidate row back to
+`owned` and dropped `candidate_since` / `candidate_note`. The *value* survives
+in the `public.sale_status` enum, because removing an enum value means
+recreating the type and rewriting every column that uses it; no row holds it
+and no code path can write it. Do not reintroduce it.
+
+A **recorded sale is editable in place** (`updateSale`). Fixing a late fee or a
+mistyped date must never require `undoSale`, which deletes the record. Venue is
+editable there and only there: a sale outlives its listing, so the sale row is
+eventually the only place the venue lives.
 
 Two money columns are **`GENERATED ALWAYS … STORED`** and must never be
 re-derived in a query or a component:

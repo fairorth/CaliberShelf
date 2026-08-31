@@ -14,6 +14,7 @@ import { collectionCsv, downloadCsv } from "@/lib/collection-csv"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { caliberLabel } from "@/lib/caliber"
+import { ATTACHMENT_LEVELS } from "@/lib/validations/watch"
 import {
   Select,
   SelectContent,
@@ -98,6 +99,7 @@ const SORT_LABELS: Record<SortKey, string> = {
   movementType: "Sort: Movement type",
   caliber: "Sort: Caliber",
   box: "Sort: Box",
+  attachment: "Sort: Attachment",
   value: "Sort: Value",
   gain: "Sort: Gain",
 }
@@ -158,13 +160,11 @@ function matchesWishlistSource(
 }
 
 /** Sale lifecycle (§3.6). "unsold" is everything you still hold, whatever
- *  stage it is at; the three named stages narrow further. */
+ *  stage it is at; the two named stages narrow further. */
 function matchesSaleStatus(w: WatchWithCover, f: CollectionFilters): boolean {
   switch (f.saleStatus) {
     case "unsold":
       return w.sale_status !== "sold"
-    case "candidate":
-      return w.sale_status === "candidate"
     case "listed":
       return w.sale_status === "listed"
     case "sold":
@@ -248,6 +248,10 @@ function sortValue(
         : null
     case "box":
       return w.box?.toLowerCase() ?? null
+    // Rank, not label — alphabetical would put High above Max. Ascending is
+    // strongest-first, matching ATTACHMENT_LEVELS.
+    case "attachment":
+      return w.attachment ? ATTACHMENT_LEVELS.indexOf(w.attachment) : null
     default:
       return null
   }
