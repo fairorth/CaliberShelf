@@ -119,10 +119,12 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - **A recorded sale is editable in place** (`updateSale` + `EditSaleDialog`). `undoSale`
   DELETES the record and is not the way to fix a fee or a date. Venue is editable only
   on the sale — a sale outlives its listing and ends up the only place it lives.
-- **`watches.attachment`** (00051, `max|high|medium|low`, nullable) is how much the owner
-  loves a watch — the counterweight to every number in Market. TEXT + CHECK, not an enum,
-  precisely because retiring `candidate` showed what an enum value costs. Order lives once,
-  in `ATTACHMENT_LEVELS`; sort by its index, never alphabetically (High would beat Max).
+- **`watches.attachment`** (00051, `max|high|medium|low|none` since 00052, nullable) is how
+  much the owner loves a watch — the counterweight to every number in Market. `none` is a
+  deliberate rating ("considered it, feel nothing" — the clearest sell signal); NULL stays
+  "never rated". TEXT + CHECK, not an enum, precisely because retiring `candidate` showed
+  what an enum value costs. Order lives once, in `ATTACHMENT_LEVELS`; sort by its index,
+  never alphabetically (High would beat Max).
 - **`cost_basis_cents` and `net_proceeds_cents` are generated columns.** Nothing in code
   re-derives them. A watch with no purchase price has basis 0 → every gain shows `—`.
 - **All gain math lives in `queries/gain.ts`** (pure), re-exported by `queries/sales.ts`

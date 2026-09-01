@@ -43,7 +43,7 @@ export type SaleStatus = "owned" | "listed" | "sold"
 
 /** How attached the owner is to a watch (00051). NULL = unrated.
  *  The one field on a watch that argues back at the Market section. */
-export type Attachment = "max" | "high" | "medium" | "low"
+export type Attachment = "max" | "high" | "medium" | "low" | "none"
 
 export type SaleVenue =
   | "watchexchange"

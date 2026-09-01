@@ -33,10 +33,12 @@ export const caseShapeSchema = z.enum([
   "other",
 ])
 
-/** How attached the owner is to a watch (00051). Ordered strongest-first —
- *  the segmented control, the table's sort and the report all read this
- *  array, so the order lives here and nowhere else. */
-export const ATTACHMENT_LEVELS = ["max", "high", "medium", "low"] as const
+/** How attached the owner is to a watch (00051, 'none' added in 00052).
+ *  Ordered strongest-first — the segmented control, the table's sort and the
+ *  report all read this array, so the order lives here and nowhere else.
+ *  'none' is a deliberate rating ("considered it, feel nothing" — the
+ *  clearest sell signal); NULL remains "never rated". */
+export const ATTACHMENT_LEVELS = ["max", "high", "medium", "low", "none"] as const
 
 export const attachmentSchema = z.enum(ATTACHMENT_LEVELS)
 
@@ -262,6 +264,7 @@ export const attachmentLabels: Record<string, string> = {
   high: "High",
   medium: "Medium",
   low: "Low",
+  none: "None",
 }
 
 export const KNOWN_COMPLICATIONS = [
