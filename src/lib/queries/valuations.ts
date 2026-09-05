@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { currentValueByWatch, type CurrentValue } from "@/lib/valuation"
 import type { WatchValuation } from "@/lib/types/watch"
 
 // Valuation row joined with basic watch identity (for the report pages)
@@ -49,6 +50,10 @@ export async function getAllValuations(): Promise<ValuationWithWatch[]> {
     .select(
       "*, watch:watches(id, model, nickname, reference_number, purchase_price_cents, brand:brands(name))"
     )
+    // Static tier estimates are excluded: this report groups rows into RUNS,
+    // and a hundred rows all stamped the moment someone edited a percentage is
+    // not a run. They belong to Config -> Tiers, not to the agent's history.
+    .neq("source", "tier")
     .order("valued_at", { ascending: false })
 
   if (error) {
@@ -61,27 +66,42 @@ export async function getAllValuations(): Promise<ValuationWithWatch[]> {
 }
 
 /**
- * Latest valuation mid (cents) per watch, as a plain object keyed by watch_id
- * (serializable to Client Components). Rows arrive newest-first, so the first
- * row seen per watch wins.
+ * The current value of every watch — source, date and all — keyed by watch_id
+ * and serializable to Client Components. All three sources are in play;
+ * `pickCurrentValue` in src/lib/valuation.ts decides between them, and it is
+ * the only thing allowed to. Every list and total goes through here.
  */
-export async function getLatestValuationMids(): Promise<Record<string, number>> {
+export async function getCurrentValues(): Promise<Record<string, CurrentValue>> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("watch_valuations")
-    .select("watch_id, value_mid_cents, valued_at")
+    .select("watch_id, value_mid_cents, valued_at, source")
     .order("valued_at", { ascending: false })
 
   if (error) {
-    console.error("Failed to fetch valuation mids:", error.message)
+    console.error("Failed to fetch valuations:", error.message)
     return {}
   }
 
-  const mids: Record<string, number> = {}
-  for (const row of data ?? []) {
-    if (!(row.watch_id in mids)) mids[row.watch_id] = row.value_mid_cents
+  const out: Record<string, CurrentValue> = {}
+  for (const [watchId, v] of currentValueByWatch(
+    (data ?? []) as Parameters<typeof currentValueByWatch>[0]
+  )) {
+    out[watchId] = { cents: v.cents, source: v.source, valuedAt: v.valuedAt }
   }
+  return out
+}
+
+/**
+ * Current value mid (cents) per watch — the numeric shape the collection table
+ * and the CSV take. A thin projection of getCurrentValues() so there is still
+ * exactly one place the precedence rule is applied.
+ */
+export async function getLatestValuationMids(): Promise<Record<string, number>> {
+  const values = await getCurrentValues()
+  const mids: Record<string, number> = {}
+  for (const [watchId, v] of Object.entries(values)) mids[watchId] = v.cents
   return mids
 }
 

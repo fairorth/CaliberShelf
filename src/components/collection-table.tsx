@@ -143,6 +143,8 @@ const PHOTO_COL_WIDTH = 80
 // Column visibility (B5): eight on by default; Nickname, Caliber and Price
 // are opt-in via the Columns dropdown, persisted per device.
 const VISIBLE_COLUMNS_KEY = "collection-visible-columns"
+/** One-time marker: this device has had Photo dropped from its saved columns. */
+const PHOTO_DEFAULT_OFF_KEY = "collection-columns-photo-default-off"
 const COLUMN_ORDER: ColumnId[] = [
   "photo",
   "category",
@@ -160,14 +162,16 @@ const COLUMN_ORDER: ColumnId[] = [
   "value",
   "gain",
 ]
-// Seven by default. Movement Type was the eighth (DECISIONS §7) but is empty
+// Six by default. Movement Type was once the eighth (DECISIONS §7) but is empty
 // in 101 of 161 rows — nine of the first twelve on screen — so it read as a
 // blank column sitting between Model and Price. It stays one click away in the
 // Columns menu for anyone who wants it; it is not worth ~130px of the default
 // table to show an em-dash. Reference is nearly as sparse (103/161) but is an
 // identifier people scan for, so it stays.
+// Photo left the default set in v1.10.2: the thumbnails are the table's whole
+// render cost (one <Image> per row), and the first paint of a 160-row
+// collection is what the wait is. One click in the Columns menu brings it back.
 const DEFAULT_VISIBLE: ColumnId[] = [
-  "photo",
   "brand",
   "model",
   "category",
@@ -208,10 +212,16 @@ export function useColumnVisibility() {
       if (!saved) return
       const parsed = JSON.parse(saved) as ColumnId[]
       if (Array.isArray(parsed)) {
-        const valid = parsed.filter((id) => COLUMN_ORDER.includes(id))
-        // Photo is a normal toggleable column now (perf: with it off, no
-        // thumbnails mount). Legacy saved arrays always contained it, so
-        // nothing changes for existing devices until they untick it.
+        let valid = parsed.filter((id) => COLUMN_ORDER.includes(id))
+        // Photo left the defaults in v1.10.2 for first-paint cost. Every saved
+        // array predating that contains it, so the new default would never
+        // reach an existing device — drop it once, then never touch the saved
+        // set again (ticking Photo back on sticks, because the marker is set).
+        if (!localStorage.getItem(PHOTO_DEFAULT_OFF_KEY)) {
+          valid = valid.filter((id) => id !== "photo")
+          localStorage.setItem(PHOTO_DEFAULT_OFF_KEY, "1")
+          localStorage.setItem(VISIBLE_COLUMNS_KEY, JSON.stringify(valid))
+        }
         // eslint-disable-next-line react-hooks/set-state-in-effect
         if (valid.length > 0) setChosenColumns(valid)
       }

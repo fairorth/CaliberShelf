@@ -44,6 +44,41 @@ export function defaultSaleStatus(view: "table" | "gallery"): SaleStatusFilter {
   return view === "gallery" ? "unsold" : "all"
 }
 
+/**
+ * What an unset `?status` means (v1.10.2): the collection you actually own,
+ * plus what is on its way — wish-list watches are a shopping list, not
+ * holdings, and they were padding every default view. Showing them is now an
+ * explicit choice (`?status=owned&status=coming&status=wish`), and the
+ * ownership chip stays on screen while they are hidden so the list never
+ * quietly drops rows — the same honesty rule the tiles' sale-status default
+ * follows.
+ */
+export const DEFAULT_STATUS = {
+  showOwned: true,
+  showComingSoon: true,
+  showWishlist: false,
+} as const
+
+/**
+ * The ownership params a search hand-off carries. A header search is a promise
+ * to look through everything, so it spells out all three rather than landing on
+ * the browse default and silently dropping the wish-list watch you searched for.
+ */
+export const SEARCH_ALL_STATUS_QS = "status=owned&status=coming&status=wish"
+
+/** True when the ownership trio is exactly the default set. */
+function isDefaultStatus(f: {
+  showOwned: boolean
+  showComingSoon: boolean
+  showWishlist: boolean
+}): boolean {
+  return (
+    f.showOwned === DEFAULT_STATUS.showOwned &&
+    f.showComingSoon === DEFAULT_STATUS.showComingSoon &&
+    f.showWishlist === DEFAULT_STATUS.showWishlist
+  )
+}
+
 // Every watch is exactly one status: wish-list beats coming-soon beats owned.
 export interface CollectionFilters {
   showOwned: boolean
@@ -71,9 +106,7 @@ export interface CollectionFilters {
 }
 
 export const EMPTY_FILTERS: CollectionFilters = {
-  showOwned: true,
-  showComingSoon: true,
-  showWishlist: true,
+  ...DEFAULT_STATUS,
   wishlistSource: "",
   brandId: "",
   movementId: "",
@@ -99,8 +132,8 @@ export const EMPTY_FILTERS: CollectionFilters = {
 // comma-joining, so `?category=<id>` — already emitted by /category/[id], the
 // by-category report and the table's category cell — keeps working unchanged.
 //
-// Absent `status` means "all three shown", which is the default; `status=none`
-// is the explicit empty selection (distinct from absent).
+// Absent `status` means DEFAULT_STATUS (owned + coming soon, no wish list);
+// `status=none` is the explicit empty selection (distinct from absent).
 const PARAM = {
   status: "status",
   wishlistSource: "wlsrc",
@@ -127,14 +160,14 @@ interface ReadableParams {
 
 export function filtersFromParams(params: ReadableParams): CollectionFilters {
   const status = params.getAll(PARAM.status)
-  const allShown = status.length === 0
+  const unset = status.length === 0
   const price = params.get(PARAM.priceTracking)
   const sale = params.get(PARAM.saleStatus)
   const saleValid = SALE_STATUS_OPTIONS.some((o) => o.value === sale)
   return {
-    showOwned: allShown || status.includes("owned"),
-    showComingSoon: allShown || status.includes("coming"),
-    showWishlist: allShown || status.includes("wish"),
+    showOwned: unset ? DEFAULT_STATUS.showOwned : status.includes("owned"),
+    showComingSoon: unset ? DEFAULT_STATUS.showComingSoon : status.includes("coming"),
+    showWishlist: unset ? DEFAULT_STATUS.showWishlist : status.includes("wish"),
     wishlistSource: params.get(PARAM.wishlistSource) ?? "",
     brandId: params.get(PARAM.brandId) ?? "",
     movementId: params.get(PARAM.movementId) ?? "",
@@ -172,7 +205,9 @@ export function filtersToParams(
     f.showComingSoon && "coming",
     f.showWishlist && "wish",
   ].filter((v): v is string => Boolean(v))
-  if (shown.length === 3) p.delete(PARAM.status)
+  // Only the default set is left implicit — anything else is spelled out, so
+  // a link always carries the ownership choice it was made with.
+  if (isDefaultStatus(f)) p.delete(PARAM.status)
   else many(PARAM.status, shown.length > 0 ? shown : ["none"])
 
   one(PARAM.wishlistSource, f.wishlistSource)
@@ -199,7 +234,9 @@ export function canonical(f: CollectionFilters): string {
 
 export function activeFilterCount(f: CollectionFilters): number {
   let n = 0
-  if (!f.showOwned || !f.showComingSoon || !f.showWishlist) n++
+  // As with sale status, the view's own default is not a filter the user set —
+  // only a departure from it counts.
+  if (!isDefaultStatus(f)) n++
   if (f.showWishlist && f.wishlistSource) n++
   if (f.brandId) n++
   if (f.movementId) n++

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useId, useMemo, useRef, useState } from "react"
+import { SEARCH_ALL_STATUS_QS } from "@/app/(dashboard)/collection/_components/collection-filters"
 import { useRouter } from "next/navigation"
 import { CornerDownLeft, Package, Search, Tag, Watch } from "lucide-react"
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider"
@@ -186,7 +187,7 @@ export function JumpSearch({
       id: "search",
       title: `Search the collection for “${raw}”`,
       detail: "",
-      href: `/collection?q=${encodeURIComponent(raw)}`,
+      href: `/collection?q=${encodeURIComponent(raw)}&${SEARCH_ALL_STATUS_QS}`,
       muted: false,
       score: -1,
       enterHint: "search collection",

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getAttentionReport } from "@/lib/queries/attention"
 import { getAgentReview, formatUsdMicros } from "@/lib/queries/agent-runs"
 import { getAllValuations, valuationRunDate } from "@/lib/queries/valuations"
+import { getWatchValuesReport } from "@/lib/queries/watch-values"
 import { getForSaleReport, getRealizedGains } from "@/lib/queries/sales"
 import { GainValue } from "@/components/gain-value"
 import { formatCurrency } from "@/lib/utils"
@@ -70,13 +71,14 @@ function ReportCard({ report }: { report: ReportLink }) {
 }
 
 export default async function ReportsPage() {
-  const [attention, agentReview, valuations, realizedGains, forSale] =
+  const [attention, agentReview, valuations, realizedGains, forSale, watchValues] =
     await Promise.all([
       getAttentionReport(),
       getAgentReview(),
       getAllValuations(),
       getRealizedGains(),
       getForSaleReport(),
+      getWatchValuesReport(),
     ])
 
   const attentionCount =
@@ -114,6 +116,19 @@ export default async function ReportsPage() {
       description:
         "The full schedule — every watch with reference, cost and current value. Prints to PDF; exports CSV/Excel.",
       available: true,
+    },
+    {
+      slug: "watch-values",
+      title: "Watch Values",
+      description:
+        "Every watch you hold with its current value, how that value was arrived at — researched, static or logged — and which way it has moved.",
+      available: true,
+      live: (
+        <>
+          {formatCurrency(watchValues.totals.valueCents, "USD", true)} ·{" "}
+          <GainValue gain={watchValues.totals.gain} wholeDollars /> vs basis
+        </>
+      ),
     },
     {
       slug: "collection-map",

@@ -573,7 +573,7 @@ export default async function WatchViewPage({
             </SectionCard>
           )}
 
-          {/* Market panel (§3.3) — estimate, actions, and the sale record.
+          {/* Valuation panel (§3.3) — value, actions, and the sale record.
               The sale controls are passed in rather than imported there so
               the panel stays a Server Component. */}
           <MarketPanel

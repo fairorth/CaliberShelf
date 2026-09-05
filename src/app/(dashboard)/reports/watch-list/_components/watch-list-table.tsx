@@ -5,7 +5,7 @@ import Link from "next/link"
 import type { WatchListRow, WatchListReport } from "@/lib/queries/watch-list"
 import { ATTACHMENT_LEVELS, attachmentLabels } from "@/lib/validations/watch"
 import { formatCurrency, cn } from "@/lib/utils"
-import { WatchListExport } from "./watch-list-export"
+import { ReportExport } from "@/components/report-export"
 
 // ── CSV assembly (dollars with cents, RFC-ish quoting) ──────────
 // Exports exactly the rows on screen, in the on-screen order.
@@ -176,7 +176,7 @@ export function WatchListTable({ report }: { report: WatchListReport }) {
             />
             Include wish list
           </label>
-          <WatchListExport
+          <ReportExport
             csv={watchListCsv(rows)}
             filename={`tentenloupe-watch-list-${today}.csv`}
           />

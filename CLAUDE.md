@@ -129,16 +129,35 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   re-derives them. A watch with no purchase price has basis 0 → every gain shows `—`.
 - **All gain math lives in `queries/gain.ts`** (pure), re-exported by `queries/sales.ts`
   and `queries/portfolio.ts`. No component computes a gain inline; `<GainValue>` renders it.
-- **Portfolio totals and the trend chart's primary series use `source='agent'` valuation
-  rows only.** Manual rows (`source='manual'`, V7) plot alongside as hollow markers and
-  never move a total.
+- **Every owned watch has a value, and `src/lib/valuation.ts` is the ONE place that says
+  which of the three sources gives it.** `pickCurrentValue` / `currentValueByWatch`:
+  a `tier` row is a FALLBACK (used only when the watch has no agent and no manual row —
+  it is re-stamped on every tier edit, so it must never win on date); between `agent` and
+  `manual` the NEWEST wins, ties to manual. Nothing may re-decide this locally — before
+  v1.10.3 the watch page, the collection and the portfolio each picked differently and one
+  watch had three values. Manual rows COUNT in totals as of v1.10.3, reversing the 00046
+  rule: keeping them out guaranteed the watch page and the portfolio disagreed.
+  `source='tier'` (00053) is written ONLY by `actions/tier-valuations.ts` — purchase price
+  x the tier's `valuationPct`, one row per watch, replaced not appended.
+  **Still agent-only on purpose:** the trend chart's primary series (a tier row has one
+  timestamp — plotting it draws a cliff that is not the market moving; a manual row is a
+  point, not a run), the ask-price suggestion on the watch page, and `/reports/valuations`
+  (it groups rows into RUNS). **As-of-a-date figures** (annual summary) use dated rows
+  only — agent + manual, never tier.
 - **Sold watches stay in the collection**, dimmed with a `SOLD` pill and net proceeds in
   the price cell. They are excluded from current-value totals, price-check runs, Photo Lab
   coverage targets and never-worn prompts; they stay in counts, search and every report.
 - **Market section** owns `/market` (portfolio strip, value-over-time chart, pipeline,
   attention) and `/market/sold` (the archive with footer totals). The watch page's
-  **Market panel owns the sale record** — status, venue, dates, ask, net proceeds and
-  every control — injected as `saleControls` so the panel stays a Server Component.
+  **Valuation panel** (titled "Market" until v1.10.3) leads with the current value and the
+  source pill, and still **owns the sale record** — status, venue, dates, ask, net proceeds
+  and every control — injected as `saleControls` so the panel stays a Server Component. The
+  sale zone carries its own "Sale" eyebrow inside the card.
+- **`/reports/watch-values` (Watch Values) is the portfolio examination**: one row per
+  held watch — current value, the SOURCE that produced it, gain vs basis, and movement
+  since the previous dated valuation, with per-source subtotals and a source filter.
+  Sold watches are excluded (a realized number is not a valuation) — they are the Watch
+  Sales report's subject.
 - **`/reports/sales` (Watch Sales) is the one sale report**: section 1 currently for sale,
   section 2 completed sales by year. It absorbed Realized Gains, whose slug now
   `permanentRedirect`s to it.
@@ -146,11 +165,12 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   (finding V9).
 
 ## Collection table conventions (`components/collection-table.tsx`)
-- Filters, search and sort live in the **URL**, not component state, so a filtered list survives a trip out to a watch and back and is linkable. Multi-value filters repeat their key (`?category=a&category=b`). View mode, tile size and column choice are per-device preferences and stay in localStorage.
+- Filters, search and sort live in the **URL**, not component state, so a filtered list survives a trip out to a watch and back and is linkable. Multi-value filters repeat their key (`?category=a&category=b`).
+- The **ownership** filter's default (absent `?status`) is Owned + Coming soon — **wish list is hidden until asked for** (v1.10.2, `DEFAULT_STATUS` in `collection-filters.tsx`). Only that set is left implicit in the URL; anything else is spelled out, and the ownership chip stays on screen while wish list is hidden so the list never quietly drops rows. View mode, tile size and column choice are per-device preferences and stay in localStorage.
 - The **Sale status** filter (`?sale=`) has view-specific defaults: an *absent* param means "Owned only" in tiles and "All" in the table, so `""` is unset and `"all"` is the explicit everything choice (clearing the chip writes `all`, otherwise the default would silently reapply). Sold watches always sort to the bottom, whatever the active sort.
 - The Brand and Category **cells** filter the collection; the rest of the row opens the watch. This deliberately narrows "one row, one destination" — see DECISIONS.md §8.
 - Column widths are explicit pixels, resizable, persisted per device. Any column may be resized; the table sizes itself to their sum.
-- **Purchased / Value / Gain** are optional picker columns (v1.9.24); Price, Value and Gain are `MONEY_COLUMNS`, gated by the show-cost setting in both the menu and the table. **Photo is a normal toggleable column** (untick = no thumbnails mount — the render-perf lever). A NEW ColumnId never auto-appears on a device with saved column prefs — users must tick it in the Columns menu.
+- **Purchased / Value / Gain** are optional picker columns (v1.9.24); Price, Value and Gain are `MONEY_COLUMNS`, gated by the show-cost setting in both the menu and the table. **Photo is a normal toggleable column and is OFF by default since v1.10.2** (untick = no thumbnails mount — the render-perf lever, and first paint is the whole point). Devices with saved column prefs have it dropped once, guarded by the `collection-columns-photo-default-off` marker, so ticking it back on sticks. A NEW ColumnId never auto-appears on a device with saved column prefs — users must tick it in the Columns menu.
 - The toolbar **CSV button** exports the on-screen view — displayed (filtered+sorted) rows × chosen columns, sold rows exporting net proceeds — via `src/lib/collection-csv.ts` (UTF-8 BOM, Excel-ready). DECISION: the collection owns ad-hoc data exports; the **Watch List report** (`/reports/watch-list`, sortable, wish-list excluded by default) stays the print/insurance schedule.
 - **"/" focuses the collection's own filter box** (`SearchInput slashShortcut`) because the header JumpSearch deliberately stands down on /collection. Never enable both listeners on one page.
 
@@ -220,6 +240,14 @@ script (or `route.ts` for spec-fetch).
   forward — so scored frames contribute nothing to the Coverage matrix and no
   cell ever shows a grade. Coverage is driven entirely by `watch_photos.angle`,
   which is set by hand in Review or the watch-page lightbox.**
+- **refresh-tier-valuations** (`scripts/refresh-tier-valuations.mjs`) →
+  `watch_valuations` rows with `source='tier'`; deterministic, no model, $0.
+  Same work as Config → Tiers → "Update static valuations" (and what saving the
+  tiers screen does for you) — use the script for a backfill or after a bulk
+  purchase-price edit. **Its band math mirrors `src/lib/tiers.ts` and its
+  eligibility rule mirrors `actions/tier-valuations.ts`** (a .mjs script cannot
+  import the TS module) — change them together, same arrangement as
+  `watchFolderName()`.
 - **chronoscout-sync** (`scripts/chronoscout-sync.mjs`) → `chronoscout_*` mirror
   (00027); catalog-only API (no prices/refs/alerts) — does NOT power Phase B;
   weekly `chronoscout-sync.yml`. Licensing: display in-app only, attribute
@@ -265,9 +293,13 @@ Three separate axes — never muddle them (full rationale in docs/data-model.md)
   Perpetual Calendar, Moon Phase, Fancy (exotica goes in notes).
 - **Tier** = price segment, DERIVED from purchase price and **user-configurable**
   (migration 00030). Per-user `profiles.tier_config` JSONB, ordered
-  `[{label, max}]` where `max` is the EXCLUSIVE upper dollar bound and the last
-  row's `max` is `null` (open top). `src/lib/tiers.ts` owns the pure helpers
-  (`configToBands`, `tierBandForCents`, `normalizeTierConfig`);
+  `[{label, max, valuationPct}]` where `max` is the EXCLUSIVE upper dollar bound
+  and the last row's `max` is `null` (open top). `valuationPct` (v1.10.2) is what
+  an UNTRACKED watch in that band is worth as a percentage of what was paid — the
+  static valuation above; a config saved before the field existed has it filled
+  from the 50→85% ramp (`defaultValuationPct`), never left undefined.
+  `src/lib/tiers.ts` owns the pure helpers
+  (`configToBands`, `tierBandForCents`, `normalizeTierConfig`, `tierValuation`);
   `src/lib/queries/tier-config.ts` reads, `src/lib/actions/tier-actions.ts`
   writes, `Config → Tiers` edits. Reports must read the user's bands live —
   never hardcode price buckets.

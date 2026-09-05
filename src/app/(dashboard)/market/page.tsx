@@ -6,6 +6,7 @@ import {
   getPortfolioOverview,
   getPortfolioSeries,
   nextMonthlyRunLabel,
+  valueMixLabel,
 } from "@/lib/queries/portfolio"
 import {
   getMarketAttention,
@@ -226,8 +227,8 @@ export default async function MarketPage() {
           }
           context={
             overview.valuedCount > 0
-              ? `${overview.valuedCount} of ${overview.ownedCount} tracked`
-              : "no tracked watches valued yet"
+              ? `${overview.valuedCount} of ${overview.ownedCount} valued · ${valueMixLabel(overview)}`
+              : "no watches valued yet"
           }
         />
         <Stat
@@ -236,7 +237,7 @@ export default async function MarketPage() {
           context={
             overview.unrealized ? (
               <>
-                <GainPercent gain={overview.unrealized} /> on tracked basis
+                <GainPercent gain={overview.unrealized} /> on valued basis
               </>
             ) : (
               "needs a valuation and a purchase price"

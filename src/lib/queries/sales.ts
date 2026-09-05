@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { currentValueByWatch } from "@/lib/valuation"
 import { getTransformedSignedUrls } from "@/lib/storage"
 import type { Attachment, SaleVenue, WatchListing, WatchSale } from "@/lib/types/watch"
 import {
@@ -292,7 +293,7 @@ export async function getMarketAttention(): Promise<MarketAttentionItem[]> {
     supabase
       .from("watch_valuations")
       .select("watch_id, valued_at, source")
-      .eq("source", "agent")
+      .in("source", ["agent", "manual"])
       .order("valued_at", { ascending: false }),
     supabase
       .from("watch_sales")
@@ -316,7 +317,9 @@ export async function getMarketAttention(): Promise<MarketAttentionItem[]> {
     }
   }
 
-  // Latest agent valuation per watch (rows arrive newest-first).
+  // Age of the CURRENT value per watch (rows arrive newest-first). Logging a
+  // value by hand counts as valuing the watch — it is the number the app now
+  // shows, so a fresh one must clear the staleness flag it answers.
   const latestValuedAt = new Map<string, string>()
   for (const v of (valuationsRes.data ?? []) as Array<{
     watch_id: string
@@ -553,8 +556,7 @@ export async function getForSaleReport(): Promise<ForSaleReport> {
       .order("listed_at", { ascending: true }),
     supabase
       .from("watch_valuations")
-      .select("watch_id, value_mid_cents, valued_at")
-      .eq("source", "agent")
+      .select("watch_id, value_mid_cents, valued_at, source")
       .order("valued_at", { ascending: false }),
   ])
   if (listingsRes.error) {
@@ -565,16 +567,13 @@ export async function getForSaleReport(): Promise<ForSaleReport> {
     watch: JoinedWatch
   })[]
 
-  // Latest agent valuation per watch (rows arrive newest-first).
+  // Current value per watch — what it is worth today, so it follows the one
+  // precedence rule (src/lib/valuation.ts) rather than agent rows alone.
   const latest = new Map<string, { mid: number; at: string }>()
-  for (const v of (valuationsRes.data ?? []) as Array<{
-    watch_id: string
-    value_mid_cents: number
-    valued_at: string
-  }>) {
-    if (!latest.has(v.watch_id)) {
-      latest.set(v.watch_id, { mid: v.value_mid_cents, at: v.valued_at.slice(0, 10) })
-    }
+  for (const [watchId, v] of currentValueByWatch(
+    (valuationsRes.data ?? []) as Parameters<typeof currentValueByWatch>[0]
+  )) {
+    latest.set(watchId, { mid: v.cents, at: v.valuedAt.slice(0, 10) })
   }
 
   const thumbs = await coverThumbUrls(
@@ -657,7 +656,7 @@ export interface AnnualSummary {
     /** end-of-year: owned watches (not wishlist/coming-soon) not yet sold. */
     countOwned: number
     costBasisCents: number
-    /** latest agent valuation as of Dec 31 of the year, tracked watches. */
+    /** latest dated valuation (agent or logged) as of Dec 31, tracked watches. */
     currentValueCents: number
     unrealized: GainFigure | null
   }
@@ -701,10 +700,14 @@ export async function getAnnualSummary(
       .from("watch_sales")
       .select(`*, watch:watches(${WATCH_JOIN})`)
       .order("sold_at", { ascending: false }),
+    // As-of-a-date figures use DATED observations only: agent runs and values
+    // you logged, both of which happened on the day they claim. Static tier
+    // rows carry today's timestamp whatever year they describe, so including
+    // them would put 2026 arithmetic in a 2024 year-end position.
     supabase
       .from("watch_valuations")
       .select("watch_id, value_mid_cents, valued_at, source")
-      .eq("source", "agent")
+      .in("source", ["agent", "manual"])
       .order("valued_at", { ascending: false }),
   ])
 
@@ -761,7 +764,7 @@ export async function getAnnualSummary(
     return !soldAt || soldAt > yearEnd
   })
 
-  // Latest agent valuation per watch as of Dec 31 (rows arrive newest-first).
+  // Latest dated valuation per watch as of Dec 31 (rows arrive newest-first).
   const valueAsOf = new Map<string, number>()
   for (const v of (valuationsRes.data ?? []) as Array<{
     watch_id: string

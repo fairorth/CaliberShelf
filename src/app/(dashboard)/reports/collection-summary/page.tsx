@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getWatches } from "@/lib/queries/watches"
-import { getPortfolioOverview } from "@/lib/queries/portfolio"
+import { getPortfolioOverview, valueMixLabel } from "@/lib/queries/portfolio"
 import { GainValue } from "@/components/gain-value"
 import { formatCurrency } from "@/lib/utils"
 
@@ -97,7 +97,7 @@ export default async function CollectionSummaryPage() {
           <SummaryRow
             label="Current Value"
             value={formatCurrency(portfolio.currentValueCents, "USD")}
-            hint={`Latest agent estimates — ${portfolio.valuedCount} tracked of ${portfolio.ownedCount} owned`}
+            hint={`${portfolio.valuedCount} of ${portfolio.ownedCount} owned valued — ${valueMixLabel(portfolio)}`}
           />
           <SummaryRow
             label="Unrealized"

@@ -288,7 +288,7 @@ export default async function WatchSalesPage() {
         {lifetime.salesCount === 0 ? (
           <p className="rounded-xl border border-dashed border-border px-5 py-8 text-sm text-muted-foreground">
             No sales recorded yet. When a watch that is for sale sells, record
-            it from the watch page&rsquo;s Market panel and its P&amp;L will
+            it from the watch page&rsquo;s Valuation panel and its P&amp;L will
             appear here.
           </p>
         ) : (

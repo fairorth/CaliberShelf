@@ -1,6 +1,6 @@
 {
   "name": "tentenloupe",
-  "version": "1.10.1",
+  "version": "1.10.3",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -14,6 +14,7 @@
     "find-references": "node scripts/find-references.mjs",
     "chronoscout-sync": "node scripts/chronoscout-sync.mjs",
     "backfill-agent-runs": "node scripts/backfill-agent-runs.mjs",
+    "refresh-tier-valuations": "node scripts/refresh-tier-valuations.mjs",
     "backfill-photo-dimensions": "node scripts/backfill-photo-dimensions.mjs",
     "sync-watch-folders": "node scripts/sync-watch-folders.mjs",
     "photo-score": "node scripts/photo-score.mjs",

@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/supabase/server"
+import { currentValueByWatch } from "@/lib/valuation"
 import type { Attachment } from "@/lib/types/watch"
 
 // ── The Watch List report (schedule/export view) ────────────────
 //
 // One row per watch — the basics a records/insurance schedule needs: brand,
-// model, nickname, reference, purchase date/price, and the latest AGENT
-// valuation (source='agent' only; manual rows never stand in for research,
-// same rule as the portfolio).
+// model, nickname, reference, purchase date/price, and the current value as
+// src/lib/valuation.ts defines it (newest of agent|manual, tier as fallback).
+// An insurance schedule with a blank value column for two thirds of the
+// collection was worse than one carrying an honest assumption.
 
 export interface WatchListRow {
   id: string
@@ -72,8 +74,7 @@ export async function getWatchListReport(): Promise<WatchListReport> {
       ),
     supabase
       .from("watch_valuations")
-      .select("watch_id, value_mid_cents, valued_at")
-      .eq("source", "agent")
+      .select("watch_id, value_mid_cents, valued_at, source")
       .order("valued_at", { ascending: false }),
   ])
   if (watchesRes.error) {
@@ -83,16 +84,12 @@ export async function getWatchListReport(): Promise<WatchListReport> {
     console.error("Failed to fetch valuations:", valuationsRes.error.message)
   }
 
-  // Latest agent valuation per watch (rows arrive newest-first).
+  // Current value per watch — one rule, decided in src/lib/valuation.ts.
   const latest = new Map<string, { mid: number; at: string }>()
-  for (const v of (valuationsRes.data ?? []) as {
-    watch_id: string
-    value_mid_cents: number
-    valued_at: string
-  }[]) {
-    if (!latest.has(v.watch_id)) {
-      latest.set(v.watch_id, { mid: v.value_mid_cents, at: v.valued_at })
-    }
+  for (const [watchId, v] of currentValueByWatch(
+    (valuationsRes.data ?? []) as Parameters<typeof currentValueByWatch>[0]
+  )) {
+    latest.set(watchId, { mid: v.cents, at: v.valuedAt })
   }
 
   const watches = (watchesRes.data ?? []) as unknown as WatchRow[]

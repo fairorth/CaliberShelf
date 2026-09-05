@@ -8,6 +8,13 @@
 - Latest applied migration: `00051_add_attachment_retire_candidate.sql`
   (confirmed applied 2026-08-30 — everything through 00051 is live). See
   docs/data-model.md for the table catalog.
+- **PENDING (run in the SQL Editor):** `00053_tier_valuations.sql` — widens
+  `watch_valuations.source` to allow `'tier'` and `run_mode` to allow
+  `'static'`, and adds the partial unique index that keeps a watch to one
+  static valuation. Nothing can write a static valuation until it is applied
+  (the app and `npm run refresh-tier-valuations` both fail the CHECK), and the
+  app is otherwise unaffected. `00052_add_attachment_none.sql` shipped with
+  v1.10.1 — confirm it is applied too.
 - `00051` added `watches.attachment` (TEXT + CHECK: max|high|medium|low,
   nullable), moved every `sale_status = 'candidate'` row back to `'owned'`, and
   DROPPED `candidate_since` / `candidate_note`. The `'candidate'` value remains

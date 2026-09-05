@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
+import { syncTierValuation } from "@/lib/actions/tier-valuations"
 import { dollarsToCents } from "@/lib/utils"
 import {
   listingFormSchema,
@@ -217,6 +218,10 @@ export async function withdrawListing(watchId: string): Promise<SaleActionState>
     .eq("user_id", user.id)
   if (updateError) return { error: updateError.message }
 
+  // Back in the collection, and price tracking stays off — so it is the tier's
+  // static estimate that carries it until someone turns tracking back on.
+  await syncTierValuation(watchId)
+
   revalidateSaleSurfaces(watchId)
   return { success: true }
 }
@@ -306,6 +311,9 @@ export async function recordSale(
       .eq("id", listing.id)
     return { error: updateError.message }
   }
+
+  // Sold: net proceeds is the number now, so the static estimate goes.
+  await syncTierValuation(watchId)
 
   revalidateSaleSurfaces(watchId)
   return { success: true }

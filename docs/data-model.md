@@ -64,7 +64,7 @@ mirror — they are **not** foreign-keyed to the user's `brands`/`watches`; the
 | `watch_photos` | owner | app | storage paths + `is_cover`, `thumb_path` |
 | `wear_logs` | owner | app | one row per wear-day; `worn_date` |
 | `timegrapher_runs` | owner | app | accuracy measurements; rate/amplitude/beat error |
-| `watch_valuations` | owner | `price-check` + the app | time series of market-value estimates; `value_mid_cents`, `confidence`, `datapoints`, `sources`, `agent_model`; `source` = `agent`\|`manual` + `entered_note` (00046) — manual rows are yours and never enter portfolio totals |
+| `watch_valuations` | owner | `price-check` + the app | time series of market-value estimates; `value_mid_cents`, `confidence`, `datapoints`, `sources`, `agent_model`; `source` = `agent`\|`manual`\|`tier` (00046, 00053) + `entered_note`. Which one is a watch's CURRENT value is decided in `src/lib/valuation.ts`, nowhere else; `tier` rows are the static estimate for untracked watches (one per watch, no history, `run_mode='static'`) |
 | `watch_listings` | owner | app | one row per time a watch goes on the market (00044); `venue` enum, `ask_price_cents`, `listed_at`, `status` (`active`\|`sold`\|`withdrawn`). Partial unique index allows at most one `active` row per watch — days-on-market and price-drop history live here |
 | `watch_sales` | owner | app | the sale record (00045), `UNIQUE (watch_id)` — the linear lifecycle made physical; sale price, denormalized venue, buyer/payment/tracking, four fee columns, and **generated** `net_proceeds_cents` |
 | `wishlist_deals` | owner | `deal-check` | one current row per wish-list watch; `availability`, `retail_price_cents`; `best_used_*` reserved for Phase B |
@@ -144,10 +144,57 @@ useful questions.
   as Chronograph, which earns its place as a category.
 - **Tier** — the price segment, never stored on the watch. It is derived from
   `purchase_price_cents` against the user's own bands in `profiles.tier_config`
-  (an ordered JSONB array of `{label, max}`, `max` exclusive, last row `null`
-  for the open top). `src/lib/tiers.ts` holds the pure conversion helpers and
-  the defaults; `Config → Tiers` edits them; reports resolve bands at request
-  time so renaming a tier reflows every chart immediately.
+  (an ordered JSONB array of `{label, max, valuationPct}`, `max` exclusive, last
+  row `null` for the open top). `src/lib/tiers.ts` holds the pure conversion
+  helpers and the defaults; `Config → Tiers` edits them; reports resolve bands
+  at request time so renaming a tier reflows every chart immediately.
+  `valuationPct` (v1.10.2) is the second job the tiers now do: the percentage of
+  the purchase price an UNTRACKED watch in that band is assumed to be worth
+  today (defaults ramp 50% → 85%; a config saved before the field existed gets
+  the same ramp filled in by `normalizeTierConfig`). It is the input to the
+  static valuation below.
+
+## Three valuation sources, one value per watch
+
+Every owned watch carries a current value, from exactly one of three places:
+
+| | researched | logged | static |
+|---|---|---|---|
+| `source` | `agent` | `manual` | `tier` |
+| written by | `price-check` / "Check price now" | the "Log a value" dialog | `src/lib/actions/tier-valuations.ts` |
+| row | one per run — a time series | one per observation | exactly one, replaced in place |
+| basis | web research, with datapoints and sources | what you saw, with a note | `purchase_price_cents x` the tier's `valuationPct` |
+| confidence | as researched | as you rated it | always `low` — an assumption about a price segment |
+
+**Precedence (`src/lib/valuation.ts`, the only arbiter).** `tier` is a *fallback*: it wins
+only when the watch has no agent and no manual row, because it is re-stamped every time
+the tier percentages are edited and would otherwise overwrite a real observation with
+arithmetic. Between `agent` and `manual`, the **newest wins** (ties to manual) — which is
+what makes "log a value" mean something without freezing the watch: next month's price
+check supersedes it. Every list, total and report calls the same function; no screen
+re-decides.
+
+The invariant `tier-valuations.ts` maintains is that a tier row exists **iff**
+the watch is untracked, unsold, not wish-list and has a purchase price. Turning
+tracking on deletes the tier row; turning it off (or undoing a sale) writes one;
+adding or editing a watch re-derives it. `refreshTierValuations()` re-asserts it
+across the collection — automatically when the tier percentages are saved, on
+demand from the button in `Config → Tiers`, and from
+`npm run refresh-tier-valuations` (deterministic, $0, no model).
+
+Four things deliberately do NOT follow the precedence rule. The **value-over-time
+chart** plots agent rows only (a tier row carries one timestamp, the moment the
+percentages were last edited, so plotting it would draw a cliff and call it the
+market moving; a manual row is a point, not a run). The **ask-price suggestion**
+on the watch page uses the researched estimate alone — an assumption or a
+self-entered number must not set what you list a watch for. **`/reports/valuations`**
+excludes tier rows because it groups rows into runs. And **as-of-a-date figures**
+(the annual summary's year-end position) use dated observations only — agent and
+manual — because a tier row claims today's date whatever year it describes.
+
+Where the whole thing is examined per watch: **`/reports/watch-values`** — value,
+source, gain vs basis and movement since the previous valuation, with subtotals
+by source.
 
 ## Which agent writes what
 

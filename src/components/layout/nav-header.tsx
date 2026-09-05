@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { SEARCH_ALL_STATUS_QS } from "@/app/(dashboard)/collection/_components/collection-filters"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Menu, Plus, X } from "lucide-react"
@@ -94,7 +95,7 @@ export function NavHeader({ userEmail, jumpIndex }: NavHeaderProps) {
   const submitSearch = () => {
     const q = searchQuery.trim()
     if (!q) return
-    const href = `/collection?q=${encodeURIComponent(q)}`
+    const href = `/collection?q=${encodeURIComponent(q)}&${SEARCH_ALL_STATUS_QS}`
     if (!interceptNavigation(href)) router.push(href)
     setSearchQuery("")
     setDrawerOpen(false)

@@ -48,7 +48,7 @@ export default async function SoldArchivePage() {
       {rows.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border px-5 py-8 text-sm text-muted-foreground">
           No sales recorded yet. When a listed watch sells, record it from the watch
-          page&rsquo;s Market panel and it will appear here.
+          page&rsquo;s Valuation panel and it will appear here.
         </p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-card">

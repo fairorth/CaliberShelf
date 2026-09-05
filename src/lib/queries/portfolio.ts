@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { valuationRunDate } from "./valuations"
+import { currentValueByWatch } from "@/lib/valuation"
 import { aggregateGain, type GainFigure } from "./gain"
+import type { ValuationSource } from "@/lib/types/watch"
 
 // Portfolio-side queries (Phase 5): basis / value / unrealized, as a strip
 // and as a series. Together with sales.ts this file is where EVERY gain
@@ -10,8 +12,16 @@ import { aggregateGain, type GainFigure } from "./gain"
 // - "Owned" = not wishlist, not coming-soon. "Unsold" = sale_status ≠ 'sold'.
 // - COST BASIS sums every owned, unsold watch (an unknown purchase price
 //   contributes its acquisition costs, usually 0 — money actually spent).
-// - CURRENT VALUE sums the latest agent-row mid of tracked, unsold watches.
-//   Manual valuations NEVER enter totals or the primary series (00046 rule).
+// - CURRENT VALUE sums the current value of every owned, unsold watch, exactly
+//   as src/lib/valuation.ts defines it: newest of agent|manual, falling back to
+//   the tier-derived static value. Manual rows DO count from v1.10.3 — the old
+//   00046 rule kept them out of totals, which guaranteed the watch page and the
+//   portfolio disagreed about the same watch.
+// - The value-over-time series stays agent-only. A tier row carries a single
+//   timestamp — the moment the percentages were last edited — so plotting it
+//   would draw a cliff on that date and call it the market moving; a manual row
+//   is a point, not a run, and gets its own markers rather than joining the
+//   researched line.
 // - UNREALIZED compares value to basis only over watches that have BOTH a
 //   valuation and a known purchase price — never value minus a basis from a
 //   different set of watches, and never a gain on an unknown basis.
@@ -33,10 +43,17 @@ interface AgentValuationRow {
   valued_at: string
 }
 
-/** Owned watches + agent valuation rows (newest-first) in one round trip. */
+interface EstimateRow extends AgentValuationRow {
+  source: ValuationSource
+}
+
+/** Owned watches + every valuation row (newest-first) in one round trip.
+ *  `valuations` is the agent-only subset the trend series draws from;
+ *  `estimates` is everything, for the precedence rule to arbitrate. */
 async function fetchPortfolioData(): Promise<{
   owned: PortfolioWatch[]
   valuations: AgentValuationRow[]
+  estimates: EstimateRow[]
 }> {
   const supabase = await createClient()
   const [watchesRes, valuationsRes] = await Promise.all([
@@ -47,8 +64,7 @@ async function fetchPortfolioData(): Promise<{
       ),
     supabase
       .from("watch_valuations")
-      .select("watch_id, value_mid_cents, valued_at")
-      .eq("source", "agent")
+      .select("watch_id, value_mid_cents, valued_at, source")
       .order("valued_at", { ascending: false }),
   ])
   if (watchesRes.error) {
@@ -60,7 +76,12 @@ async function fetchPortfolioData(): Promise<{
   const owned = ((watchesRes.data ?? []) as PortfolioWatch[]).filter(
     (w) => !w.is_wishlist && !w.is_coming_soon
   )
-  return { owned, valuations: (valuationsRes.data ?? []) as AgentValuationRow[] }
+  const estimates = (valuationsRes.data ?? []) as EstimateRow[]
+  return {
+    owned,
+    valuations: estimates.filter((v) => v.source === "agent"),
+    estimates,
+  }
 }
 
 // ── The portfolio strip (§3.2 block 1) ──────────────────────────
@@ -68,11 +89,16 @@ async function fetchPortfolioData(): Promise<{
 export interface PortfolioOverview {
   /** Σ cost basis, owned & unsold watches. */
   costBasisCents: number
-  /** Σ latest agent mid, tracked & unsold watches. */
+  /** Σ latest estimate (agent where tracked, tier where not), owned & unsold. */
   currentValueCents: number
   /** count of watches contributing to currentValueCents. */
   valuedCount: number
-  /** owned & unsold watches — the denominator for "28 of 42 tracked". */
+  /** of those, how many are researched agent estimates — the strip says so,
+   *  because "researched" and "assumed" are not the same claim about a number. */
+  researchedCount: number
+  /** of those, how many are values you logged by hand. */
+  loggedCount: number
+  /** owned & unsold watches — the denominator for "40 of 42 valued". */
   ownedCount: number
   unrealized: GainFigure | null
   /** lifetime realized gain over sales with a known basis. */
@@ -90,9 +116,29 @@ export function nextMonthlyRunLabel(): string {
   return next.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 }
 
+/**
+ * "28 researched · 85 static · 1 logged" — the composition of a value total,
+ * in one wording. A total that mixes research with arithmetic has to say so,
+ * and it has to say it the same way on every screen that prints it.
+ */
+export function valueMixLabel(o: {
+  valuedCount: number
+  researchedCount: number
+  loggedCount: number
+}): string {
+  const staticCount = o.valuedCount - o.researchedCount - o.loggedCount
+  return [
+    o.researchedCount > 0 ? `${o.researchedCount} researched` : null,
+    staticCount > 0 ? `${staticCount} static` : null,
+    o.loggedCount > 0 ? `${o.loggedCount} logged` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ")
+}
+
 export async function getPortfolioOverview(): Promise<PortfolioOverview> {
   const supabase = await createClient()
-  const [{ owned, valuations }, salesRes] = await Promise.all([
+  const [{ owned, valuations, estimates }, salesRes] = await Promise.all([
     fetchPortfolioData(),
     supabase
       .from("watch_sales")
@@ -103,17 +149,20 @@ export async function getPortfolioOverview(): Promise<PortfolioOverview> {
 
   const unsold = owned.filter((w) => w.sale_status !== "sold")
 
-  // Latest agent mid per watch (rows arrive newest-first).
+  // The current value per watch, decided in one place (src/lib/valuation.ts),
+  // with the winning source kept so the strip can say what these numbers are.
+  const current = currentValueByWatch(estimates)
   const latestMid = new Map<string, number>()
-  for (const v of valuations) {
-    if (!latestMid.has(v.watch_id)) latestMid.set(v.watch_id, v.value_mid_cents)
+  const sourceOf = new Map<string, ValuationSource>()
+  for (const [watchId, v] of current) {
+    latestMid.set(watchId, v.cents)
+    sourceOf.set(watchId, v.source)
   }
 
-  const valued = unsold.filter(
-    (w) => w.price_check_enabled && latestMid.has(w.id)
-  )
+  const valued = unsold.filter((w) => latestMid.has(w.id))
 
-  // The run these values came from: newest agent row among the valued set.
+  // The run these values came from: newest AGENT row among the valued set —
+  // a tier row has no run behind it, so it must not date the strip.
   const valuedIds = new Set(valued.map((w) => w.id))
   const latestValuedAt = valuations.find((v) => valuedIds.has(v.watch_id))?.valued_at
   const latestRunDate = latestValuedAt ? valuationRunDate(latestValuedAt) : null
@@ -130,6 +179,8 @@ export async function getPortfolioOverview(): Promise<PortfolioOverview> {
       0
     ),
     valuedCount: valued.length,
+    researchedCount: valued.filter((w) => sourceOf.get(w.id) === "agent").length,
+    loggedCount: valued.filter((w) => sourceOf.get(w.id) === "manual").length,
     ownedCount: unsold.length,
     latestRunDate,
     unrealized: aggregateGain(

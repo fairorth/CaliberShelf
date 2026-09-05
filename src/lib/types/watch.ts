@@ -223,9 +223,15 @@ export interface WatchWithCover extends Watch {
 
 // ── Valuation ───────────────────────────────────────────────────
 
-/** Who logged the value (00046). Portfolio totals and the trend chart's
- *  primary series use 'agent' rows only; 'manual' rows plot alongside. */
-export type ValuationSource = "agent" | "manual"
+/** Where the value came from (00046, 00053).
+ *  - 'agent'  — researched by the valuation agent. The authority.
+ *  - 'manual' — logged by hand ("saw one sell at RedBar for 4.2"). Never
+ *    enters a total or the trend chart's primary series; plots alongside.
+ *  - 'tier'   — derived: purchase price x the price tier's valuationPct, for
+ *    untracked watches. Counts toward portfolio totals (otherwise most of the
+ *    collection would have no value at all) but never plots as a trend point,
+ *    because it is one assumption restamped, not a measurement over time. */
+export type ValuationSource = "agent" | "manual" | "tier"
 
 export interface ValuationDatapoint {
   price_usd: number

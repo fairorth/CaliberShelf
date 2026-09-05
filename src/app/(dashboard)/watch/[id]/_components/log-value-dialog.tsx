@@ -31,8 +31,12 @@ const CONFIDENCE_OPTIONS = [
 ] as const
 
 /**
- * "Log a value" (V7) — a manual valuation row. Logged alongside agent rows,
- * marked as yours, never counted in portfolio totals.
+ * "Log a value" (V7) — a manual valuation row.
+ *
+ * Since v1.10.3 it is not a footnote: a logged value BECOMES the watch's
+ * current value (newest of agent|manual wins) and counts in portfolio totals,
+ * until a later price check supersedes it. Before that it was written to the
+ * database and rendered nowhere, which made the button a lie.
  */
 export function LogValueDialog({ watchId }: LogValueDialogProps) {
   const router = useRouter()
@@ -73,8 +77,9 @@ export function LogValueDialog({ watchId }: LogValueDialogProps) {
         <DialogHeader>
           <DialogTitle>Log a value</DialogTitle>
           <DialogDescription>
-            Your own observation — shown as a hollow marker beside the agent
-            estimates, never counted in portfolio totals.
+            Your own observation. It becomes this watch&rsquo;s current value —
+            on the watch page, in the collection and in your portfolio total —
+            until a newer price check replaces it.
           </DialogDescription>
         </DialogHeader>
 

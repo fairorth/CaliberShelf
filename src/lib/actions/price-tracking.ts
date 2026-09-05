@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
+import { syncTierValuation } from "@/lib/actions/tier-valuations"
 
 export type PriceTrackingState = { error?: string; enabled?: boolean }
 
@@ -51,7 +52,13 @@ export async function setPriceTracking(
     .eq("user_id", user.id)
   if (error) return { error: error.message }
 
+  // The two valuation sources are exclusive: switching tracking ON hands the
+  // watch to the agent and drops its static estimate; switching it OFF hands
+  // it back to its tier. `syncTierValuation` knows which way round this is.
+  await syncTierValuation(watchId)
+
   revalidatePath(`/watch/${watchId}`)
   revalidatePath("/market")
+  revalidatePath("/collection")
   return { enabled }
 }

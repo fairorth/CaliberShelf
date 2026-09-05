@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { watchFormSchema, quickAddSchema } from "@/lib/validations/watch"
 import { setWatchLabels } from "@/lib/actions/label-actions"
+import { syncTierValuation } from "@/lib/actions/tier-valuations"
 import { buildStoragePath } from "@/lib/storage"
 import { generateThumbnail, thumbPathFor } from "@/lib/thumbnails"
 import { dollarsToCents } from "@/lib/utils"
@@ -125,6 +126,9 @@ export async function createWatch(
   }
 
   await clearBrandWishlist(supabase, user.id, data.brand_id, data.is_wishlist)
+  // A new watch is valued the moment it exists: untracked ones get their
+  // tier's static estimate, so nothing sits in the collection with no value.
+  await syncTierValuation(watch.id)
 
   revalidatePath("/dashboard")
   redirect(`/watch/${watch.id}/edit`)
@@ -210,6 +214,9 @@ export async function updateWatch(
   await setWatchLabels(watchId, data.label_ids)
 
   await clearBrandWishlist(supabase, user.id, data.brand_id, data.is_wishlist)
+  // Purchase price, wish-list status and price tracking all move the static
+  // valuation — re-derive it rather than leave yesterday's number behind.
+  await syncTierValuation(watchId)
 
   revalidatePath("/dashboard")
   revalidatePath("/collection")
@@ -413,6 +420,7 @@ export async function createWatchWithPhoto(
   }
 
   await clearBrandWishlist(supabase, user.id, data.brand_id, data.is_wishlist)
+  await syncTierValuation(watch.id)
 
   revalidatePath("/dashboard")
   // Return the destination instead of calling redirect(). This action is invoked
