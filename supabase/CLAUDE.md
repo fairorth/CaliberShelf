@@ -5,16 +5,17 @@
 - Each migration is a single logical change (one table or set of related policies)
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
-- Latest applied migration: `00051_add_attachment_retire_candidate.sql`
-  (confirmed applied 2026-08-30 — everything through 00051 is live). See
-  docs/data-model.md for the table catalog.
-- **PENDING (run in the SQL Editor):** `00053_tier_valuations.sql` — widens
-  `watch_valuations.source` to allow `'tier'` and `run_mode` to allow
-  `'static'`, and adds the partial unique index that keeps a watch to one
-  static valuation. Nothing can write a static valuation until it is applied
-  (the app and `npm run refresh-tier-valuations` both fail the CHECK), and the
-  app is otherwise unaffected. `00052_add_attachment_none.sql` shipped with
-  v1.10.1 — confirm it is applied too.
+- Latest applied migration: `00053_tier_valuations.sql`
+  (confirmed applied 2026-09-05 — everything through 00053 is live, 00052
+  included). See docs/data-model.md for the table catalog.
+- `00053` widened `watch_valuations.source` to allow `'tier'` and `run_mode` to
+  allow `'static'`, and added the partial unique index that holds a watch to one
+  static valuation. Applied 2026-09-05, immediately followed by
+  `npm run refresh-tier-valuations` — 115 static valuations written.
+  Both CHECK constraints were dropped by DEFINITION rather than by assumed name
+  (they were created inline by ADD COLUMN, so Postgres named them): a widened
+  constraint added alongside a surviving narrow one looks like it worked and
+  still rejects every insert.
 - `00051` added `watches.attachment` (TEXT + CHECK: max|high|medium|low,
   nullable), moved every `sale_status = 'candidate'` row back to `'owned'`, and
   DROPPED `candidate_since` / `candidate_note`. The `'candidate'` value remains
