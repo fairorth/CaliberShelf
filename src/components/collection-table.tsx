@@ -861,19 +861,6 @@ export function CollectionTable({
                         {watch.is_wishlist && guideNames?.[watch.id] && (
                           <GuideBadge name={guideNames[watch.id]} className="shrink-0 align-middle" />
                         )}
-                        {/* title goes on the wrapper: lucide icons take no title
-                            prop, and the tooltip is the point (§5). */}
-                        {watch.price_check_enabled && (
-                          <span
-                            title="Price checking enabled"
-                            className="inline-flex shrink-0 align-middle"
-                          >
-                            <CircleDollarSign
-                              aria-label="Price checking enabled"
-                              className="h-3.5 w-3.5 text-brass"
-                            />
-                          </span>
-                        )}
                       </span>
                     </TableCell>
                   )}
@@ -943,9 +930,28 @@ export function CollectionTable({
                       show — here (their realized story lives in Price, §3.6). */}
                   {isVisible("value") && (
                     <TableCell className="text-right font-mono text-xs font-medium tabular-nums text-foreground">
-                      {watch.sale_status !== "sold" && valuationMids?.[watch.id] != null
-                        ? formatCurrency(valuationMids[watch.id], "USD", true)
-                        : "—"}
+                      <span className="flex items-center justify-end gap-1.5">
+                        {/* The price-tracked marker sits with the VALUE, not the
+                            model: it is a fact about this number — researched by
+                            the agent rather than derived from the price tier —
+                            and beside the model it qualified nothing. Title goes
+                            on the wrapper: lucide icons take no title prop, and
+                            the tooltip is the point (§5). */}
+                        {watch.price_check_enabled && (
+                          <span
+                            title="Price checking enabled — this value is researched, not derived from the price tier"
+                            className="inline-flex shrink-0 align-middle"
+                          >
+                            <CircleDollarSign
+                              aria-label="Price checking enabled"
+                              className="h-3.5 w-3.5 text-brass"
+                            />
+                          </span>
+                        )}
+                        {watch.sale_status !== "sold" && valuationMids?.[watch.id] != null
+                          ? formatCurrency(valuationMids[watch.id], "USD", true)
+                          : "—"}
+                      </span>
                     </TableCell>
                   )}
                   {isVisible("gain") && (
