@@ -1,7 +1,10 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useTransition } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { setPriceTracking } from "@/lib/actions/price-tracking"
 import type {
   WatchValueRow,
   WatchValuesReport,
@@ -42,6 +45,7 @@ function watchValuesCsv(rows: WatchValueRow[]): string {
       "change_pct",
       "change_since",
       "valuations",
+      "research",
     ],
     ...rows.map((r) => [
       r.brand,
@@ -58,6 +62,7 @@ function watchValuesCsv(rows: WatchValueRow[]): string {
       r.change?.pct != null ? r.change.pct.toFixed(1) : null,
       r.change?.since.slice(0, 10) ?? null,
       String(r.valuationCount),
+      r.researching ? "on" : "off",
     ]),
   ]
     .map((r) => r.map(csvCell).join(","))
@@ -89,6 +94,7 @@ type SortKey =
   | "gainPct"
   | "change"
   | "valuedOn"
+  | "research"
 
 /** Source rank, so sorting groups researched → logged → static rather than
  *  alphabetising three words into a meaningless order. */
@@ -117,6 +123,10 @@ function sortValue(r: WatchValueRow, key: SortKey): string | number | null {
       return r.change?.cents ?? null
     case "valuedOn":
       return r.valuedOn
+    // Descending groups the actionable rows: researching first, then the ones
+    // that could be, then the ones that need a reference number before they can.
+    case "research":
+      return r.researching ? 2 : r.reference ? 1 : 0
   }
 }
 
@@ -131,7 +141,88 @@ const HEADERS: Array<{ key: SortKey; label: string; align?: "right" }> = [
   { key: "gainPct", label: "Gain %", align: "right" },
   { key: "change", label: "Change", align: "right" },
   { key: "valuedOn", label: "Valued", align: "right" },
+  { key: "research", label: "Research" },
 ]
+
+/**
+ * One row's research switch.
+ *
+ * This is the report's one WRITE, and it deliberately is not the Source pill:
+ * Source says what produced the number you are looking at, Research says
+ * whether the agent will keep it fresh. A watch can be Static and researching
+ * (first run pending) or Researched and no longer tracked, so folding them into
+ * one control would make two facts share a word.
+ *
+ * Applying is immediate — switching research on spends nothing, it only enrols
+ * the watch in the monthly run — so there is no staged "apply" step to get
+ * wrong. A watch with no reference number cannot be enrolled at all (Zod
+ * refine, DB CHECK, and the action all refuse), so it offers the fix instead of
+ * failing on click.
+ */
+function ResearchToggle({
+  row,
+  onDone,
+}: {
+  row: WatchValueRow
+  onDone: () => void
+}) {
+  const [pending, startTransition] = useTransition()
+  const [on, setOn] = useState(row.researching)
+
+  if (!row.reference) {
+    return (
+      <Link
+        href={`/watch/${row.id}/edit`}
+        title="Research needs a reference number — a valuation has to be about a specific watch. Add one here."
+        className="font-mono text-2xs uppercase tracking-[0.1em] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline print:no-underline"
+      >
+        Needs ref
+      </Link>
+    )
+  }
+
+  function toggle(next: boolean) {
+    setOn(next) // optimistic: the click has to feel like the switch it looks like
+    startTransition(async () => {
+      const result = await setPriceTracking(row.id, next)
+      if (result.error) {
+        setOn(!next)
+        toast.error(result.error)
+        return
+      }
+      toast.success(
+        next
+          ? `Researching ${row.brand} ${row.model} — first estimate on the next run.`
+          : `Stopped researching ${row.brand} ${row.model}.`
+      )
+      onDone()
+    })
+  }
+
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-center gap-2 print:cursor-auto",
+        pending && "opacity-60"
+      )}
+      title={
+        on
+          ? "The valuation agent researches this watch on the monthly run"
+          : "Enrol this watch in the monthly valuation run"
+      }
+    >
+      <input
+        type="checkbox"
+        checked={on}
+        disabled={pending}
+        onChange={(e) => toggle(e.target.checked)}
+        className="h-4 w-4 rounded border-border accent-brass"
+        aria-label={`Research ${row.brand} ${row.model}`}
+      />
+      <span className="text-xs text-muted-foreground">{on ? "On" : "Off"}</span>
+    </label>
+  )
+}
 
 /**
  * The examination table. Sorted by value descending on arrival — the money is
@@ -140,6 +231,7 @@ const HEADERS: Array<{ key: SortKey; label: string; align?: "right" }> = [
  * arithmetic.
  */
 export function WatchValuesTable({ report }: { report: WatchValuesReport }) {
+  const router = useRouter()
   const [source, setSource] = useState<"" | ValuationSource>("")
   const [sortKey, setSortKey] = useState<SortKey>("value")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
@@ -234,7 +326,11 @@ export function WatchValuesTable({ report }: { report: WatchValuesReport }) {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-3 print:hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <p className="max-w-xl text-xs text-muted-foreground">
+          Research enrols a watch in the monthly valuation run (about $1–1.50 each).
+          It keeps its static estimate until the first researched value lands.
+        </p>
         <ReportExport
           csv={watchValuesCsv(rows)}
           filename={`tentenloupe-watch-values-${today}.csv`}
@@ -358,6 +454,9 @@ export function WatchValuesTable({ report }: { report: WatchValuesReport }) {
                   <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
                     {fmtDate(r.valuedOn)}
                   </td>
+                  <td className="px-3 py-2">
+                    <ResearchToggle row={r} onDone={() => router.refresh()} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -392,7 +491,7 @@ export function WatchValuesTable({ report }: { report: WatchValuesReport }) {
                     <span className="font-mono tabular-nums text-muted-foreground">—</span>
                   )}
                 </td>
-                <td colSpan={2} />
+                <td colSpan={3} />
               </tr>
             </tfoot>
           </table>

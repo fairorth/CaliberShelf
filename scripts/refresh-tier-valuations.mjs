@@ -131,9 +131,11 @@ function tierValuation(purchasePriceCents, bands) {
   return { cents: Math.round((purchasePriceCents * band.valuationPct) / 100), band }
 }
 
-/** Mirror of tierRowFor() in src/lib/actions/tier-valuations.ts. */
-function eligible(w) {
-  return !w.is_wishlist && w.sale_status !== "sold" && !w.price_check_enabled
+/** Mirror of tierRowFor() in src/lib/actions/tier-valuations.ts. The test is
+ *  "has no researched value", NOT "not price-tracked": switching research on
+ *  must not blank a watch's value while it waits for the first run. */
+function eligible(w, hasResearch) {
+  return !w.is_wishlist && w.sale_status !== "sold" && !hasResearch.has(w.id)
 }
 
 const money = (cents) =>
@@ -158,6 +160,16 @@ if (watchError) {
   process.exit(1)
 }
 
+const { data: agentRows, error: agentError } = await supabase
+  .from("watch_valuations")
+  .select("watch_id")
+  .eq("source", "agent")
+if (agentError) {
+  console.error("Failed to read valuations:", agentError.message)
+  process.exit(1)
+}
+const hasResearch = new Set(agentRows.map((r) => r.watch_id))
+
 const bandsByUser = new Map(
   (profiles ?? []).map((p) => [p.id, bandsForProfile(p.tier_config)])
 )
@@ -168,7 +180,7 @@ let skipped = 0
 let notEligible = 0
 
 for (const w of watches ?? []) {
-  if (!eligible(w)) {
+  if (!eligible(w, hasResearch)) {
     notEligible++
     continue
   }
@@ -209,8 +221,8 @@ for (const w of watches ?? []) {
 const selected = rows.slice(0, Number.isFinite(LIMIT) ? LIMIT : rows.length)
 
 console.log(
-  `\n${watches?.length ?? 0} watches · ${notEligible} tracked/sold/wish-list · ` +
-    `${skipped} untracked with no purchase price · ${rows.length} to value` +
+  `\n${watches?.length ?? 0} watches · ${notEligible} researched/sold/wish-list · ` +
+    `${skipped} with no purchase price · ${rows.length} to value` +
     (selected.length !== rows.length ? ` (writing ${selected.length}, --limit)` : "")
 )
 for (const r of selected) {

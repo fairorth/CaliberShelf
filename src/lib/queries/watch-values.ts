@@ -41,6 +41,13 @@ export interface WatchValueRow {
   change: ValuationChange | null
   /** how many valuations this watch has ever carried. */
   valuationCount: number
+  /** is the valuation agent researching this watch (watches.price_check_enabled)? */
+  researching: boolean
+  /** Research needs a reference number — enforced by a Zod refine, a DB CHECK
+   *  and setPriceTracking. Without one the toggle has to be disabled rather
+   *  than fail on click, which is the common case: most of the collection has
+   *  no reference. */
+  reference: string | null
 }
 
 export interface SourceSubtotal {
@@ -70,6 +77,8 @@ interface WatchRow {
   id: string
   model: string
   nickname: string | null
+  reference_number: string | null
+  price_check_enabled: boolean
   sale_status: string
   purchase_price_cents: number | null
   cost_basis_cents: number
@@ -94,7 +103,7 @@ export async function getWatchValuesReport(): Promise<WatchValuesReport> {
     supabase
       .from("watches")
       .select(
-        "id, model, nickname, sale_status, purchase_price_cents, cost_basis_cents, is_wishlist, is_coming_soon, brand:brands(name)"
+        "id, model, nickname, reference_number, price_check_enabled, sale_status, purchase_price_cents, cost_basis_cents, is_wishlist, is_coming_soon, brand:brands(name)"
       ),
     supabase
       .from("watch_valuations")
@@ -153,6 +162,8 @@ export async function getWatchValuesReport(): Promise<WatchValuesReport> {
             : null,
         change: valuationChange(byWatch.get(w.id) ?? []),
         valuationCount: (byWatch.get(w.id) ?? []).length,
+        researching: w.price_check_enabled,
+        reference: w.reference_number,
       }
     })
     // Most valuable first: this is a portfolio examination, and the watches

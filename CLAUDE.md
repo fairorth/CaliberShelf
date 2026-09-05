@@ -138,7 +138,10 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   watch had three values. Manual rows COUNT in totals as of v1.10.3, reversing the 00046
   rule: keeping them out guaranteed the watch page and the portfolio disagreed.
   `source='tier'` (00053) is written ONLY by `actions/tier-valuations.ts` — purchase price
-  x the tier's `valuationPct`, one row per watch, replaced not appended.
+  x the tier's `valuationPct`, one row per watch, replaced not appended. A tier row exists
+  **iff the watch has no AGENT row** — not "iff untracked" (v1.10.7): switching research on
+  must not blank a watch's value while it waits for its first run. `refresh-tier-valuations.mjs`
+  mirrors that test and must change with it.
   **Still agent-only on purpose:** the trend chart's primary series (a tier row has one
   timestamp — plotting it draws a cliff that is not the market moving; a manual row is a
   point, not a run), the ask-price suggestion on the watch page, and `/reports/valuations`
@@ -157,7 +160,13 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   held watch — current value, the SOURCE that produced it, gain vs basis, and movement
   since the previous dated valuation. The four cards at the top (Total · Researched ·
   Logged · Static) ARE the source filter — Total is the "all" option — so there is one
-  control for that state, not a card row and a select saying the same thing.
+  control for that state, not a card row and a select saying the same thing. Its
+  **Research column** is the report's one write: a per-row switch on
+  `price_check_enabled` (v1.10.7), applied immediately because enrolling costs nothing —
+  only the monthly run does. It is deliberately NOT the Source pill: Source says what
+  produced the number, Research says whether the agent keeps it fresh, and a watch can be
+  Static-and-researching (first run pending). A watch with no reference number renders
+  "Needs ref" linking to its edit page rather than a switch that would be refused.
   Sold watches are excluded (a realized number is not a valuation) — they are the Watch
   Sales report's subject.
 - **`/reports/sales` (Watch Sales) is the one sale report**: section 1 currently for sale,
