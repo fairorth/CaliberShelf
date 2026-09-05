@@ -26,7 +26,6 @@ import type { LucideIcon } from "lucide-react"
 import { Logo } from "@/components/brand/logo"
 import { APP_VERSION } from "@/lib/version"
 import { getWatches } from "@/lib/queries/watches"
-import { createClient } from "@/lib/supabase/server"
 import { formatCurrency } from "@/lib/utils"
 import { AboutStats } from "./_components/about-stats"
 
@@ -190,19 +189,6 @@ export default async function AboutPage() {
   const owned = watches.filter((w) => !w.is_wishlist)
   const value = owned.reduce((s, w) => s + (w.purchase_price_cents ?? 0), 0)
 
-  let catalog = 0
-  try {
-    const supabase = await createClient()
-    const { data } = await supabase
-      .from("chronoscout_sync_state")
-      .select("watches_count")
-      .eq("id", 1)
-      .maybeSingle()
-    catalog = data?.watches_count ?? 0
-  } catch {
-    // stats are a flourish — never let a missing sync break the page
-  }
-
   // Watches tracked counts the whole collection — owned, coming soon, AND wish list.
   const collectionValue = value > 0 ? formatCurrency(value, "USD", true) : null
 
@@ -231,7 +217,6 @@ export default async function AboutPage() {
       <AboutStats
         watchesTracked={watches.length}
         collectionValue={collectionValue}
-        catalogModels={catalog}
         agentCount={6}
       />
 

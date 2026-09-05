@@ -155,7 +155,9 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   sale zone carries its own "Sale" eyebrow inside the card.
 - **`/reports/watch-values` (Watch Values) is the portfolio examination**: one row per
   held watch — current value, the SOURCE that produced it, gain vs basis, and movement
-  since the previous dated valuation, with per-source subtotals and a source filter.
+  since the previous dated valuation. The four cards at the top (Total · Researched ·
+  Logged · Static) ARE the source filter — Total is the "all" option — so there is one
+  control for that state, not a card row and a select saying the same thing.
   Sold watches are excluded (a realized number is not a valuation) — they are the Watch
   Sales report's subject.
 - **`/reports/sales` (Watch Sales) is the one sale report**: section 1 currently for sale,

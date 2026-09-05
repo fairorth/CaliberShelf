@@ -4,20 +4,20 @@ interface AboutStatsProps {
   watchesTracked: number
   /** Pre-formatted collection value, or null when there's nothing to show. */
   collectionValue: string | null
-  catalogModels: number
   agentCount: number
 }
 
 /**
- * "By the numbers" stat tiles. The Collection Value tile used to be gated on
- * the per-device cost preference, which is why this is a Client Component;
- * since v1.10.5 that preference does one thing only — the Collection's own
- * summary line — so the tile simply shows whenever there is a value.
+ * "By the numbers" stat tiles — three facts about YOUR collection.
+ *
+ * "Catalog models" (the ChronoScout mirror's row count, ~9,000) was a fourth
+ * and is gone in v1.10.6: it measured someone else's database, sat beside two
+ * numbers about the owner's own watches, and moved when a weekly sync ran. A
+ * stat tile has to be about you or it is decoration.
  */
 export function AboutStats({
   watchesTracked,
   collectionValue,
-  catalogModels,
   agentCount,
 }: AboutStatsProps) {
   const stats: { label: string; value: string }[] = [
@@ -25,9 +25,6 @@ export function AboutStats({
   ]
   if (collectionValue) {
     stats.push({ label: "Collection value", value: collectionValue })
-  }
-  if (catalogModels > 0) {
-    stats.push({ label: "Catalog models", value: catalogModels.toLocaleString() })
   }
   stats.push({ label: "Automation agents", value: String(agentCount) })
 

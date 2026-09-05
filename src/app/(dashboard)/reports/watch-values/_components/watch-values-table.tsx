@@ -133,13 +133,6 @@ const HEADERS: Array<{ key: SortKey; label: string; align?: "right" }> = [
   { key: "valuedOn", label: "Valued", align: "right" },
 ]
 
-const SOURCE_FILTERS: Array<{ value: "" | ValuationSource; label: string }> = [
-  { value: "", label: "All sources" },
-  { value: "agent", label: "Researched" },
-  { value: "manual", label: "Logged" },
-  { value: "tier", label: "Static" },
-]
-
 /**
  * The examination table. Sorted by value descending on arrival — the money is
  * the point — and filterable by source, which is the question this report
@@ -176,13 +169,44 @@ export function WatchValuesTable({ report }: { report: WatchValuesReport }) {
   }
 
   const today = new Date().toISOString().slice(0, 10)
-  const shownValue = rows.reduce((sum, r) => sum + (r.currentValueCents ?? 0), 0)
 
   return (
     <div className="space-y-4 print:space-y-3">
-      {/* Where the total comes from. One card per source that has rows — the
-          headline number of the whole app, finally shown as its parts. */}
+      {/* The total, then what it is made of. The cards are also the filter:
+          Total is the "all sources" option, so there is one control for one
+          piece of state rather than a card row and a select saying the same
+          thing. */}
       <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+        <button
+          type="button"
+          onClick={() => setSource("")}
+          className={cn(
+            "rounded-xl border px-4 py-3 text-left transition-colors",
+            source === ""
+              ? "border-brass/45 bg-muted/40"
+              : "border-border hover:border-brass/30"
+          )}
+          title="Every watch you hold, whatever produced its value"
+        >
+          <p className="font-mono text-2xs uppercase tracking-[0.14em] text-muted-foreground">
+            Total
+          </p>
+          <p className="mt-1 font-mono text-sm tabular-nums text-foreground">
+            {money(report.totals.valueCents)}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {report.totals.valuedCount} of {report.totals.watchCount} valued ·{" "}
+            <GainValue
+              gain={report.totals.gain}
+              showPct
+              wholeDollars
+              className="text-xs"
+            />
+            {report.totals.movedCount > 0 && (
+              <> · {report.totals.movedCount} moved</>
+            )}
+          </p>
+        </button>
         {report.bySource.map((s) => (
           <button
             key={s.source}
@@ -210,34 +234,11 @@ export function WatchValuesTable({ report }: { report: WatchValuesReport }) {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {rows.length} watch{rows.length === 1 ? "" : "es"} shown ·{" "}
-          <span className="font-mono tabular-nums">{money(shownValue)}</span>
-          {report.totals.movedCount > 0 && (
-            <> · {report.totals.movedCount} moved since their last valuation</>
-          )}
-        </p>
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-sm print:hidden">
-            <span className="text-muted-foreground">Source</span>
-            <select
-              value={source}
-              onChange={(e) => setSource(e.target.value as "" | ValuationSource)}
-              className="h-9 rounded-md border border-input bg-background px-2 text-sm accent-brass outline-none focus:border-ring focus:ring-[3px] focus:ring-ring/50"
-            >
-              {SOURCE_FILTERS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <ReportExport
-            csv={watchValuesCsv(rows)}
-            filename={`tentenloupe-watch-values-${today}.csv`}
-          />
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-3 print:hidden">
+        <ReportExport
+          csv={watchValuesCsv(rows)}
+          filename={`tentenloupe-watch-values-${today}.csv`}
+        />
       </div>
 
       {rows.length === 0 ? (
