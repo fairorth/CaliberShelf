@@ -87,9 +87,11 @@ export function SettingsTab({
               className="mt-0.5"
             />
             <span className="space-y-0.5">
-              <span className="block text-sm font-medium">Include Cost in Category Listing</span>
+              <span className="block text-sm font-medium">Include Cost in Collection Listing</span>
               <span className="block text-xs text-muted-foreground">
-                Show each watch&apos;s purchase price in the Collection table and gallery.
+                Show the Cost, Value and Delta totals on the Collection&apos;s summary line,
+                and each watch&apos;s price on the tiles. The table&apos;s Price, Value and
+                Gain columns are chosen in its own Columns menu and are not affected by this.
               </span>
             </span>
           </label>

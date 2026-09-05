@@ -6,7 +6,6 @@ import { ArrowDown, ArrowUp, Download, LayoutGrid, Table as TableIcon } from "lu
 import {
   CollectionTable,
   ColumnsMenu,
-  MONEY_COLUMNS,
   useColumnVisibility,
   type TableSortKey,
 } from "@/components/collection-table"
@@ -730,28 +729,17 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
             />
           </div>
           {view === "table" && (
-            <ColumnsMenu
-              chosenColumns={chosenColumns}
-              toggleColumn={toggleColumn}
-              showCost={showCost}
-            />
+            <ColumnsMenu chosenColumns={chosenColumns} toggleColumn={toggleColumn} />
           )}
           {/* Export what's on screen: displayed rows (filtered + sorted) ×
-              chosen columns, money columns gated the same as the table. */}
+              chosen columns, exactly as the table shows them. */}
           <Button
             variant="outline"
             size="sm"
             className="h-8 gap-1.5"
             onClick={() =>
               downloadCsv(
-                collectionCsv(
-                  displayed,
-                  chosenColumns.filter(
-                    (id) => !MONEY_COLUMNS.includes(id) || showCost
-                  ),
-                  valuationMids,
-                  saleSummaries
-                ),
+                collectionCsv(displayed, chosenColumns, valuationMids, saleSummaries),
                 `tentenloupe-collection-${new Date().toISOString().slice(0, 10)}.csv`
               )
             }

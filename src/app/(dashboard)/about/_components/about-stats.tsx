@@ -1,8 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { SHOW_COST_KEY } from "@/lib/preferences"
-
 interface AboutStatsProps {
   watchesTracked: number
   /** Pre-formatted collection value, or null when there's nothing to show. */
@@ -12,10 +9,10 @@ interface AboutStatsProps {
 }
 
 /**
- * "By the numbers" stat tiles. Client-side because the Collection Value tile is
- * gated on the per-device "Include Cost in Category Listing" preference
- * (localStorage, same key the Collection views use). Defaults to hidden until
- * the preference is read, so a cost-suppressed device never flashes the value.
+ * "By the numbers" stat tiles. The Collection Value tile used to be gated on
+ * the per-device cost preference, which is why this is a Client Component;
+ * since v1.10.5 that preference does one thing only — the Collection's own
+ * summary line — so the tile simply shows whenever there is a value.
  */
 export function AboutStats({
   watchesTracked,
@@ -23,17 +20,10 @@ export function AboutStats({
   catalogModels,
   agentCount,
 }: AboutStatsProps) {
-  const [showCost, setShowCost] = useState(false)
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to a client-only preference
-    setShowCost(localStorage.getItem(SHOW_COST_KEY) === "1")
-  }, [])
-
   const stats: { label: string; value: string }[] = [
     { label: "Watches tracked", value: watchesTracked.toLocaleString() },
   ]
-  if (collectionValue && showCost) {
+  if (collectionValue) {
     stats.push({ label: "Collection value", value: collectionValue })
   }
   if (catalogModels > 0) {

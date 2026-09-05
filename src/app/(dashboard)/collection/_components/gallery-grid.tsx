@@ -19,8 +19,10 @@ interface GalleryGridProps {
   watches: WatchWithCover[]
   /** Min tile width in px — the grid uses auto-fill, so columns shrink as tiles grow */
   itemSize: number
-  /** Show each watch's purchase price (driven by the Config → Settings toggle). */
+  /** Show each watch's price on the tile. Tiles have no column picker, so the
+   *  Config → Settings cost preference is the only control they get. */
   showCost?: boolean
+  /** Show each watch's purchase price (driven by the Config → Settings toggle). */
   /** watch_id → collection-guide name, for badging guide members. */
   guideNames?: Record<string, string>
   /** watch_id → net proceeds + realized gain for sold watches (§3.6). */

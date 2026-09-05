@@ -1,6 +1,11 @@
 // Client-side display preferences stored in localStorage (per-device).
 
-/** When set to "1", the Collection views show each watch's purchase price. */
+/** When set to "1", the Collection shows cost where there is no other control
+ *  for it: the Cost / Value / Delta totals on the summary line, and each
+ *  watch's price on the tiles (and in the table's narrow card list, which
+ *  ignores the column picker). Since v1.10.5 it no longer gates the wide
+ *  table's money columns — those are the Columns menu's business, and one
+ *  checkbox greying out a picker was two decisions in one place. */
 export const SHOW_COST_KEY = "collection-show-cost"
 
 /** sessionStorage (not localStorage): the collection's query string as the user

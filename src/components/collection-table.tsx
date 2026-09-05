@@ -41,7 +41,9 @@ import type { LabelColor } from "@/lib/validations/label"
 interface CollectionTableProps {
   /** Already sorted by the collection view — the single sort owner (B3). */
   watches: WatchWithCover[]
-  /** Show each watch's purchase price (driven by the Config → Settings toggle). */
+  /** Show each watch's price in the NARROW card list. The wide table's money
+   *  columns are the Columns menu's business (v1.10.5); the card list has no
+   *  picker, so it keeps the Config → Settings preference, like the tiles. */
   showCost?: boolean
   /** watch_id → collection-guide name, for badging guide members. */
   guideNames?: Record<string, string>
@@ -241,15 +243,20 @@ export function useColumnVisibility() {
   return { chosenColumns, toggleColumn }
 }
 
-/** The Columns chooser — a view-specific control for table view only. */
+/**
+ * The Columns chooser — a view-specific control for table view only.
+ *
+ * Money columns are NOT gated by the Config "include cost" preference any
+ * more (v1.10.5). That preference now does one thing — the Cost/Value/Delta
+ * stats on the collection's summary line — and a display preference greying
+ * out a column picker was two decisions wearing one checkbox.
+ */
 export function ColumnsMenu({
   chosenColumns,
   toggleColumn,
-  showCost,
 }: {
   chosenColumns: ColumnId[]
   toggleColumn: (id: ColumnId) => void
-  showCost: boolean
 }) {
   return (
     <DropdownMenu>
@@ -270,10 +277,8 @@ export function ColumnsMenu({
               key={id}
               checked={chosenColumns.includes(id)}
               onCheckedChange={() => toggleColumn(id)}
-              disabled={MONEY_COLUMNS.includes(id) && !showCost}
             >
               {COLUMN_LABELS[id]}
-              {MONEY_COLUMNS.includes(id) && !showCost && " (enable in Config)"}
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuGroup>
@@ -670,13 +675,14 @@ export function CollectionTable({
     window.addEventListener("pointerup", onUp)
   }
 
-  // Price stays gated by the Config → Settings "show cost" preference on top
-  // of the column choice (B5). Below 1200px the set narrows to six (FIXES §4).
+  // What you ticked is what you get: the money columns are no longer also
+  // gated by the Config preference (v1.10.5). Below 1200px the set narrows to
+  // six (FIXES §4).
   const effectiveChosen = isNarrow
     ? chosenColumns.filter((id) => NARROW_VISIBLE.includes(id))
     : chosenColumns
-  const visibleColumns: ColumnId[] = COLUMN_ORDER.filter(
-    (id) => effectiveChosen.includes(id) && (!MONEY_COLUMNS.includes(id) || showCost)
+  const visibleColumns: ColumnId[] = COLUMN_ORDER.filter((id) =>
+    effectiveChosen.includes(id)
   )
   const isVisible = (id: ColumnId) => visibleColumns.includes(id)
 
