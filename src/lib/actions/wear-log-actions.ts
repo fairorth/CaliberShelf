@@ -11,6 +11,8 @@ import type { WearLogWithWatch } from "@/lib/types/watch"
 export type WearLogActionState = {
   error?: string
   success?: boolean
+  /** The new row, so the caller can ask how it felt (00054). */
+  logId?: string
 }
 
 // ── Form-bound Actions ─────────────────────────────────────────────
@@ -40,11 +42,13 @@ export async function createWearLog(
     watch_id: data.watch_id,
     worn_date: data.worn_date,
     notes: data.notes || null,
+    feel: data.feel || null,
   })
 
   if (error) return { error: error.message }
 
   revalidatePath("/wear-log")
+  revalidatePath("/market/edit")
   revalidatePath(`/watch/${data.watch_id}`); revalidatePath(`/watch/${data.watch_id}/edit`)
   return { success: true }
 }
@@ -96,17 +100,22 @@ export async function quickWear(
 
   const today = new Date().toISOString().slice(0, 10)
 
-  const { error } = await supabase.from("wear_logs").insert({
-    user_id: user.id,
-    watch_id: watchId,
-    worn_date: today,
-  })
+  const { data, error } = await supabase
+    .from("wear_logs")
+    .insert({
+      user_id: user.id,
+      watch_id: watchId,
+      worn_date: today,
+    })
+    .select("id")
+    .single()
 
   if (error) return { error: error.message }
 
   revalidatePath("/wear-log")
+  revalidatePath("/market/edit")
   revalidatePath(`/watch/${watchId}`); revalidatePath(`/watch/${watchId}/edit`)
-  return { success: true }
+  return { success: true, logId: (data as { id: string }).id }
 }
 
 /**

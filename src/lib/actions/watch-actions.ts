@@ -109,6 +109,11 @@ export async function createWatch(
       notes: data.notes || null,
       box: data.box || null,
       attachment: data.attachment || null,
+      attachment_rated_at: data.attachment ? new Date().toISOString() : null,
+      keep_decision: data.keep_decision || null,
+      keep_decided_at: data.keep_decision ? new Date().toISOString() : null,
+      replaceability: data.replaceability || null,
+      sentimental: data.sentimental,
       is_coming_soon: data.is_coming_soon,
       is_wishlist: data.is_wishlist,
       price_check_enabled: data.price_check_enabled,
@@ -161,6 +166,23 @@ export async function updateWatch(
 
   const data = parsed.data
 
+  // The judgement timestamps (00054) move only when the judgement does — a
+  // spec edit must not make a two-month-old rating look fresh.
+  const { data: before } = await supabase
+    .from("watches")
+    .select("attachment, keep_decision")
+    .eq("id", watchId)
+    .maybeSingle()
+  const prior = before as { attachment: string | null; keep_decision: string | null } | null
+  const now = new Date().toISOString()
+  const judgementStamps: Record<string, string | null> = {}
+  if ((prior?.attachment ?? null) !== (data.attachment || null)) {
+    judgementStamps.attachment_rated_at = data.attachment ? now : null
+  }
+  if ((prior?.keep_decision ?? null) !== (data.keep_decision || null)) {
+    judgementStamps.keep_decided_at = data.keep_decision ? now : null
+  }
+
   const { error } = await supabase
     .from("watches")
     .update({
@@ -199,6 +221,10 @@ export async function updateWatch(
       notes: data.notes || null,
       box: data.box || null,
       attachment: data.attachment || null,
+      keep_decision: data.keep_decision || null,
+      replaceability: data.replaceability || null,
+      sentimental: data.sentimental,
+      ...judgementStamps,
       is_coming_soon: data.is_coming_soon,
       is_wishlist: data.is_wishlist,
       price_check_enabled: data.price_check_enabled,
@@ -220,6 +246,8 @@ export async function updateWatch(
 
   revalidatePath("/dashboard")
   revalidatePath("/collection")
+  revalidatePath("/market/edit")
+  revalidatePath("/market/to-sell")
   revalidatePath(`/watch/${watchId}`); revalidatePath(`/watch/${watchId}/edit`)
   // Return to wherever the user came from (e.g. the Attention Needed report).
   // Only allow internal paths — never an off-site (open-redirect) target.

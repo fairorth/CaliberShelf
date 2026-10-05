@@ -20,6 +20,7 @@ import { createWearLog } from "@/lib/actions/wear-log-actions"
 import type { WearLogActionState } from "@/lib/actions/wear-log-actions"
 import { toast } from "sonner"
 import type { WatchWithCover } from "@/lib/types/watch"
+import { WEAR_FEELS, wearFeelLabels } from "@/lib/validations/keep"
 
 interface AddWearDialogProps {
   watches: WatchWithCover[]
@@ -112,6 +113,24 @@ export function AddWearDialog({
             max={today}
             required
           />
+        </div>
+
+        {/* How it felt (00054) — optional, and the wear signal The Edit can
+            use from the first entry. */}
+        <div className="space-y-2">
+          <Label>How did it feel? (optional)</Label>
+          {/* Native radios, so the form's reset() clears the choice too. */}
+          <div role="radiogroup" aria-label="How did it feel?" className="flex h-9 overflow-hidden rounded-lg border border-border">
+            {WEAR_FEELS.map((f) => (
+              <label
+                key={f}
+                className="flex flex-1 cursor-pointer items-center justify-center text-sm text-muted-foreground transition-colors hover:text-foreground has-[:checked]:bg-brass/15 has-[:checked]:text-brass [&:not(:first-child)]:border-l [&:not(:first-child)]:border-border"
+              >
+                <input type="radio" name="feel" value={f} className="sr-only" />
+                {wearFeelLabels[f]}
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* Notes */}

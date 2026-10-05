@@ -14,6 +14,7 @@ import {
   Check,
   Cog,
   FolderOpen,
+  Heart,
   Layers,
   Plus,
   Ruler,
@@ -53,6 +54,13 @@ import {
   caseShapeLabels,
   KNOWN_COMPLICATIONS,
 } from "@/lib/validations/watch"
+import {
+  KEEP_DECISIONS,
+  REPLACEABILITY_LEVELS,
+  keepDecisionLabels,
+  replaceabilityHints,
+  replaceabilityLabels,
+} from "@/lib/validations/keep"
 import type { SpecFetchResponse } from "@/lib/validations/spec-fetch"
 import { labelColorMap } from "@/lib/validations/label"
 import { BrandCombobox } from "@/components/brand-combobox"
@@ -276,6 +284,11 @@ export function WatchForm({
   // custom free-text value already on the watch so nothing is silently dropped.
   const [box, setBox] = useState(watch?.box ?? "")
   const [attachment, setAttachment] = useState<string>(watch?.attachment ?? "")
+  // The Edit's judgements (00054) — every rating the keep/sell screens set
+  // can also be set here, one watch at a time.
+  const [keepDecision, setKeepDecision] = useState<string>(watch?.keep_decision ?? "")
+  const [replaceability, setReplaceability] = useState<string>(watch?.replaceability ?? "")
+  const [sentimental, setSentimental] = useState<boolean>(watch?.sentimental ?? false)
   const boxChoices = boxOptions(boxCount)
   const boxSelectOptions =
     box && !boxChoices.includes(box) ? [box, ...boxChoices] : boxChoices
@@ -896,6 +909,100 @@ export function WatchForm({
             <p className="text-2xs text-muted-foreground">
               How much you love it. Leave unset, or click the active step to
               clear.
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <FormLabel className={LABEL}>Keep or sell</FormLabel>
+            <input type="hidden" name="keep_decision" value={keepDecision} />
+            <div
+              role="radiogroup"
+              aria-label="Keep or sell"
+              className="flex h-8 w-full overflow-hidden rounded-lg border border-border"
+            >
+              {KEEP_DECISIONS.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  role="radio"
+                  aria-checked={keepDecision === opt}
+                  onClick={() => {
+                    markDirty()
+                    setKeepDecision((cur) => (cur === opt ? "" : opt))
+                  }}
+                  className={cn(
+                    "flex-1 px-2 text-xs font-medium transition-colors [&:not(:first-child)]:border-l [&:not(:first-child)]:border-border",
+                    keepDecision === opt
+                      ? "bg-brass/15 text-brass"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {keepDecisionLabels[opt]}
+                </button>
+              ))}
+            </div>
+            <p className="text-2xs text-muted-foreground">
+              Your call for The Edit. Keep locks it in; Sell puts it on the To Sell list.
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <FormLabel className={LABEL}>Replaceability</FormLabel>
+            <input type="hidden" name="replaceability" value={replaceability} />
+            <div
+              role="radiogroup"
+              aria-label="Replaceability"
+              className="flex h-8 w-full overflow-hidden rounded-lg border border-border"
+            >
+              {REPLACEABILITY_LEVELS.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  role="radio"
+                  aria-checked={replaceability === opt}
+                  title={replaceabilityHints[opt]}
+                  onClick={() => {
+                    markDirty()
+                    setReplaceability((cur) => (cur === opt ? "" : opt))
+                  }}
+                  className={cn(
+                    "flex-1 px-2 text-xs font-medium transition-colors [&:not(:first-child)]:border-l [&:not(:first-child)]:border-border",
+                    replaceability === opt
+                      ? "bg-brass/15 text-brass"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {replaceabilityLabels[opt]}
+                </button>
+              ))}
+            </div>
+            <p className="text-2xs text-muted-foreground">
+              Could you buy it again at this price?
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <FormLabel className={LABEL}>Sentimental</FormLabel>
+            {sentimental && <input type="hidden" name="sentimental" value="on" />}
+            <button
+              type="button"
+              aria-pressed={sentimental}
+              onClick={() => {
+                markDirty()
+                setSentimental((v) => !v)
+              }}
+              className={cn(
+                "flex h-8 w-full items-center gap-2 rounded-lg border px-3 text-xs font-medium transition-colors",
+                sentimental
+                  ? "border-brass/45 bg-brass/15 text-brass"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Heart className="h-3.5 w-3.5" aria-hidden="true" />
+              {sentimental ? "Sentimental — never suggest selling" : "Not sentimental"}
+            </button>
+            <p className="text-2xs text-muted-foreground">
+              A gift, an inheritance, a milestone. The Edit never suggests it.
             </p>
           </div>
 

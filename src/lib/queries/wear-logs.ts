@@ -77,6 +77,9 @@ async function enrichLogsWithWatches(
       watch_id: log.watch_id,
       worn_date: log.worn_date,
       notes: log.notes,
+      // Optional until 00054 is applied — the select is "*", so a missing
+      // column simply arrives as undefined.
+      feel: log.feel ?? null,
       created_at: log.created_at,
       updated_at: log.updated_at,
       watch,

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { keepDecisionSchema, replaceabilitySchema } from "./keep"
 
 // Enum schemas matching Postgres enums
 export const caseMaterialSchema = z.enum([
@@ -42,6 +43,21 @@ export const ATTACHMENT_LEVELS = ["max", "high", "medium", "low", "none"] as con
 
 export const attachmentSchema = z.enum(ATTACHMENT_LEVELS)
 
+/** A partial update of the keep judgements on one watch (00054) — the
+ *  direct-call action behind the Sort grid, the rating session and the watch
+ *  page. `null` clears a field; an absent key leaves it alone. Lives here, not
+ *  in ./keep, because it needs attachmentSchema (see the note in keep.ts). */
+export const keepFieldsSchema = z
+  .object({
+    attachment: attachmentSchema.nullable().optional(),
+    keep_decision: keepDecisionSchema.nullable().optional(),
+    sentimental: z.boolean().optional(),
+    replaceability: replaceabilitySchema.nullable().optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, { message: "Nothing to update." })
+
+export type KeepFields = z.infer<typeof keepFieldsSchema>
+
 // Main watch form schema — validates user input for create/update
 export const watchFormSchema = z.object({
   // Required FK fields
@@ -71,6 +87,13 @@ export const watchFormSchema = z.object({
   // How attached you are (00051). "" = unrated, same empty-string-as-null
   // convention the other optional selects use.
   attachment: z.union([attachmentSchema, z.literal("")]).optional().default(""),
+  // The Edit's judgements (00054) — same empty-string-as-null convention.
+  keep_decision: z.union([keepDecisionSchema, z.literal("")]).optional().default(""),
+  replaceability: z.union([replaceabilitySchema, z.literal("")]).optional().default(""),
+  sentimental: z
+    .string()
+    .optional()
+    .transform((v) => v === "on"),
 
   // Agent-supplied reference awaiting human verification (hidden input "on"/"")
   reference_unverified: z

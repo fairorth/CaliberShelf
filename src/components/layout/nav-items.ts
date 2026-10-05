@@ -9,8 +9,10 @@ import {
   Info,
   Link2,
   List,
+  Scissors,
   Settings,
   Tag,
+  Target,
   TrendingUp,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -67,6 +69,10 @@ export const NAV_GROUPS: NavGroup[] = [
     heading: "Market",
     items: [
       { href: "/market", label: "Market", icon: TrendingUp },
+      // The keep/sell workflow (00054). Sort, Rate and Head-to-head are tabs
+      // inside The Edit, so the rail carries the two destinations only.
+      { href: "/market/edit", label: "The Edit", icon: Scissors },
+      { href: "/market/to-sell", label: "To Sell", icon: Target },
       { href: "/market/sold", label: "Sold Archive", icon: Archive },
       { href: "/deals", label: "Deals", icon: BadgeDollarSign },
     ],

@@ -4,9 +4,12 @@ import { useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { quickWear } from "@/lib/actions/wear-log-actions"
 import { toast } from "sonner"
+import { confirmWearAndAskFeel } from "@/components/wear-feel-toast"
 
 interface WearTodayButtonProps {
   watchId: string
+  /** For the confirmation toast. */
+  name?: string
 }
 
 /**
@@ -15,7 +18,7 @@ interface WearTodayButtonProps {
  * card, and again in that card's context line. Phase 9 §2.3 keeps the count in
  * one place, the WEAR card, and leaves the header the thing you press.
  */
-export function WearTodayButton({ watchId }: WearTodayButtonProps) {
+export function WearTodayButton({ watchId, name = "Watch" }: WearTodayButtonProps) {
   const [isPending, startTransition] = useTransition()
 
   function handleQuickWear() {
@@ -24,7 +27,7 @@ export function WearTodayButton({ watchId }: WearTodayButtonProps) {
       if (result.error) {
         toast.error(result.error)
       } else {
-        toast.success("Wear logged!")
+        confirmWearAndAskFeel(result.logId, name)
       }
     })
   }

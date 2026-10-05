@@ -28,7 +28,11 @@ const COLOR_BUCKETS: ColorBucket[] = [
   { key: "salmon", label: "Salmon / Rose", hex: "#e08a7a" },
   { key: "red", label: "Red", hex: "#b23b3b" },
   { key: "orange", label: "Orange", hex: "#d9772e" },
-  { key: "yellow", label: "Yellow / Gold", hex: "#d3a53a" },
+  // Yellow and gold/champagne were one bucket until v1.11.0 — but a yellow
+  // dial and a champagne dial are different watches on the wrist, and The Edit
+  // counts dial families when it asks "how many of these do I already keep?".
+  { key: "yellow", label: "Yellow", hex: "#e3c234" },
+  { key: "gold", label: "Gold / Champagne", hex: "#c9a86a" },
   { key: "purple", label: "Purple", hex: "#6b4a9e" },
   { key: "other", label: "Other", hex: "#9a8f7d" },
   { key: "unspecified", label: "Unspecified", hex: "" },
@@ -48,7 +52,8 @@ const TOKEN_TO_KEY: Record<string, string> = {
   salmon: "salmon", rose: "salmon", pink: "salmon",
   red: "red", burgundy: "red", maroon: "red", oxblood: "red", crimson: "red",
   orange: "orange",
-  yellow: "yellow", gold: "yellow", champagne: "yellow", mustard: "yellow",
+  yellow: "yellow", mustard: "yellow", lemon: "yellow",
+  gold: "gold", champagne: "gold", golden: "gold",
   purple: "purple", violet: "purple", aubergine: "purple", lavender: "purple",
 }
 

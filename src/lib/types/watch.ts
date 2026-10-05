@@ -1,3 +1,5 @@
+import type { KeepDecision, Replaceability, WearFeel } from "@/lib/validations/keep"
+
 // Enum types matching Postgres enums/values from migrations
 
 export type CaliberType = "quartz" | "mechanical_manual" | "mechanical_automatic"
@@ -151,6 +153,15 @@ export interface Watch {
   cost_basis_cents: number
   /** How attached the owner is (00051). Null = unrated. */
   attachment: Attachment | null
+  /** When attachment was last set (00054) — lets a rating session resume. */
+  attachment_rated_at: string | null
+  /** The owner's keep/sell call — the floor piles (00054). Null = undecided. */
+  keep_decision: KeepDecision | null
+  keep_decided_at: string | null
+  /** Gift, inheritance, milestone — a lock: never suggested for sale (00054). */
+  sentimental: boolean
+  /** Could it be bought again at this price? (00054). Null = unrated. */
+  replaceability: Replaceability | null
   /** free-text storage location — which watch case/box holds this watch */
   box: string | null
   notes: string | null
@@ -354,6 +365,8 @@ export interface WearLog {
   watch_id: string
   worn_date: string // "YYYY-MM-DD"
   notes: string | null
+  /** How it felt after the day (00054). Null = not recorded. */
+  feel: WearFeel | null
   created_at: string
   updated_at: string
 }

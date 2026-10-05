@@ -4,6 +4,7 @@ import { useState, useTransition } from "react"
 import { Check, CalendarPlus } from "lucide-react"
 import { quickWear } from "@/lib/actions/wear-log-actions"
 import { toast } from "sonner"
+import { confirmWearAndAskFeel } from "@/components/wear-feel-toast"
 import { cn } from "@/lib/utils"
 
 /**
@@ -41,7 +42,7 @@ export function WearTodayTileButton({
         toast.error(result.error)
       } else {
         setDone(true)
-        toast.success(`${name} — wear logged.`)
+        confirmWearAndAskFeel(result.logId, name)
       }
     })
   }

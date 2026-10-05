@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { wearFeelSchema } from "./keep"
 
 /** Full wear log form — used by AddWearDialog */
 export const wearLogFormSchema = z.object({
@@ -8,6 +9,8 @@ export const wearLogFormSchema = z.object({
     .min(1, "Date is required")
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
   notes: z.string().optional().default(""),
+  // How it felt (00054). "" = not recorded.
+  feel: z.union([wearFeelSchema, z.literal("")]).optional().default(""),
 })
 
 export type WearLogFormValues = z.input<typeof wearLogFormSchema>

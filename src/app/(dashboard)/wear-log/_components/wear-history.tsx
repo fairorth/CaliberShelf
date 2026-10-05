@@ -21,6 +21,7 @@ import {
 import { fetchWearHistory, deleteWearLog } from "@/lib/actions/wear-log-actions"
 import { toast } from "sonner"
 import type { WearLogWithWatch, WatchWithCover } from "@/lib/types/watch"
+import { WearFeelPicker } from "@/components/wear-feel-picker"
 
 interface WearHistoryProps {
   watches: WatchWithCover[]
@@ -160,6 +161,16 @@ export function WearHistory({ watches }: WearHistoryProps) {
                 </p>
               )}
             </div>
+
+            {/* How it felt (00054) — rate it here if the day was logged
+                in the morning. */}
+            <WearFeelPicker
+              logId={log.id}
+              value={log.feel ?? null}
+              onSaved={(feel) =>
+                setLogs((cur) => cur.map((l) => (l.id === log.id ? { ...l, feel } : l)))
+              }
+            />
 
             {/* Delete */}
             <AlertDialog>

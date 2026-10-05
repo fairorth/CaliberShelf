@@ -175,6 +175,31 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - **No `npm run …` in UI copy** — the in-app "Check price now" button is the answer
   (finding V9).
 
+## The Edit — what to sell (v1.11.0, migration 00054) — see docs/data-model.md
+- Five screens, tabbed in workflow order: **Sort** (`/market/edit/sort`, the floor
+  piles → `keep_decision`), **Rate** (`/market/edit/rate`, random order, NO prices
+  on screen — deliberate), **Head-to-head** (`/market/edit/faceoff`), **The Edit**
+  (`/market/edit`) and **To Sell** (`/market/to-sell`, the goal bar).
+- **`src/lib/the-edit.ts` is the ONE ranking** (pure; runs client-side on slider
+  moves). Nothing else may re-decide what to sell. Money is not an input.
+- **`keep_decision` is not `sale_status`.** keep|maybe|sell precedes the lifecycle;
+  `candidate` stays retired. Keep and Sentimental LOCK a watch in; Sell or listed
+  takes it out before the algorithm runs.
+- **Every keep-judgement write goes through `actions/keep-actions.ts`**
+  (`setKeepFields`) or the watch form — both stamp `attachment_rated_at` /
+  `keep_decided_at` only when the judgement actually changes.
+- **Wear signals ramp in, never toggle.** Feel (`wear_logs.feel`) counts from the
+  first rating (full weight at 3 per watch); frequency is off until 120 days of
+  history, then weighted by logging coverage. The Edit's header says which.
+- **To Sell counts each stage at its true number:** sold = net proceeds since
+  `sale_goal_set_at`; listed = ask less `sale_fee_pct`; decided = current value
+  (valuation.ts) less the fee. The fee never touches a recorded sale.
+- Client screens that write on every keypress (Rate, Head-to-head) **freeze their
+  props at mount** — each write revalidates the route, and the rate page shuffles
+  server-side, so adopting new props would re-deal the deck mid-session.
+- `keepFieldsSchema` lives in `validations/watch.ts`, not `validations/keep.ts`:
+  watch.ts imports keep.ts for the form, so keep.ts must never import watch.ts.
+
 ## Collection table conventions (`components/collection-table.tsx`)
 - Filters, search and sort live in the **URL**, not component state, so a filtered list survives a trip out to a watch and back and is linkable. Multi-value filters repeat their key (`?category=a&category=b`).
 - The **ownership** filter's default (absent `?status`) is Owned + Coming soon — **wish list is hidden until asked for** (v1.10.2, `DEFAULT_STATUS` in `collection-filters.tsx`). Only that set is left implicit in the URL; anything else is spelled out, and the ownership chip stays on screen while wish list is hidden so the list never quietly drops rows. View mode, tile size and column choice are per-device preferences and stay in localStorage.

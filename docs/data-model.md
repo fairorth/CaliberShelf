@@ -54,15 +54,16 @@ mirror — they are **not** foreign-keyed to the user's `brands`/`watches`; the
 
 | Table | Ownership | Written by | Purpose / key columns |
 |---|---|---|---|
-| `profiles` | owner | app (auth) | user profile; `is_public` for future sharing; `tier_config` JSONB (00030) holds the user's price-tier labels and bounds; `box_config` JSONB (00032) holds `{ count }` for the numbered storage boxes |
+| `profiles` | owner | app (auth) | user profile; `is_public` for future sharing; `tier_config` JSONB (00030) holds the user's price-tier labels and bounds; `box_config` JSONB (00032) holds `{ count }` for the numbered storage boxes; 00054 adds the sale goal (`sale_goal_cents`, `sale_goal_label`, `sale_goal_set_at` — sales count toward the goal from this date) and `sale_fee_pct` (haircut on estimates and asks, default 8) |
 | `brands` | owner | app + `find-store-urls` | `name`, `brand_type`, `store_url` (feeds deal-check), `logo_url`, `is_wishlist` (00036 — wish-list brand, auto-cleared when an owned/coming-soon watch is saved for it) |
 | `movements` | owner | app | caliber catalog; `caliber_name`, `caliber_type`, `beat_rate`, `lift_angle` |
 | `categories` | owner | app | display grouping (renamed from display_cases); `name`, `color` |
 | `labels` | owner | app | free tags; `name`, `color` |
 | `watch_labels` | via watch | app | junction watch↔label (composite PK) |
-| `watches` | owner | app + `find-references` (ref) | the core record; specs, `rotating_bezel` (00029), `box` (00031, free-text storage location), `is_wishlist`, `is_coming_soon`, `price_check_enabled`, `reference_unverified`; Phase 5 (00043) adds `sale_status`, `target_ask_cents`, the three `acq_*_cents` acquisition costs, and **generated** `cost_basis_cents`; 00051 adds `attachment` (max\|high\|medium\|low, nullable) and drops `candidate_since`/`candidate_note` |
+| `watches` | owner | app + `find-references` (ref) | the core record; specs, `rotating_bezel` (00029), `box` (00031, free-text storage location), `is_wishlist`, `is_coming_soon`, `price_check_enabled`, `reference_unverified`; Phase 5 (00043) adds `sale_status`, `target_ask_cents`, the three `acq_*_cents` acquisition costs, and **generated** `cost_basis_cents`; 00051 adds `attachment` (max\|high\|medium\|low, nullable; `none` since 00052) and drops `candidate_since`/`candidate_note`; 00054 adds The Edit's judgements — `keep_decision` (keep\|maybe\|sell, nullable — the decision that PRECEDES `sale_status`, not part of it), `sentimental` (a lock), `replaceability` (easy\|findable\|rare\|irreplaceable) and the `attachment_rated_at` / `keep_decided_at` stamps |
 | `watch_photos` | owner | app | storage paths + `is_cover`, `thumb_path` |
-| `wear_logs` | owner | app | one row per wear-day; `worn_date` |
+| `wear_logs` | owner | app | one row per wear-day; `worn_date`; `feel` (00054: loved\|fine\|meh, nullable) |
+| `keep_faceoffs` | owner | app | head-to-head picks (00054): `winner_id`, `loser_id` — a small tiebreak in The Edit's keep value |
 | `timegrapher_runs` | owner | app | accuracy measurements; rate/amplitude/beat error |
 | `watch_valuations` | owner | `price-check` + the app | time series of market-value estimates; `value_mid_cents`, `confidence`, `datapoints`, `sources`, `agent_model`; `source` = `agent`\|`manual`\|`tier` (00046, 00053) + `entered_note`. Which one is a watch's CURRENT value is decided in `src/lib/valuation.ts`, nowhere else; `tier` rows are the static estimate for untracked watches (one per watch, no history, `run_mode='static'`) |
 | `watch_listings` | owner | app | one row per time a watch goes on the market (00044); `venue` enum, `ask_price_cents`, `listed_at`, `status` (`active`\|`sold`\|`withdrawn`). Partial unique index allows at most one `active` row per watch — days-on-market and price-drop history live here |
@@ -122,6 +123,34 @@ sign. Sold watches stay in the collection (dimmed, `SOLD` pill, price cell
 shows net proceeds) and are excluded from current-value totals, price-check
 runs, coverage targets and never-worn prompts — but stay in counts, search and
 every report.
+
+## The Edit — what to sell (00054)
+
+`src/lib/the-edit.ts` is the one implementation; `/market/edit` runs it in the
+browser on every slider move, and the head-to-head screen asks its questions
+from the same ranking.
+
+1. **Keep value (0–1)** per watch: attachment 0.60, replaceability 0.15,
+   narrative role (a Collection Guide entry) 0.10, plus two wear signals that
+   join only as the log earns them — **feel** (0.15, full weight at 3 rated
+   wears for that watch) and **frequency** (0.10 × coverage, off until 120
+   days of history). Weights renormalise, so a thin log means attachment
+   carries more, not that every watch loses points. Head-to-head wins/losses
+   add ±0.06 (tanh of the net).
+2. **Similarity (0–1)** between two watches: category .25, function .20
+   (derived: chronograph / GMT / diver / calendar / time — no stored field),
+   dial family .25, size band .10 (neighbours half), material .10, brand .10.
+   Missing data earns 0.3 credit — neutral, never "twins".
+3. **Greedy selection to a target.** Sentimental watches and `keep_decision =
+   keep` are locked in; `sell` and listed watches are already out. Then, one at
+   a time, the watch with the highest `K × (1 − λ·max(twin, crowd))`, where
+   `crowd` saturates with how many kept watches share its category, function
+   or dial (1 − e^(−n/4)). Crowding penalises only the WEAKER members of a
+   group — the first chronograph picked pays nothing.
+
+Money is not an input. Value decides the order you sell in (`/market/to-sell`),
+never what you sell. The yellow/gold dial bucket was split (v1.11.0) because
+The Edit counts dial families.
 
 ## The three classification axes
 

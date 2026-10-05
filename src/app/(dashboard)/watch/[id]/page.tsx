@@ -42,6 +42,8 @@ import { WearTodayButton } from "./_components/wear-today-button"
 import { CollectionBackLink } from "./_components/collection-back-link"
 import { MarketPanel } from "./_components/market-panel"
 import { attachmentLabels } from "@/lib/validations/watch"
+import { replaceabilityLabels } from "@/lib/validations/keep"
+import { KeepDecisionControl } from "@/components/keep-decision-control"
 import { LifecycleControls } from "./_components/lifecycle-controls"
 import { TimegrapherPanel } from "./_components/timegrapher-panel"
 
@@ -247,6 +249,9 @@ export default async function WatchViewPage({
   const daysListed = listing ? daysBetween(listing.listed_at, todayDate()) ?? 0 : null
   // A watch you do not own yet has no sale to plan.
   const showLifecycle = !watch.is_wishlist && !watch.is_coming_soon
+  // The keep/sell call precedes the lifecycle: once a watch is listed the
+  // call has been made, and a wish-list watch has nothing to keep.
+  const showKeepDecision = !watch.is_wishlist && watch.sale_status === "owned"
 
   const acquisitionCosts = (
     [
@@ -291,7 +296,7 @@ export default async function WatchViewPage({
         {/* Actions — Edit is the only primary action; Delete lives on the
             edit page only (A1). */}
         <div className="flex shrink-0 items-center gap-2.5">
-          {!watch.is_wishlist && <WearTodayButton watchId={watch.id} />}
+          {!watch.is_wishlist && <WearTodayButton watchId={watch.id} name={`${watch.brand.name} ${watch.model}`.trim()} />}
           <Button
             render={<Link href={`/watch/${watch.id}/edit?from=watch`} />}
             className="gap-1.5 bg-brass text-brass-foreground hover:bg-brass/90"
@@ -474,6 +479,15 @@ export default async function WatchViewPage({
             <ViewField label="Attachment">
               {watch.attachment ? attachmentLabels[watch.attachment] : null}
             </ViewField>
+            {/* The Edit's other two judgements (00054). The keep/sell call
+                itself lives in the Sale zone below, beside the step it leads
+                to — one home per fact. */}
+            <ViewField label="Replaceability">
+              {watch.replaceability ? replaceabilityLabels[watch.replaceability] : null}
+            </ViewField>
+            <ViewField label="Sentimental">
+              {watch.sentimental ? "Yes — never suggested for sale" : null}
+            </ViewField>
             <ViewField label="Notes" className="sm:col-span-2">
               {watch.notes ? (
                 <span className="whitespace-pre-wrap">{watch.notes}</span>
@@ -583,7 +597,23 @@ export default async function WatchViewPage({
             sale={sale}
             trace={priceCheckTrace}
             saleControls={
-              showLifecycle ? (
+              showKeepDecision || showLifecycle ? (
+                <div className="space-y-[18px]">
+                  {showKeepDecision && (
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-col gap-0.5">
+                        <p className={SECTION_LABEL}>Keep or sell</p>
+                        <Link
+                          href="/market/edit"
+                          className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                        >
+                          Decided in The Edit
+                        </Link>
+                      </div>
+                      <KeepDecisionControl watchId={watch.id} value={watch.keep_decision ?? null} size="md" />
+                    </div>
+                  )}
+                  {showLifecycle && (
                 <LifecycleControls
                   watchId={watch.id}
                   watchName={`${watch.brand.name} ${watch.model}`.trim()}
@@ -600,6 +630,8 @@ export default async function WatchViewPage({
                   listingAging={daysListed != null && daysListed > LISTING_AGING_DAYS}
                   sale={sale}
                 />
+                  )}
+                </div>
               ) : null
             }
           />

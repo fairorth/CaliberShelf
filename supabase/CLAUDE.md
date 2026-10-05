@@ -5,7 +5,13 @@
 - Each migration is a single logical change (one table or set of related policies)
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
-- Latest applied migration: `00053_tier_valuations.sql`
+- **`00054_keep_sell_edit.sql` APPLIED 2026-10-05** (user confirmed) — The
+  Edit: `watches.keep_decision` / `sentimental` / `replaceability` /
+  `attachment_rated_at` / `keep_decided_at`, `wear_logs.feel`, the
+  `profiles.sale_goal_*` + `sale_fee_pct` columns, and the `keep_faceoffs`
+  table (SELECT/INSERT/DELETE policies, no UPDATE — picks are replaced, not
+  edited). Latest applied migration is now 00054.
+- Previously latest: `00053_tier_valuations.sql`
   (confirmed applied 2026-09-05 — everything through 00053 is live, 00052
   included). See docs/data-model.md for the table catalog.
 - `00053` widened `watch_valuations.source` to allow `'tier'` and `run_mode` to
