@@ -39,6 +39,20 @@ export const SALE_STATUS_OPTIONS: { value: Exclude<SaleStatusFilter, "">; label:
   { value: "sold", label: "Sold" },
 ]
 
+/**
+ * Guide-watch filter (00055). "" includes them (no filter) · "exclude" leaves
+ * only the watches you chose yourself · "only" is the guide watches alone.
+ * Independent of ownership: it narrows whichever of owned / coming soon /
+ * wish list are shown, so "Wish list + exclude" is the hand-picked wish list.
+ */
+export type GuideFilter = "" | "exclude" | "only"
+
+export const GUIDE_FILTER_OPTIONS: { value: GuideFilter; label: string }[] = [
+  { value: "", label: "Include" },
+  { value: "exclude", label: "Exclude" },
+  { value: "only", label: "Only" },
+]
+
 /** Tiles browse what you have; the table is the two-sided ledger (§3.6). */
 export function defaultSaleStatus(view: "table" | "gallery"): SaleStatusFilter {
   return view === "gallery" ? "unsold" : "all"
@@ -84,9 +98,8 @@ export interface CollectionFilters {
   showOwned: boolean
   showComingSoon: boolean
   showWishlist: boolean
-  // Which wish-list watches to show (applies only while showWishlist is on):
-  // "" = all · "manual" = hand-added (no guide) · else a collection-guide name.
-  wishlistSource: string
+  /** Guide watches (00055) — include / exclude / only, across every status. */
+  guide: GuideFilter
   brandId: string
   movementId: string
   caliberType: string
@@ -107,7 +120,7 @@ export interface CollectionFilters {
 
 export const EMPTY_FILTERS: CollectionFilters = {
   ...DEFAULT_STATUS,
-  wishlistSource: "",
+  guide: "",
   brandId: "",
   movementId: "",
   caliberType: "",
@@ -136,7 +149,7 @@ export const EMPTY_FILTERS: CollectionFilters = {
 // `status=none` is the explicit empty selection (distinct from absent).
 const PARAM = {
   status: "status",
-  wishlistSource: "wlsrc",
+  guide: "guide",
   brandId: "brand",
   movementId: "movement",
   caliberType: "movtype",
@@ -150,8 +163,13 @@ const PARAM = {
   complications: "comp",
 } as const
 
+/** The wish-list-only source filter that ?guide replaced (v1.11.1). Read once
+ *  so an old link still lands roughly where it meant — "manual" was "not from
+ *  a guide" — and always dropped on the next write. */
+const LEGACY_WISHLIST_SOURCE = "wlsrc"
+
 /** Params the filter codec owns. Everything else (?q) is left untouched. */
-export const FILTER_PARAM_KEYS: string[] = Object.values(PARAM)
+export const FILTER_PARAM_KEYS: string[] = [...Object.values(PARAM), LEGACY_WISHLIST_SOURCE]
 
 interface ReadableParams {
   get(key: string): string | null
@@ -164,11 +182,20 @@ export function filtersFromParams(params: ReadableParams): CollectionFilters {
   const price = params.get(PARAM.priceTracking)
   const sale = params.get(PARAM.saleStatus)
   const saleValid = SALE_STATUS_OPTIONS.some((o) => o.value === sale)
+  const guide = params.get(PARAM.guide)
+  const legacySource = params.get(LEGACY_WISHLIST_SOURCE)
   return {
     showOwned: unset ? DEFAULT_STATUS.showOwned : status.includes("owned"),
     showComingSoon: unset ? DEFAULT_STATUS.showComingSoon : status.includes("coming"),
     showWishlist: unset ? DEFAULT_STATUS.showWishlist : status.includes("wish"),
-    wishlistSource: params.get(PARAM.wishlistSource) ?? "",
+    guide:
+      guide === "exclude" || guide === "only"
+        ? guide
+        : legacySource === "manual"
+          ? "exclude"
+          : legacySource
+            ? "only"
+            : "",
     brandId: params.get(PARAM.brandId) ?? "",
     movementId: params.get(PARAM.movementId) ?? "",
     caliberType: params.get(PARAM.caliberType) ?? "",
@@ -210,7 +237,8 @@ export function filtersToParams(
   if (isDefaultStatus(f)) p.delete(PARAM.status)
   else many(PARAM.status, shown.length > 0 ? shown : ["none"])
 
-  one(PARAM.wishlistSource, f.wishlistSource)
+  p.delete(LEGACY_WISHLIST_SOURCE)
+  one(PARAM.guide, f.guide)
   one(PARAM.brandId, f.brandId)
   one(PARAM.movementId, f.movementId)
   one(PARAM.caliberType, f.caliberType)
@@ -237,7 +265,7 @@ export function activeFilterCount(f: CollectionFilters): number {
   // As with sale status, the view's own default is not a filter the user set —
   // only a departure from it counts.
   if (!isDefaultStatus(f)) n++
-  if (f.showWishlist && f.wishlistSource) n++
+  if (f.guide) n++
   if (f.brandId) n++
   if (f.movementId) n++
   if (f.caliberType) n++
@@ -284,8 +312,6 @@ interface CollectionFiltersDialogProps {
   filters: CollectionFilters
   /** Called once, when the dialog closes — never per keystroke. */
   onChange: (next: CollectionFilters) => void
-  /** Distinct collection-guide names with wish-list members (e.g. "Grand Seiko"). */
-  guides?: string[]
   brands: BrandOption[]
   movements: MovementOption[]
   caliberTypes: string[]
@@ -335,7 +361,6 @@ export function CollectionFiltersDialog({
   // and to label the trigger.
   filters: applied,
   onChange,
-  guides = [],
   brands,
   movements,
   caliberTypes,
@@ -445,38 +470,34 @@ export function CollectionFiltersDialog({
                 </label>
               ))}
             </div>
+          </div>
 
-            {/* Wish-list source — only meaningful while wish-list is shown */}
-            {filters.showWishlist && (
-              <div className="space-y-1.5 pl-1 pt-1">
-                <span className="text-xs text-muted-foreground">Wish list from</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    { value: "", label: "All" },
-                    { value: "manual", label: "Manual" },
-                    ...guides.map((g) => ({ value: g, label: g })),
-                  ].map((opt) => {
-                    const selected = filters.wishlistSource === opt.value
-                    return (
-                      <button
-                        key={opt.value || "all"}
-                        type="button"
-                        onClick={() => set("wishlistSource", opt.value)}
-                        aria-pressed={selected}
-                        className={cn(
-                          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
-                          selected
-                            ? "bg-brass/15 text-brass ring-1 ring-brass/40"
-                            : "bg-muted text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        {opt.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+          {/* Guide watches (00055) — a separate axis from the three above, so
+              it narrows whichever of them are ticked. Wish List + Exclude is
+              the hand-picked wish list; Owned + Only is the guides you own. */}
+          <div className="space-y-1.5 pt-1">
+            <FormLabel>Guide watches</FormLabel>
+            <div className="flex flex-wrap gap-1.5">
+              {GUIDE_FILTER_OPTIONS.map((opt) => {
+                const selected = filters.guide === opt.value
+                return (
+                  <button
+                    key={opt.value || "include"}
+                    type="button"
+                    onClick={() => set("guide", opt.value)}
+                    aria-pressed={selected}
+                    className={cn(
+                      "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all",
+                      selected
+                        ? "bg-brass/15 text-brass ring-1 ring-brass/40"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Sale status (§3.6) — the lifecycle, independent of the three

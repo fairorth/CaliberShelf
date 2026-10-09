@@ -347,7 +347,7 @@ async function main() {
           .insert({
             user_id: userId, brand_id: brandIds[e.brand], model: e.title,
             reference_number: e.reference_number, category_id: categoryFor(e.category),
-            purchase_price_cents: mid, is_wishlist: true,
+            purchase_price_cents: mid, is_wishlist: true, is_guide_watch: true,
             notes: `From Swiss Artisans v2.0 (${e.chapter}). ${e.recommended_variant}`,
           })
           .select("id").single()

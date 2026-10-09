@@ -5,6 +5,10 @@
 - Each migration is a single logical change (one table or set of related policies)
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
+- **`00055_add_guide_watch.sql` APPLIED 2026-10-09** (user confirmed). Adds
+  `watches.is_guide_watch BOOLEAN NOT NULL DEFAULT false`, backfilled true for
+  every watch linked from `guide_entries` (36: 10 owned, 26 wish list). Latest
+  applied migration is now 00055.
 - **`00054_keep_sell_edit.sql` APPLIED 2026-10-05** (user confirmed) — The
   Edit: `watches.keep_decision` / `sentimental` / `replaceability` /
   `attachment_rated_at` / `keep_decided_at`, `wear_logs.feel`, the

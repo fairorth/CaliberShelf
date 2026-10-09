@@ -62,11 +62,11 @@ export function ActiveFilterChips({
     })
   }
 
-  if (f.showWishlist && f.wishlistSource) {
+  if (f.guide) {
     chips.push({
-      key: "wishlist-source",
-      label: `Wish list from: ${f.wishlistSource === "manual" ? "Manual" : f.wishlistSource}`,
-      onClear: () => onChange({ ...f, wishlistSource: "" }),
+      key: "guide",
+      label: f.guide === "exclude" ? "Guide watches: excluded" : "Guide watches only",
+      onClear: () => onChange({ ...f, guide: "" }),
     })
   }
 

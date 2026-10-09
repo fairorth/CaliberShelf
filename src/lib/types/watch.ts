@@ -168,6 +168,9 @@ export interface Watch {
   is_public: boolean
   is_coming_soon: boolean
   is_wishlist: boolean
+  /** Part of a Master Collection Guide (00055). Independent of ownership and
+   *  kept through a purchase; the guide_entries link says WHICH guide. */
+  is_guide_watch: boolean
   price_check_enabled: boolean
   /** A valuation run produced no usable evidence — estimate needs a human (00050). */
   needs_value_review: boolean

@@ -11,6 +11,7 @@ import {
 import type { MouseEvent } from "react"
 import { useRouter } from "next/navigation"
 import {
+  BookOpen,
   Check,
   Cog,
   FolderOpen,
@@ -289,6 +290,7 @@ export function WatchForm({
   const [keepDecision, setKeepDecision] = useState<string>(watch?.keep_decision ?? "")
   const [replaceability, setReplaceability] = useState<string>(watch?.replaceability ?? "")
   const [sentimental, setSentimental] = useState<boolean>(watch?.sentimental ?? false)
+  const [guideWatch, setGuideWatch] = useState<boolean>(watch?.is_guide_watch ?? false)
   const boxChoices = boxOptions(boxCount)
   const boxSelectOptions =
     box && !boxChoices.includes(box) ? [box, ...boxChoices] : boxChoices
@@ -870,6 +872,35 @@ export function WatchForm({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Guide watch (00055) — a separate axis from Ownership, so it is a
+              toggle beside it rather than a fourth segment: a guide watch can
+              be owned, coming soon or wished for, and it stays a guide watch
+              when it is bought. Same toggle shape as Sentimental. */}
+          <div className="space-y-1">
+            <FormLabel className={LABEL}>Guide watch</FormLabel>
+            {guideWatch && <input type="hidden" name="is_guide_watch" value="on" />}
+            <button
+              type="button"
+              aria-pressed={guideWatch}
+              onClick={() => {
+                markDirty()
+                setGuideWatch((v) => !v)
+              }}
+              className={cn(
+                "flex h-8 w-full items-center gap-2 rounded-lg border px-3 text-xs font-medium transition-colors",
+                guideWatch
+                  ? "border-brass/45 bg-brass/15 text-brass"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              {guideWatch ? "In a collection guide" : "Not a guide watch"}
+            </button>
+            <p className="text-2xs text-muted-foreground">
+              Part of a Master Collection Guide. Kept when you buy it.
+            </p>
           </div>
 
           {/* Attachment (00051) — the one field on a watch that argues with

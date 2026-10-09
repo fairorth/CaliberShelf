@@ -77,6 +77,35 @@ export async function getGuideById(
   }
 }
 
+/** The guides one watch is linked into (usually zero or one), for the watch
+ *  page's Guide watch field — name plus a link to the guide. */
+export async function getGuidesForWatch(
+  watchId: string
+): Promise<Array<{ id: string; name: string }>> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("guide_entries")
+    .select("guide_id, collection_guides(name)")
+    .eq("watch_id", watchId)
+
+  if (error) {
+    console.error("Failed to fetch guides for watch:", error.message)
+    return []
+  }
+
+  const seen = new Map<string, string>()
+  for (const row of (data as unknown as Array<{
+    guide_id: string
+    collection_guides: { name: string } | null
+  }>) ?? []) {
+    if (row.collection_guides?.name && !seen.has(row.guide_id)) {
+      seen.set(row.guide_id, row.collection_guides.name)
+    }
+  }
+  return [...seen].map(([id, name]) => ({ id, name }))
+}
+
 /** Map of watch_id → guide name, for badging watches that belong to a guide.
  *  A watch in multiple guides shows the first guide's name (rare by design). */
 export async function getGuideMembership(): Promise<Record<string, string>> {

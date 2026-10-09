@@ -24,6 +24,7 @@ import { getTimegrapherRuns } from "@/lib/queries/timegrapher"
 import { getCurrentStrapForWatch } from "@/lib/queries/straps"
 import { getBoxConfig } from "@/lib/queries/box-config"
 import { getLatestPriceCheckTrace } from "@/lib/queries/agent-trace"
+import { getGuidesForWatch } from "@/lib/queries/guides"
 import { boxLabel } from "@/lib/boxes"
 import { cn, formatCurrency } from "@/lib/utils"
 import {
@@ -169,6 +170,7 @@ export default async function WatchViewPage({
     sale,
     watchLabels,
     priceCheckTrace,
+    watchGuides,
   ] = await Promise.all([
     getWatchById(id),
     getWearCountForWatch(id),
@@ -180,6 +182,7 @@ export default async function WatchViewPage({
     getSaleForWatch(id),
     getLabelsForWatch(id),
     getLatestPriceCheckTrace(id),
+    getGuidesForWatch(id),
   ])
 
   if (!watch) notFound()
@@ -472,6 +475,27 @@ export default async function WatchViewPage({
               <p className={SECTION_LABEL}>Ownership</p>
               <div className="min-h-[1.35rem] text-xs text-foreground">{ownership}</div>
             </div>
+            {/* Guide watch (00055) — beside Ownership because it qualifies it,
+                but its own field because it is its own axis: it survives the
+                move from wish list to owned. Names the guide when linked. */}
+            <ViewField label="Guide watch">
+              {watch.is_guide_watch ? (
+                watchGuides.length > 0 ? (
+                  <span>
+                    {watchGuides.map((g, i) => (
+                      <span key={g.id}>
+                        {i > 0 && " · "}
+                        <Link href={`/guides/${g.id}`} className="hover:text-brass">
+                          {g.name}
+                        </Link>
+                      </span>
+                    ))}
+                  </span>
+                ) : (
+                  "Yes"
+                )
+              ) : null}
+            </ViewField>
             {/* Attachment (00051) — how much you love it. It belongs with
                 ownership, not with Market: it is the reason a watch survives
                 a bad valuation, and putting it beside the money would read as

@@ -24,6 +24,7 @@ function watchListCsv(rows: WatchListRow[]): string {
       "nickname",
       "reference",
       "status",
+      "guide_watch",
       "attachment",
       "purchase_date",
       "purchase_price",
@@ -36,6 +37,7 @@ function watchListCsv(rows: WatchListRow[]): string {
       r.nickname,
       r.reference,
       r.status,
+      r.isGuideWatch ? "Yes" : null,
       r.attachment ? attachmentLabels[r.attachment] : null,
       r.purchaseDate,
       r.purchasePriceCents,
@@ -67,6 +69,7 @@ type SortKey =
   | "nickname"
   | "reference"
   | "status"
+  | "guide"
   | "attachment"
   | "purchaseDate"
   | "paid"
@@ -86,6 +89,9 @@ function sortValue(r: WatchListRow, key: SortKey): string | number | null {
       return r.reference?.toLowerCase() ?? null
     case "status":
       return r.status
+    // Guide watches first ascending; the rest sort last as blanks do.
+    case "guide":
+      return r.isGuideWatch ? 0 : null
     // Rank, not label: sorting the words puts High above Max. Ascending is
     // strongest-first, which is how the scale reads.
     case "attachment":
@@ -107,11 +113,21 @@ const HEADERS: Array<{ key: SortKey; label: string; align?: "right" }> = [
   { key: "nickname", label: "Nickname" },
   { key: "reference", label: "Reference" },
   { key: "status", label: "Status" },
+  { key: "guide", label: "Guide" },
   { key: "attachment", label: "Attachment" },
   { key: "purchaseDate", label: "Purchased", align: "right" },
   { key: "paid", label: "Paid", align: "right" },
   { key: "current", label: "Current", align: "right" },
   { key: "valuedOn", label: "Valued", align: "right" },
+]
+
+/** Guide watches (00055): include · exclude · only — same three choices as
+ *  the collection's filter. */
+type GuideFilter = "include" | "exclude" | "only"
+const GUIDE_FILTERS: Array<{ value: GuideFilter; label: string }> = [
+  { value: "include", label: "Include" },
+  { value: "exclude", label: "Exclude" },
+  { value: "only", label: "Only" },
 ]
 
 /**
@@ -122,11 +138,17 @@ const HEADERS: Array<{ key: SortKey; label: string; align?: "right" }> = [
  */
 export function WatchListTable({ report }: { report: WatchListReport }) {
   const [includeWishlist, setIncludeWishlist] = useState(false)
+  const [guideFilter, setGuideFilter] = useState<GuideFilter>("include")
   const [sortKey, setSortKey] = useState<SortKey>("brand")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
 
   const rows = useMemo(() => {
-    const visible = report.rows.filter((r) => includeWishlist || !r.isWishlist)
+    const visible = report.rows.filter(
+      (r) =>
+        (includeWishlist || !r.isWishlist) &&
+        (guideFilter === "include" ||
+          (guideFilter === "only" ? r.isGuideWatch : !r.isGuideWatch))
+    )
     const dir = sortDir === "asc" ? 1 : -1
     return [...visible].sort((a, b) => {
       const av = sortValue(a, sortKey)
@@ -137,7 +159,21 @@ export function WatchListTable({ report }: { report: WatchListReport }) {
       if (typeof av === "number" && typeof bv === "number") return (av - bv) * dir
       return String(av).localeCompare(String(bv)) * dir
     })
-  }, [report.rows, includeWishlist, sortKey, sortDir])
+  }, [report.rows, includeWishlist, guideFilter, sortKey, sortDir])
+
+  // Totals follow the rows on screen: the guide filter changes which OWNED
+  // rows are shown, so a whole-collection total would no longer describe this
+  // list. Money covers owned & unsold only — wish-list prices are estimates of
+  // a future purchase, sold watches are realized history.
+  const totals = useMemo(() => {
+    const owned = rows.filter((r) => !r.isWishlist && !r.isSold)
+    return {
+      ownedCount: owned.length,
+      purchaseCents: owned.reduce((sum, r) => sum + (r.purchasePriceCents ?? 0), 0),
+      currentValueCents: owned.reduce((sum, r) => sum + (r.currentValueCents ?? 0), 0),
+      valuedCount: owned.filter((r) => r.currentValueCents != null).length,
+    }
+  }, [rows])
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -157,13 +193,13 @@ export function WatchListTable({ report }: { report: WatchListReport }) {
           {rows.length} watch{rows.length === 1 ? "" : "es"} shown ·{" "}
           {fmtDate(today)} ·{" "}
           <span className="font-mono tabular-nums">
-            {money(report.totals.purchaseCents)}
+            {money(totals.purchaseCents)}
           </span>{" "}
           paid /{" "}
           <span className="font-mono tabular-nums">
-            {money(report.totals.currentValueCents)}
+            {money(totals.currentValueCents)}
           </span>{" "}
-          current ({report.totals.valuedCount} of {report.totals.ownedCount}{" "}
+          current ({totals.valuedCount} of {totals.ownedCount}{" "}
           owned valued)
         </p>
         <div className="flex flex-wrap items-center gap-4">
@@ -176,6 +212,30 @@ export function WatchListTable({ report }: { report: WatchListReport }) {
             />
             Include wish list
           </label>
+          <div
+            role="radiogroup"
+            aria-label="Guide watches"
+            className="flex items-center gap-1.5 text-sm print:hidden"
+          >
+            <span className="text-muted-foreground">Guide watches</span>
+            {GUIDE_FILTERS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                role="radio"
+                aria-checked={guideFilter === opt.value}
+                onClick={() => setGuideFilter(opt.value)}
+                className={cn(
+                  "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors",
+                  guideFilter === opt.value
+                    ? "bg-brass/15 text-brass ring-1 ring-brass/40"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
           <ReportExport
             csv={watchListCsv(rows)}
             filename={`tentenloupe-watch-list-${today}.csv`}
@@ -245,6 +305,9 @@ export function WatchListTable({ report }: { report: WatchListReport }) {
                     {r.status}
                   </td>
                   <td className="px-3 py-2 text-xs text-muted-foreground">
+                    {r.isGuideWatch ? "Guide" : "—"}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-muted-foreground">
                     {r.attachment ? attachmentLabels[r.attachment] : "—"}
                   </td>
                   <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
@@ -266,15 +329,15 @@ export function WatchListTable({ report }: { report: WatchListReport }) {
               <tr className="border-t border-border font-mono tabular-nums">
                 <td
                   className="px-3 py-2.5 text-2xs uppercase tracking-[0.12em] text-muted-foreground"
-                  colSpan={7}
+                  colSpan={8}
                 >
-                  Totals · owned &amp; unsold ({report.totals.ownedCount})
+                  Totals · owned &amp; unsold ({totals.ownedCount})
                 </td>
                 <td className="px-3 py-2.5 text-right font-medium">
-                  {money(report.totals.purchaseCents)}
+                  {money(totals.purchaseCents)}
                 </td>
                 <td className="px-3 py-2.5 text-right font-medium">
-                  {money(report.totals.currentValueCents)}
+                  {money(totals.currentValueCents)}
                 </td>
                 <td />
               </tr>

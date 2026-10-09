@@ -213,6 +213,18 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   is only on screen when the Value column is. The narrow card view keeps its own marker by
   the brand name, since that view has no Value column.
 - The toolbar **CSV button** exports the on-screen view — displayed (filtered+sorted) rows × chosen columns, sold rows exporting net proceeds — via `src/lib/collection-csv.ts` (UTF-8 BOM, Excel-ready). DECISION: the collection owns ad-hoc data exports; the **Watch List report** (`/reports/watch-list`, sortable, wish-list excluded by default) stays the print/insurance schedule.
+- **Guide watches** (`watches.is_guide_watch`, 00055, v1.11.1) are a flag
+  INDEPENDENT of Ownership — any of owned / coming soon / wish list, kept
+  through a purchase, owner-editable (watch form toggle beside Ownership). It
+  replaced the wish-list-only "Wish list from" filter: `?guide=exclude|only`
+  (absent = include) narrows every ownership state, so Wish List + Exclude is
+  the hand-picked wish list. Filter and badge read the FLAG; `guide_entries.
+  watch_id` only supplies the guide's NAME (`getGuideMembership`). The old
+  `?wlsrc` param is read once for old links and dropped on the next write.
+  The Watch List report carries the same Include/Exclude/Only control and a
+  Guide column — and its totals are computed over the rows ON SCREEN (they
+  were whole-collection, which was only safe while the wish-list toggle was
+  the one filter and could not change which owned rows showed).
 - **"/" focuses the collection's own filter box** (`SearchInput slashShortcut`) because the header JumpSearch deliberately stands down on /collection. Never enable both listeners on one page.
 
 ## Photo Lab — see docs/photo-lab-app.md

@@ -110,6 +110,11 @@ export const watchFormSchema = z.object({
     .string()
     .optional()
     .transform((v) => v === "on"),
+  // Guide watch (00055) — independent of the ownership choice above.
+  is_guide_watch: z
+    .string()
+    .optional()
+    .transform((v) => v === "on"),
   // Opt-in to the automated market-valuation agent. Requires a reference
   // number (cross-field rule enforced via .refine below the object).
   price_check_enabled: z

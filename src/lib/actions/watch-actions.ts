@@ -116,6 +116,7 @@ export async function createWatch(
       sentimental: data.sentimental,
       is_coming_soon: data.is_coming_soon,
       is_wishlist: data.is_wishlist,
+      is_guide_watch: data.is_guide_watch,
       price_check_enabled: data.price_check_enabled,
     })
     .select("id")
@@ -227,6 +228,7 @@ export async function updateWatch(
       ...judgementStamps,
       is_coming_soon: data.is_coming_soon,
       is_wishlist: data.is_wishlist,
+      is_guide_watch: data.is_guide_watch,
       price_check_enabled: data.price_check_enabled,
     })
     .eq("id", watchId)

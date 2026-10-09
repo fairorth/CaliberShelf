@@ -131,9 +131,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames, s
             {/* Incidental markers overlay the photo's top-right on hover —
                 never a permanent strip that outweighs the watch (B6). */}
             <div className="absolute right-2 top-2 flex items-center gap-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-              {watch.is_wishlist && guideNames?.[watch.id] && (
-                <GuideBadge name={guideNames[watch.id]} />
-              )}
+              {watch.is_guide_watch && <GuideBadge name={guideNames?.[watch.id]} />}
               {watch.price_check_enabled && (
                 <span
                   title="Price checking enabled"

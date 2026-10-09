@@ -864,8 +864,8 @@ export function CollectionTable({
                         )}
                         {watch.is_coming_soon && <ComingSoonBadge className="shrink-0 align-middle" />}
                         {watch.is_wishlist && <WishlistBadge className="shrink-0 align-middle" />}
-                        {watch.is_wishlist && guideNames?.[watch.id] && (
-                          <GuideBadge name={guideNames[watch.id]} className="shrink-0 align-middle" />
+                        {watch.is_guide_watch && (
+                          <GuideBadge name={guideNames?.[watch.id]} className="shrink-0 align-middle" />
                         )}
                       </span>
                     </TableCell>
@@ -1033,8 +1033,8 @@ export function CollectionTable({
                   )}
                   {watch.is_coming_soon && <ComingSoonBadge className="ml-2 align-middle" />}
                   {watch.is_wishlist && <WishlistBadge className="ml-2 align-middle" />}
-                  {watch.is_wishlist && guideNames?.[watch.id] && (
-                    <GuideBadge name={guideNames[watch.id]} className="ml-2 align-middle" />
+                  {watch.is_guide_watch && (
+                    <GuideBadge name={guideNames?.[watch.id]} className="ml-2 align-middle" />
                   )}
                   {watch.price_check_enabled && (
                     <span

@@ -236,6 +236,7 @@ async function main() {
             category_id: categoryFor(e.category),
             purchase_price_cents: mid,
             is_wishlist: true,
+            is_guide_watch: true,
             notes: `From the Swiss Artisans Master Collection Guide (v${GUIDE.version}). ${e.recommended_variant}`,
           })
           .select("id")

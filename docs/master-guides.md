@@ -121,7 +121,11 @@ one). The skeleton, and the lessons baked into it:
 - **Foundation vs target entries**: owned/pre-ordered foundations are marked
   and NEVER auto-created — if they don't link, report "link manually" rather
   than inventing a duplicate watch.
-- **Wish-list creation for targets**: `is_wishlist: true`, estimated cost =
+- **Wish-list creation for targets**: `is_wishlist: true` AND
+  `is_guide_watch: true` (00055 — the flag is what keeps guide-made watches
+  apart from the owner's hand-picked wish list; when the seeder LINKS an
+  existing watch instead, flag that watch too, by hand or in the seeder),
+  estimated cost =
   band midpoint, reference filled, the recommended-variant advice copied into
   the watch's notes. Creating even the moonshots is a deliberate choice
   (chapter ≠ shopping cart) — cap by priority if the user prefers.

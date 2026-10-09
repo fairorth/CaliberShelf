@@ -94,6 +94,9 @@ export async function promoteEntryToWishlist(
       category_id: categoryId,
       purchase_price_cents: mid,
       is_wishlist: true,
+      // Born from a guide entry — flagged so it never passes for a watch the
+      // owner added by hand (00055).
+      is_guide_watch: true,
     })
     .select("id")
     .single()

@@ -21,6 +21,8 @@ export interface WatchListRow {
   /** How attached the owner is (00051). Null = unrated. */
   attachment: Attachment | null
   isWishlist: boolean
+  /** Part of a Master Collection Guide (00055), whatever the status. */
+  isGuideWatch: boolean
   isSold: boolean
   purchaseDate: string | null
   purchasePriceCents: number | null
@@ -29,16 +31,11 @@ export interface WatchListRow {
   valuedOn: string | null
 }
 
+/** Totals are computed by the table over the rows ON SCREEN — the wish-list
+ *  and guide filters change which owned rows are shown, so a whole-collection
+ *  total would describe a different list from the one above it. */
 export interface WatchListReport {
   rows: WatchListRow[]
-  totals: {
-    watchCount: number
-    /** Owned & unsold (wish list excluded) — the set the money totals cover. */
-    ownedCount: number
-    purchaseCents: number
-    currentValueCents: number
-    valuedCount: number
-  }
 }
 
 interface WatchRow {
@@ -52,6 +49,7 @@ interface WatchRow {
   attachment: Attachment | null
   is_wishlist: boolean
   is_coming_soon: boolean
+  is_guide_watch: boolean
   brand: { name: string } | null
 }
 
@@ -70,7 +68,7 @@ export async function getWatchListReport(): Promise<WatchListReport> {
     supabase
       .from("watches")
       .select(
-        "id, model, nickname, reference_number, purchase_date, purchase_price_cents, sale_status, attachment, is_wishlist, is_coming_soon, brand:brands(name)"
+        "id, model, nickname, reference_number, purchase_date, purchase_price_cents, sale_status, attachment, is_wishlist, is_coming_soon, is_guide_watch, brand:brands(name)"
       ),
     supabase
       .from("watch_valuations")
@@ -106,6 +104,7 @@ export async function getWatchListReport(): Promise<WatchListReport> {
         status: statusLabel(w),
         attachment: w.attachment,
         isWishlist: w.is_wishlist,
+        isGuideWatch: w.is_guide_watch,
         isSold,
         purchaseDate: w.purchase_date,
         purchasePriceCents: w.purchase_price_cents,
@@ -119,23 +118,5 @@ export async function getWatchListReport(): Promise<WatchListReport> {
       (a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model)
     )
 
-  // Money totals cover owned & unsold watches only — wish-list prices are
-  // estimates of a future purchase, sold watches are realized history.
-  const ownedRows = rows.filter((r) => !r.isWishlist && !r.isSold)
-  return {
-    rows,
-    totals: {
-      watchCount: rows.length,
-      ownedCount: ownedRows.length,
-      purchaseCents: ownedRows.reduce(
-        (sum, r) => sum + (r.purchasePriceCents ?? 0),
-        0
-      ),
-      currentValueCents: ownedRows.reduce(
-        (sum, r) => sum + (r.currentValueCents ?? 0),
-        0
-      ),
-      valuedCount: ownedRows.filter((r) => r.currentValueCents != null).length,
-    },
-  }
+  return { rows }
 }
