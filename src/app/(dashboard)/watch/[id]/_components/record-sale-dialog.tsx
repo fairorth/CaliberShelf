@@ -19,6 +19,7 @@ import { saleFormSchema } from "@/lib/validations/sale"
 import { saleLedgerPreview } from "@/lib/queries/gain"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { localDateIso } from "@/lib/dates"
 
 interface RecordSaleDialogProps {
   watchId: string
@@ -30,13 +31,6 @@ interface RecordSaleDialogProps {
   purchaseDate: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
-}
-
-function todayLocal(): string {
-  const d = new Date()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const day = String(d.getDate()).padStart(2, "0")
-  return `${d.getFullYear()}-${m}-${day}`
 }
 
 const cents = (v: string): number => {
@@ -77,7 +71,7 @@ export function RecordSaleDialog({
   onOpenChange,
 }: RecordSaleDialogProps) {
   const router = useRouter()
-  const [soldAt, setSoldAt] = useState(todayLocal())
+  const [soldAt, setSoldAt] = useState(localDateIso())
   const [salePrice, setSalePrice] = useState("")
   const [buyerName, setBuyerName] = useState("")
   const [buyerHandle, setBuyerHandle] = useState("")

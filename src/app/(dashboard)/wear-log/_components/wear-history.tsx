@@ -37,10 +37,10 @@ export function WearHistory({ watches }: WearHistoryProps) {
   const [isPending, startTransition] = useTransition()
   const [filterWatchId, setFilterWatchId] = useState("")
 
-  function loadPage(targetPage: number) {
+  function loadPage(targetPage: number, watchId: string = filterWatchId) {
     setPage(targetPage)
     startTransition(async () => {
-      const result = await fetchWearHistory(targetPage, PAGE_SIZE)
+      const result = await fetchWearHistory(targetPage, PAGE_SIZE, watchId)
       setLogs(result.logs)
       setTotalCount(result.totalCount)
       setLoaded(true)
@@ -60,7 +60,7 @@ export function WearHistory({ watches }: WearHistoryProps) {
       } else {
         toast.success("Wear log deleted")
         // Reload current page
-        const res = await fetchWearHistory(page, PAGE_SIZE)
+        const res = await fetchWearHistory(page, PAGE_SIZE, filterWatchId)
         setLogs(res.logs)
         setTotalCount(res.totalCount)
       }
@@ -79,18 +79,16 @@ export function WearHistory({ watches }: WearHistoryProps) {
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
-  // Filter
-  const filtered = filterWatchId
-    ? logs.filter((l) => l.watch_id === filterWatchId)
-    : logs
-
   return (
     <div className="space-y-4">
       {/* Filter bar */}
       <div className="flex items-center gap-4">
         <select
           value={filterWatchId}
-          onChange={(e) => setFilterWatchId(e.target.value)}
+          onChange={(e) => {
+            setFilterWatchId(e.target.value)
+            loadPage(1, e.target.value)
+          }}
           className="flex h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
           <option value="">All watches</option>
@@ -111,7 +109,12 @@ export function WearHistory({ watches }: WearHistoryProps) {
       )}
 
       {/* Empty state */}
-      {loaded && logs.length === 0 && (
+      {loaded && logs.length === 0 && filterWatchId && (
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground">This watch has no wear logs.</p>
+        </Card>
+      )}
+      {loaded && logs.length === 0 && !filterWatchId && (
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">No wear logs yet.</p>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -122,7 +125,7 @@ export function WearHistory({ watches }: WearHistoryProps) {
 
       {/* Log entries */}
       <div className={`space-y-2 ${isPending ? "opacity-50" : ""}`}>
-        {filtered.map((log) => (
+        {logs.map((log) => (
           <Card key={log.id} className="flex items-center gap-4 p-3">
             {/* Watch thumbnail */}
             <Link

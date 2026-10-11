@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request"
 import {
   specFetchRequestSchema,
   specFetchResultSchema,
@@ -55,10 +55,8 @@ Rules:
 export async function POST(request: Request) {
   const startedAt = Date.now()
   // Only signed-in users may spend API tokens
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Cookie (web) or bearer token (iPhone app) — see getRequestAuth.
+  const { supabase, user } = await getRequestAuth(request)
   if (!user) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 })
   }

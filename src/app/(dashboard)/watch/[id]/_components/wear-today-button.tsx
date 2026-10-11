@@ -3,6 +3,7 @@
 import { useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { quickWear } from "@/lib/actions/wear-log-actions"
+import { localDateIso } from "@/lib/dates"
 import { toast } from "sonner"
 import { confirmWearAndAskFeel } from "@/components/wear-feel-toast"
 
@@ -23,7 +24,7 @@ export function WearTodayButton({ watchId, name = "Watch" }: WearTodayButtonProp
 
   function handleQuickWear() {
     startTransition(async () => {
-      const result = await quickWear(watchId)
+      const result = await quickWear(watchId, localDateIso())
       if (result.error) {
         toast.error(result.error)
       } else {

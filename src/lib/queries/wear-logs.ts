@@ -131,21 +131,28 @@ export async function getWearLogsForMonth(
  */
 export async function getWearLogsHistory(
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 20,
+  /** Narrow to one watch. Filtered HERE, not in the client — filtering the
+   *  loaded page only ever searched the latest 20 entries. */
+  watchId?: string
 ): Promise<{ logs: WearLogWithWatch[]; totalCount: number }> {
   const supabase = await createClient()
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
   // Get total count
-  const { count } = await supabase
+  let countQuery = supabase
     .from("wear_logs")
     .select("*", { count: "exact", head: true })
+  if (watchId) countQuery = countQuery.eq("watch_id", watchId)
+  const { count } = await countQuery
 
   // Get paginated logs
-  const { data: logs, error } = await supabase
+  let logsQuery = supabase
     .from("wear_logs")
     .select("*, watches(*, brands(*), movements(*))")
+  if (watchId) logsQuery = logsQuery.eq("watch_id", watchId)
+  const { data: logs, error } = await logsQuery
     .order("worn_date", { ascending: false })
     .order("created_at", { ascending: false })
     .range(from, to)

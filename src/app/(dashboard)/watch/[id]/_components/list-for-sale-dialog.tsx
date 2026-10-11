@@ -19,6 +19,7 @@ import { listingFormSchema, saleVenueLabels, saleVenueSchema } from "@/lib/valid
 import { formatCurrency, cn } from "@/lib/utils"
 import type { SaleVenue, WatchListing } from "@/lib/types/watch"
 import { toast } from "sonner"
+import { localDateIso } from "@/lib/dates"
 
 interface ListForSaleDialogProps {
   watchId: string
@@ -36,13 +37,6 @@ interface ListForSaleDialogProps {
 }
 
 const VENUES = saleVenueSchema.options
-
-function todayLocal(): string {
-  const d = new Date()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const day = String(d.getDate()).padStart(2, "0")
-  return `${d.getFullYear()}-${m}-${day}`
-}
 
 /**
  * List for sale (§3.4) / Edit listing. Saving writes the watch_listings row,
@@ -64,7 +58,7 @@ export function ListForSaleDialog({
   const editing = !!listing
   const [venue, setVenue] = useState<SaleVenue>(listing?.venue ?? "watchexchange")
   const [venueOther, setVenueOther] = useState(listing?.venue_other ?? "")
-  const [listedAt, setListedAt] = useState(listing?.listed_at ?? todayLocal())
+  const [listedAt, setListedAt] = useState(listing?.listed_at ?? localDateIso())
   const [ask, setAsk] = useState(
     listing ? (listing.ask_price_cents / 100).toFixed(2) : ""
   )

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { wearLogFormSchema, wearLogNotesSchema } from "@/lib/validations/wear-log"
+import { quickWearSchema, wearLogFormSchema, wearLogNotesSchema } from "@/lib/validations/wear-log"
 import { getWearLogsForMonth, getWearLogsHistory } from "@/lib/queries/wear-logs"
 import type { WearLogWithWatch } from "@/lib/types/watch"
 
@@ -87,10 +87,13 @@ export async function updateWearLogNotes(
 // ── Direct-call Actions ────────────────────────────────────────────
 
 /**
- * Quick-wear: log today's date for a watch. Called from "Wore Today" button.
+ * Quick-wear: log a watch as worn today. Called from "Wore Today" buttons.
+ * `localToday` is the caller's local date (`localDateIso()`), never the
+ * server's — see src/lib/dates.ts.
  */
 export async function quickWear(
-  watchId: string
+  watchId: string,
+  localToday: string
 ): Promise<WearLogActionState> {
   const supabase = await createClient()
   const {
@@ -98,14 +101,15 @@ export async function quickWear(
   } = await supabase.auth.getUser()
   if (!user) return { error: "You must be logged in." }
 
-  const today = new Date().toISOString().slice(0, 10)
+  const parsed = quickWearSchema.safeParse({ watch_id: watchId, worn_date: localToday })
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
 
   const { data, error } = await supabase
     .from("wear_logs")
     .insert({
       user_id: user.id,
-      watch_id: watchId,
-      worn_date: today,
+      watch_id: parsed.data.watch_id,
+      worn_date: parsed.data.worn_date,
     })
     .select("id")
     .single()
@@ -159,7 +163,8 @@ export async function fetchMonthLogs(
  */
 export async function fetchWearHistory(
   page: number,
-  pageSize: number
+  pageSize: number,
+  watchId?: string
 ): Promise<{ logs: WearLogWithWatch[]; totalCount: number }> {
-  return getWearLogsHistory(page, pageSize)
+  return getWearLogsHistory(page, pageSize, watchId || undefined)
 }

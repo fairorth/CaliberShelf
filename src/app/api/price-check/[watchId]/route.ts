@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request"
 import {
   MODEL,
   PROFILES,
@@ -56,16 +56,14 @@ interface TraceStep {
 }
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ watchId: string }> }
 ) {
   const { watchId } = await params
 
   // Only signed-in users may spend API tokens.
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Cookie (web) or bearer token (iPhone app) — see getRequestAuth.
+  const { supabase, user } = await getRequestAuth(request)
   if (!user) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 })
   }

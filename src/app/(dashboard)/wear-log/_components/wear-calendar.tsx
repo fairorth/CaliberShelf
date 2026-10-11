@@ -6,6 +6,7 @@ import { fetchMonthLogs } from "@/lib/actions/wear-log-actions"
 import { CalendarDayCell } from "./calendar-day-cell"
 import { AddWearDialog } from "./add-wear-dialog"
 import type { WearLogWithWatch, WatchWithCover } from "@/lib/types/watch"
+import { localDateIso } from "@/lib/dates"
 
 interface WearCalendarProps {
   initialLogs: WearLogWithWatch[]
@@ -79,8 +80,7 @@ export function WearCalendar({
   }
 
   // Today
-  const today = new Date()
-  const todayStr = today.toISOString().slice(0, 10)
+  const todayStr = localDateIso()
 
   // Build day cells
   const cells: Array<{

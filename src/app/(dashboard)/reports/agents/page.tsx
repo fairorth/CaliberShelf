@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { BadgeDollarSign, BookOpen, Bot, Globe, Search, Sparkles, Tag } from "lucide-react"
+import { BadgeDollarSign, BookOpen, Bot, Globe, ScanEye, Search, Sparkles, Tag } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getAgentReview, formatUsdMicros } from "@/lib/queries/agent-runs"
@@ -20,6 +20,7 @@ const AGENT_META: Record<string, { label: string; icon: LucideIcon }> = {
   "find-store-urls": { label: "Brand Enrichment", icon: Globe },
   "chronoscout-sync": { label: "ChronoScout Sync", icon: BookOpen },
   "spec-fetch": { label: "Spec Autofill", icon: Sparkles },
+  identify: { label: "Photo Identify", icon: ScanEye },
 }
 const agentLabel = (a: string) => AGENT_META[a]?.label ?? a
 const AgentIcon = ({ agent }: { agent: string }) => {

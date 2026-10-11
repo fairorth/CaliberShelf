@@ -1482,8 +1482,10 @@ export function WatchForm({
       </SectionCard>
 
       {stickyBar ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 py-3 backdrop-blur">
-          <div className="mx-auto flex w-full max-w-[1180px] items-center gap-4 px-4 sm:px-[30px]">
+        // Bottom padding clears the iPhone home indicator; a fixed layer sits
+        // outside the shell's own safe-area padding (mobile-app.md B3).
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
+          <div className="mx-auto flex w-full max-w-[1180px] items-center gap-3 px-4 sm:gap-4 sm:px-[30px]">
             <span
               className={cn(
                 "h-2 w-2 rounded-full transition-all",
@@ -1492,7 +1494,12 @@ export function WatchForm({
                   : "bg-muted-foreground/50"
               )}
             />
-            <span className={cn("text-sm", isDirty ? "text-brass" : "text-muted-foreground")}>
+            {/* Below sm the dot alone carries the state: a phone's ~358px
+                cannot hold the label, Delete, Back and Save on one row. */}
+            <span className={cn("hidden text-sm sm:inline", isDirty ? "text-brass" : "text-muted-foreground")}>
+              {isDirty ? "Unsaved changes" : "All changes saved"}
+            </span>
+            <span className="sr-only sm:hidden">
               {isDirty ? "Unsaved changes" : "All changes saved"}
             </span>
             {/* §3.8 — Delete is separated from Save. It sat immediately
@@ -1500,7 +1507,7 @@ export function WatchForm({
                 becomes an unrecoverable one. Far left, with the save actions
                 pushed to the right by `ml-auto` on their own group. */}
             {watch && (
-              <div className="mr-auto pl-4">
+              <div className="mr-auto sm:pl-4">
                 <AlertDialog>
                   <AlertDialogTrigger
                     render={
@@ -1541,7 +1548,8 @@ export function WatchForm({
               >
                 {/* §3.8 — says where it goes, rather than leaving you to
                     guess what you are returning to. */}
-                Back to watch
+                <span className="sm:hidden">Back</span>
+                <span className="hidden sm:inline">Back to watch</span>
               </Button>
               <Button
                 type="submit"

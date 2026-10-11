@@ -31,6 +31,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Same light --background as the manifest, so Safari's chrome and the
+  // installed app's status area match the page rather than defaulting.
+  themeColor: "#f2f6f8",
 }
 
 export const metadata: Metadata = {

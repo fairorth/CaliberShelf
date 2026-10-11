@@ -21,6 +21,7 @@ import type { WearLogActionState } from "@/lib/actions/wear-log-actions"
 import { toast } from "sonner"
 import type { WatchWithCover } from "@/lib/types/watch"
 import { WEAR_FEELS, wearFeelLabels } from "@/lib/validations/keep"
+import { localDateIso } from "@/lib/dates"
 
 interface AddWearDialogProps {
   watches: WatchWithCover[]
@@ -71,7 +72,7 @@ export function AddWearDialog({
     }
   }, [state, onSuccess, onOpenChange])
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDateIso()
 
   const dialogBody = (
     <DialogContent>

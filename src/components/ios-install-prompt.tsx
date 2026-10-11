@@ -45,7 +45,7 @@ export function IosInstallPrompt() {
   if (!show) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background p-4 shadow-lg md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lg md:hidden">
       <div className="flex items-start gap-3">
         <Mark size={24} className="shrink-0 rounded-md" />
         <div className="min-w-0 flex-1">

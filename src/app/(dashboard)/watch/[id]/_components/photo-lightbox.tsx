@@ -142,7 +142,10 @@ export function PhotoLightbox({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-black/90 backdrop-blur-sm">
+    // Safe-area padding: a fixed overlay sits outside the shell's own, so on an
+    // iPhone the toolbar went under the status bar and the hint under the home
+    // indicator (mobile-app.md B3).
+    <div className="fixed inset-0 z-[100] flex flex-col bg-black/90 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] backdrop-blur-sm">
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 p-3 text-white">
         <span className="text-sm tabular-nums text-white/70">
@@ -239,7 +242,11 @@ export function PhotoLightbox({
           ))}
         </div>
       )}
-      <p className="pb-3 text-center text-xs text-white/40">
+      {/* Keyboard and mouse hints mean nothing on a phone — it gets its own. */}
+      <p className="pb-3 text-center text-xs text-white/40 pointer-fine:hidden">
+        Pinch to zoom · drag to pan
+      </p>
+      <p className="hidden pb-3 text-center text-xs text-white/40 pointer-fine:block">
         {hasMultiple && "← → navigate · "}
         {onSetCover && "C set cover · "}
         {onDelete && "X delete · "}

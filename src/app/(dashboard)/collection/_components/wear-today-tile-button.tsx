@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { Check, CalendarPlus } from "lucide-react"
 import { quickWear } from "@/lib/actions/wear-log-actions"
+import { localDateIso } from "@/lib/dates"
 import { toast } from "sonner"
 import { confirmWearAndAskFeel } from "@/components/wear-feel-toast"
 import { cn } from "@/lib/utils"
@@ -37,7 +38,7 @@ export function WearTodayTileButton({
     e.stopPropagation()
     if (done || isPending) return
     startTransition(async () => {
-      const result = await quickWear(watchId)
+      const result = await quickWear(watchId, localDateIso())
       if (result.error) {
         toast.error(result.error)
       } else {

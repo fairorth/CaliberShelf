@@ -327,6 +327,25 @@ counters. From a route, write the row ONCE when the run finishes. The CLI's
 `startRun`/`finishRun` pair works only because cron scripts run under the
 service role, which bypasses RLS.
 
+## iPhone app (Expo, decided v1.11.2) — see docs/iphone-app.md
+- A native Expo / React Native app is being built, camera-first (Identify, Add,
+  Quick Capture, then Today/Rate/Collection lite). Siri, widgets, NFC and the
+  Share sheet were deliberately DROPPED — don't propose them back. No Swift.
+- **Shared files** (`dates.ts`, `valuation.ts`, `queries/gain.ts`, `tiers.ts`,
+  `the-edit.ts`, `validations/**`, `types/watch.ts`) are imported by the phone.
+  An ESLint rule in `eslint.config.mjs` forbids them importing Next.js, React,
+  Supabase or server code — keep them pure; extend the list to share more.
+- The phone cannot call Server Actions. It reads/writes Supabase directly
+  (RLS protects it) and calls `route.ts` endpoints with
+  `Authorization: Bearer <token>`. Any route the phone calls must use
+  `getRequestAuth(request)` (`lib/supabase/request.ts`), never the cookie-only
+  `createClient()`. The middleware lets bearer requests to `/api/*` through.
+- **A wear's date is the CLIENT's local day** (`localDateIso()` in
+  `lib/dates.ts`), sent to the server. Never `toISOString().slice(0, 10)` for
+  a calendar day — that is UTC and logged US evenings as tomorrow (v1.11.2).
+- Touch devices get ≥16px fields from one unlayered rule in globals.css (iOS
+  zooms on smaller). Don't fight it per field.
+
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000
 - `npm run build` - Production build

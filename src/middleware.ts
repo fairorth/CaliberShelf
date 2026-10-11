@@ -6,6 +6,18 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
+  // The iPhone app calls API routes with `Authorization: Bearer <token>` and
+  // no cookie. Without this, the cookie check below 307s it to /login before
+  // the route can verify the token itself (getRequestAuth in
+  // src/lib/supabase/request.ts) — so pass it straight through. Only for
+  // /api/: pages are web-only and keep the cookie redirect.
+  if (
+    request.nextUrl.pathname.startsWith("/api/") &&
+    /^Bearer\s+\S+/i.test(request.headers.get("authorization") ?? "")
+  ) {
+    return supabaseResponse
+  }
+
   // Skip auth checks if Supabase is not configured yet
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return supabaseResponse
@@ -69,7 +81,10 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files (images, etc.)
+     * - the web app manifest: browsers fetch it WITHOUT cookies, so behind
+     *   the auth redirect it was never served (it 307'd to /login) and its
+     *   name, icons and launch colours were silently ignored (v1.11.2)
      */
-    "/((?!_next/static|_next/image|favicon.ico|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest\\.webmanifest|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 }

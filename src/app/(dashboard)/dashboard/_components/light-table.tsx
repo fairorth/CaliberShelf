@@ -1469,7 +1469,7 @@ export function LightTable({ sets, seed }: LightTableProps) {
 
         {/* Top-left: the one screen a visitor sees from across the room, so it
             may as well be signed. */}
-        <div className="absolute left-7 top-6 flex items-center gap-2.5 opacity-50">
+        <div className="absolute left-7 top-[calc(1.5rem+env(safe-area-inset-top))] flex items-center gap-2.5 opacity-50">
           <Mark size={22} decorative />
           <span className="font-mono text-2xs tracking-[0.3em] text-white/85">
             LOUPE
@@ -1481,19 +1481,23 @@ export function LightTable({ sets, seed }: LightTableProps) {
             was white/20 on black/35 with white/75 text over an arbitrarily
             bright photograph, which is a pill you can look straight past. Solid
             ground, full-strength text, a real border. */}
-        <div className="absolute right-6 top-5 flex items-center gap-2 rounded-full border border-white/35 bg-black/60 px-3.5 py-2 shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
-          <MousePointer2 className="size-4 text-card" aria-hidden />
+        <div className="absolute right-6 top-[calc(1.25rem+env(safe-area-inset-top))] flex items-center gap-2 rounded-full border border-white/35 bg-black/60 px-3.5 py-2 shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
+          <MousePointer2 className="size-4 text-card pointer-coarse:hidden" aria-hidden />
           <span className="font-mono text-2xs tracking-[0.14em] text-card">
-            MOVE TO RETURN
+            {/* A phone has no pointer to move; any touch dismisses glance. */}
+            <span className="pointer-coarse:hidden">MOVE TO RETURN</span>
+            <span className="hidden pointer-coarse:inline">TAP TO RETURN</span>
           </span>
         </div>
 
         {/* First-run explanation (§9). Under the pill it points at, so the two
             read as one thing rather than as two unrelated captions. */}
         {explainGlance && (
-          <div className="absolute right-6 top-[58px] max-w-[320px] rounded-lg border border-white/25 bg-black/60 px-3.5 py-2.5 shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
+          <div className="absolute right-6 top-[calc(58px+env(safe-area-inset-top))] max-w-[320px] rounded-lg border border-white/25 bg-black/60 px-3.5 py-2.5 shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
             <p className="text-xs leading-relaxed text-card">
-              Glance mode — move the mouse to return. Configurable in Config.
+              Glance mode — <span className="pointer-coarse:hidden">move the mouse</span>
+              <span className="hidden pointer-coarse:inline">tap anywhere</span> to return.
+              Configurable in Config.
             </p>
           </div>
         )}
@@ -1501,7 +1505,7 @@ export function LightTable({ sets, seed }: LightTableProps) {
         {/* Bottom bar — every glyph over the photograph sits on this gradient
             or carries a shadow; the frame beneath can be any brightness. */}
         <div
-          className="absolute inset-x-0 bottom-0 flex items-end gap-5 px-7 pb-6 pt-12"
+          className="absolute inset-x-0 bottom-0 flex items-end gap-5 px-7 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-12"
           style={{ background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.45))" }}
         >
           <div className="min-w-0 flex-1">

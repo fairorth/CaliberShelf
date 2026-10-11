@@ -19,6 +19,7 @@ const AGENT_LABEL: Record<string, string> = {
   "find-store-urls": "Brand Enrichment",
   "chronoscout-sync": "ChronoScout Sync",
   "spec-fetch": "Spec Autofill",
+  identify: "Photo Identify",
 }
 
 function fmtDuration(ms: number | null): string {

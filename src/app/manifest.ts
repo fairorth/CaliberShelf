@@ -7,9 +7,11 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Track and showcase your watch collection",
     start_url: "/dashboard",
     display: "standalone",
-    // Match the dark app surface so the PWA splash/launch doesn't flash white.
-    background_color: "#0f1318",
-    theme_color: "#0f1318",
+    // The light --background (oklch(0.97 0.005 235) ≈ #f2f6f8). This was the
+    // dark surface's #0f1318 from before the product went light-only, which
+    // flashed a dark splash before every launch. Change with globals.css.
+    background_color: "#f2f6f8",
+    theme_color: "#f2f6f8",
     orientation: "portrait",
     icons: [
       {

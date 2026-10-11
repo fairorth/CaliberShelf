@@ -197,7 +197,9 @@ export function NavHeader({ userEmail, jumpIndex }: NavHeaderProps) {
 
       {/* ≤sm overlay drawer — overlays the page, never pushes layout (A2). */}
       {drawerOpen && (
-        <div className="fixed inset-0 top-14 z-50 md:hidden">
+        // Below the header, which itself sits below the shell's safe-area
+        // padding — so the drawer starts at the inset plus 56px, not at 56px.
+        <div className="fixed inset-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-50 md:hidden">
           <button
             type="button"
             aria-label="Close menu"
@@ -210,7 +212,7 @@ export function NavHeader({ userEmail, jumpIndex }: NavHeaderProps) {
             role="dialog"
             aria-label="Navigation"
             tabIndex={-1}
-            className="absolute inset-y-0 left-0 w-[264px] overflow-y-auto border-r border-border bg-surface-rail px-3 py-4 shadow-[14px_0_40px_rgba(0,0,0,0.5)] outline-none"
+            className="absolute inset-y-0 left-0 w-[264px] overflow-y-auto border-r border-border bg-surface-rail px-3 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[14px_0_40px_rgba(0,0,0,0.5)] outline-none"
           >
             {showSearch && (
               <SearchInput

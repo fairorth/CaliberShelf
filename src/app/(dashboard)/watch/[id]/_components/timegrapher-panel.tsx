@@ -16,6 +16,7 @@ import {
 } from "@/lib/actions/timegrapher-actions"
 import { toast } from "sonner"
 import type { TimegrapherRun } from "@/lib/types/watch"
+import { localDateIso } from "@/lib/dates"
 
 const FIELD = "bg-card border-border text-xs md:text-xs"
 
@@ -85,7 +86,7 @@ export function TimegrapherPanel({
     }
   }, [state])
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDateIso()
 
   function handleDelete(runId: string) {
     startDelete(async () => {

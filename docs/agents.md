@@ -20,6 +20,7 @@ follow), see [price-check.mjs.md](price-check.mjs.md).
 |---|---|---|---|---|---|
 | Valuation (`price-check.mjs`) | LLM + web search/fetch | Monthly cron (1st, 14:00 UTC) + manual + **"Check price now" in the app** | Sonnet 5, 6+6 uses | ~$1–1.5/watch (~340k tokens, ~9 min each) | Yes — monthly, flagged watches only |
 | Spec autofill (`/api/spec-fetch`) | LLM + web search/fetch | ✨ button on watch form | Sonnet 5, 4+4 uses | ~$0.05–0.15/click (shown in UI) | Per click |
+| Photo identify (`/api/identify`) | LLM vision, no tools | iPhone app camera button (built v1.11.2; no UI caller yet) | Opus 5.5, effort low | est. ~$0.03–0.05/photo, roster cached — not yet observed | Per photo |
 | Store-URL / brand-type sweep (`find-store-urls.mjs`) | LLM + web search | Manual script | Sonnet 5, 3 uses | $0.14/brand ($10.22 for all 73) | One-time; re-runs touch only NULL columns |
 | Reference sweep (`find-references.mjs`) | LLM + web search | Manual script | Sonnet 5, 4 uses | **$0.44/watch** ($2.20 for 5) | One-time-ish; ~77 watches remain ≈ $30–35 |
 | Deal check (`deal-check.mjs`) | Deterministic (no LLM) | Daily cron (13:00 UTC) + manual | — | **$0** | Yes — daily, free |
@@ -94,6 +95,25 @@ verified" to clear; a manual edit also clears it).
   disambiguation noticeably suffers.
 - **Warnings:** never overwrites your data; on the edit page existing DB
   values are untouched even if the agent disagrees with them.
+
+## 2b. Photo identify — `POST /api/identify` (v1.11.2)
+
+"Which watch is this?" for the iPhone app (docs/iphone-app.md §3). One photo
+(~1024px, base64) plus a text ROSTER of every watch the caller has (id, brand,
+model, ref, nickname, dial, material, diameter, status) goes to one vision
+call with structured output; it returns up to 3 roster matches with
+confidence, and a separate `guess` of what the photo shows for pre-filling Add.
+
+- **Initiate:** the phone app's camera button (bearer token), or any signed-in
+  web session. No web UI calls it yet.
+- **Cost:** not yet observed. Estimate ~$0.03–0.05/photo on Opus 5.5 at effort
+  low: the roster (~5k tokens for ~170 watches) is the cached system block,
+  ordered by id so it stays byte-identical until the collection changes; the
+  image (~1.5k tokens) comes after it. `MODEL` constant at the top of the
+  route; Sonnet 5.5 roughly halves it if look-alike accuracy holds.
+- **Safety:** ids not in the roster are dropped server-side. Server-side
+  fallback to Opus 4.8 on a refusal. Logged to `agent_runs` once per call
+  (`agent='identify'`, `trigger='ui-click'`).
 
 ## 3. Brand enrichment sweep — `npm run find-store-urls`
 

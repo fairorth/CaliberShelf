@@ -197,6 +197,23 @@
   }
 }
 
+/* Touch devices: no text field below 16px. iOS zooms the page on focusing any
+   input under 16px and leaves it zoomed, so the 13px edit-form fields, the
+   15px search boxes and every text-sm <select> each zoomed (mobile-app.md B2).
+   One rule instead of one fix per field — the same "sweep the token, not the
+   instance" lesson as the blue. 16px is the base Input's own touch size
+   (`text-base md:text-sm`), the one sanctioned step outside the type scale and
+   only ever inside a field. Deliberately UNLAYERED: Tailwind's utilities live
+   in @layer utilities, and unlayered styles beat every layer, so this wins
+   over `text-xs` without !important. */
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+}
+
 /* Native <select> dropdown options: force theme colors so the popup is legible
    in dark mode even where the browser ignores `color-scheme` for the option
    list (e.g. Chromium on Windows). The vars flip with the theme, so this is
