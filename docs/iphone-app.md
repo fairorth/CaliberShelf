@@ -410,6 +410,16 @@ and none of the v1.1 / Later rows except notifications.
    clearly beat the iOS camera sheet, stop and build the `/m` web pages
    instead. Needs: the $99/yr Apple Developer account, an Expo account, and
    Marc's iPhone registered for development builds.
-3. **v1 (4–6 weeks)** — camera-centred: Identify, Add, Quick Capture with
+   **Trial PASSED 2026-10-12** — Identify found the right watch (high, with a
+   correct low look-alike; 7.4¢, ~7–10 s on Opus 5.5) and angle-tagged frames
+   uploaded and appeared on the web (after the v1.11.4 base64 fix and a failed
+   Vercel deploy). Open: the angle TAGS on flat/hero/profile frames look wrong
+   on the web — to investigate with Marc.
+3. **Structure build (v0.2.0, web v1.11.6)** — Expo Router with the five tabs,
+   the camera as a full-screen route, More (Face ID, updates, Sign out), a
+   minimal watch page, the live sharpness meter, and every native package v1
+   needs. Then **Add a watch + wear logging together** (Marc's call), as
+   over-the-air updates.
+4. **v1 (4–6 weeks)** — camera-centred: Identify, Add, Quick Capture with
    angle tags; then Today + feel, Rate, Collection lite, the watch card,
    strap swap, offline queue, Face ID.

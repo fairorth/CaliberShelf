@@ -29,7 +29,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   const isBare = !moduleName.startsWith(".") && !path.isAbsolute(moduleName)
   if (isBare && context.originModulePath.startsWith(sharedRoot)) {
     return resolve(
-      { ...context, originModulePath: path.join(projectRoot, "index.ts") },
+      { ...context, originModulePath: path.join(projectRoot, "package.json") },
       moduleName,
       platform
     )

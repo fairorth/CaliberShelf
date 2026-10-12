@@ -1,34 +1,30 @@
 import Constants from "expo-constants"
-import { useEffect, useState } from "react"
-import { Alert, Modal, Pressable, StyleSheet, Switch, Text, View } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { canUseBiometrics, isLockEnabled, setLockEnabled, unlock } from "../lib/app-lock"
-import { supabase } from "../lib/supabase"
-import type { UpdateState } from "../lib/use-app-update"
-import { color, radius, text, TOUCH } from "../theme"
-
-interface SettingsSheetProps {
-  visible: boolean
-  email: string
-  update: { state: UpdateState; check: () => void; restart: () => void; label: string }
-  onClose: () => void
-}
+import { useFocusEffect } from "expo-router"
+import { useCallback, useState } from "react"
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native"
+import { ScreenHeader } from "../../components/screen-header"
+import { useApp } from "../../lib/app-context"
+import { canUseBiometrics, isLockEnabled, setLockEnabled, unlock } from "../../lib/app-lock"
+import { API_BASE } from "../../lib/config"
+import { supabase } from "../../lib/supabase"
+import { color, radius, text, TOUCH } from "../../theme"
 
 /**
- * Settings: the Face ID lock, updates, and Sign out — which lives HERE, off
- * the home screen, behind a confirmation, because signing out is rare and an
- * accidental tap costs a full sign-in.
+ * More: the Face ID lock, updates, the web app, and Sign out — which lives
+ * HERE, at the bottom, behind a confirmation, because signing out is rare and
+ * an accidental tap costs a full sign-in.
  */
-export function SettingsSheet({ visible, email, update, onClose }: SettingsSheetProps) {
-  const insets = useSafeAreaInsets()
+export default function MoreScreen() {
+  const { session, update } = useApp()
   const [lockOn, setLockOn] = useState(false)
   const [biometrics, setBiometrics] = useState<boolean | null>(null)
 
-  useEffect(() => {
-    if (!visible) return
-    void isLockEnabled().then(setLockOn)
-    void canUseBiometrics().then(setBiometrics)
-  }, [visible])
+  useFocusEffect(
+    useCallback(() => {
+      void isLockEnabled().then(setLockOn)
+      void canUseBiometrics().then(setBiometrics)
+    }, [])
+  )
 
   async function toggleLock(next: boolean) {
     // Turning it on proves Face ID works first, so you can't lock yourself
@@ -41,29 +37,16 @@ export function SettingsSheet({ visible, email, update, onClose }: SettingsSheet
   function confirmSignOut() {
     Alert.alert("Sign out of TenTen?", "You'll need your email and password to sign back in.", [
       { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign out",
-        style: "destructive",
-        onPress: () => {
-          onClose()
-          void supabase.auth.signOut()
-        },
-      },
+      { text: "Sign out", style: "destructive", onPress: () => void supabase.auth.signOut() },
     ])
   }
 
   const version = Constants.expoConfig?.version ?? "?"
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={[styles.root, { paddingBottom: insets.bottom + 16 }]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
-          <Pressable onPress={onClose} hitSlop={12} style={styles.headerButton}>
-            <Text style={styles.done}>Done</Text>
-          </Pressable>
-        </View>
-
+    <View style={{ flex: 1, backgroundColor: color.background }}>
+      <ScreenHeader title="More" />
+      <ScrollView contentContainerStyle={styles.body}>
         <View style={styles.card}>
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
@@ -71,7 +54,7 @@ export function SettingsSheet({ visible, email, update, onClose }: SettingsSheet
               <Text style={styles.rowHint}>
                 {biometrics === false
                   ? "Set up Face ID or a passcode on this iPhone first."
-                  : "Ask for Face ID when TenTen opens or returns after a minute away."}
+                  : "Ask for Face ID when TenTen opens, or returns after a minute away."}
               </Text>
             </View>
             <Switch
@@ -101,25 +84,26 @@ export function SettingsSheet({ visible, email, update, onClose }: SettingsSheet
               </Pressable>
             )}
           </View>
+          <View style={styles.divider} />
+          <Pressable style={styles.row} onPress={() => void Linking.openURL(API_BASE)}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Open TenTenLoupe on the web</Text>
+              <Text style={styles.rowHint}>Reports, Market, The Edit and everything else</Text>
+            </View>
+          </Pressable>
         </View>
 
-        <View style={{ flex: 1 }} />
-
-        <Text style={styles.email}>Signed in as {email}</Text>
+        <Text style={styles.email}>Signed in as {session?.user.email ?? ""}</Text>
         <Pressable style={styles.signOut} onPress={confirmSignOut}>
           <Text style={styles.signOutText}>Sign out</Text>
         </Pressable>
-      </View>
-    </Modal>
+      </ScrollView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: color.background, paddingHorizontal: 16, gap: 12 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 56 },
-  title: { fontSize: text.md, fontWeight: "600", color: color.foreground },
-  headerButton: { minHeight: TOUCH, justifyContent: "center" },
-  done: { fontSize: text.sm, fontWeight: "600", color: color.brass },
+  body: { padding: 16, gap: 12 },
   card: {
     backgroundColor: color.card,
     borderRadius: radius.card,
@@ -128,6 +112,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   row: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, paddingVertical: 10 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border },
   rowLabel: { fontSize: text.sm, color: color.foreground },
   rowHint: { fontSize: text.xs, color: color.mutedForeground, marginTop: 2 },
   smallButton: {
@@ -139,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   smallButtonText: { fontSize: text.xs, color: color.foreground },
-  email: { fontSize: text.xs, color: color.mutedForeground, textAlign: "center" },
+  email: { fontSize: text.xs, color: color.mutedForeground, textAlign: "center", marginTop: 24 },
   signOut: {
     minHeight: TOUCH,
     borderRadius: radius.control,

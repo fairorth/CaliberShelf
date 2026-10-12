@@ -1,6 +1,6 @@
 import * as Haptics from "expo-haptics"
 import { Image } from "expo-image"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -16,8 +16,13 @@ import {
   Camera,
   useCameraDevice,
   useCameraPermission,
+  useFrameOutput,
   usePhotoOutput,
 } from "react-native-vision-camera"
+import type { Frame } from "react-native-vision-camera"
+import { scheduleOnRN } from "react-native-worklets"
+import { centreSharpness, nextFocusState } from "../lib/focus"
+import type { FocusState } from "../lib/focus"
 import { ANGLE_LABELS, PHOTO_ANGLES } from "@/lib/photo-lab"
 import type { PhotoAngle } from "@/lib/types/watch"
 import type { IdentifyResponse } from "@/lib/validations/identify"
@@ -45,12 +50,24 @@ interface StripFrame {
   status: FrameStatus
   photoId?: string
   error?: string
+  /** The dial read soft at the instant of the shutter — retake candidate. */
+  soft: boolean
 }
 
 /** Upload size: matches the web's Quick Capture and Review's Accept. */
 const UPLOAD_LONG_EDGE = 2000
 /** Identify needs far less — keeps the request small and fast. */
 const IDENTIFY_LONG_EDGE = 1024
+
+/**
+ * The sharpness meter's frame size. MODULE-LEVEL ON PURPOSE: useFrameOutput
+ * rebuilds its output whenever `targetResolution` changes identity, and a new
+ * output makes VisionCamera reconfigure the whole session. Written inline it
+ * was a new object on every render — and the meter re-renders ~5×/s — so the
+ * preview froze and jumped every time the number updated (build 3). Every
+ * object passed to a VisionCamera hook must be stable.
+ */
+const FRAME_RESOLUTION = { width: 640, height: 480 }
 
 let frameCounter = 0
 
@@ -73,6 +90,47 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
     containerFormat: "jpeg",
     quality: 0.92,
     qualityPrioritization: "quality",
+  })
+
+  // Live dial sharpness (build 3). The frame thread measures every preview
+  // frame; the screen re-renders at most ~5×/s. If the session can't run
+  // the extra stream, the camera's onError turns it off rather than leaving
+  // a dead viewfinder.
+  const [sharpnessOn, setSharpnessOn] = useState(true)
+  const [sharpness, setSharpness] = useState<number | null>(null)
+  const [focusState, setFocusState] = useState<FocusState>("unknown")
+  // The latest ring state, readable at the shutter without waiting for a render.
+  const focusRef = useRef<FocusState>("unknown")
+  const lastShown = useRef(0)
+  const reportSharpness = useCallback((value: number) => {
+    // The ring state follows every reading (it's cheap and decides the
+    // shutter's soft flag); the number on screen re-renders at most ~5×/s.
+    const next = nextFocusState(focusRef.current, value)
+    if (next !== focusRef.current) {
+      focusRef.current = next
+      setFocusState(next)
+    }
+    const now = Date.now()
+    if (now - lastShown.current < 200) return
+    lastShown.current = now
+    setSharpness(value)
+  }, [])
+  const onFrame = useCallback(
+    (frame: Frame) => {
+      "worklet"
+      try {
+        const v = centreSharpness(frame)
+        if (v != null) scheduleOnRN(reportSharpness, v)
+      } finally {
+        frame.dispose()
+      }
+    },
+    [reportSharpness]
+  )
+  const frameOutput = useFrameOutput({
+    targetResolution: FRAME_RESOLUTION,
+    pixelFormat: "yuv",
+    onFrame,
   })
 
   const [appActive, setAppActive] = useState(AppState.currentState === "active")
@@ -122,8 +180,9 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
         const localId = `f${++frameCounter}`
         const frameAngle = angle
         const watchId = mode.watch.id
+        const soft = sharpnessOn && focusRef.current === "soft"
         setStrip((prev) => [
-          { localId, uri: fileUri(file.filePath), angle: frameAngle, status: "uploading" },
+          { localId, uri: fileUri(file.filePath), angle: frameAngle, status: "uploading", soft },
           ...prev,
         ])
         void (async () => {
@@ -213,7 +272,11 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
         <Camera
           style={StyleSheet.absoluteFill}
           device={device}
-          outputs={[photoOutput]}
+          outputs={sharpnessOn ? [photoOutput, frameOutput] : [photoOutput]}
+          onError={(e) => {
+            if (sharpnessOn) setSharpnessOn(false)
+            else console.error(e)
+          }}
           isActive={appActive}
           zoom={activeZoom}
           enableNativeTapToFocusGesture
@@ -242,9 +305,26 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
         <View style={styles.topButton} />
       </View>
 
-      {/* Dial guide — centre the dial; tap anywhere to focus there. */}
+      {/* The fine-grained reading, kept on screen at Marc's request — the
+          ring below is what says sharp or soft. */}
+      {sharpnessOn && sharpness != null && (
+        <View pointerEvents="none" style={[styles.focusPill, { top: insets.top + 64 }]}>
+          <Text style={styles.focusText}>Sharpness {Math.round(sharpness)}</Text>
+        </View>
+      )}
+
+      {/* Dial guide AND sharpness meter: centre the dial in it; it is solid
+          white while the dial is sharp and dashed amber while it's soft.
+          Tap anywhere to focus there. */}
       <View pointerEvents="none" style={styles.guideWrap}>
-        <View style={styles.guide} />
+        <View
+          style={[
+            styles.guide,
+            sharpnessOn && focusState === "sharp" && styles.guideSharp,
+            sharpnessOn && focusState === "soft" && styles.guideSoft,
+          ]}
+          accessibilityLabel={focusState === "soft" ? "Dial looks soft" : focusState === "sharp" ? "Dial is sharp" : undefined}
+        />
       </View>
 
       {/* Bottom controls */}
@@ -264,6 +344,7 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
                     <Text style={styles.undoText}>Undo</Text>
                   </Pressable>
                 )}
+                {f.soft && <View style={styles.softDot} accessibilityLabel="Dial was soft — consider a retake" />}
                 {f.angle && <Text style={styles.frameAngle}>{ANGLE_LABELS[f.angle]}</Text>}
               </View>
             ))}
@@ -443,6 +524,18 @@ const styles = StyleSheet.create({
   topButtonText: { color: color.viewfinderText, fontSize: text.sm, fontWeight: "600" },
   topTitle: { color: color.viewfinderText, fontSize: text.sm, fontWeight: "600" },
   topSub: { color: "rgba(255,255,255,0.75)", fontSize: text.xxs, marginTop: 2 },
+  focusPill: {
+    position: "absolute",
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  focusText: { color: color.viewfinderText, fontSize: text.xs, fontWeight: "600" },
   guideWrap: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center" },
   guide: {
     width: "62%",
@@ -450,6 +543,19 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.45)",
+  },
+  guideSharp: { borderWidth: 2, borderColor: color.viewfinderText, borderStyle: "solid" },
+  guideSoft: { borderWidth: 2, borderColor: color.warning, borderStyle: "dashed" },
+  softDot: {
+    position: "absolute",
+    left: 4,
+    top: 4,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: color.warning,
+    borderWidth: 1.5,
+    borderColor: color.viewfinderText,
   },
   bottom: {
     position: "absolute",

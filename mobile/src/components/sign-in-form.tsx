@@ -14,7 +14,7 @@ import { supabase } from "../lib/supabase"
 import { color, radius, text, TOUCH } from "../theme"
 
 /** Your existing TenTenLoupe account — the same Supabase sign-in as the web. */
-export function SignIn() {
+export function SignInForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [busy, setBusy] = useState(false)

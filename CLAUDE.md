@@ -350,6 +350,16 @@ service role, which bypasses RLS.
   imported, never copied (`mobile/metro.config.js`). Photo storage/deletion
   is ONE implementation, `lib/photo-store.ts`, used by both the web actions
   and the phone's `/api/watches/[id]/photos` + `/api/photos/[id]` routes.
+- **Over-the-air vs build:** JS-only changes ship with `eas update --channel
+  preview` from `mobile/`. Adding a native module/permission needs a new
+  `eas build --profile preview --platform ios --non-interactive` AND a bump of
+  `mobile/app.json` "version" (runtimeVersion = appVersion), or an update
+  could reach a build without the native code and crash it. Builds need no
+  Apple sign-in (credentials live on Expo) — never make Marc sign in to Apple
+  again unless a build says it must; the CLI sign-in locked his Apple ID once.
+- Production web is **caliber-shelf.vercel.app**. After every push, check the
+  deploy actually succeeded (GitHub commit status, or ask Marc) — v1.11.4
+  failed on Vercel silently and the phone hit the old server.
 - I can't run an iPhone simulator on this Windows machine. Verify phone code
   with `npm run typecheck`, `npx expo export --platform ios` and
   `npm run doctor` in `mobile/`; the device test is Marc's.

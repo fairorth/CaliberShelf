@@ -1,5 +1,5 @@
 import * as Updates from "expo-updates"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 export type UpdateState = "idle" | "checking" | "ready" | "current" | "error"
 
@@ -36,13 +36,19 @@ export function useAppUpdate() {
     void check()
   }, [check])
 
-  return {
-    state,
-    check,
-    restart: () => void Updates.reloadAsync(),
-    /** Which JavaScript is running — shown in Settings. */
-    label: Updates.updateId
-      ? `update ${Updates.updateId.slice(0, 8)}${Updates.createdAt ? ` · ${Updates.createdAt.toLocaleDateString()}` : ""}`
-      : "built-in",
-  }
+  return useMemo(
+    () => ({
+      state,
+      check,
+      restart: () => void Updates.reloadAsync(),
+      /** Which JavaScript is running — shown in More. The code a build ships
+       *  with has an update id too, so "built-in" is decided by
+       *  isEmbeddedLaunch, not by the id being null. */
+      label:
+        Updates.isEmbeddedLaunch || !Updates.updateId
+          ? "built-in code"
+          : `update ${Updates.updateId.slice(0, 8)}${Updates.createdAt ? ` · ${Updates.createdAt.toLocaleDateString()}` : ""}`,
+    }),
+    [state, check]
+  )
 }

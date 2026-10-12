@@ -2,7 +2,7 @@
   "expo": {
     "name": "TenTen",
     "slug": "tentenloupe",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -36,7 +36,8 @@
         {
           "faceIDPermission": "TenTen can use Face ID to unlock the app."
         }
-      ]
+      ],
+      "expo-router"
     ],
     "owner": "fairorth",
     "extra": {

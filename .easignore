@@ -1,22 +1,38 @@
 # What EAS Build uploads for the iPhone app (mobile/). When this file exists
-# EAS uses it INSTEAD of .gitignore, so it must also exclude everything
-# .gitignore does. The phone build needs only mobile/ and the pure shared
-# code in src/lib (mobile/metro.config.js); without this the archive was the
-# whole repository — design hand-offs, docs, a zip — at 210 MB.
+# EAS uses it INSTEAD of every .gitignore, so it must also exclude what they
+# do. Paths are relative to the REPOSITORY root (EAS copies from the git root).
+#
+# Written as a plain exclude list, NOT "/*" + "!/mobile/": EAS tests each
+# path without a trailing slash, so a directory re-include like "!/mobile/"
+# never matches and the archive came out as 80 bytes (build 3, cancelled).
+# No trailing slashes below for the same reason.
+#
+# The phone build needs only mobile/ and the pure shared code in src/lib
+# (mobile/metro.config.js) — everything heavy goes.
 
-# Everything at the top level, except the app and the shared code
-/*
-!/mobile/
-!/src/
-/src/*
-!/src/lib/
+# Web app, docs and assets the phone never touches
+/design_handoff_*
+/docs
+/public
+/supabase
+/scripts
+/scratch
+/*.zip
+/src/app
+/src/components
+/src/hooks
+/.next
+/.vercel
+/.claude
+/coverage
+/out
+/build
 
 # Never upload these, wherever they are
-node_modules/
-.expo/
-.next/
-dist/
-web-build/
+node_modules
+.expo
+dist
+web-build
 *.tsbuildinfo
 .env*
 *.pem
@@ -26,5 +42,5 @@ web-build/
 *.jks
 *.mobileprovision
 .DS_Store
-/mobile/ios/
-/mobile/android/
+/mobile/ios
+/mobile/android

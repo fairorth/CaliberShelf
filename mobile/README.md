@@ -4,18 +4,41 @@ The native iPhone app — currently the **camera trial** build
 (`docs/iphone-app.md` §19). TypeScript end to end; built in Expo's cloud
 (EAS), so no Mac is needed.
 
-## What the trial does
+## What it does (structure build, v0.2.0)
 
-- Sign in with your TenTenLoupe account (same Supabase login as the web).
-- **Identify**: point the camera at any watch → your best matches (or a guess
-  if it isn't yours) via `POST /api/identify`.
-- **Shoot**: pick a watch (or "Shoot" from an Identify match), then shoot frame
-  after frame with VisionCamera: lens stops (0.5× / 1× / tele), tap-to-focus,
-  the triple camera's automatic macro switch-over, and a Photo Lab angle chip
-  that tags each frame. Frames upload in the background at 2000px through
-  `POST /api/watches/:id/photos`; each has an Undo.
-- Not yet: the live dial-sharpness warning (build 2 — it needs VisionCamera's
-  frame-processor packages).
+Five tabs — **Today · Collection · ◉ Camera · Rate · More** — on Expo Router
+(`src/app/`):
+
+- **Camera** (the raised centre button): Identify from the viewfinder via
+  `POST /api/identify`, then **Photograph** a match. Shoot-after-shoot with
+  lens stops (0.5× / 1× / tele), tap-to-focus, the triple camera's automatic
+  macro switch-over, a Photo Lab angle chip per frame, and a **live dial
+  sharpness meter** (`src/lib/focus.ts`, a VisionCamera frame processor —
+  the raw number is shown while its threshold is calibrated). Frames upload
+  in the background at 2000px through `POST /api/watches/:id/photos`, each
+  with an Undo; Done warns about frames still uploading or failed.
+- **Collection**: the photo grid with search → a minimal watch page with
+  "Photograph this watch".
+- **Today** and **Rate**: placeholders. Next release: Add a watch + wear
+  logging together.
+- **More**: Face ID lock (optional), version / updates, open the web app,
+  Sign out (behind a confirmation).
+- Sign-in once per install (Stack.Protected); the session persists.
+
+## Builds vs over-the-air updates
+
+`runtimeVersion` follows the app `version`. JavaScript-only changes ship with
+`eas update --channel preview` and reach the phone on next launch ("An update
+is ready · Restart"). Anything that adds a native module or permission needs
+a new build — **and a version bump**, so updates for it can never land on an
+older build that lacks the native code. v0.2.0 pre-installs every native
+package v1 is expected to need (router, gestures, reanimated, worklets, svg,
+netinfo, image picker) so the next features can ship as updates.
+
+`.easignore` (repo root) keeps the upload to the app and `src/lib`. EAS reads
+it from the git root and tests paths without trailing slashes — write plain
+excludes, not a "/*" + "!/mobile/" whitelist (that produced an 80-byte
+archive).
 
 ## How it connects
 
