@@ -14,22 +14,31 @@ import type { Frame } from "react-native-vision-camera"
  */
 
 /**
- * The ring's thresholds, with a dead band between them so a reading that
- * hovers near the line doesn't make the ring flicker: it turns WHITE (sharp)
- * at SHARP_AT or above, and only turns AMBER (soft) again below SOFT_BELOW.
- * First guesses — calibrate on real dials and change them here.
+ * The ring has a dead band between its two thresholds so a reading that
+ * hovers near the line doesn't make it flicker: it turns WHITE (sharp) at
+ * `sharpAt` or above, and only turns AMBER (soft) again below `softBelow`.
+ * Both are camera settings (More → Camera, lib/camera-settings.ts).
+ *
+ * Calibrated on Marc's iPhone 17 Pro Max (2026-10-12): a sharp dial reads
+ * ~4,000–7,000, a blurred one ~40. The iPhone's autofocus doesn't slide
+ * between them — it hunts (~40) and then SNAPS into focus (thousands), so the
+ * ring is really a "focus landed on the dial" light. The default line
+ * (600 / 300) sits in the low hundreds, leaving headroom for dark dials and
+ * dim light. (The first guess, 60/50, was below even the blurred reading.)
  */
-export const SHARP_AT = 60
-export const SOFT_BELOW = 50
-
 export type FocusState = "unknown" | "sharp" | "soft"
 
+export interface FocusThresholds {
+  sharpAt: number
+  softBelow: number
+}
+
 /** The ring's next state for a new reading (hysteresis between the two thresholds). */
-export function nextFocusState(prev: FocusState, value: number): FocusState {
-  if (value >= SHARP_AT) return "sharp"
-  if (value < SOFT_BELOW) return "soft"
+export function nextFocusState(prev: FocusState, value: number, t: FocusThresholds): FocusState {
+  if (value >= t.sharpAt) return "sharp"
+  if (value < t.softBelow) return "soft"
   // In the dead band: keep what it was, so it doesn't flicker; a first
-  // reading in the band counts as soft until it clearly clears SHARP_AT.
+  // reading in the band counts as soft until it clearly clears sharpAt.
   return prev === "unknown" ? "soft" : prev
 }
 

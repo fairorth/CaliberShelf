@@ -21,6 +21,7 @@ import {
 } from "react-native-vision-camera"
 import type { Frame } from "react-native-vision-camera"
 import { scheduleOnRN } from "react-native-worklets"
+import { FOCUS_WAIT_MS, useCameraSettings } from "../lib/camera-settings"
 import { centreSharpness, nextFocusState } from "../lib/focus"
 import type { FocusState } from "../lib/focus"
 import { ANGLE_LABELS, PHOTO_ANGLES } from "@/lib/photo-lab"
@@ -97,6 +98,12 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
   // the extra stream, the camera's onError turns it off rather than leaving
   // a dead viewfinder.
   const [sharpnessOn, setSharpnessOn] = useState(true)
+  // The ring's thresholds and the focus-aware shutter come from More → Camera.
+  // The frame callback reads them through a ref so a settings change never
+  // rebuilds the frame output (which would reconfigure the session).
+  const { settings: cam } = useCameraSettings()
+  const thresholdsRef = useRef(cam)
+  thresholdsRef.current = cam
   const [sharpness, setSharpness] = useState<number | null>(null)
   const [focusState, setFocusState] = useState<FocusState>("unknown")
   // The latest ring state, readable at the shutter without waiting for a render.
@@ -105,7 +112,7 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
   const reportSharpness = useCallback((value: number) => {
     // The ring state follows every reading (it's cheap and decides the
     // shutter's soft flag); the number on screen re-renders at most ~5×/s.
-    const next = nextFocusState(focusRef.current, value)
+    const next = nextFocusState(focusRef.current, value, thresholdsRef.current)
     if (next !== focusRef.current) {
       focusRef.current = next
       setFocusState(next)
@@ -147,6 +154,7 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
   const [angle, setAngle] = useState<PhotoAngle | null>(null)
   const [strip, setStrip] = useState<StripFrame[]>([])
   const [shooting, setShooting] = useState(false)
+  const [waitingForFocus, setWaitingForFocus] = useState(false)
   const [identifying, setIdentifying] = useState(false)
   const [result, setResult] = useState<IdentifyResponse | null>(null)
   const [identifyError, setIdentifyError] = useState<string | null>(null)
@@ -167,10 +175,29 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
     setStrip((prev) => prev.map((f) => (f.localId === localId ? { ...f, ...patch } : f)))
   }
 
+  /**
+   * Focus-aware shutter: pressed while the ring is amber, wait (up to
+   * FOCUS_WAIT_MS) for focus to land, then fire the instant it turns white.
+   * If it never lands, shoot anyway — the frame gets the amber dot.
+   */
+  async function waitForFocus(): Promise<void> {
+    // Read through a function: the frame thread changes focusRef while we
+    // wait, which TypeScript's narrowing can't see.
+    const isSharp = () => focusRef.current === "sharp"
+    if (!cam.focusAwareShutter || !sharpnessOn || isSharp()) return
+    setWaitingForFocus(true)
+    const started = Date.now()
+    while (!isSharp() && Date.now() - started < FOCUS_WAIT_MS) {
+      await new Promise((r) => setTimeout(r, 40))
+    }
+    setWaitingForFocus(false)
+  }
+
   async function shoot() {
     if (shooting || identifying) return
     setShooting(true)
     try {
+      await waitForFocus()
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       const file = await photoOutput.capturePhotoToFile({ enableShutterSound: true }, {})
       if (mode.kind === "identify") {
@@ -386,7 +413,11 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
           style={({ pressed }) => [styles.shutter, pressed && { transform: [{ scale: 0.94 }] }]}
           accessibilityLabel={mode.kind === "identify" ? "Identify" : "Take photo"}
         >
-          {identifying ? <ActivityIndicator color={color.brass} /> : <View style={styles.shutterInner} />}
+          {identifying ? (
+            <ActivityIndicator color={color.brass} />
+          ) : (
+            <View style={[styles.shutterInner, waitingForFocus && styles.shutterWaiting]} />
+          )}
         </Pressable>
       </View>
 
@@ -626,6 +657,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   shutterInner: { width: 60, height: 60, borderRadius: 30, backgroundColor: color.viewfinderText },
+  // Focus-aware shutter holding for focus: the button goes amber like the ring.
+  shutterWaiting: { backgroundColor: color.warning },
   sheet: {
     position: "absolute",
     left: 0,
