@@ -32,7 +32,7 @@ The native iPhone app — currently the **camera trial** build
 |---|---|
 | `EXPO_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Same page → the `anon` / publishable key (public by design) |
-| `EXPO_PUBLIC_API_BASE` | Optional; defaults to `https://tentenloupe.vercel.app` |
+| `EXPO_PUBLIC_API_BASE` | Optional; defaults to `https://caliber-shelf.vercel.app` |
 
 ## Commands
 

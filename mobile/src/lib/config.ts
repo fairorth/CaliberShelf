@@ -9,7 +9,7 @@ export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ""
 
 /** The deployed web app, whose /api routes the phone calls. */
 export const API_BASE = (
-  process.env.EXPO_PUBLIC_API_BASE ?? "https://tentenloupe.vercel.app"
+  process.env.EXPO_PUBLIC_API_BASE ?? "https://caliber-shelf.vercel.app"
 ).replace(/\/$/, "")
 
 export const configProblem: string | null =

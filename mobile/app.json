@@ -17,7 +17,9 @@
     },
     "android": {
       "package": "com.fairorth.tentenloupe",
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "plugins": [
       "expo-image",
@@ -28,7 +30,27 @@
           "imageWidth": 160,
           "backgroundColor": "#f2f6f8"
         }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "TenTen can use Face ID to unlock the app."
+        }
       ]
-    ]
+    ],
+    "owner": "fairorth",
+    "extra": {
+      "eas": {
+        "projectId": "4de84e46-0037-49ac-bc50-84f2407bcd46"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4de84e46-0037-49ac-bc50-84f2407bcd46",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    }
   }
 }

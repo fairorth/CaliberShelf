@@ -6,7 +6,7 @@ timegrapher records, reports, and a fleet of automation agents (AI
 market-valuation, spec autofill, deal scanning, and a mirrored ChronoScout
 catalog for spec lookups).
 
-Production: https://tentenloupe.vercel.app (auto-deploys from `master`).
+Production: https://caliber-shelf.vercel.app (auto-deploys from `master`).
 An in-app **About** page (`/about`) gives the short, shareable tour.
 
 Every code change bumps `package.json` "version" — it renders next to the

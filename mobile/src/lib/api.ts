@@ -1,5 +1,6 @@
 import type { IdentifyRequest, IdentifyResponse } from "@/lib/validations/identify"
 import type { PhotoAngle } from "@/lib/types/watch"
+import type { PhonePhotoUpload } from "@/lib/validations/photo-upload"
 import { API_BASE } from "./config"
 import { accessToken } from "./supabase"
 
@@ -21,25 +22,26 @@ async function readError(res: Response): Promise<string> {
   return body?.error ?? `Request failed (${res.status}).`
 }
 
-/** Upload one frame to a watch; returns the new watch_photos id. */
+/**
+ * Upload one frame to a watch; returns the new watch_photos id. Sent as
+ * base64 JSON: Expo's fetch rejects React Native's `{ uri, name, type }`
+ * FormData parts (camera trial build 1 — "Unsupported FormDataPart
+ * implementation"). Contract: src/lib/validations/photo-upload.ts.
+ */
 export async function uploadPhoto(
   watchId: string,
-  fileUri: string,
+  imageBase64: string,
   angle: PhotoAngle | null
 ): Promise<string> {
-  const form = new FormData()
-  // React Native's FormData takes a { uri, name, type } descriptor for files.
-  form.append("photo", { uri: fileUri, name: "frame.jpg", type: "image/jpeg" } as unknown as Blob)
-  if (angle) form.append("angle", angle)
-
+  const body: PhonePhotoUpload = { image_base64: imageBase64, media_type: "image/jpeg", angle }
   const res = await fetch(`${API_BASE}/api/watches/${watchId}/photos`, {
     method: "POST",
-    headers: await authHeaders(),
-    body: form,
+    headers: { ...(await authHeaders()), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error(await readError(res))
-  const body = (await res.json()) as { photoId: string }
-  return body.photoId
+  const json = (await res.json()) as { photoId: string }
+  return json.photoId
 }
 
 /** Undo: delete a frame just uploaded. */

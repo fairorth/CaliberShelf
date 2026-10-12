@@ -3,6 +3,7 @@ import { Image } from "expo-image"
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
   ActivityIndicator,
+  Alert,
   AppState,
   Pressable,
   ScrollView,
@@ -127,8 +128,12 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
         ])
         void (async () => {
           try {
-            const prepared = await prepareFrame(fileUri(file.filePath), UPLOAD_LONG_EDGE)
-            const photoId = await uploadPhoto(watchId, prepared.uri, frameAngle)
+            const prepared = await prepareFrame(fileUri(file.filePath), UPLOAD_LONG_EDGE, {
+              compress: 0.9,
+              base64: true,
+            })
+            if (!prepared.base64) throw new Error("Couldn't read the photo.")
+            const photoId = await uploadPhoto(watchId, prepared.base64, frameAngle)
             updateFrame(localId, { status: "done", photoId })
           } catch (e) {
             updateFrame(localId, { status: "error", error: (e as Error).message })
@@ -169,6 +174,23 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
     }
   }
 
+  // Leaving with frames still uploading or failed loses them silently — the
+  // trial's first caseback frame went that way. Say so first.
+  function done() {
+    const live = strip.filter((f) => f.status !== "removed")
+    const uploading = live.filter((f) => f.status === "uploading").length
+    const failed = live.filter((f) => f.status === "error").length
+    if (uploading === 0 && failed === 0) return onClose()
+    const parts = [
+      uploading > 0 ? `${uploading} still uploading` : null,
+      failed > 0 ? `${failed} failed to upload` : null,
+    ].filter(Boolean)
+    Alert.alert("Leave the camera?", `${parts.join(" and ")}.`, [
+      { text: "Stay", style: "cancel" },
+      { text: "Leave", style: "destructive", onPress: onClose },
+    ])
+  }
+
   if (!permission.hasPermission) {
     return (
       <View style={[styles.center, { paddingTop: insets.top }]}>
@@ -206,7 +228,7 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
 
       {/* Top bar: what you're shooting, and the way out. */}
       <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={onClose} hitSlop={12} style={styles.topButton}>
+        <Pressable onPress={done} hitSlop={12} style={styles.topButton}>
           <Text style={styles.topButtonText}>Done</Text>
         </Pressable>
         <View style={{ flex: 1, alignItems: "center" }}>
@@ -353,7 +375,7 @@ function IdentifySheet({
             </Text>
             <Text style={styles.matchReason} numberOfLines={2}>{m.reason}</Text>
           </View>
-          <Text style={styles.matchAction}>Shoot</Text>
+          <Text style={styles.matchAction}>Photograph</Text>
         </Pressable>
       ))}
       {result && result.watch_visible && matches.length === 0 && (

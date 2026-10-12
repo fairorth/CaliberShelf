@@ -12,7 +12,6 @@ import {
 } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import type { PhoneWatch } from "../lib/watches"
-import { supabase } from "../lib/supabase"
 import { color, radius, text, TOUCH } from "../theme"
 
 interface WatchPickerProps {
@@ -22,13 +21,27 @@ interface WatchPickerProps {
   onRefresh: () => void
   onPick: (watch: PhoneWatch) => void
   onIdentify: () => void
+  onSettings: () => void
+  /** An over-the-air update has downloaded and is waiting for a restart. */
+  updateReady: boolean
+  onRestart: () => void
 }
 
 /**
  * Trial home: identify with the camera, or pick the watch to shoot. A photo
  * grid, never a text dropdown — the thing in your hand is a watch, not a name.
  */
-export function WatchPicker({ watches, loading, error, onRefresh, onPick, onIdentify }: WatchPickerProps) {
+export function WatchPicker({
+  watches,
+  loading,
+  error,
+  onRefresh,
+  onPick,
+  onIdentify,
+  onSettings,
+  updateReady,
+  onRestart,
+}: WatchPickerProps) {
   const insets = useSafeAreaInsets()
   const [query, setQuery] = useState("")
 
@@ -45,10 +58,18 @@ export function WatchPicker({ watches, loading, error, onRefresh, onPick, onIden
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Camera trial</Text>
-        <Pressable onPress={() => void supabase.auth.signOut()} hitSlop={12}>
-          <Text style={styles.link}>Sign out</Text>
+        {/* Sign out lives in Settings, behind a confirmation — not one stray
+            tap from the home screen. */}
+        <Pressable onPress={onSettings} hitSlop={12}>
+          <Text style={styles.link}>Settings</Text>
         </Pressable>
       </View>
+
+      {updateReady && (
+        <Pressable style={styles.update} onPress={onRestart}>
+          <Text style={styles.updateText}>An update is ready · Restart</Text>
+        </Pressable>
+      )}
 
       <Pressable
         style={({ pressed }) => [styles.identify, pressed && { opacity: 0.85 }]}
@@ -113,6 +134,16 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: text.lg, fontWeight: "600", color: color.foreground },
   link: { fontSize: text.sm, color: color.mutedForeground },
+  update: {
+    minHeight: TOUCH,
+    borderRadius: radius.control,
+    borderWidth: 1,
+    borderColor: color.brass,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  updateText: { fontSize: text.sm, fontWeight: "600", color: color.brass },
   identify: {
     minHeight: 56,
     borderRadius: radius.card,
