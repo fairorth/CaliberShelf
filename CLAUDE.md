@@ -345,6 +345,14 @@ service role, which bypasses RLS.
   a calendar day — that is UTC and logged US evenings as tomorrow (v1.11.2).
 - Touch devices get ≥16px fields from one unlayered rule in globals.css (iOS
   zooms on smaller). Don't fight it per field.
+- The app lives in **`mobile/`** with its own package.json, toolchain and
+  README (excluded from the web's tsconfig and ESLint). Shared files are
+  imported, never copied (`mobile/metro.config.js`). Photo storage/deletion
+  is ONE implementation, `lib/photo-store.ts`, used by both the web actions
+  and the phone's `/api/watches/[id]/photos` + `/api/photos/[id]` routes.
+- I can't run an iPhone simulator on this Windows machine. Verify phone code
+  with `npm run typecheck`, `npx expo export --platform ios` and
+  `npm run doctor` in `mobile/`; the device test is Marc's.
 
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000

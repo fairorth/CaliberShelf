@@ -395,7 +395,15 @@ and none of the v1.1 / Later rows except notifications.
    - **Not yet exercised with a real token or a real photo** — the first
      end-to-end call happens in the camera trial (the endpoints were checked
      for the unauthenticated and forged-token paths only).
-2. **Camera trial (~1 week)** — a bare Expo app on Marc's iPhone:
+2. **Camera trial — BUILT in v1.11.3, awaiting first device build.** The app
+   lives in `mobile/` (Expo SDK 57, React Native 0.86, VisionCamera 5; see
+   `mobile/README.md`). Build 1 has sign-in, Identify, and shoot-after-shoot
+   with lens stops, tap-to-focus, auto-macro, angle-tagged frames uploading at
+   2000px with undo. New web routes for it: `POST /api/watches/[id]/photos`
+   and `DELETE /api/photos/[id]`, sharing `lib/photo-store.ts` with the web's
+   upload/delete actions. **Build 2** adds the live sharpness warning (needs
+   VisionCamera's frame-processor packages). Original scope:
+   a bare Expo app on Marc's iPhone:
    viewfinder (react-native-vision-camera), tap-to-focus, macro, multi-shot,
    the five angle chips, a live dial-sharpness warning, and upload to a real
    watch; plus one call to `/api/identify`. **Decision gate:** if it does not

@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
       "src/lib/queries/gain.ts",
       "src/lib/tiers.ts",
       "src/lib/the-edit.ts",
+      "src/lib/photo-lab.ts",
       "src/lib/validations/**/*.ts",
       "src/lib/types/watch.ts",
     ],
@@ -65,6 +66,8 @@ const eslintConfig = defineConfig([
     "**/*Handoff*/**",
     "**/design_handoff_*/**",
     "design rebrand temp/**",
+    // The Expo iPhone app has its own toolchain (mobile/package.json).
+    "mobile/**",
   ]),
 ]);
 

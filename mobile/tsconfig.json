@@ -1,0 +1,13 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    // The web app's pure shared files — see metro.config.js. `zod` and other
+    // packages imported by them resolve from this app's node_modules.
+    "paths": {
+      "@/lib/*": ["../src/lib/*"],
+      "zod": ["./node_modules/zod"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+}

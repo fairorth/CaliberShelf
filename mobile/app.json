@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "TenTen",
+    "slug": "tentenloupe",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "tentenloupe",
+    "ios": {
+      "bundleIdentifier": "com.fairorth.tentenloupe",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "TenTen uses the camera to photograph and identify your watches.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.fairorth.tentenloupe",
+      "permissions": ["android.permission.CAMERA"]
+    },
+    "plugins": [
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#f2f6f8"
+        }
+      ]
+    ]
+  }
+}
