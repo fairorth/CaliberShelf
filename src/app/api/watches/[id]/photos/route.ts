@@ -28,7 +28,12 @@ export async function POST(
   let photo: File
   let angle: PhotoAngle | null = null
 
-  if ((request.headers.get("content-type") ?? "").includes("application/json")) {
+  // Multipart only when the request says so; anything else is the phone's
+  // JSON. Deciding on "is it JSON?" instead would send a request whose
+  // Content-Type got dropped or rewritten down the multipart path, which
+  // reports a baffling "No file selected".
+  const isMultipart = (request.headers.get("content-type") ?? "").includes("multipart/form-data")
+  if (!isMultipart) {
     const body = await request.json().catch(() => null)
     const parsed = phonePhotoUploadSchema.safeParse(body)
     if (!parsed.success) {

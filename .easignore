@@ -1,0 +1,30 @@
+# What EAS Build uploads for the iPhone app (mobile/). When this file exists
+# EAS uses it INSTEAD of .gitignore, so it must also exclude everything
+# .gitignore does. The phone build needs only mobile/ and the pure shared
+# code in src/lib (mobile/metro.config.js); without this the archive was the
+# whole repository — design hand-offs, docs, a zip — at 210 MB.
+
+# Everything at the top level, except the app and the shared code
+/*
+!/mobile/
+!/src/
+/src/*
+!/src/lib/
+
+# Never upload these, wherever they are
+node_modules/
+.expo/
+.next/
+dist/
+web-build/
+*.tsbuildinfo
+.env*
+*.pem
+*.p8
+*.p12
+*.key
+*.jks
+*.mobileprovision
+.DS_Store
+/mobile/ios/
+/mobile/android/
