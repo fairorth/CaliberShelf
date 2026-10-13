@@ -19,6 +19,7 @@ const eslintConfig = defineConfig([
       "src/lib/tiers.ts",
       "src/lib/the-edit.ts",
       "src/lib/photo-lab.ts",
+      "src/lib/boxes.ts",
       "src/lib/validations/**/*.ts",
       "src/lib/types/watch.ts",
     ],

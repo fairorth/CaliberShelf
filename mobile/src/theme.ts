@@ -24,6 +24,8 @@ export const color = {
   viewfinderText: "#ffffff",
   viewfinderAccent: "#f5d68a",
   viewfinderError: "#ffb4ab",
+  /** --background at 60%: a busy veil over a screen while it saves. */
+  scrim: "rgba(242,246,248,0.6)",
 } as const
 
 /** The six-step type scale: 11 / 13 / 15 / 19 / 26 / 38. */

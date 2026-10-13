@@ -137,7 +137,8 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   v1.10.3 the watch page, the collection and the portfolio each picked differently and one
   watch had three values. Manual rows COUNT in totals as of v1.10.3, reversing the 00046
   rule: keeping them out guaranteed the watch page and the portfolio disagreed.
-  `source='tier'` (00053) is written ONLY by `actions/tier-valuations.ts` — purchase price
+  `source='tier'` (00053) is written ONLY by `actions/tier-valuations.ts` (and its
+  client-passed core `lib/tier-sync.ts`, which the iPhone app's create route uses) — purchase price
   x the tier's `valuationPct`, one row per watch, replaced not appended. A tier row exists
   **iff the watch has no AGENT row** — not "iff untracked" (v1.10.7): switching research on
   must not blank a watch's value while it waits for its first run. `refresh-tier-valuations.mjs`
@@ -350,6 +351,11 @@ service role, which bypasses RLS.
   imported, never copied (`mobile/metro.config.js`). Photo storage/deletion
   is ONE implementation, `lib/photo-store.ts`, used by both the web actions
   and the phone's `/api/watches/[id]/photos` + `/api/photos/[id]` routes.
+  Creating a watch is likewise ONE implementation, `lib/watch-create.ts`
+  (insert, cover photo, brand wish-list tag, static valuation), used by the
+  web's quick add and the phone's `POST /api/watches`. Wear logs are written
+  by the phone straight to Supabase (`mobile/src/lib/wear.ts`), dated with
+  the phone's local day.
 - **Over-the-air vs build:** JS-only changes ship with `eas update --channel
   preview` from `mobile/`. Adding a native module/permission needs a new
   `eas build --profile preview --platform ios --non-interactive` AND a bump of

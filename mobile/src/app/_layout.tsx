@@ -42,6 +42,28 @@ function Shell() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="camera" options={{ presentation: "fullScreenModal", animation: "fade" }} />
           <Stack.Screen
+            name="add"
+            options={{
+              presentation: "modal",
+              headerShown: true,
+              title: "Add a watch",
+              headerTintColor: color.brass,
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: color.background },
+            }}
+          />
+          <Stack.Screen
+            name="wear/pick"
+            options={{
+              presentation: "modal",
+              headerShown: true,
+              title: "Worn today",
+              headerTintColor: color.brass,
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: color.background },
+            }}
+          />
+          <Stack.Screen
             name="watch/[id]"
             options={{
               headerShown: true,

@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/server"
 import { watchFormSchema, quickAddSchema } from "@/lib/validations/watch"
 import { setWatchLabels } from "@/lib/actions/label-actions"
 import { syncTierValuation } from "@/lib/actions/tier-valuations"
-import { buildStoragePath } from "@/lib/storage"
-import { generateThumbnail, thumbPathFor } from "@/lib/thumbnails"
+import { clearBrandWishlistFor, createWatchFor } from "@/lib/watch-create"
+import { thumbPathFor } from "@/lib/thumbnails"
 import { dollarsToCents } from "@/lib/utils"
 
 export type WatchActionState = {
@@ -30,17 +30,8 @@ async function clearBrandWishlist(
   brandId: string,
   watchIsWishlist: boolean
 ) {
-  if (watchIsWishlist) return
-  const { error } = await supabase
-    .from("brands")
-    .update({ is_wishlist: false })
-    .eq("id", brandId)
-    .eq("user_id", userId)
-    .eq("is_wishlist", true)
-  if (error) {
-    // Non-fatal: the watch save already succeeded.
-    console.error("Failed to clear brand wish-list tag:", error.message)
-  } else {
+  // The rule lives once, in lib/watch-create.ts (shared with the iPhone app).
+  if (await clearBrandWishlistFor(supabase, userId, brandId, watchIsWishlist)) {
     revalidatePath("/config")
     revalidatePath("/reports/brand-wishlist")
   }
@@ -361,10 +352,6 @@ export async function bulkDeleteWatches(
   return { success: true }
 }
 
-const PHOTO_BUCKET = "watch-photos"
-const PHOTO_MAX_SIZE = 10 * 1024 * 1024 // 10MB
-const PHOTO_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"]
-
 /**
  * Create a watch with an optional photo in one action.
  * Used by the camera-first "Add Watch" mobile flow.
@@ -396,62 +383,34 @@ export async function createWatchWithPhoto(
   const destination =
     formData.get("redirect_to") === "another" ? `/add` : `/watch/__ID__`
 
-  // Insert the watch
-  const { data: watch, error } = await supabase
-    .from("watches")
-    .insert({
-      user_id: user.id,
+  // The create itself — insert, first photo as cover, brand wish-list tag,
+  // static valuation — is lib/watch-create.ts, shared with the iPhone app.
+  // A photo that can't be stored (too large, wrong type) is skipped silently,
+  // as before: the watch exists and we still navigate to it.
+  const photo = formData.get("photo") as File | null
+  const created = await createWatchFor(
+    supabase,
+    user.id,
+    {
       brand_id: data.brand_id,
       model: data.model,
       category_id: data.category_id,
-      purchase_price_cents: data.purchase_price !== null
-        ? dollarsToCents(data.purchase_price)
-        : null,
+      purchase_price_cents: data.purchase_price !== null ? dollarsToCents(data.purchase_price) : null,
       is_coming_soon: data.is_coming_soon,
       is_wishlist: data.is_wishlist,
-    })
-    .select("id")
-    .single()
-
-  if (error) {
-    return { error: error.message }
+    },
+    photo
+  )
+  if ("error" in created) {
+    return { error: created.error }
   }
 
-  const target = destination.replace("__ID__", watch.id)
+  const target = destination.replace("__ID__", created.watchId)
 
-  // Handle photo upload if present. Skip silently if it's too large — the watch
-  // is already created and we still navigate to it below.
-  const photo = formData.get("photo") as File | null
-  if (photo && photo.size > 0 && photo.size <= PHOTO_MAX_SIZE) {
-    if (PHOTO_ALLOWED_TYPES.includes(photo.type)) {
-      const ext = photo.name.split(".").pop() ?? "jpg"
-      const uniqueName = `${crypto.randomUUID()}.${ext}`
-      const storagePath = buildStoragePath(user.id, watch.id, uniqueName)
-
-      const { error: uploadError } = await supabase.storage
-        .from(PHOTO_BUCKET)
-        .upload(storagePath, photo, {
-          contentType: photo.type,
-          upsert: false,
-        })
-
-      if (!uploadError) {
-        const thumbPath = await generateThumbnail(supabase, storagePath, await photo.arrayBuffer())
-        await supabase.from("watch_photos").insert({
-          watch_id: watch.id,
-          user_id: user.id,
-          storage_path: storagePath,
-          thumb_path: thumbPath,
-          display_order: 0,
-          is_cover: true,
-        })
-      }
-    }
+  if (!data.is_wishlist) {
+    revalidatePath("/config")
+    revalidatePath("/reports/brand-wishlist")
   }
-
-  await clearBrandWishlist(supabase, user.id, data.brand_id, data.is_wishlist)
-  await syncTierValuation(watch.id)
-
   revalidatePath("/dashboard")
   // Return the destination instead of calling redirect(). This action is invoked
   // imperatively from a client try/catch, and redirect() works by THROWING a

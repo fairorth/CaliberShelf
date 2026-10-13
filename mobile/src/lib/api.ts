@@ -1,6 +1,7 @@
 import type { IdentifyRequest, IdentifyResponse } from "@/lib/validations/identify"
 import type { PhotoAngle } from "@/lib/types/watch"
 import type { PhonePhotoUpload } from "@/lib/validations/photo-upload"
+import type { PhoneAddWatch, PhoneAddWatchResponse } from "@/lib/validations/phone-watch"
 import { API_BASE } from "./config"
 import { accessToken } from "./supabase"
 
@@ -62,4 +63,15 @@ export async function identify(req: IdentifyRequest): Promise<IdentifyResponse> 
   })
   if (!res.ok) throw new Error(await readError(res))
   return (await res.json()) as IdentifyResponse
+}
+
+/** Add a watch (with its cover photo) — POST /api/watches, the web's quick add. */
+export async function addWatch(body: PhoneAddWatch): Promise<PhoneAddWatchResponse> {
+  const res = await fetch(`${API_BASE}/api/watches`, {
+    method: "POST",
+    headers: { ...(await authHeaders()), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(await readError(res))
+  return (await res.json()) as PhoneAddWatchResponse
 }

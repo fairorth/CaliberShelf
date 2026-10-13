@@ -41,6 +41,12 @@ interface CameraScreenProps {
   onClose: () => void
   /** Identify → "Shoot this watch" switches to capture for that watch. */
   onSwitchToCapture: (watch: PhoneWatch) => void
+  /** Identify → "Wearing it": log today's wear for that watch. */
+  onWearing: (watch: PhoneWatch) => void
+  /** Identify → "Not in your collection": Add, with the photo and the guess. */
+  onAdd: (args: { photoUri: string; guess: IdentifyResponse["guess"]; ownership: "owned" | "wish" }) => void
+  /** Opened from Today: lead with "Wearing it". */
+  intent?: "wear"
 }
 
 type FrameStatus = "uploading" | "done" | "error" | "removed"
@@ -79,7 +85,7 @@ let frameCounter = 0
  * Photo Lab angle and uploading behind you, and Identify from the same
  * viewfinder.
  */
-export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: CameraScreenProps) {
+export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWearing, onAdd, intent }: CameraScreenProps) {
   const insets = useSafeAreaInsets()
   const permission = useCameraPermission()
   // Ask for all three back lenses: iOS then gives the virtual "triple"
@@ -233,7 +239,12 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
     }
   }
 
+  // The full-resolution identify shot, kept so "Add to collection" can use it
+  // as the cover (identify itself only sends a 1024px copy).
+  const [identifyUri, setIdentifyUri] = useState<string | null>(null)
+
   async function runIdentify(uri: string) {
+    setIdentifyUri(uri)
     setIdentifying(true)
     setIdentifyError(null)
     setResult(null)
@@ -433,6 +444,9 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture }: Came
             setIdentifyError(null)
           }}
           onShoot={onSwitchToCapture}
+          onWearing={onWearing}
+          leadWithWear={intent === "wear"}
+          onAdd={(ownership) => identifyUri && onAdd({ photoUri: identifyUri, guess: result?.guess ?? null, ownership })}
         />
       )}
     </View>
@@ -454,6 +468,9 @@ function IdentifySheet({
   bottomInset,
   onDismiss,
   onShoot,
+  onWearing,
+  onAdd,
+  leadWithWear,
 }: {
   result: IdentifyResponse | null
   error: string | null
@@ -461,6 +478,9 @@ function IdentifySheet({
   bottomInset: number
   onDismiss: () => void
   onShoot: (w: PhoneWatch) => void
+  onWearing: (w: PhoneWatch) => void
+  onAdd: (ownership: "owned" | "wish") => void
+  leadWithWear: boolean
 }) {
   const byId = new Map(watches.map((w) => [w.id, w]))
   const matches = (result?.matches ?? [])
@@ -472,7 +492,7 @@ function IdentifySheet({
       {error && <Text style={styles.sheetError}>{error}</Text>}
       {result && !result.watch_visible && <Text style={styles.sheetBody}>No watch in that photo — try again.</Text>}
       {matches.map((m, i) => (
-        <Pressable key={m.watch_id} style={styles.match} onPress={() => onShoot(m.watch)}>
+        <View key={m.watch_id} style={styles.match}>
           {m.watch.thumbUrl ? (
             <Image source={{ uri: m.watch.thumbUrl }} style={styles.matchThumb} contentFit="cover" />
           ) : (
@@ -487,8 +507,24 @@ function IdentifySheet({
             </Text>
             <Text style={styles.matchReason} numberOfLines={2}>{m.reason}</Text>
           </View>
-          <Text style={styles.matchAction}>Photograph</Text>
-        </Pressable>
+          <View style={[styles.matchActions, styles.matchActionsRow]}>
+            {/* Wearing is for watches in hand — not wish-list or sold ones. */}
+            {(m.watch.status === "owned" || m.watch.status === "coming") && (
+              <Pressable
+                style={[styles.matchButton, leadWithWear && styles.matchButtonPrimary]}
+                onPress={() => onWearing(m.watch)}
+              >
+                <Text style={[styles.matchButtonText, leadWithWear && styles.matchButtonTextPrimary]}>Wearing it</Text>
+              </Pressable>
+            )}
+            <Pressable
+              style={[styles.matchButton, !leadWithWear && styles.matchButtonPrimary]}
+              onPress={() => onShoot(m.watch)}
+            >
+              <Text style={[styles.matchButtonText, !leadWithWear && styles.matchButtonTextPrimary]}>Photograph</Text>
+            </Pressable>
+          </View>
+        </View>
       ))}
       {result && result.watch_visible && matches.length === 0 && (
         <View style={{ gap: 4 }}>
@@ -499,7 +535,23 @@ function IdentifySheet({
           {result.guess?.reference_number && (
             <Text style={styles.matchReason}>⚠ ref {result.guess.reference_number} (unverified)</Text>
           )}
+          <View style={[styles.matchActions, { marginTop: 8 }]}>
+            <Pressable style={[styles.matchButton, styles.matchButtonPrimary, { flex: 1 }]} onPress={() => onAdd("owned")}>
+              <Text style={[styles.matchButtonText, styles.matchButtonTextPrimary]}>Add to collection</Text>
+            </Pressable>
+            <Pressable style={[styles.matchButton, { flex: 1 }]} onPress={() => onAdd("wish")}>
+              <Text style={styles.matchButtonText}>Add to wish list</Text>
+            </Pressable>
+          </View>
         </View>
+      )}
+      {/* Matches that aren't it: the guess is still there to add from. */}
+      {result && result.watch_visible && matches.length > 0 && result.guess?.brand && (
+        <Pressable onPress={() => onAdd("owned")} hitSlop={8}>
+          <Text style={styles.matchReason}>
+            Not one of these? Add it as {[result.guess.brand, result.guess.model].filter(Boolean).join(" ")} →
+          </Text>
+        </Pressable>
       )}
       {result?.notes && <Text style={styles.matchReason}>{result.notes}</Text>}
       {result && (
@@ -672,12 +724,27 @@ const styles = StyleSheet.create({
   },
   sheetError: { color: color.destructive, fontSize: text.sm },
   sheetBody: { color: color.foreground, fontSize: text.sm },
-  match: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64 },
+  // Thumb + name on one line, the actions on the next (indented under the
+  // name), so two buttons never squeeze the watch's name.
+  match: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 12, rowGap: 8, minHeight: 64 },
   matchThumb: { width: 56, height: 56, borderRadius: radius.control },
   matchBrand: { color: color.mutedForeground, fontSize: text.xs },
   matchName: { color: color.foreground, fontSize: text.md, fontWeight: "600" },
   matchReason: { color: color.mutedForeground, fontSize: text.xs },
-  matchAction: { color: color.brass, fontSize: text.sm, fontWeight: "600" },
+  matchActions: { flexDirection: "row", gap: 8 },
+  matchActionsRow: { width: "100%", paddingLeft: 68 },
+  matchButton: {
+    minHeight: 40,
+    paddingHorizontal: 12,
+    borderRadius: radius.control,
+    borderWidth: 1,
+    borderColor: color.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  matchButtonPrimary: { backgroundColor: color.brass, borderColor: color.brass },
+  matchButtonText: { color: color.foreground, fontSize: text.xs, fontWeight: "600" },
+  matchButtonTextPrimary: { color: color.brassForeground },
   cost: { color: color.mutedForeground, fontSize: text.xxs },
   sheetButton: {
     minHeight: TOUCH,
