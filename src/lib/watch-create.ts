@@ -22,6 +22,8 @@ export interface NewWatchInput {
   reference_number?: string | null
   reference_unverified?: boolean
   box?: string | null
+  /** YYYY-MM-DD. */
+  purchase_date?: string | null
 }
 
 export type CreateWatchResult = { watchId: string; photoError?: string } | { error: string }
@@ -46,6 +48,7 @@ export async function createWatchFor(
         ? { reference_number: input.reference_number, reference_unverified: !!input.reference_unverified }
         : {}),
       ...(input.box ? { box: input.box } : {}),
+      ...(input.purchase_date ? { purchase_date: input.purchase_date } : {}),
     })
     .select("id")
     .single()

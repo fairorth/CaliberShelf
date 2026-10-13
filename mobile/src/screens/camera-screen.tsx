@@ -535,6 +535,11 @@ function IdentifySheet({
           {result.guess?.reference_number && (
             <Text style={styles.matchReason}>⚠ ref {result.guess.reference_number} (unverified)</Text>
           )}
+          {/* The guess only pre-fills the form — say so, or a wrong guess
+              looks like a dead end (Marc, first Add test). */}
+          <Text style={styles.matchReason}>
+            Not right? Add it anyway — you can correct the brand, model and reference on the next screen.
+          </Text>
           <View style={[styles.matchActions, { marginTop: 8 }]}>
             <Pressable style={[styles.matchButton, styles.matchButtonPrimary, { flex: 1 }]} onPress={() => onAdd("owned")}>
               <Text style={[styles.matchButtonText, styles.matchButtonTextPrimary]}>Add to collection</Text>
@@ -549,7 +554,7 @@ function IdentifySheet({
       {result && result.watch_visible && matches.length > 0 && result.guess?.brand && (
         <Pressable onPress={() => onAdd("owned")} hitSlop={8}>
           <Text style={styles.matchReason}>
-            Not one of these? Add it as {[result.guess.brand, result.guess.model].filter(Boolean).join(" ")} →
+            Not one of these? Add it as {[result.guess.brand, result.guess.model].filter(Boolean).join(" ")} (you can correct it) →
           </Text>
         </Pressable>
       )}

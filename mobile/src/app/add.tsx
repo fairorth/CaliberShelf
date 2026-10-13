@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { localDateIso } from "@/lib/dates"
 import type { PhoneOwnership } from "@/lib/validations/phone-watch"
 import { addWatch } from "../lib/api"
 import { useApp } from "../lib/app-context"
@@ -68,6 +69,9 @@ export default function AddWatchScreen() {
   )
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [price, setPrice] = useState("")
+  // Defaults to today (the phone's local day): adding from the phone is
+  // usually the day it arrives. Editable; not sent for wish list.
+  const [purchaseDate, setPurchaseDate] = useState(localDateIso())
   const [box, setBox] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -91,10 +95,12 @@ export default function AddWatchScreen() {
     return newBrand
   }, [brandId, newBrand, form])
 
+  const dateValid = ownership === "wish" || purchaseDate === "" || isRealDate(purchaseDate)
   const missing = [
     !brandName && "brand",
     !model.trim() && "model",
     !categoryId && "category",
+    !dateValid && "a valid purchase date",
   ].filter(Boolean) as string[]
 
   async function takePhoto() {
@@ -127,6 +133,7 @@ export default function AddWatchScreen() {
         ownership,
         purchase_price_cents: cents != null && Number.isFinite(cents) ? cents : null,
         box: ownership === "wish" ? null : box,
+        purchase_date: ownership === "wish" || !purchaseDate ? null : purchaseDate,
         ...(image_base64 ? { image_base64, media_type: "image/jpeg" as const } : {}),
       })
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
@@ -243,6 +250,24 @@ export default function AddWatchScreen() {
           />
         </Field>
 
+        {/* Purchase date — not for wish list: it hasn't been bought */}
+        {ownership !== "wish" && (
+          <Field label="Purchase date" note={dateValid ? "YYYY-MM-DD" : "Use YYYY-MM-DD"}>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TextInput
+                style={[styles.input, styles.inputText, { flex: 1 }, !dateValid && styles.inputInvalid]}
+                value={purchaseDate}
+                onChangeText={(t) => setPurchaseDate(t.replace(/[^0-9-]/g, "").slice(0, 10))}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={color.mutedForeground}
+                keyboardType="numbers-and-punctuation"
+                autoCorrect={false}
+              />
+              <Chip label="Today" active={purchaseDate === localDateIso()} onPress={() => setPurchaseDate(localDateIso())} />
+            </View>
+          </Field>
+        )}
+
         {/* Box — not for wish list: it isn't here to be stored */}
         {ownership !== "wish" && (form?.boxes.length ?? 0) > 0 && (
           <Field label="Box" note="Optional">
@@ -296,6 +321,14 @@ export default function AddWatchScreen() {
       />
     </View>
   )
+}
+
+/** A real calendar day as YYYY-MM-DD (rejects 2026-02-31 and the like). */
+function isRealDate(v: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false
+  const [y, m, d] = v.split("-").map(Number)
+  const dt = new Date(y, m - 1, d)
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d
 }
 
 function Field({ label, note, children }: { label: string; note?: string; children: React.ReactNode }) {
@@ -451,6 +484,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.card,
   },
   inputText: { fontSize: 16, color: color.foreground }, // ≥16: iOS zooms smaller fields
+  inputInvalid: { borderColor: color.destructive },
   placeholder: { fontSize: 16, color: color.mutedForeground },
   segment: {
     flexDirection: "row",

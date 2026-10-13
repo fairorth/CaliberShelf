@@ -51,6 +51,8 @@ export async function POST(request: Request) {
       reference_number: d.reference_number ?? null,
       reference_unverified: d.reference_unverified,
       box: d.ownership === "wish" ? null : (d.box ?? null),
+      // A wish-list watch hasn't been bought, so it has no purchase date.
+      purchase_date: d.ownership === "wish" ? null : (d.purchase_date ?? null),
     },
     photo
   )

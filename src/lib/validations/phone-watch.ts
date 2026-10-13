@@ -26,6 +26,14 @@ export const phoneAddWatchSchema = z
     reference_unverified: z.boolean().optional().default(false),
     category_id: z.string().min(1, "Category is required"),
     ownership: z.enum(PHONE_OWNERSHIP),
+    /** YYYY-MM-DD. The phone defaults it to its local today (Marc,
+     *  2026-10-13); ignored for wish-list entries, which aren't bought. */
+    purchase_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Purchase date must be YYYY-MM-DD")
+      .refine((v) => !Number.isNaN(Date.parse(`${v}T00:00:00Z`)), "That isn't a real date")
+      .nullable()
+      .optional(),
     /** For wish-list entries, the estimated future price (as on the web). */
     purchase_price_cents: z.number().int().min(0).nullable().optional(),
     box: z.string().trim().max(40).nullable().optional(),
