@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -47,10 +47,18 @@ export function WearHistory({ watches }: WearHistoryProps) {
     })
   }
 
-  // Load on first render
-  if (!loaded && !isPending) {
-    loadPage(1)
-  }
+  // First load, once the tab has mounted. This used to run DURING render
+  // (`if (!loaded && !isPending) loadPage(1)`), which React 19 rejects —
+  // "Cannot call startTransition while rendering", plus a setState in an
+  // unmounted component — the three console errors on switching to History.
+  useEffect(() => {
+    startTransition(async () => {
+      const result = await fetchWearHistory(1, PAGE_SIZE)
+      setLogs(result.logs)
+      setTotalCount(result.totalCount)
+      setLoaded(true)
+    })
+  }, [])
 
   function handleDelete(logId: string) {
     startTransition(async () => {
