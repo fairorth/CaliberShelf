@@ -78,6 +78,7 @@ const DROPDOWN_SORT_KEYS: SortKey[] = [
   "brand",
   "price",
   "purchaseDate",
+  "dateAdded",
   "caseDiameter",
   "wearCount",
 ]
@@ -89,6 +90,7 @@ const SORT_LABELS: Record<SortKey, string> = {
   brand: "Sort: Brand",
   price: "Sort: Price",
   purchaseDate: "Sort: Purchase date",
+  dateAdded: "Sort: Date added",
   caseDiameter: "Sort: Case size",
   wearCount: "Sort: Wear count",
   category: "Sort: Category",
@@ -217,6 +219,8 @@ function sortValue(
       return w.purchase_price_cents
     case "purchaseDate":
       return w.purchase_date // "YYYY-MM-DD" sorts lexically
+    case "dateAdded":
+      return w.created_at // ISO timestamp, sorts lexically
     case "value":
       return valuationMids[w.id] ?? null
     case "gain": {

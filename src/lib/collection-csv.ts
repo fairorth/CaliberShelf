@@ -6,6 +6,7 @@ import { gainVersusBasis } from "@/lib/queries/gain"
 import { caliberLabel } from "@/lib/caliber"
 import { caliberTypeLabels } from "@/lib/validations/movement"
 import { attachmentLabels } from "@/lib/validations/watch"
+import { localDateIso } from "@/lib/dates"
 
 // ── Collection → CSV (what you see is what exports) ─────────────
 //
@@ -57,6 +58,9 @@ function columnValue(
       return w.wear_count ?? 0
     case "purchased":
       return w.purchase_date
+    case "added":
+      // The local calendar day it was added, YYYY-MM-DD like Purchased.
+      return w.created_at ? localDateIso(new Date(w.created_at)) : null
     case "price":
       // Matches the table: a sold row shows what it returned (§3.6).
       return sold && saleSummaries?.[w.id]

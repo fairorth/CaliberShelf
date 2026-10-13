@@ -72,6 +72,21 @@ function priceLabel(watch: WatchWithCover): string {
 }
 
 /** "Aug 12, 2026" — the T00:00:00 suffix avoids the UTC off-by-one. */
+/**
+ * When the watch entered TenTenLoupe (`created_at`) — NOT when it was bought:
+ * a watch bought in 2019 and catalogued last week reads "Purchased 2019 ·
+ * Added last week". Shown as the browser's local day.
+ */
+function addedLabel(watch: WatchWithCover): string {
+  return watch.created_at
+    ? new Date(watch.created_at).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : "—"
+}
+
 function purchasedLabel(watch: WatchWithCover): string {
   return watch.purchase_date
     ? new Date(watch.purchase_date + "T00:00:00").toLocaleDateString("en-US", {
@@ -110,6 +125,7 @@ export type TableSortKey =
   | "attachment"
   | "wearCount"
   | "purchaseDate"
+  | "dateAdded"
   | "price"
   | "value"
   | "gain"
@@ -130,6 +146,7 @@ export type ColumnId =
   | "attachment"
   | "worn"
   | "purchased"
+  | "added"
   | "price"
   | "value"
   | "gain"
@@ -160,6 +177,7 @@ const COLUMN_ORDER: ColumnId[] = [
   "attachment",
   "worn",
   "purchased",
+  "added",
   "price",
   "value",
   "gain",
@@ -194,6 +212,7 @@ export const COLUMN_LABELS: Record<ColumnId, string> = {
   attachment: "Attachment",
   worn: "Worn",
   purchased: "Purchased",
+  added: "Added",
   price: "Price",
   value: "Value",
   gain: "Gain",
@@ -322,6 +341,8 @@ const DEFAULT_WIDTHS: Record<ColumnId, number> = {
   worn: 72,
   // "Aug 12, 2026" in 12px mono plus padding.
   purchased: 112,
+  // Same "Aug 12, 2026" format as Purchased.
+  added: 112,
   price: 104,
   value: 100,
   gain: 100,
@@ -779,6 +800,7 @@ export function CollectionTable({
                 {isVisible("attachment") && <SortableHeader label="Attachment" sortKey="attachment" colId="attachment" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} />}
                 {isVisible("worn") && <SortableHeader label="Worn" sortKey="wearCount" colId="worn" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
                 {isVisible("purchased") && <SortableHeader label="Purchased" sortKey="purchaseDate" colId="purchased" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
+                {isVisible("added") && <SortableHeader label="Added" sortKey="dateAdded" colId="added" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
                 {isVisible("price") && (
                   <SortableHeader label="Price" sortKey="price" colId="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />
                 )}
@@ -910,6 +932,11 @@ export function CollectionTable({
                   {isVisible("purchased") && (
                     <TableCell className="text-right font-mono text-xs tabular-nums text-muted-foreground">
                       {purchasedLabel(watch)}
+                    </TableCell>
+                  )}
+                  {isVisible("added") && (
+                    <TableCell className="text-right font-mono text-xs tabular-nums text-muted-foreground">
+                      {addedLabel(watch)}
                     </TableCell>
                   )}
                   {isVisible("price") && (

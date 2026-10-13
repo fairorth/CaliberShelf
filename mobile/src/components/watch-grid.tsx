@@ -1,6 +1,8 @@
 import { Image } from "expo-image"
 import { useMemo, useState } from "react"
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native"
+import { sortWatches } from "../lib/collection-sort"
+import type { CollectionSort } from "../lib/collection-sort"
 import type { PhoneWatch } from "../lib/watches"
 import { color, radius, text, TOUCH } from "../theme"
 
@@ -15,6 +17,8 @@ interface WatchGridProps {
   onRefresh: () => void
   onPick: (watch: PhoneWatch) => void
   scope?: GridScope
+  /** Order of the grid; omitted = the collection's default (status, brand, model). */
+  sort?: CollectionSort
   searchPlaceholder?: string
   /** Rendered above the search box (scrolls with the grid). */
   header?: React.ReactElement
@@ -32,6 +36,7 @@ export function WatchGrid({
   onRefresh,
   onPick,
   scope = "in-hand",
+  sort,
   searchPlaceholder = "Search brand, model, nickname or ref",
   header,
   bottomInset = 0,
@@ -43,11 +48,13 @@ export function WatchGrid({
       (w) => scope === "all" || w.status === "owned" || w.status === "coming"
     )
     const q = query.trim().toLowerCase()
-    if (!q) return list
-    return list.filter((w) =>
-      [w.brand, w.model, w.nickname ?? "", w.reference ?? ""].some((s) => s.toLowerCase().includes(q))
-    )
-  }, [watches, query, scope])
+    const found = !q
+      ? list
+      : list.filter((w) =>
+          [w.brand, w.model, w.nickname ?? "", w.reference ?? ""].some((s) => s.toLowerCase().includes(q))
+        )
+    return sort ? sortWatches(found, sort) : found
+  }, [watches, query, scope, sort])
 
   return (
     <FlatList

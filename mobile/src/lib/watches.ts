@@ -10,6 +10,9 @@ export interface PhoneWatch {
   status: "owned" | "coming" | "wish" | "sold"
   /** Signed URL of the cover's ~600px thumbnail, or null. */
   thumbUrl: string | null
+  /** When it was added to TenTenLoupe (ISO timestamp) — not when it was bought. */
+  createdAt: string
+  purchasePriceCents: number | null
 }
 
 type Row = {
@@ -20,6 +23,8 @@ type Row = {
   is_wishlist: boolean
   is_coming_soon: boolean
   sale_status: string
+  created_at: string
+  purchase_price_cents: number | null
   brands: { name: string } | null
   watch_photos: Array<{ thumb_path: string | null; is_cover: boolean }> | null
 }
@@ -35,7 +40,7 @@ export async function fetchWatches(): Promise<PhoneWatch[]> {
   const { data, error } = await supabase
     .from("watches")
     .select(
-      "id, model, nickname, reference_number, is_wishlist, is_coming_soon, sale_status, brands(name), watch_photos(thumb_path, is_cover)"
+      "id, model, nickname, reference_number, is_wishlist, is_coming_soon, sale_status, created_at, purchase_price_cents, brands(name), watch_photos(thumb_path, is_cover)"
     )
   if (error) throw new Error(error.message)
   // Nested joins infer loosely — cast to the real shape (same as the web).
@@ -73,6 +78,8 @@ export async function fetchWatches(): Promise<PhoneWatch[]> {
             ? "sold"
             : "owned",
       thumbUrl: thumb ? (urlByPath.get(thumb) ?? null) : null,
+      createdAt: r.created_at,
+      purchasePriceCents: r.purchase_price_cents,
     }
   })
   const rank = { owned: 0, coming: 1, wish: 2, sold: 3 } as const
