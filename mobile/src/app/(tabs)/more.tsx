@@ -8,6 +8,7 @@ import { ShowModeSection } from "../../components/show-mode-section"
 import { useApp } from "../../lib/app-context"
 import { canUseBiometrics, isLockEnabled, setLockEnabled, unlock } from "../../lib/app-lock"
 import { API_BASE } from "../../lib/config"
+import { setShowPurchasePrice, useShowPurchasePrice } from "../../lib/price-visibility"
 import { supabase } from "../../lib/supabase"
 import { color, radius, text, TOUCH } from "../../theme"
 
@@ -20,6 +21,7 @@ export default function MoreScreen() {
   const { session, update } = useApp()
   const [lockOn, setLockOn] = useState(false)
   const [biometrics, setBiometrics] = useState<boolean | null>(null)
+  const showPrice = useShowPurchasePrice()
 
   useFocusEffect(
     useCallback(() => {
@@ -67,6 +69,22 @@ export default function MoreScreen() {
               value={lockOn}
               onValueChange={(v) => void toggleLock(v)}
               disabled={biometrics === false}
+              trackColor={{ true: color.brass, false: color.muted }}
+            />
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Show watch purchase price</Text>
+              <Text style={styles.rowHint}>
+                On the collection tiles and the watch page. Off by default — handy when the phone is out in public.
+              </Text>
+            </View>
+            <Switch
+              value={showPrice}
+              onValueChange={(v) => void setShowPurchasePrice(v)}
               trackColor={{ true: color.brass, false: color.muted }}
             />
           </View>

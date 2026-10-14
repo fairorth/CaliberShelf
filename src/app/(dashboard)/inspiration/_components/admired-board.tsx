@@ -237,7 +237,7 @@ function AdmiredEditor({ watch, onClose }: { watch: AdmiredWatchView; onClose: (
           <Input id="adm-ref" value={reference} onChange={(e) => setReference(e.target.value)} maxLength={80} />
         </Field>
         <Field id="adm-price" label="Price (as shown)">
-          <Input id="adm-price" value={price} onChange={(e) => setPrice(e.target.value)} maxLength={80} placeholder="CHF 48,000" />
+          <Input id="adm-price" value={price} onChange={(e) => setPrice(e.target.value)} maxLength={80} />
         </Field>
         <Field id="adm-event" label="Event">
           <Input id="adm-event" value={event} onChange={(e) => setEvent(e.target.value)} maxLength={120} />

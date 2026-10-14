@@ -2,6 +2,7 @@ import { Image } from "expo-image"
 import { useMemo, useState } from "react"
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native"
 import { sortWatches } from "../lib/collection-sort"
+import { formatPrice, useShowPurchasePrice } from "../lib/price-visibility"
 import type { CollectionSort } from "../lib/collection-sort"
 import type { PhoneWatch } from "../lib/watches"
 import { color, radius, text, TOUCH } from "../theme"
@@ -42,6 +43,8 @@ export function WatchGrid({
   bottomInset = 0,
 }: WatchGridProps) {
   const [query, setQuery] = useState("")
+  // Prices only when More → "Show watch purchase price" is on.
+  const showPrice = useShowPurchasePrice()
 
   const shown = useMemo(() => {
     const list = (watches ?? []).filter(
@@ -97,6 +100,9 @@ export function WatchGrid({
           <Text style={styles.model} numberOfLines={1}>
             {item.nickname || item.model}
           </Text>
+          {showPrice && item.purchasePriceCents != null && (
+            <Text style={styles.price}>{formatPrice(item.purchasePriceCents)}</Text>
+          )}
         </Pressable>
       )}
       ListEmptyComponent={watches && !loading ? <Text style={styles.empty}>No watches match.</Text> : null}
@@ -130,5 +136,7 @@ const styles = StyleSheet.create({
   noThumbText: { fontSize: text.xs, color: color.mutedForeground },
   brand: { fontSize: text.xs, color: color.mutedForeground, marginTop: 6 },
   model: { fontSize: text.sm, color: color.foreground },
+  // Prices are foreground + tabular figures, never coloured (design system).
+  price: { fontSize: text.xs, color: color.foreground, fontVariant: ["tabular-nums"], marginTop: 2 },
   empty: { fontSize: text.sm, color: color.mutedForeground, textAlign: "center", marginTop: 32 },
 })

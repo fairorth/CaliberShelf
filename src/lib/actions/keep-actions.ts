@@ -11,6 +11,7 @@ import {
 } from "@/lib/validations/keep"
 import { keepFieldsSchema, type KeepFields } from "@/lib/validations/watch"
 import { dollarsToCents } from "@/lib/utils"
+import { applyKeepFieldsFor } from "@/lib/keep-store"
 
 // The Edit's writes (00054). Every screen of the keep/sell flow — the Sort
 // grid, the rating session, the head-to-heads, the watch page — goes through
@@ -45,26 +46,10 @@ export async function setKeepFields(watchId: string, fields: KeepFields): Promis
   } = await supabase.auth.getUser()
   if (!user) return { error: "You must be logged in." }
 
-  const now = new Date().toISOString()
-  const update: Record<string, unknown> = {}
-  const f = parsed.data
-  if (f.attachment !== undefined) {
-    update.attachment = f.attachment
-    update.attachment_rated_at = f.attachment ? now : null
-  }
-  if (f.keep_decision !== undefined) {
-    update.keep_decision = f.keep_decision
-    update.keep_decided_at = f.keep_decision ? now : null
-  }
-  if (f.sentimental !== undefined) update.sentimental = f.sentimental
-  if (f.replaceability !== undefined) update.replaceability = f.replaceability
-
-  const { error } = await supabase
-    .from("watches")
-    .update(update)
-    .eq("id", watchId)
-    .eq("user_id", user.id)
-  if (error) return { error: error.message }
+  // The write and its timestamps live once, in lib/keep-store.ts (shared
+  // with the iPhone's /api/watches/[id]/keep).
+  const result = await applyKeepFieldsFor(supabase, user.id, watchId, parsed.data)
+  if ("error" in result) return { error: result.error }
 
   revalidateEdit(watchId)
   return { success: true }
