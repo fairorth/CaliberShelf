@@ -23,6 +23,9 @@ import type { Frame } from "react-native-vision-camera"
 import { scheduleOnRN } from "react-native-worklets"
 import { FOCUS_WAIT_MS, useCameraSettings } from "../lib/camera-settings"
 import { centreSharpness, nextFocusState } from "../lib/focus"
+import * as admiredQueue from "../lib/admired-queue"
+import { localDateIso } from "@/lib/dates"
+import type { AdmiredPhotoKind } from "@/lib/validations/admired"
 import type { FocusState } from "../lib/focus"
 import { ANGLE_LABELS, PHOTO_ANGLES } from "@/lib/photo-lab"
 import type { PhotoAngle } from "@/lib/types/watch"
@@ -32,7 +35,11 @@ import { fileUri, prepareFrame } from "../lib/images"
 import type { PhoneWatch } from "../lib/watches"
 import { color, radius, text, TOUCH } from "../theme"
 
-export type CameraMode = { kind: "capture"; watch: PhoneWatch } | { kind: "identify" }
+export type CameraMode =
+  | { kind: "capture"; watch: PhoneWatch }
+  | { kind: "identify" }
+  /** Show mode: watches admired, not owned (00056) — stamped with the event. */
+  | { kind: "admired"; event: string }
 
 interface CameraScreenProps {
   mode: CameraMode
@@ -158,6 +165,59 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWear
   const activeZoom = zoom ?? base
 
   const [angle, setAngle] = useState<PhotoAngle | null>(null)
+
+  // ── Admired (Show mode) ──────────────────────────────────────────
+  // One admired watch at a time: every frame belongs to the current one
+  // until "Next watch". A Placard frame is read on the server and fills that
+  // watch's details, whatever order it was shot in.
+  const [admiredId, setAdmiredId] = useState<string | null>(null)
+  const [admiredNumber, setAdmiredNumber] = useState(1)
+  const [frameKind, setFrameKind] = useState<AdmiredPhotoKind>("watch")
+  const [admiredFrames, setAdmiredFrames] = useState<
+    Array<{ photoId: string; uri: string; kind: AdmiredPhotoKind; soft: boolean; removed?: boolean }>
+  >([])
+  const [, setQueueTick] = useState(0)
+  useEffect(() => admiredQueue.subscribe(() => setQueueTick((t) => t + 1)), [])
+  const queue = admiredQueue.getStatus()
+
+  async function shootAdmired(uri: string) {
+    if (mode.kind !== "admired") return
+    let id = admiredId
+    if (!id) {
+      id = admiredQueue.newId()
+      setAdmiredId(id)
+      await admiredQueue.enqueueCreate({ id, event: mode.event, seen_on: localDateIso() })
+    }
+    const kind = frameKind
+    const photoId = admiredQueue.newId()
+    const soft = kind === "watch" && sharpnessOn && focusRef.current === "soft"
+    const order = admiredFrames.length
+    setAdmiredFrames((prev) => [{ photoId, uri, kind, soft }, ...prev])
+    // After the placard, the next shot is almost always the watch again.
+    if (kind === "placard") setFrameKind("watch")
+    const prepared = await prepareFrame(uri, UPLOAD_LONG_EDGE, { compress: 0.9, base64: true })
+    if (!prepared.base64) throw new Error("Couldn't read the photo.")
+    await admiredQueue.enqueuePhoto({ admiredId: id, photoId, kind, order, base64: prepared.base64 })
+  }
+
+  function nextAdmired() {
+    if (!admiredId) return
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    setAdmiredId(null)
+    setAdmiredFrames([])
+    setFrameKind("watch")
+    setAdmiredNumber((n) => n + 1)
+  }
+
+  async function undoAdmired(photoId: string) {
+    setAdmiredFrames((prev) => prev.map((f) => (f.photoId === photoId ? { ...f, removed: true } : f)))
+    try {
+      await admiredQueue.removeFrame(photoId)
+    } catch (e) {
+      setAdmiredFrames((prev) => prev.map((f) => (f.photoId === photoId ? { ...f, removed: false } : f)))
+      Alert.alert("Couldn't remove that frame", (e as Error).message)
+    }
+  }
   const [strip, setStrip] = useState<StripFrame[]>([])
   const [shooting, setShooting] = useState(false)
   const [waitingForFocus, setWaitingForFocus] = useState(false)
@@ -208,6 +268,8 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWear
       const file = await photoOutput.capturePhotoToFile({ enableShutterSound: true }, {})
       if (mode.kind === "identify") {
         await runIdentify(fileUri(file.filePath))
+      } else if (mode.kind === "admired") {
+        await shootAdmired(fileUri(file.filePath))
       } else {
         // The frame enters the strip at once; resizing and upload run behind it.
         const localId = `f${++frameCounter}`
@@ -334,10 +396,22 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWear
         </Pressable>
         <View style={{ flex: 1, alignItems: "center" }}>
           <Text style={styles.topTitle} numberOfLines={1}>
-            {mode.kind === "identify" ? "Identify" : `${mode.watch.brand} ${mode.watch.nickname || mode.watch.model}`}
+            {mode.kind === "identify"
+              ? "Identify"
+              : mode.kind === "admired"
+                ? `Admired · ${mode.event}`
+                : `${mode.watch.brand} ${mode.watch.nickname || mode.watch.model}`}
           </Text>
           {mode.kind === "capture" && doneCount > 0 && (
             <Text style={styles.topSub}>{doneCount} uploaded</Text>
+          )}
+          {mode.kind === "admired" && (
+            <Text style={styles.topSub}>
+              Watch {admiredNumber}
+              {queue.pendingFrames > 0
+                ? ` · ${queue.pendingFrames} waiting${queue.online ? " — sending" : " — no signal, saved on phone"}`
+                : " · all sent"}
+            </Text>
           )}
         </View>
         <View style={styles.topButton} />
@@ -392,6 +466,17 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWear
           <Text style={styles.errorText}>
             {visibleFrames.find((f) => f.status === "error")?.error ?? "Upload failed."}
           </Text>
+        )}
+
+        {mode.kind === "admired" && (
+          <AdmiredControls
+            admiredId={admiredId}
+            frames={admiredFrames.filter((f) => !f.removed)}
+            frameKind={frameKind}
+            onKind={setFrameKind}
+            onNext={nextAdmired}
+            onUndo={(id) => void undoAdmired(id)}
+          />
         )}
 
         {mode.kind === "capture" && (
@@ -449,6 +534,91 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWear
           onAdd={(ownership) => identifyUri && onAdd({ photoUri: identifyUri, guess: result?.guess ?? null, ownership })}
         />
       )}
+    </View>
+  )
+}
+
+/**
+ * The Admired strip: the current watch's frames (a spinner until sent,
+ * placards marked), what its placard said once read, the Watch / Placard
+ * choice for the next frame, and Next watch.
+ */
+function AdmiredControls({
+  admiredId,
+  frames,
+  frameKind,
+  onKind,
+  onNext,
+  onUndo,
+}: {
+  admiredId: string | null
+  frames: Array<{ photoId: string; uri: string; kind: AdmiredPhotoKind; soft: boolean }>
+  frameKind: AdmiredPhotoKind
+  onKind: (k: AdmiredPhotoKind) => void
+  onNext: () => void
+  onUndo: (photoId: string) => void
+}) {
+  const placard = admiredId ? admiredQueue.placardFor(admiredId) : undefined
+  return (
+    <View style={{ gap: 10, alignSelf: "stretch" }}>
+      {frames.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
+          {frames.map((f) => {
+            const sent = admiredQueue.isUploaded(f.photoId)
+            return (
+              <View key={f.photoId} style={styles.frame}>
+                <Image source={{ uri: f.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+                {!sent && (
+                  <View style={styles.frameOverlay}>
+                    <ActivityIndicator size="small" color={color.viewfinderText} />
+                  </View>
+                )}
+                <Pressable style={styles.undo} onPress={() => onUndo(f.photoId)} hitSlop={8}>
+                  <Text style={styles.undoText}>Undo</Text>
+                </Pressable>
+                {f.soft && <View style={styles.softDot} accessibilityLabel="Dial was soft — consider a retake" />}
+                {f.kind === "placard" && <Text style={styles.frameAngle}>Placard</Text>}
+              </View>
+            )
+          })}
+        </ScrollView>
+      )}
+
+      {placard && (
+        <Text style={styles.placardBanner} numberOfLines={2}>
+          {placard.error
+            ? `Placard: ${placard.error}`
+            : placard.legible
+              ? `Placard: ${[placard.maker, placard.model, placard.price_text].filter(Boolean).join(" · ") || "read, no name on it"}`
+              : "Placard couldn't be read — add the details later on the web."}
+        </Text>
+      )}
+
+      <View style={styles.admiredRow}>
+        <View style={styles.kindToggle}>
+          {(["watch", "placard"] as const).map((k) => (
+            <Pressable
+              key={k}
+              onPress={() => onKind(k)}
+              style={[styles.kindItem, frameKind === k && styles.kindItemActive]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: frameKind === k }}
+            >
+              <Text style={[styles.chipText, frameKind === k && styles.chipTextActive]}>
+                {k === "watch" ? "Watch" : "Placard"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <Pressable
+          onPress={onNext}
+          disabled={!admiredId}
+          style={[styles.nextButton, !admiredId && { opacity: 0.4 }]}
+          accessibilityLabel="Finish this watch and start the next"
+        >
+          <Text style={styles.nextButtonText}>Next watch →</Text>
+        </Pressable>
+      </View>
     </View>
   )
 }
@@ -612,6 +782,31 @@ const styles = StyleSheet.create({
   topButtonText: { color: color.viewfinderText, fontSize: text.sm, fontWeight: "600" },
   topTitle: { color: color.viewfinderText, fontSize: text.sm, fontWeight: "600" },
   topSub: { color: "rgba(255,255,255,0.75)", fontSize: text.xxs, marginTop: 2 },
+  placardBanner: {
+    color: color.viewfinderText,
+    fontSize: text.xs,
+    paddingHorizontal: 16,
+    textAlign: "center",
+  },
+  admiredRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 },
+  kindToggle: {
+    flexDirection: "row",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.4)",
+    overflow: "hidden",
+  },
+  kindItem: { minHeight: 36, paddingHorizontal: 16, justifyContent: "center" },
+  kindItemActive: { backgroundColor: color.brass },
+  nextButton: {
+    minHeight: 36,
+    paddingHorizontal: 16,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.viewfinderText,
+    justifyContent: "center",
+  },
+  nextButtonText: { color: color.viewfinderText, fontSize: text.xs, fontWeight: "600" },
   focusPill: {
     position: "absolute",
     alignSelf: "center",

@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import { Alert } from "react-native"
 import { useApp } from "../lib/app-context"
+import { getShowMode } from "../lib/show-mode"
 import { logWear } from "../lib/wear"
 import { CameraScreen } from "../screens/camera-screen"
 import type { CameraMode } from "../screens/camera-screen"
@@ -11,14 +12,19 @@ import type { CameraMode } from "../screens/camera-screen"
  * /camera?mode=identify[&intent=wear] — "which watch is this?" (intent=wear
  *   when opened from Today: "Wearing it" leads).
  * /camera?watchId=…                  — shoot frames for that watch.
+ * /camera?mode=admired               — Show mode: admired watches + placards.
  * Full-screen over the tabs; Done returns to wherever you came from.
  */
 export default function CameraRoute() {
-  const { watchId, intent } = useLocalSearchParams<{ mode?: string; watchId?: string; intent?: string }>()
+  const { watchId, intent, mode: modeParam } = useLocalSearchParams<{ mode?: string; watchId?: string; intent?: string }>()
   const { watches, reloadWatches } = useApp()
 
   const watch = watchId ? watches?.find((w) => w.id === watchId) : undefined
-  const mode: CameraMode = watch ? { kind: "capture", watch } : { kind: "identify" }
+  const mode: CameraMode = watch
+    ? { kind: "capture", watch }
+    : modeParam === "admired"
+      ? { kind: "admired", event: getShowMode().event }
+      : { kind: "identify" }
 
   return (
     <>
@@ -26,7 +32,7 @@ export default function CameraRoute() {
       <CameraScreen
         // A new mode is a fresh screen: identify → capture must not carry
         // over the strip or the result sheet.
-        key={mode.kind === "capture" ? mode.watch.id : "identify"}
+        key={mode.kind === "capture" ? mode.watch.id : mode.kind}
         mode={mode}
         watches={watches ?? []}
         intent={intent === "wear" ? "wear" : undefined}

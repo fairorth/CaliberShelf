@@ -370,6 +370,23 @@ service role, which bypasses RLS.
   with `npm run typecheck`, `npx expo export --platform ios` and
   `npm run doctor` in `mobile/`; the device test is Marc's.
 
+## Admired (v1.11.12, migration 00056) — watches admired, not to be owned
+- `admired_watches` + `admired_photos`: watches seen in the metal (the Indies at
+  Watch Week NYC) — deliberately NOT the wish list, which drives deal checks,
+  guides and wish-list totals. Maker is free text, not `brands` (twenty
+  independents seen once don't belong there). Web: Imagery → Inspiration →
+  **Admired** tab (`?tab=admired`), grouped by event, edited via
+  `actions/admired-actions.ts`. ONE implementation: `lib/admired-store.ts`.
+- iPhone **Show mode** (More): the camera button opens Admired capture, one
+  watch at a time until "Next watch"; each frame is **Watch** or **Placard**.
+  A placard is read SERVER-side on upload (vision, `placard-read` in
+  agent_runs) and fills only EMPTY fields — the owner's edits always win.
+- **Offline queue** (`mobile/src/lib/admired-queue.ts`): every frame is saved
+  on the phone before it is sent; ids are client-generated and the server
+  treats repeats as done. The queue gives up ONLY on 422/413 — routes must
+  return 422 for validation and 5xx for storage/DB trouble, never a 4xx that
+  would make the phone drop a shot.
+
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000
 - `npm run build` - Production build

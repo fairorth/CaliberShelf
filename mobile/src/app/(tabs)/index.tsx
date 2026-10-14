@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { FeelPicker } from "../../components/feel-picker"
 import { RecentStrip } from "../../components/recent-strip"
 import { ScreenHeader } from "../../components/screen-header"
+import { ShowModeCard } from "../../components/show-mode-card"
 import { UpdateBanner } from "../../components/update-banner"
 import { useApp } from "../../lib/app-context"
 import { useWears } from "../../lib/use-wears"
@@ -61,6 +62,8 @@ export default function TodayScreen() {
         refreshControl={<RefreshControl refreshing={false} onRefresh={() => void w.reload()} />}
       >
         {w.error && <Text style={styles.error}>{w.error}</Text>}
+
+        <ShowModeCard />
 
         {/* On the wrist */}
         {todays.map((entry) => (

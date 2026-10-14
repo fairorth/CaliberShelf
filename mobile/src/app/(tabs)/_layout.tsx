@@ -1,6 +1,7 @@
 import { router, Tabs } from "expo-router"
 import { Camera, Ellipsis, LayoutGrid, Scale, Sun } from "lucide-react-native"
 import { Pressable, StyleSheet, View } from "react-native"
+import { useShowMode } from "../../lib/show-mode"
 import { color, text } from "../../theme"
 
 /**
@@ -9,6 +10,9 @@ import { color, text } from "../../theme"
  * that opens Identify full-screen over whatever tab you're on.
  */
 export default function TabsLayout() {
+  // In Show mode the camera button goes straight to Admired capture — at a
+  // show that is the job; Identify is still on the Today tab.
+  const show = useShowMode()
   return (
     <Tabs
       screenOptions={{
@@ -39,10 +43,16 @@ export default function TabsLayout() {
           tabBarButton: () => (
             <View style={styles.cameraSlot}>
               <Pressable
-                onPress={() => router.push({ pathname: "/camera", params: { mode: "identify" } })}
-                style={({ pressed }) => [styles.cameraButton, pressed && { transform: [{ scale: 0.94 }] }]}
+                onPress={() =>
+                  router.push({ pathname: "/camera", params: { mode: show.on ? "admired" : "identify" } })
+                }
+                style={({ pressed }) => [
+                  styles.cameraButton,
+                  show.on && styles.cameraButtonShow,
+                  pressed && { transform: [{ scale: 0.94 }] },
+                ]}
                 accessibilityRole="button"
-                accessibilityLabel="Identify a watch with the camera"
+                accessibilityLabel={show.on ? `Admire a watch at ${show.event}` : "Identify a watch with the camera"}
               >
                 <Camera color={color.brassForeground} size={26} aria-hidden />
               </Pressable>
@@ -75,4 +85,6 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: color.card,
   },
+  // Show mode: a brass ring around the button says the camera is in Admired.
+  cameraButtonShow: { borderColor: color.brass, backgroundColor: color.foreground },
 })

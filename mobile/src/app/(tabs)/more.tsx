@@ -4,6 +4,7 @@ import { useCallback, useState } from "react"
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native"
 import { CameraSettingsSection } from "../../components/camera-settings-section"
 import { ScreenHeader } from "../../components/screen-header"
+import { ShowModeSection } from "../../components/show-mode-section"
 import { useApp } from "../../lib/app-context"
 import { canUseBiometrics, isLockEnabled, setLockEnabled, unlock } from "../../lib/app-lock"
 import { API_BASE } from "../../lib/config"
@@ -70,6 +71,8 @@ export default function MoreScreen() {
             />
           </View>
         </View>
+
+        <ShowModeSection />
 
         <CameraSettingsSection />
 

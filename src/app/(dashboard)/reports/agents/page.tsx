@@ -21,6 +21,7 @@ const AGENT_META: Record<string, { label: string; icon: LucideIcon }> = {
   "chronoscout-sync": { label: "ChronoScout Sync", icon: BookOpen },
   "spec-fetch": { label: "Spec Autofill", icon: Sparkles },
   identify: { label: "Photo Identify", icon: ScanEye },
+  "placard-read": { label: "Placard Reader", icon: ScanEye },
 }
 const agentLabel = (a: string) => AGENT_META[a]?.label ?? a
 const AgentIcon = ({ agent }: { agent: string }) => {

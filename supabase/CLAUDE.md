@@ -5,6 +5,10 @@
 - Each migration is a single logical change (one table or set of related policies)
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
+- **`00056_create_admired_watches.sql` APPLIED 2026-10-14** (user confirmed). Latest applied migration is now 00056.
+  Admired: `admired_watches` + `admired_photos` (client-generated UUID PKs so
+  the phone's offline queue can retry), owner-only RLS on both; photos in the
+  watch-photos bucket under `{user_id}/admired/{admired_id}/`.
 - **`00055_add_guide_watch.sql` APPLIED 2026-10-09** (user confirmed). Adds
   `watches.is_guide_watch BOOLEAN NOT NULL DEFAULT false`, backfilled true for
   every watch linked from `guide_entries` (36: 10 owned, 26 wish list). Latest

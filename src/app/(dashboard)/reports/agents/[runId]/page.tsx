@@ -20,6 +20,7 @@ const AGENT_LABEL: Record<string, string> = {
   "chronoscout-sync": "ChronoScout Sync",
   "spec-fetch": "Spec Autofill",
   identify: "Photo Identify",
+  "placard-read": "Placard Reader",
 }
 
 function fmtDuration(ms: number | null): string {
