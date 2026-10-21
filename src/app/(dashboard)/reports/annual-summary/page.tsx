@@ -28,17 +28,31 @@ function csv(rows: Array<Array<string | number | null>>): string {
   return rows.map((r) => r.map(csvCell).join(",")).join("\n")
 }
 
+function sumOf<T>(rows: T[], f: (r: T) => number): number {
+  return rows.reduce((t, r) => t + f(r), 0)
+}
+
 function acquisitionsCsv(s: AnnualSummary): string {
   return csv([
-    ["purchase_date", "watch", "purchase_price", "acq_costs", "cost_basis"],
+    ["purchase_date", "watch", "purchase_price", "sales_tax", "import_fees", "shipping", "cost_basis"],
     ...s.acquisitions.rows.map((r) => [
       r.purchaseDate,
       r.name,
       r.purchasePriceCents,
-      r.acqCostsCents,
+      r.salesTaxCents,
+      r.importFeesCents,
+      r.shippingCents,
       r.costBasisCents,
     ]),
-    ["total", "", null, null, s.acquisitions.totalInvestedCents],
+    [
+      "total",
+      "",
+      null,
+      sumOf(s.acquisitions.rows, (r) => r.salesTaxCents),
+      sumOf(s.acquisitions.rows, (r) => r.importFeesCents),
+      sumOf(s.acquisitions.rows, (r) => r.shippingCents),
+      s.acquisitions.totalInvestedCents,
+    ],
   ])
 }
 
@@ -175,10 +189,10 @@ export default async function AnnualSummaryPage({
     (sum, r) => sum + (r.purchasePriceCents ?? 0),
     0
   )
-  const acqCostsCents = summary.acquisitions.rows.reduce(
-    (sum, r) => sum + r.acqCostsCents,
-    0
-  )
+  // Each on its own line: sales tax is what tax time asks for.
+  const salesTaxCents = sumOf(summary.acquisitions.rows, (r) => r.salesTaxCents)
+  const importFeesCents = sumOf(summary.acquisitions.rows, (r) => r.importFeesCents)
+  const shippingCents = sumOf(summary.acquisitions.rows, (r) => r.shippingCents)
   const soldBasisCents = summary.sales.rows.reduce(
     (sum, r) => sum + r.costBasisCents,
     0
@@ -246,11 +260,9 @@ export default async function AnnualSummaryPage({
               } bought`}
               value={formatCurrency(purchasesCents)}
             />
-            <Line
-              label="Acquisition costs — shipping, tax, duty"
-              value={formatCurrency(acqCostsCents)}
-              secondary
-            />
+            <Line label="Sales tax paid" value={formatCurrency(salesTaxCents)} secondary />
+            <Line label="Import fees — duty, customs, brokerage" value={formatCurrency(importFeesCents)} secondary />
+            <Line label="Shipping" value={formatCurrency(shippingCents)} secondary />
             <Line
               label="Total invested"
               value={formatCurrency(summary.acquisitions.totalInvestedCents)}

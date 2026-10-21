@@ -24,6 +24,9 @@ export interface NewWatchInput {
   box?: string | null
   /** YYYY-MM-DD. */
   purchase_date?: string | null
+  /** Sales tax / import fees paid on the purchase (count toward cost basis). */
+  acq_tax_cents?: number | null
+  acq_duty_cents?: number | null
 }
 
 export type CreateWatchResult = { watchId: string; photoError?: string } | { error: string }
@@ -49,6 +52,8 @@ export async function createWatchFor(
         : {}),
       ...(input.box ? { box: input.box } : {}),
       ...(input.purchase_date ? { purchase_date: input.purchase_date } : {}),
+      ...(input.acq_tax_cents ? { acq_tax_cents: input.acq_tax_cents } : {}),
+      ...(input.acq_duty_cents ? { acq_duty_cents: input.acq_duty_cents } : {}),
     })
     .select("id")
     .single()

@@ -69,6 +69,10 @@ export default function AddWatchScreen() {
   )
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [price, setPrice] = useState("")
+  // Paid on top of the price — sales tax (tax time) and import fees (duty,
+  // customs, brokerage). Both count toward cost basis.
+  const [salesTax, setSalesTax] = useState("")
+  const [importFees, setImportFees] = useState("")
   // Defaults to today (the phone's local day): adding from the phone is
   // usually the day it arrives. Editable; not sent for wish list.
   const [purchaseDate, setPurchaseDate] = useState(localDateIso())
@@ -123,7 +127,12 @@ export default function AddWatchScreen() {
         const prepared = await prepareFrame(photoUri, COVER_LONG_EDGE, { compress: 0.9, base64: true })
         image_base64 = prepared.base64
       }
-      const cents = price.trim() ? Math.round(parseFloat(price.replace(/[^0-9.]/g, "")) * 100) : null
+      const toCents = (v: string) => {
+        if (!v.trim()) return null
+        const c = Math.round(parseFloat(v.replace(/[^0-9.]/g, "")) * 100)
+        return Number.isFinite(c) ? c : null
+      }
+      const cents = toCents(price)
       const res = await addWatch({
         ...(brandId ? { brand_id: brandId } : { new_brand_name: newBrand ?? "" }),
         model: model.trim(),
@@ -131,7 +140,9 @@ export default function AddWatchScreen() {
         reference_unverified: !!reference.trim() && referenceFromPhoto,
         category_id: categoryId!,
         ownership,
-        purchase_price_cents: cents != null && Number.isFinite(cents) ? cents : null,
+        purchase_price_cents: cents,
+        acq_tax_cents: ownership === "wish" ? null : toCents(salesTax),
+        acq_duty_cents: ownership === "wish" ? null : toCents(importFees),
         box: ownership === "wish" ? null : box,
         purchase_date: ownership === "wish" || !purchaseDate ? null : purchaseDate,
         ...(image_base64 ? { image_base64, media_type: "image/jpeg" as const } : {}),
@@ -249,6 +260,36 @@ export default function AddWatchScreen() {
             keyboardType="decimal-pad"
           />
         </Field>
+
+        {/* Paid on top of the price — not for wish list */}
+        {ownership !== "wish" && (
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Field label="Sales tax" note="Optional">
+                <TextInput
+                  style={[styles.input, styles.inputText]}
+                  value={salesTax}
+                  onChangeText={(t) => setSalesTax(t.replace(/[^0-9.]/g, ""))}
+                  placeholder="0"
+                  placeholderTextColor={color.mutedForeground}
+                  keyboardType="decimal-pad"
+                />
+              </Field>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Field label="Import fees" note="Optional">
+                <TextInput
+                  style={[styles.input, styles.inputText]}
+                  value={importFees}
+                  onChangeText={(t) => setImportFees(t.replace(/[^0-9.]/g, ""))}
+                  placeholder="0"
+                  placeholderTextColor={color.mutedForeground}
+                  keyboardType="decimal-pad"
+                />
+              </Field>
+            </View>
+          </View>
+        )}
 
         {/* Purchase date — not for wish list: it hasn't been bought */}
         {ownership !== "wish" && (

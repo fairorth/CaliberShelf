@@ -635,8 +635,12 @@ export async function getForSaleReport(): Promise<ForSaleReport> {
 export interface AcquisitionRow extends SaleWatchRef {
   purchaseDate: string
   purchasePriceCents: number | null
-  /** shipping + tax + duty */
+  /** shipping + sales tax + import fees */
   acqCostsCents: number
+  salesTaxCents: number
+  /** duty, customs, brokerage (acq_duty_cents) */
+  importFeesCents: number
+  shippingCents: number
   costBasisCents: number
 }
 
@@ -747,6 +751,9 @@ export async function getAnnualSummary(
       purchasePriceCents: w.purchase_price_cents,
       acqCostsCents:
         (w.acq_shipping_cents ?? 0) + (w.acq_tax_cents ?? 0) + (w.acq_duty_cents ?? 0),
+      salesTaxCents: w.acq_tax_cents ?? 0,
+      importFeesCents: w.acq_duty_cents ?? 0,
+      shippingCents: w.acq_shipping_cents ?? 0,
       costBasisCents: w.cost_basis_cents,
     }))
 

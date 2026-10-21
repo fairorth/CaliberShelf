@@ -781,9 +781,9 @@ export function WatchForm({
                 <div className="grid gap-3 sm:grid-cols-3">
                   {(
                     [
+                      ["acq_tax", "Sales tax", watch?.acq_tax_cents],
+                      ["acq_duty", "Import fees (duty, customs, brokerage)", watch?.acq_duty_cents],
                       ["acq_shipping", "Shipping", watch?.acq_shipping_cents],
-                      ["acq_tax", "Tax", watch?.acq_tax_cents],
-                      ["acq_duty", "Duty", watch?.acq_duty_cents],
                     ] as const
                   ).map(([name, label, cents]) => (
                     <div key={name} className="space-y-1">
@@ -808,7 +808,7 @@ export function WatchForm({
                 className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-brass"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                Add acquisition costs (shipping, tax, duty)
+                Add sales tax, import fees, shipping
               </button>
             )}
           </div>

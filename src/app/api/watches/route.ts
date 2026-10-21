@@ -53,6 +53,8 @@ export async function POST(request: Request) {
       box: d.ownership === "wish" ? null : (d.box ?? null),
       // A wish-list watch hasn't been bought, so it has no purchase date.
       purchase_date: d.ownership === "wish" ? null : (d.purchase_date ?? null),
+      acq_tax_cents: d.ownership === "wish" ? null : (d.acq_tax_cents ?? null),
+      acq_duty_cents: d.ownership === "wish" ? null : (d.acq_duty_cents ?? null),
     },
     photo
   )

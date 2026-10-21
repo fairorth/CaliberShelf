@@ -36,6 +36,11 @@ export const phoneAddWatchSchema = z
       .optional(),
     /** For wish-list entries, the estimated future price (as on the web). */
     purchase_price_cents: z.number().int().min(0).nullable().optional(),
+    /** Sales tax and import fees (duty, customs, brokerage) paid on the
+     *  purchase — watches.acq_tax_cents / acq_duty_cents, part of cost basis.
+     *  Ignored for wish-list entries. */
+    acq_tax_cents: z.number().int().min(0).nullable().optional(),
+    acq_duty_cents: z.number().int().min(0).nullable().optional(),
     box: z.string().trim().max(40).nullable().optional(),
     /** The cover photo, as from the camera (see photo-upload.ts for why base64). */
     image_base64: z.string().max(PHONE_PHOTO_MAX_BASE64).optional(),

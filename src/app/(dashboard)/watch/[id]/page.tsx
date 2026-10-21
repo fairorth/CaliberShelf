@@ -258,9 +258,9 @@ export default async function WatchViewPage({
 
   const acquisitionCosts = (
     [
+      ["Sales tax", watch.acq_tax_cents],
+      ["Import fees", watch.acq_duty_cents],
       ["Shipping", watch.acq_shipping_cents],
-      ["Tax", watch.acq_tax_cents],
-      ["Duty", watch.acq_duty_cents],
     ] as const
   ).filter(([, cents]) => (cents ?? 0) > 0)
 
