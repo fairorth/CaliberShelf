@@ -5,6 +5,10 @@
 - Each migration is a single logical change (one table or set of related policies)
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
+- **`00057_create_rate_my_watches.sql` and `00058_rename_daily_category.sql`
+  APPLIED 2026-10-21** (user confirmed). Latest applied migration is now 00058. 00057: `raters`, `rating_sessions`,
+  `rating_picks` (client UUID PKs, owner-only RLS). 00058: data change —
+  category "Daily" → "Tool / Field" (id kept).
 - **`00056_create_admired_watches.sql` APPLIED 2026-10-14** (user confirmed). Latest applied migration is now 00056.
   Admired: `admired_watches` + `admired_photos` (client-generated UUID PKs so
   the phone's offline queue can retry), owner-only RLS on both; photos in the

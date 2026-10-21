@@ -26,6 +26,32 @@ type PhotoRow = {
   image_height: number | null
 }
 
+/** Just a watch's photos, cover first — Rate My Watches' "Show me more". */
+export async function fetchWatchPhotos(watchId: string): Promise<WatchDetail["photos"]> {
+  const { data, error } = await supabase
+    .from("watch_photos")
+    .select("id, storage_path, is_cover, sort_order, display_order, image_width, image_height")
+    .eq("watch_id", watchId)
+  if (error) throw new Error(error.message)
+  return signPhotos((data ?? []) as PhotoRow[])
+}
+
+async function signPhotos(rows: PhotoRow[]): Promise<WatchDetail["photos"]> {
+  const ordered = [...rows].sort((a, b) => {
+    if (a.is_cover !== b.is_cover) return a.is_cover ? -1 : 1
+    return (a.sort_order ?? a.display_order) - (b.sort_order ?? b.display_order)
+  })
+  const signed = await Promise.all(
+    ordered.map(async (p) => {
+      const { data } = await supabase.storage
+        .from(BUCKET)
+        .createSignedUrl(p.storage_path, 3600, { transform: CARD_TRANSFORM })
+      return data?.signedUrl ? { id: p.id, url: data.signedUrl, width: p.image_width, height: p.image_height } : null
+    })
+  )
+  return signed.filter((x): x is NonNullable<typeof x> => x != null)
+}
+
 /**
  * One watch's photos (cover first, then the owner's order — sort_order,
  * falling back to display_order, as on the web) and its keep judgements.
@@ -41,25 +67,11 @@ export async function fetchWatchDetail(watchId: string): Promise<WatchDetail> {
   if (pErr) throw new Error(pErr.message)
   if (wErr) throw new Error(wErr.message)
 
-  const ordered = ((photos ?? []) as PhotoRow[]).sort((a, b) => {
-    if (a.is_cover !== b.is_cover) return a.is_cover ? -1 : 1
-    return (a.sort_order ?? a.display_order) - (b.sort_order ?? b.display_order)
-  })
-  // The transform is baked into each signed URL, so they are signed one by one.
-  const signed = await Promise.all(
-    ordered.map(async (p) => {
-      const { data } = await supabase.storage
-        .from(BUCKET)
-        .createSignedUrl(p.storage_path, 3600, { transform: CARD_TRANSFORM })
-      return data?.signedUrl
-        ? { id: p.id, url: data.signedUrl, width: p.image_width, height: p.image_height }
-        : null
-    })
-  )
+  const signed = await signPhotos((photos ?? []) as PhotoRow[])
 
   const w = watch as { attachment: WatchDetail["attachment"]; keep_decision: KeepDecision | null; sentimental: boolean | null }
   return {
-    photos: signed.filter((x): x is NonNullable<typeof x> => x != null),
+    photos: signed,
     attachment: w.attachment,
     keepDecision: w.keep_decision,
     sentimental: !!w.sentimental,

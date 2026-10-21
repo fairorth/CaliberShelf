@@ -13,6 +13,11 @@ export interface PhoneWatch {
   /** When it was added to TenTenLoupe (ISO timestamp) — not when it was bought. */
   createdAt: string
   purchasePriceCents: number | null
+  /** Its category — Rate My Watches' segment. */
+  categoryId: string | null
+  categoryName: string | null
+  /** How much the owner loves it (Max..None), for the "agree with Marc" fallback. */
+  attachment: "max" | "high" | "medium" | "low" | "none" | null
 }
 
 type Row = {
@@ -25,6 +30,8 @@ type Row = {
   sale_status: string
   created_at: string
   purchase_price_cents: number | null
+  attachment: PhoneWatch["attachment"]
+  categories: { id: string; name: string } | null
   brands: { name: string } | null
   watch_photos: Array<{ thumb_path: string | null; is_cover: boolean }> | null
 }
@@ -40,7 +47,7 @@ export async function fetchWatches(): Promise<PhoneWatch[]> {
   const { data, error } = await supabase
     .from("watches")
     .select(
-      "id, model, nickname, reference_number, is_wishlist, is_coming_soon, sale_status, created_at, purchase_price_cents, brands(name), watch_photos(thumb_path, is_cover)"
+      "id, model, nickname, reference_number, is_wishlist, is_coming_soon, sale_status, created_at, purchase_price_cents, attachment, categories(id, name), brands(name), watch_photos(thumb_path, is_cover)"
     )
   if (error) throw new Error(error.message)
   // Nested joins infer loosely — cast to the real shape (same as the web).
@@ -80,6 +87,9 @@ export async function fetchWatches(): Promise<PhoneWatch[]> {
       thumbUrl: thumb ? (urlByPath.get(thumb) ?? null) : null,
       createdAt: r.created_at,
       purchasePriceCents: r.purchase_price_cents,
+      categoryId: r.categories?.id ?? null,
+      categoryName: r.categories?.name ?? null,
+      attachment: r.attachment,
     }
   })
   const rank = { owned: 0, coming: 1, wish: 2, sold: 3 } as const

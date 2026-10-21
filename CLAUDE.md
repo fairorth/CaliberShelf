@@ -387,6 +387,26 @@ service role, which bypasses RLS.
   return 422 for validation and 5xx for storage/DB trouble, never a 4xx that
   would make the phone drop a shot.
 
+## Rate My Watches (v1.11.15, migration 00057) — friends rank the collection
+- iPhone **Rate** tab → "Start a game" opens `/rate-game`, LOCKED (full screen,
+  no swipe-back; only Face ID / passcode exits). A friend taps the preferred of
+  two watches, one SEGMENT (= category) at a time; owned + coming soon only,
+  never wish list or sold; NO prices shown. Then a reveal (podium, "you agree
+  with <owner>", hot take), next segment, and Best in Show (top 3 per segment
+  played).
+- **`src/lib/rating.ts` is the ONE model** (pure, shared with the phone):
+  Bradley–Terry fit (MM, light prior, ties = half a win), adaptive pair choice
+  (least-seen first, then front-runners, near-equals, no repeats, random
+  sides), the stop rule (every watch ≥3 comparisons, ranking and podium
+  settled, cap 4/watch), pairwise agreement, hot take. Simulated: matches
+  random pairs' accuracy with 3–4× fewer picks. Never re-rank elsewhere.
+- Tables `raters` (one `is_owner` — the yardstick), `rating_sessions` (frozen
+  `result`, latest per rater per segment counts), `rating_picks`; client
+  UUIDs, saved on segment completion, retried from the phone if offline.
+- Web **Reports → Ratings** (`/reports/ratings?rater=`): Everyone = consensus
+  (all raters' latest picks re-fitted) + most divisive; per rater = rankings,
+  Best in Show, agreement with the owner.
+
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000
 - `npm run build` - Production build
@@ -398,8 +418,8 @@ service role, which bypasses RLS.
 ## Taxonomy, Tiers & Config
 Three separate axes — never muddle them (full rationale in docs/data-model.md):
 - **Category** = design archetype, single-select, user-managed rows in
-  `categories` (NOT an enum). Currently: Dress, Sport, Chronograph, Daily,
-  Horology.
+  `categories` (NOT an enum). Currently: Dress, Sport, Chronograph,
+  Tool / Field (was "Daily" until 00058 — divers live here), Horology.
 - **Complications** = what the movement does, multi-select, stored
   comma-joined in `watches.complication`. `KNOWN_COMPLICATIONS` in
   `src/lib/validations/watch.ts`: Date, DTZ, Power Reserve, Annual Calendar,

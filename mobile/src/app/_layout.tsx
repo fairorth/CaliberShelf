@@ -41,6 +41,9 @@ function Shell() {
         <Stack.Protected guard={!!session}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="camera" options={{ presentation: "fullScreenModal", animation: "fade" }} />
+          {/* Rate My Watches is LOCKED while a friend plays: full screen, no
+              swipe-back — the only way out is Face ID (rate-game.tsx). */}
+          <Stack.Screen name="rate-game" options={{ presentation: "fullScreenModal", gestureEnabled: false }} />
           <Stack.Screen
             name="add"
             options={{

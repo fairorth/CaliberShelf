@@ -159,6 +159,13 @@ export default async function ReportsPage() {
       available: true,
     },
     {
+      slug: "ratings",
+      title: "Ratings",
+      description:
+        "Rate My Watches from the iPhone — each friend's ranking per segment, Best in Show, agreement with you, and the crowd's consensus.",
+      available: true,
+    },
+    {
       slug: "valuations",
       title: "Watch Valuations",
       description:
