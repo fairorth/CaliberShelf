@@ -5,8 +5,12 @@ import { Trophy } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatusPill } from "@/components/ui/status-pill"
 import { getRatingsReport } from "@/lib/queries/ratings"
-import type { SessionView } from "@/lib/queries/ratings"
+import type { RankRow, SessionView } from "@/lib/queries/ratings"
+import { getTierBands } from "@/lib/queries/tier-config"
 import { getWatches } from "@/lib/queries/watches"
+import { SEGMENT_SCHEMES, segmentSchemeLabels, tierLabelForKey } from "@/lib/rating-segments"
+import type { SegmentScheme } from "@/lib/rating-segments"
+import type { TierBand } from "@/lib/tiers"
 import type { WatchWithCover } from "@/lib/types/watch"
 import { cn } from "@/lib/utils"
 
@@ -20,14 +24,33 @@ export const dynamic = "force-dynamic"
  * Ratings — Rate My Watches results (00057). "Everyone" is the consensus:
  * every rater's latest picks per segment, re-fitted together. Pick a rater
  * for their own rankings, Best in Show and agreement with the owner. The
- * rater lives in the URL (?rater=) so a view is linkable.
+ * rater and the segment scheme (Type / Tier / Type + Tier) live in the URL
+ * (?rater=, ?scheme=) so a view is linkable.
+ *
+ * The game names tiers neutrally ("Tier 2") so friends never see a price;
+ * this report is the owner's, so it adds the real tier label beside it.
  */
-export default async function RatingsPage({ searchParams }: { searchParams: Promise<{ rater?: string }> }) {
-  const { rater: raterParam } = await searchParams
-  const [report, watches] = await Promise.all([getRatingsReport(), getWatches()])
+export default async function RatingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ rater?: string; scheme?: string }>
+}) {
+  const { rater: raterParam, scheme: schemeParam } = await searchParams
+  const [report, watches, bands] = await Promise.all([getRatingsReport(), getWatches(), getTierBands()])
   const byId = new Map(watches.map((w) => [w.id, w]))
   const selected = report.raters.find((r) => r.id === raterParam) ?? null
   const owner = report.raters.find((r) => r.isOwner) ?? null
+  const scheme: SegmentScheme = (SEGMENT_SCHEMES as readonly string[]).includes(schemeParam ?? "")
+    ? (schemeParam as SegmentScheme)
+    : "type"
+  const hrefFor = (raterId: string | null, sc: SegmentScheme) => {
+    const q = new URLSearchParams()
+    if (raterId) q.set("rater", raterId)
+    if (sc !== "type") q.set("scheme", sc)
+    const qs = q.toString()
+    return qs ? `/reports/ratings?${qs}` : "/reports/ratings"
+  }
+  const consensus = report.consensus.filter((c) => c.scheme === scheme)
 
   return (
     <div className="space-y-6">
@@ -40,26 +63,42 @@ export default async function RatingsPage({ searchParams }: { searchParams: Prom
       </div>
 
       {report.raters.length > 0 && (
-        <nav aria-label="Rater" className="flex flex-wrap gap-2">
-          <RaterLink href="/reports/ratings" active={!selected}>
-            Everyone
-          </RaterLink>
-          {report.raters.map((r) => (
-            <RaterLink key={r.id} href={`/reports/ratings?rater=${r.id}`} active={selected?.id === r.id}>
-              {r.name}
-              {r.isOwner ? " (you)" : ""}
+        <div className="space-y-3">
+          <nav aria-label="Rater" className="flex flex-wrap gap-2">
+            <RaterLink href={hrefFor(null, scheme)} active={!selected}>
+              Everyone
             </RaterLink>
-          ))}
-        </nav>
+            {report.raters.map((r) => (
+              <RaterLink key={r.id} href={hrefFor(r.id, scheme)} active={selected?.id === r.id}>
+                {r.name}
+                {r.isOwner ? " (you)" : ""}
+              </RaterLink>
+            ))}
+          </nav>
+          <nav aria-label="Segments by" className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground">Segments by</span>
+            {SEGMENT_SCHEMES.map((sc) => (
+              <RaterLink key={sc} href={hrefFor(selected?.id ?? null, sc)} active={scheme === sc}>
+                {segmentSchemeLabels[sc]}
+              </RaterLink>
+            ))}
+          </nav>
+          <p className="text-xs text-muted-foreground">
+            Score: the model&rsquo;s strength, 1500 = an average watch in the segment. Beside it, the chance it
+            beats the watch below in a pick &mdash; <span className="text-foreground">clear</span> when that gap is
+            bigger than the model&rsquo;s uncertainty, <span className="text-foreground">close</span> when more picks
+            could swap them.
+          </p>
+        </div>
       )}
 
       {!selected ? (
         <div className="grid gap-4 lg:grid-cols-2">
-          {report.consensus.map((c) => (
-            <Card key={c.key}>
+          {consensus.map((c) => (
+            <Card key={c.segmentKey}>
               <CardHeader>
                 <CardTitle className="flex items-baseline justify-between gap-2">
-                  <span className="font-display text-md">{c.segmentName}</span>
+                  <SegmentTitle name={c.segmentName} segmentKey={c.segmentKey} bands={bands} />
                   <span className="font-mono text-xs font-normal text-muted-foreground">
                     {c.raterCount} {c.raterCount === 1 ? "rater" : "raters"}
                   </span>
@@ -75,14 +114,15 @@ export default async function RatingsPage({ searchParams }: { searchParams: Prom
               </CardContent>
             </Card>
           ))}
-          {report.consensus.length === 0 && report.raters.length > 0 && (
-            <p className="text-sm text-muted-foreground">No segments completed yet.</p>
+          {consensus.length === 0 && report.raters.length > 0 && (
+            <p className="text-sm text-muted-foreground">No {segmentSchemeLabels[scheme]} segments completed yet.</p>
           )}
         </div>
       ) : (
         <RaterView
-          sessions={report.sessions.filter((s) => s.raterId === selected.id)}
+          sessions={report.sessions.filter((s) => s.raterId === selected.id && s.scheme === scheme)}
           byId={byId}
+          bands={bands}
           ownerName={owner?.name ?? "the owner"}
           isOwner={selected.isOwner}
         />
@@ -94,11 +134,13 @@ export default async function RatingsPage({ searchParams }: { searchParams: Prom
 function RaterView({
   sessions,
   byId,
+  bands,
   ownerName,
   isOwner,
 }: {
   sessions: SessionView[]
   byId: Map<string, WatchWithCover>
+  bands: TierBand[]
   ownerName: string
   isOwner: boolean
 }) {
@@ -128,7 +170,7 @@ function RaterView({
           <Card key={s.id}>
             <CardHeader>
               <CardTitle className="flex items-baseline justify-between gap-2">
-                <span className="font-display text-md">{s.segmentName}</span>
+                <SegmentTitle name={s.segmentName} segmentKey={s.segmentKey} bands={bands} />
                 <span className="flex items-center gap-2">
                   {s.agreementWithOwner !== null && !isOwner && (
                     <StatusPill tone="outline" title={`Share of pairs ordered the same as ${ownerName}`}>
@@ -152,13 +194,18 @@ function RaterView({
   )
 }
 
-function RankList({
-  ranking,
-  byId,
-}: {
-  ranking: Array<{ watchId: string; rank: number }>
-  byId: Map<string, WatchWithCover>
-}) {
+/** The segment's game name, plus (tier segments) the owner's real tier label. */
+function SegmentTitle({ name, segmentKey, bands }: { name: string; segmentKey: string; bands: TierBand[] }) {
+  const tier = segmentKey.includes("tier:") ? tierLabelForKey(segmentKey, bands) : null
+  return (
+    <span className="min-w-0">
+      <span className="font-display text-md">{name}</span>
+      {tier && <span className="ml-2 font-sans text-xs font-normal text-muted-foreground">{tier}</span>}
+    </span>
+  )
+}
+
+function RankList({ ranking, byId }: { ranking: RankRow[]; byId: Map<string, WatchWithCover> }) {
   return (
     <ol className="divide-y divide-border">
       {ranking.map((r) => {
@@ -178,6 +225,12 @@ function RankList({
             ) : (
               <span className="text-sm text-muted-foreground">A watch no longer in the collection</span>
             )}
+            <span className="ml-auto flex shrink-0 items-baseline gap-3 font-mono text-xs tabular-nums text-muted-foreground">
+              <span title="Score: 1500 is an average watch in this segment">{Math.round(r.score)}</span>
+              <span className="w-20 text-right" title={r.vsNext ? `Chance it beats #${r.rank + 1} in a pick` : undefined}>
+                {r.vsNext ? `${Math.round(r.vsNext.winChance * 100)}% · ${r.vsNext.clear ? "clear" : "close"}` : ""}
+              </span>
+            </span>
           </li>
         )
       })}

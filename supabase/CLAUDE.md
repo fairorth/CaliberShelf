@@ -5,6 +5,10 @@
 - Each migration is a single logical change (one table or set of related policies)
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
+- **`00059_rating_segment_schemes.sql` APPLIED 2026-10-21** (user confirmed).
+  Latest applied migration is now 00059. Adds `rating_sessions.segment_scheme`
+  (type|tier|type_tier, CHECK) and `segment_key` (backfilled from
+  category_id / 'final'); the v1.11.16 report and phone both read them.
 - **`00057_create_rate_my_watches.sql` and `00058_rename_daily_category.sql`
   APPLIED 2026-10-21** (user confirmed). Latest applied migration is now 00058. 00057: `raters`, `rating_sessions`,
   `rating_picks` (client UUID PKs, owner-only RLS). 00058: data change —

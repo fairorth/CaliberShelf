@@ -1,9 +1,11 @@
 import { router, useFocusEffect } from "expo-router"
-import { Trophy } from "lucide-react-native"
+import { Camera, Trophy } from "lucide-react-native"
 import { useCallback, useState } from "react"
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { ScreenHeader } from "../../components/screen-header"
+import { useApp } from "../../lib/app-context"
+import { startCasebackRun, watchesMissingCaseback } from "../../lib/caseback-run"
 import { supabase } from "../../lib/supabase"
 import { color, radius, text } from "../../theme"
 
@@ -22,6 +24,14 @@ interface RaterSummary {
 export default function RateScreen() {
   const insets = useSafeAreaInsets()
   const [raters, setRaters] = useState<RaterSummary[] | null>(null)
+  const { watches } = useApp()
+  // Owned watches with no Caseback photo — the game shows front AND back.
+  // Coming-soon watches aren't in hand, so they're left out of the run.
+  const [missingBack, setMissingBack] = useState<string[] | null>(null)
+  const ownedKey = (watches ?? [])
+    .filter((w) => w.status === "owned")
+    .map((w) => w.id)
+    .join(",")
 
   useFocusEffect(
     useCallback(() => {
@@ -46,6 +56,20 @@ export default function RateScreen() {
         })
     }, [])
   )
+  useFocusEffect(
+    useCallback(() => {
+      if (!ownedKey) return
+      watchesMissingCaseback(ownedKey.split(","))
+        .then(setMissingBack)
+        .catch(() => setMissingBack(null))
+    }, [ownedKey])
+  )
+
+  function startRun() {
+    if (!missingBack?.length) return
+    startCasebackRun(missingBack)
+    router.push({ pathname: "/camera", params: { watchId: missingBack[0], run: "caseback" } })
+  }
 
   const owner = raters?.find((r) => r.isOwner)
 
@@ -71,6 +95,19 @@ export default function RateScreen() {
             </Text>
           )}
         </View>
+
+        {missingBack && missingBack.length > 0 && (
+          <Pressable style={styles.card} onPress={startRun} accessibilityRole="button">
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <Camera color={color.brass} size={20} aria-hidden />
+              <Text style={styles.title}>Shoot missing casebacks</Text>
+            </View>
+            <Text style={styles.body2}>
+              {missingBack.length} owned watch{missingBack.length === 1 ? " has" : "es have"} no caseback photo, so the
+              game shows only the front. One after another, Caseback already chosen — tap Next to move on.
+            </Text>
+          </Pressable>
+        )}
 
         {raters && raters.length > 0 && (
           <View style={{ gap: 8 }}>

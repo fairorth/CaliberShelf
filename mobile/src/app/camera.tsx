@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import { Alert } from "react-native"
 import { useApp } from "../lib/app-context"
+import { casebackRunPosition } from "../lib/caseback-run"
 import { getShowMode } from "../lib/show-mode"
 import { logWear } from "../lib/wear"
 import { CameraScreen } from "../screens/camera-screen"
@@ -13,10 +14,17 @@ import type { CameraMode } from "../screens/camera-screen"
  *   when opened from Today: "Wearing it" leads).
  * /camera?watchId=…                  — shoot frames for that watch.
  * /camera?mode=admired               — Show mode: admired watches + placards.
+ * /camera?watchId=…&run=caseback     — the caseback run (Rate tab): Caseback
+ *   preselected, "Next" walks to the next watch missing one.
  * Full-screen over the tabs; Done returns to wherever you came from.
  */
 export default function CameraRoute() {
-  const { watchId, intent, mode: modeParam } = useLocalSearchParams<{ mode?: string; watchId?: string; intent?: string }>()
+  const { watchId, intent, mode: modeParam, run: runParam } = useLocalSearchParams<{
+    mode?: string
+    watchId?: string
+    intent?: string
+    run?: string
+  }>()
   const { watches, reloadWatches } = useApp()
 
   const watch = watchId ? watches?.find((w) => w.id === watchId) : undefined
@@ -25,6 +33,11 @@ export default function CameraRoute() {
     : modeParam === "admired"
       ? { kind: "admired", event: getShowMode().event }
       : { kind: "identify" }
+  const runAt = runParam === "caseback" && watch ? casebackRunPosition(watch.id) : null
+  const close = () => {
+    void reloadWatches() // new covers show up in the grids
+    router.back()
+  }
 
   return (
     <>
@@ -36,10 +49,17 @@ export default function CameraRoute() {
         mode={mode}
         watches={watches ?? []}
         intent={intent === "wear" ? "wear" : undefined}
-        onClose={() => {
-          void reloadWatches() // new covers show up in the grids
-          router.back()
-        }}
+        initialAngle={runAt ? "caseback" : undefined}
+        run={
+          runAt
+            ? {
+                label: `Caseback run · ${runAt.index + 1} of ${runAt.total}`,
+                nextLabel: runAt.nextId ? "Next →" : "Finish",
+                onNext: () => (runAt.nextId ? router.setParams({ watchId: runAt.nextId }) : close()),
+              }
+            : undefined
+        }
+        onClose={close}
         onSwitchToCapture={(w) => router.setParams({ mode: "capture", watchId: w.id })}
         onWearing={(w) => {
           void (async () => {

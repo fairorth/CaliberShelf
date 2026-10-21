@@ -1,22 +1,39 @@
 import * as Haptics from "expo-haptics"
 import { Image } from "expo-image"
 import { useEffect, useRef, useState } from "react"
-import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native"
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native"
+import type { LayoutChangeEvent } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { isSegmentComplete, nextPair, segmentProgress } from "@/lib/rating"
+import { isSegmentComplete, nextPair, pairKey, segmentProgress } from "@/lib/rating"
 import type { RatingPick } from "@/lib/rating"
 import type { PlayedPick } from "../../lib/rate-game"
 import { fetchWatchPhotos } from "../../lib/watch-detail"
 import type { PhoneWatch } from "../../lib/watches"
 import { color, radius, text, TOUCH } from "../../theme"
 
-type Photos = Array<{ id: string; url: string }>
+type Photo = { id: string; url: string; angle: string | null }
+/** A watch's photos split for the card: the front slot and the caseback slot. */
+type Slots = { front: Photo[]; back: Photo[] }
+
+/** Front = the cover first, then every other non-caseback shot; back = the
+ *  photos tagged Caseback (the exhibition back is half of a watch's case for
+ *  many collectors). */
+function splitPhotos(photos: Photo[]): Slots {
+  return {
+    front: photos.filter((p) => p.angle !== "caseback"),
+    back: photos.filter((p) => p.angle === "caseback"),
+  }
+}
 
 /**
- * The head-to-head: two watches side by side, tap the one you prefer. The
- * pair comes from the model (lib/rating.ts nextPair) after every tap; the
- * segment ends when the model says the ranking has settled. NO prices, no
- * values, nothing but the watches — the friend judges the watch.
+ * The head-to-head: two watches side by side, FRONT above BACK, tap the one
+ * you prefer. Swipe a photo to see that watch's other shots in place. The
+ * pair comes from the model (lib/rating.ts nextPair); the segment ends when
+ * it says the ranking has settled. NO prices — the friend judges the watch.
+ *
+ * Equal  = a tie (half a win each).
+ * Skip   = "I can't judge these" — records nothing, and the pair isn't
+ *          offered again while any other is left.
  */
 export function Duel({
   raterName,
@@ -35,49 +52,60 @@ export function Duel({
   const ids = watches.map((w) => w.id)
   const byId = new Map(watches.map((w) => [w.id, w]))
   const [picks, setPicks] = useState<PlayedPick[]>([])
+  const skipped = useRef(new Set<string>())
   const [pair, setPair] = useState<[string, string] | null>(() => nextPair(ids, []))
   const [chosen, setChosen] = useState<string | null>(null)
-  const [more, setMore] = useState<PhoneWatch | null>(null)
   const shownAt = useRef(Date.now())
   const startedAt = useRef(new Date().toISOString())
-  const photoCache = useRef(new Map<string, Photos>())
+  const photoCache = useRef(new Map<string, Slots>())
   const [, bump] = useState(0)
 
-  const asModel = (list: PlayedPick[]): RatingPick[] =>
-    list.map((p) => ({ a: p.left, b: p.right, winner: p.winner }))
+  const asModel = (list: PlayedPick[]): RatingPick[] => list.map((p) => ({ a: p.left, b: p.right, winner: p.winner }))
 
-  // Fetch the pair's photo sets in the background, for "Show me more".
+  // The pair's photo sets, fetched in the background (the cover thumbnail
+  // shows until they arrive).
   useEffect(() => {
     if (!pair) return
     for (const id of pair) {
       if (photoCache.current.has(id)) continue
       fetchWatchPhotos(id)
         .then((p) => {
-          photoCache.current.set(id, p)
+          photoCache.current.set(id, splitPhotos(p))
           bump((n) => n + 1)
         })
-        .catch(() => photoCache.current.set(id, []))
+        .catch(() => photoCache.current.set(id, { front: [], back: [] }))
     }
     shownAt.current = Date.now()
   }, [pair])
+
+  function advance(next: PlayedPick[]) {
+    if (isSegmentComplete(ids, asModel(next))) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      onComplete(next, startedAt.current)
+    } else {
+      setPair(nextPair(ids, asModel(next), Math.random, skipped.current))
+    }
+  }
 
   function choose(winner: string | null) {
     if (!pair || chosen) return
     void Haptics.impactAsync(winner ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light)
     const pick: PlayedPick = { left: pair[0], right: pair[1], winner, decidedMs: Date.now() - shownAt.current }
     const next = [...picks, pick]
-    setChosen(winner ?? "tie")
+    setChosen(winner ?? "equal")
     // A beat to see the choice land, then the next pair.
     setTimeout(() => {
       setChosen(null)
       setPicks(next)
-      if (isSegmentComplete(ids, asModel(next))) {
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        onComplete(next, startedAt.current)
-      } else {
-        setPair(nextPair(ids, asModel(next)))
-      }
+      advance(next)
     }, 220)
+  }
+
+  function skip() {
+    if (!pair || chosen) return
+    void Haptics.selectionAsync()
+    skipped.current.add(pairKey(pair[0], pair[1]))
+    setPair(nextPair(ids, asModel(picks), Math.random, skipped.current))
   }
 
   function undo() {
@@ -95,11 +123,17 @@ export function Duel({
   }
 
   const progress = segmentProgress(ids, asModel(picks))
+  const anyMore =
+    !!pair &&
+    pair.some((id) => {
+      const s = photoCache.current.get(id)
+      return !!s && (s.front.length > 1 || s.back.length > 1)
+    })
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 12 }]}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>
+        <Text style={styles.headerText} numberOfLines={1}>
           {raterName} · {segmentName}
         </Text>
         <Pressable onPress={quit} hitSlop={10}>
@@ -116,24 +150,17 @@ export function Duel({
         <View style={styles.pair}>
           {pair.map((id) => {
             const w = byId.get(id)!
-            const photos = photoCache.current.get(id)
+            const slots = photoCache.current.get(id)
             const isChosen = chosen === id
-            const isLoser = !!chosen && chosen !== "tie" && chosen !== id
+            const isLoser = !!chosen && chosen !== "equal" && chosen !== id
             return (
-              <View key={id} style={[styles.side, isLoser && { opacity: 0.35 }]}>
-                <Pressable
-                  onPress={() => choose(id)}
-                  style={({ pressed }) => [styles.card, (pressed || isChosen) && styles.cardChosen]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Prefer ${w.brand} ${w.model}`}
-                >
-                  {w.thumbUrl ? (
-                    <Image source={{ uri: w.thumbUrl }} style={styles.photo} contentFit="cover" transition={120} />
-                  ) : (
-                    <View style={[styles.photo, styles.noPhoto]}>
-                      <Text style={styles.noPhotoText}>No photo</Text>
-                    </View>
-                  )}
+              <View
+                key={id}
+                style={[styles.card, isChosen && styles.cardChosen, isLoser && { opacity: 0.35 }]}
+                accessibilityLabel={`${w.brand} ${w.model}`}
+              >
+                <WatchPhotos watch={w} slots={slots} onPick={() => choose(id)} />
+                <Pressable onPress={() => choose(id)} accessibilityRole="button" accessibilityLabel={`Prefer ${w.brand} ${w.model}`}>
                   <Text style={styles.brand} numberOfLines={1}>
                     {w.brand}
                   </Text>
@@ -141,107 +168,172 @@ export function Duel({
                     {w.model}
                   </Text>
                 </Pressable>
-                {photos && photos.length > 1 ? (
-                  <Pressable style={styles.more} onPress={() => setMore(w)}>
-                    <Text style={styles.moreText}>Show me more · {photos.length}</Text>
-                  </Pressable>
-                ) : (
-                  <View style={styles.moreSpacer} />
-                )}
               </View>
             )
           })}
         </View>
       )}
 
-      <Text style={styles.hint}>Tap the one you&rsquo;d rather wear</Text>
+      <Text style={styles.hint}>
+        Tap the one you&rsquo;d rather wear{anyMore ? " · swipe a photo for more" : ""}
+      </Text>
 
       <View style={{ flex: 1 }} />
-      <Pressable style={styles.tie} onPress={() => choose(null)}>
-        <Text style={styles.tieText}>Can&rsquo;t choose</Text>
-      </Pressable>
+      <View style={styles.actions}>
+        <Pressable style={styles.action} onPress={() => choose(null)} accessibilityHint="Counts as a tie">
+          <Text style={styles.actionText}>Equal</Text>
+        </Pressable>
+        <Pressable style={styles.action} onPress={skip} accessibilityHint="Records nothing for this pair">
+          <Text style={styles.actionText}>Skip</Text>
+        </Pressable>
+      </View>
       <Pressable onPress={undo} disabled={picks.length === 0} hitSlop={8} style={{ minHeight: TOUCH, justifyContent: "center" }}>
         <Text style={[styles.undo, picks.length === 0 && { opacity: 0.4 }]}>Undo last pick</Text>
       </Pressable>
-
-      <PhotoPager watch={more} photos={more ? (photoCache.current.get(more.id) ?? []) : []} onClose={() => setMore(null)} />
     </View>
   )
 }
 
-/** "Show me more": every photo of one watch, swipe through, then back. */
-function PhotoPager({ watch, photos, onClose }: { watch: PhoneWatch | null; photos: Photos; onClose: () => void }) {
-  const { width } = useWindowDimensions()
-  const insets = useSafeAreaInsets()
-  const [page, setPage] = useState(0)
-  useEffect(() => setPage(0), [watch])
+/** The front slot over the caseback slot; each swipes through its photos. */
+function WatchPhotos({ watch, slots, onPick }: { watch: PhoneWatch; slots: Slots | undefined; onPick: () => void }) {
+  const [width, setWidth] = useState(0)
+  const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)
+  // Until the full set arrives, the cover thumbnail stands in for the front.
+  const front: Photo[] = slots?.front.length
+    ? slots.front
+    : watch.thumbUrl
+      ? [{ id: "thumb", url: watch.thumbUrl, angle: null }]
+      : []
+  const back = slots?.back ?? []
   return (
-    <Modal visible={watch != null} animationType="fade" onRequestClose={onClose}>
-      <View style={[styles.pager, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }]}>
-        <View style={styles.header}>
-          <Text style={styles.pagerTitle} numberOfLines={1}>
-            {watch ? `${watch.brand} ${watch.model}` : ""}
-          </Text>
-          <Pressable onPress={onClose} hitSlop={10}>
-            <Text style={styles.headerLink}>Back to the choice</Text>
-          </Pressable>
-        </View>
-        <FlatList
-          data={photos}
-          keyExtractor={(p) => p.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}
-          renderItem={({ item }) => (
-            <Image source={{ uri: item.url }} style={{ width, height: "100%" }} contentFit="contain" />
+    <View onLayout={onLayout} style={{ gap: 6 }}>
+      {width > 0 && (
+        <>
+          <Pager photos={front} size={width} onPick={onPick} emptyLabel="No photo" />
+          {slots && back.length > 0 ? (
+            <Pager photos={back} size={width} onPick={onPick} label="Caseback" />
+          ) : slots ? (
+            <View style={[styles.noBack, { width }]}>
+              <Text style={styles.noBackText}>No caseback photo</Text>
+            </View>
+          ) : (
+            <View style={[styles.photoBox, { width, height: width }]} />
           )}
-        />
-        <Text style={styles.pagerCount}>
-          {photos.length ? `${page + 1} / ${photos.length}` : ""}
-        </Text>
-      </View>
-    </Modal>
+        </>
+      )}
+    </View>
+  )
+}
+
+function Pager({
+  photos,
+  size,
+  onPick,
+  label,
+  emptyLabel,
+}: {
+  photos: Photo[]
+  size: number
+  onPick: () => void
+  label?: string
+  emptyLabel?: string
+}) {
+  const [page, setPage] = useState(0)
+  if (photos.length === 0) {
+    return (
+      <Pressable onPress={onPick} style={[styles.photoBox, styles.center, { width: size, height: size }]}>
+        <Text style={styles.noBackText}>{emptyLabel ?? ""}</Text>
+      </Pressable>
+    )
+  }
+  return (
+    <View>
+      <FlatList
+        data={photos}
+        keyExtractor={(p) => p.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        style={{ width: size, height: size, borderRadius: radius.control }}
+        onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / size))}
+        renderItem={({ item }) => (
+          // Tapping a photo picks the watch; swiping it pages through.
+          <Pressable onPress={onPick}>
+            <Image
+              source={{ uri: item.url }}
+              style={[styles.photoBox, { width: size, height: size }]}
+              contentFit="cover"
+              transition={120}
+            />
+          </Pressable>
+        )}
+      />
+      {label && (
+        <View style={styles.label} pointerEvents="none">
+          <Text style={styles.labelText}>{label}</Text>
+        </View>
+      )}
+      {photos.length > 1 && (
+        <View style={styles.dots} pointerEvents="none">
+          {photos.map((p, i) => (
+            <View key={p.id} style={[styles.dot, i === page && styles.dotActive]} />
+          ))}
+        </View>
+      )}
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: color.background, paddingHorizontal: 16, gap: 12 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", minHeight: TOUCH },
-  headerText: { fontSize: text.xs, color: color.mutedForeground },
+  root: { flex: 1, backgroundColor: color.background, paddingHorizontal: 16, gap: 10 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", minHeight: TOUCH, gap: 12 },
+  headerText: { flex: 1, fontSize: text.xs, color: color.mutedForeground },
   headerLink: { fontSize: text.sm, color: color.brass, fontWeight: "600" },
   track: { height: 4, borderRadius: 2, backgroundColor: color.muted, overflow: "hidden" },
   fill: { height: 4, backgroundColor: color.brass },
-  prompt: { fontSize: text.md, fontWeight: "600", color: color.foreground, textAlign: "center", marginTop: 4 },
+  prompt: { fontSize: text.md, fontWeight: "600", color: color.foreground, textAlign: "center" },
   pair: { flexDirection: "row", gap: 10 },
-  side: { flex: 1, gap: 8 },
   card: {
+    flex: 1,
     backgroundColor: color.card,
     borderRadius: radius.card,
     borderWidth: 2,
     borderColor: color.border,
     padding: 8,
-    gap: 4,
+    gap: 6,
   },
   cardChosen: { borderColor: color.brass },
-  photo: { width: "100%", aspectRatio: 1, borderRadius: radius.control, backgroundColor: color.surfacePhoto },
-  noPhoto: { alignItems: "center", justifyContent: "center" },
-  noPhotoText: { fontSize: text.xs, color: color.mutedForeground },
-  brand: { fontSize: text.xs, color: color.mutedForeground, marginTop: 4 },
-  model: { fontSize: text.sm, color: color.foreground, fontWeight: "600" },
-  more: {
-    minHeight: 36,
+  photoBox: { borderRadius: radius.control, backgroundColor: color.surfacePhoto },
+  center: { alignItems: "center", justifyContent: "center" },
+  noBack: {
+    height: 36,
     borderRadius: radius.control,
     borderWidth: 1,
+    borderStyle: "dashed",
     borderColor: color.border,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: color.card,
   },
-  moreText: { fontSize: text.xs, color: color.foreground },
-  moreSpacer: { minHeight: 36 },
+  noBackText: { fontSize: text.xxs, color: color.mutedForeground },
+  label: {
+    position: "absolute",
+    left: 6,
+    top: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    backgroundColor: color.scrim,
+  },
+  labelText: { fontSize: text.xxs, color: color.foreground },
+  dots: { position: "absolute", bottom: 6, left: 0, right: 0, flexDirection: "row", justifyContent: "center", gap: 4 },
+  dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: color.scrim },
+  dotActive: { backgroundColor: color.brassForeground },
+  brand: { fontSize: text.xs, color: color.mutedForeground },
+  model: { fontSize: text.sm, color: color.foreground, fontWeight: "600" },
   hint: { fontSize: text.xs, color: color.mutedForeground, textAlign: "center" },
-  tie: {
+  actions: { flexDirection: "row", gap: 10 },
+  action: {
+    flex: 1,
     minHeight: TOUCH + 4,
     borderRadius: radius.control,
     borderWidth: 1,
@@ -250,9 +342,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  tieText: { fontSize: text.sm, fontWeight: "600", color: color.foreground },
+  actionText: { fontSize: text.sm, fontWeight: "600", color: color.foreground },
   undo: { fontSize: text.xs, color: color.mutedForeground, textAlign: "center" },
-  pager: { flex: 1, backgroundColor: color.viewfinder, gap: 8 },
-  pagerTitle: { flex: 1, fontSize: text.sm, color: color.viewfinderText, fontWeight: "600", paddingLeft: 16 },
-  pagerCount: { fontSize: text.xs, color: color.viewfinderText, textAlign: "center" },
 })

@@ -5,7 +5,7 @@ import { accessToken, supabase } from "./supabase"
 
 /** What the watch card shows beyond the collection's tile. */
 export interface WatchDetail {
-  photos: Array<{ id: string; url: string; width: number | null; height: number | null }>
+  photos: Array<{ id: string; url: string; width: number | null; height: number | null; angle: string | null }>
   attachment: "max" | "high" | "medium" | "low" | "none" | null
   keepDecision: KeepDecision | null
   sentimental: boolean
@@ -24,13 +24,14 @@ type PhotoRow = {
   display_order: number
   image_width: number | null
   image_height: number | null
+  angle: string | null
 }
 
 /** Just a watch's photos, cover first — Rate My Watches' "Show me more". */
 export async function fetchWatchPhotos(watchId: string): Promise<WatchDetail["photos"]> {
   const { data, error } = await supabase
     .from("watch_photos")
-    .select("id, storage_path, is_cover, sort_order, display_order, image_width, image_height")
+    .select("id, storage_path, is_cover, sort_order, display_order, image_width, image_height, angle")
     .eq("watch_id", watchId)
   if (error) throw new Error(error.message)
   return signPhotos((data ?? []) as PhotoRow[])
@@ -46,7 +47,9 @@ async function signPhotos(rows: PhotoRow[]): Promise<WatchDetail["photos"]> {
       const { data } = await supabase.storage
         .from(BUCKET)
         .createSignedUrl(p.storage_path, 3600, { transform: CARD_TRANSFORM })
-      return data?.signedUrl ? { id: p.id, url: data.signedUrl, width: p.image_width, height: p.image_height } : null
+      return data?.signedUrl
+        ? { id: p.id, url: data.signedUrl, width: p.image_width, height: p.image_height, angle: p.angle }
+        : null
     })
   )
   return signed.filter((x): x is NonNullable<typeof x> => x != null)
@@ -60,7 +63,7 @@ export async function fetchWatchDetail(watchId: string): Promise<WatchDetail> {
   const [{ data: photos, error: pErr }, { data: watch, error: wErr }] = await Promise.all([
     supabase
       .from("watch_photos")
-      .select("id, storage_path, is_cover, sort_order, display_order, image_width, image_height")
+      .select("id, storage_path, is_cover, sort_order, display_order, image_width, image_height, angle")
       .eq("watch_id", watchId),
     supabase.from("watches").select("attachment, keep_decision, sentimental").eq("id", watchId).single(),
   ])

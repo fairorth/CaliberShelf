@@ -6,15 +6,20 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, Tex
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { estimatePicks, finalists, hotTake, pairwiseAgreement, rankWatches } from "@/lib/rating"
 import type { RankedWatch } from "@/lib/rating"
+import { buildSegments, SEGMENT_SCHEMES, segmentSchemeLabels } from "@/lib/rating-segments"
+import type { SegmentScheme } from "@/lib/rating-segments"
+import type { TierBand } from "@/lib/tiers"
 import { ATTACHMENT_LEVELS } from "@/lib/validations/watch"
 import { useApp } from "../lib/app-context"
 import { canUseBiometrics, unlock } from "../lib/app-lock"
 import {
   fetchOwnerRankings,
   fetchRaters,
+  fetchTierBands,
   flushPendingSessions,
   getOrCreateRater,
   newId,
+  rankingKey,
   saveSession,
 } from "../lib/rate-game"
 import type { PlayedPick, Rater } from "../lib/rate-game"
@@ -25,9 +30,11 @@ import type { RevealData } from "../screens/rate-game/reveal"
 import { color, radius, text, TOUCH } from "../theme"
 
 interface Segment {
-  /** Category id, or "final" for Best in Show. */
+  scheme: SegmentScheme
+  /** The segment within its scheme (rating-segments.ts), or "final". */
   key: string
   name: string
+  categoryId: string | null
   watches: PhoneWatch[]
 }
 
@@ -54,11 +61,16 @@ export default function RateGameScreen() {
   const [ownerRankings, setOwnerRankings] = useState<Map<string, string[]>>(new Map())
   const [done, setDone] = useState<Array<{ segment: Segment; ranking: RankedWatch[] }>>([])
   const [saveState, setSaveState] = useState<"saving" | "saved" | "queued">("saving")
+  // How the collection is cut into segments for this game (Type / Tier /
+  // Type + Tier). Switching scheme mid-game starts its own set of segments.
+  const [scheme, setScheme] = useState<SegmentScheme>("type")
+  const [bands, setBands] = useState<TierBand[] | null>(null)
 
   useEffect(() => {
     void flushPendingSessions()
     fetchRaters().then(setRaters).catch(() => setRaters([]))
     void fetchOwnerRankings().then(setOwnerRankings)
+    fetchTierBands().then(setBands).catch(() => setBands([]))
   }, [])
 
   // The players: owned + coming soon — never wish list, never sold.
@@ -67,16 +79,28 @@ export default function RateGameScreen() {
     [watches]
   )
   const byId = useMemo(() => new Map(players.map((w) => [w.id, w])), [players])
-  const segments = useMemo<Segment[]>(() => {
-    const m = new Map<string, Segment>()
-    for (const w of players) {
-      if (!w.categoryId) continue
-      const s = m.get(w.categoryId) ?? { key: w.categoryId, name: w.categoryName ?? "Uncategorised", watches: [] }
-      s.watches.push(w)
-      m.set(w.categoryId, s)
-    }
-    return [...m.values()].filter((s) => s.watches.length >= 2).sort((a, b) => a.name.localeCompare(b.name))
-  }, [players])
+  const segments = useMemo<Segment[]>(
+    () =>
+      buildSegments(
+        players.map((w) => ({
+          id: w.id,
+          categoryId: w.categoryId,
+          categoryName: w.categoryName,
+          priceCents: w.purchasePriceCents,
+        })),
+        scheme,
+        bands ?? []
+      ).map((g) => ({
+        scheme: g.scheme,
+        key: g.key,
+        name: g.name,
+        categoryId: g.categoryId,
+        watches: g.watchIds.map((id) => byId.get(id)).filter((w): w is PhoneWatch => !!w),
+      })),
+    [players, byId, scheme, bands]
+  )
+  // Segments finished in THIS game under the current scheme.
+  const doneHere = done.filter((d) => d.segment.scheme === scheme)
 
   const owner = raters?.find((r) => r.isOwner) ?? null
   const ownerName = owner?.name ?? "the owner"
@@ -101,7 +125,8 @@ export default function RateGameScreen() {
     // before the owner has played it, against their attachment ratings.
     let agreement: RevealData["agreement"] = null
     let take: RevealData["hotTake"] = null
-    const ownerOrder = ownerRankings.get(segment.key)
+    const yardstick = rankingKey(segment.scheme, segment.key)
+    const ownerOrder = ownerRankings.get(yardstick)
     if (!rater.isOwner) {
       if (ownerOrder) {
         const a = pairwiseAgreement(order, ownerOrder)
@@ -115,11 +140,15 @@ export default function RateGameScreen() {
       }
     } else {
       // The owner just set the yardstick — use it for the rest of this game.
-      setOwnerRankings((prev) => new Map(prev).set(segment.key, order))
+      setOwnerRankings((prev) => new Map(prev).set(yardstick, order))
     }
 
     const isFinal = segment.key === "final"
-    if (!isFinal) setDone((prev) => [...prev.filter((d) => d.segment.key !== segment.key), { segment, ranking }])
+    if (!isFinal)
+      setDone((prev) => [
+        ...prev.filter((d) => !(d.segment.key === segment.key && d.segment.scheme === segment.scheme)),
+        { segment, ranking },
+      ])
     setStage({
       kind: "reveal",
       segment,
@@ -131,7 +160,9 @@ export default function RateGameScreen() {
       id: newId(),
       raterId: rater.id,
       kind: isFinal ? "final" : "segment",
-      categoryId: isFinal ? null : segment.key,
+      scheme: segment.scheme,
+      segmentKey: segment.key,
+      categoryId: isFinal ? null : segment.categoryId,
       segmentName: isFinal ? "Best in Show" : segment.name,
       watchIds: ids,
       picks,
@@ -142,16 +173,19 @@ export default function RateGameScreen() {
   }
 
   function startFinal() {
-    const ids = finalists(done.map((d) => d.ranking))
+    const ids = finalists(doneHere.map((d) => d.ranking))
     const watchesInFinal = ids.map((id) => byId.get(id)).filter((w): w is PhoneWatch => !!w)
-    setStage({ kind: "duel", segment: { key: "final", name: "Best in Show", watches: watchesInFinal } })
+    setStage({
+      kind: "duel",
+      segment: { scheme, key: "final", name: "Best in Show", categoryId: null, watches: watchesInFinal },
+    })
   }
 
   // ── Screens ─────────────────────────────────────────────────────
   if (stage.kind === "duel" && rater) {
     return (
       <Duel
-        key={stage.segment.key}
+        key={`${stage.segment.scheme}|${stage.segment.key}`}
         raterName={rater.name}
         segmentName={stage.segment.name}
         watches={stage.segment.watches}
@@ -163,8 +197,8 @@ export default function RateGameScreen() {
 
   if (stage.kind === "reveal" && rater) {
     const isFinal = stage.data.isFinal
-    const remaining = segments.filter((s) => !done.some((d) => d.segment.key === s.key))
-    const canFinal = !isFinal && done.length >= 2
+    const remaining = segments.filter((s) => !doneHere.some((d) => d.segment.key === s.key))
+    const canFinal = !isFinal && doneHere.length >= 2
     return (
       <Reveal
         data={stage.data}
@@ -222,8 +256,24 @@ export default function RateGameScreen() {
           <Text style={styles.sub}>
             You&rsquo;ll see two watches at a time — tap the one you prefer. A segment ends when your ranking is clear.
           </Text>
+          {/* How to group the watches: by type, by price tier (named
+              neutrally — no prices in the game), or both. */}
+          <View style={styles.schemes} accessibilityRole="radiogroup" accessibilityLabel="Group watches by">
+            {SEGMENT_SCHEMES.map((sc) => (
+              <Pressable
+                key={sc}
+                onPress={() => setScheme(sc)}
+                style={[styles.schemeItem, scheme === sc && styles.schemeItemActive]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: scheme === sc }}
+              >
+                <Text style={[styles.schemeText, scheme === sc && styles.schemeTextActive]}>{segmentSchemeLabels[sc]}</Text>
+              </Pressable>
+            ))}
+          </View>
+          {scheme !== "type" && bands === null && <ActivityIndicator color={color.brass} />}
           {segments.map((s) => {
-            const played = done.some((d) => d.segment.key === s.key)
+            const played = doneHere.some((d) => d.segment.key === s.key)
             const minutes = Math.max(1, Math.round((estimatePicks(s.watches.length) * 4) / 60))
             return (
               <Pressable
@@ -241,7 +291,7 @@ export default function RateGameScreen() {
               </Pressable>
             )
           })}
-          {done.length >= 2 && (
+          {doneHere.length >= 2 && (
             <Pressable style={styles.final} onPress={startFinal}>
               <Text style={styles.finalText}>Best in Show — the top 3 of each segment you played</Text>
             </Pressable>
@@ -398,6 +448,17 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   error: { fontSize: text.xs, color: color.destructive },
+  schemes: {
+    flexDirection: "row",
+    borderRadius: radius.control,
+    borderWidth: 1,
+    borderColor: color.border,
+    overflow: "hidden",
+  },
+  schemeItem: { flex: 1, minHeight: TOUCH, alignItems: "center", justifyContent: "center", backgroundColor: color.card },
+  schemeItemActive: { backgroundColor: color.brass },
+  schemeText: { fontSize: text.sm, color: color.foreground },
+  schemeTextActive: { color: color.brassForeground, fontWeight: "600" },
   segment: {
     flexDirection: "row",
     alignItems: "center",

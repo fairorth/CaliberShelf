@@ -1,5 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import type { RankedWatch } from "@/lib/rating"
+import type { SegmentScheme } from "@/lib/rating-segments"
+import { configToBands, normalizeTierConfig } from "@/lib/tiers"
+import type { TierBand } from "@/lib/tiers"
 import { newId } from "./admired-queue"
 import { supabase } from "./supabase"
 
@@ -29,6 +32,9 @@ export interface FinishedSession {
   id: string
   raterId: string
   kind: "segment" | "final"
+  scheme: SegmentScheme
+  /** The segment within the scheme (rating-segments.ts), or "final". */
+  segmentKey: string
   categoryId: string | null
   segmentName: string
   watchIds: string[]
@@ -75,25 +81,28 @@ export async function getOrCreateRater(name: string, isOwner: boolean, existing:
   return rater
 }
 
+/** Key for one segment of one scheme — how rankings are compared like for like. */
+export const rankingKey = (scheme: SegmentScheme, segmentKey: string) => `${scheme}|${segmentKey}`
+
 /**
- * The owner's own latest ranking per segment (category id; "final" for Best
- * in Show) — the yardstick for "you agree with Marc".
+ * The owner's own latest ranking per segment of every scheme — the yardstick
+ * for "you agree with Marc". Keyed by rankingKey(scheme, segmentKey).
  */
 export async function fetchOwnerRankings(): Promise<Map<string, string[]>> {
   const { data, error } = await supabase
     .from("rating_sessions")
-    .select("kind, category_id, result, completed_at, raters!inner(is_owner)")
+    .select("segment_scheme, segment_key, result, completed_at, raters!inner(is_owner)")
     .eq("raters.is_owner", true)
     .order("completed_at", { ascending: false })
   if (error) return new Map()
   const out = new Map<string, string[]>()
   for (const row of (data ?? []) as unknown as Array<{
-    kind: string
-    category_id: string | null
+    segment_scheme: SegmentScheme
+    segment_key: string
     result: Array<{ watch_id: string; rank: number }>
   }>) {
-    const key = row.kind === "final" ? "final" : (row.category_id ?? "")
-    if (!key || out.has(key)) continue // newest first: keep the latest
+    const key = rankingKey(row.segment_scheme, row.segment_key)
+    if (out.has(key)) continue // newest first: keep the latest
     out.set(
       key,
       [...row.result].sort((a, b) => a.rank - b.rank).map((r) => r.watch_id)
@@ -109,6 +118,9 @@ async function insertSession(s: FinishedSession): Promise<void> {
     user_id: uid,
     rater_id: s.raterId,
     kind: s.kind,
+    // A session queued before v1.11.16 has no scheme/key: it was a Type game.
+    segment_scheme: s.scheme ?? "type",
+    segment_key: s.segmentKey ?? (s.kind === "final" ? "final" : (s.categoryId ?? `name:${s.segmentName}`)),
     category_id: s.categoryId,
     segment_name: s.segmentName.slice(0, 80),
     watch_count: s.watchIds.length,
@@ -178,6 +190,15 @@ export async function flushPendingSessions(): Promise<number> {
   }
   await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(left))
   return left.length
+}
+
+/** The owner's price tiers (Config → Tiers) as bands — for the Tier segments. */
+export async function fetchTierBands(): Promise<TierBand[]> {
+  const { data: auth } = await supabase.auth.getUser()
+  const uid = auth.user?.id
+  if (!uid) return configToBands(normalizeTierConfig(null))
+  const { data } = await supabase.from("profiles").select("tier_config").eq("id", uid).maybeSingle()
+  return configToBands(normalizeTierConfig((data as { tier_config?: unknown } | null)?.tier_config ?? null))
 }
 
 export { newId }

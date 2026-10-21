@@ -387,13 +387,24 @@ service role, which bypasses RLS.
   return 422 for validation and 5xx for storage/DB trouble, never a 4xx that
   would make the phone drop a shot.
 
-## Rate My Watches (v1.11.15, migration 00057) — friends rank the collection
+## Rate My Watches (v1.11.15–16, migrations 00057, 00059) — friends rank the collection
 - iPhone **Rate** tab → "Start a game" opens `/rate-game`, LOCKED (full screen,
   no swipe-back; only Face ID / passcode exits). A friend taps the preferred of
-  two watches, one SEGMENT (= category) at a time; owned + coming soon only,
-  never wish list or sold; NO prices shown. Then a reveal (podium, "you agree
-  with <owner>", hot take), next segment, and Best in Show (top 3 per segment
-  played).
+  two watches, one SEGMENT at a time; owned + coming soon only, never wish list
+  or sold; NO prices shown. Then a reveal (podium, "you agree with <owner>",
+  hot take), next segment, and Best in Show (top 3 per segment played).
+- **Segments** come from `src/lib/rating-segments.ts` (pure, shared): scheme
+  **Type** (category), **Tier** or **Type + Tier**, chosen on the segments
+  screen. Tiers are named NEUTRALLY in the game ("Tier 2", "Tiers 1–2") — the
+  owner's tier labels carry dollar amounts; only the web report shows them
+  (`tierLabelForKey`). Small tier groups merge (MIN_SEGMENT 4). Sessions store
+  `segment_scheme` + `segment_key` (00059); compare only like with like.
+- **Duel card** = front pager over caseback pager (`angle = 'caseback'`), swipe
+  in place, tap anywhere picks. **Equal** = a tie (winner null); **Skip** =
+  no pick, and `nextPair` avoids that pair while others remain.
+- **Caseback run**: Rate tab counts OWNED watches with no caseback photo and
+  walks them in the camera (`/camera?watchId=…&run=caseback`, Caseback
+  preselected, "Next →"); list held in `mobile/src/lib/caseback-run.ts`.
 - **`src/lib/rating.ts` is the ONE model** (pure, shared with the phone):
   Bradley–Terry fit (MM, light prior, ties = half a win), adaptive pair choice
   (least-seen first, then front-runners, near-equals, no repeats, random
@@ -403,9 +414,12 @@ service role, which bypasses RLS.
 - Tables `raters` (one `is_owner` — the yardstick), `rating_sessions` (frozen
   `result`, latest per rater per segment counts), `rating_picks`; client
   UUIDs, saved on segment completion, retried from the phone if offline.
-- Web **Reports → Ratings** (`/reports/ratings?rater=`): Everyone = consensus
-  (all raters' latest picks re-fitted) + most divisive; per rater = rankings,
-  Best in Show, agreement with the owner.
+- Web **Reports → Ratings** (`/reports/ratings?rater=&scheme=`): Everyone =
+  consensus (all raters' latest picks re-fitted) + most divisive; per rater =
+  rankings, Best in Show, agreement with the owner. Every row shows the
+  model's score (1500 = average) and `rankWithGaps`' chance of beating the
+  next watch, "clear" when the gap exceeds the combined standard error. Rater
+  chips are generated from `raters` — a new friend appears automatically.
 
 ## Common Commands
 - `npm run dev` - Start dev server (Turbopack) on port 3000

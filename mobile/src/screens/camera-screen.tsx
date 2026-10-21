@@ -54,6 +54,11 @@ interface CameraScreenProps {
   onAdd: (args: { photoUri: string; guess: IdentifyResponse["guess"]; ownership: "owned" | "wish" }) => void
   /** Opened from Today: lead with "Wearing it". */
   intent?: "wear"
+  /** Capture: the angle chip selected on open (the caseback run). */
+  initialAngle?: PhotoAngle
+  /** Capture as part of a run through several watches (Rate → caseback run):
+   *  its label under the title, and the top-right "Next" button. */
+  run?: { label: string; nextLabel: string; onNext: () => void }
 }
 
 type FrameStatus = "uploading" | "done" | "error" | "removed"
@@ -92,7 +97,17 @@ let frameCounter = 0
  * Photo Lab angle and uploading behind you, and Identify from the same
  * viewfinder.
  */
-export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWearing, onAdd, intent }: CameraScreenProps) {
+export function CameraScreen({
+  mode,
+  watches,
+  onClose,
+  onSwitchToCapture,
+  onWearing,
+  onAdd,
+  intent,
+  initialAngle,
+  run,
+}: CameraScreenProps) {
   const insets = useSafeAreaInsets()
   const permission = useCameraPermission()
   // Ask for all three back lenses: iOS then gives the virtual "triple"
@@ -164,7 +179,7 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWear
   const [zoom, setZoom] = useState<number | null>(null)
   const activeZoom = zoom ?? base
 
-  const [angle, setAngle] = useState<PhotoAngle | null>(null)
+  const [angle, setAngle] = useState<PhotoAngle | null>(initialAngle ?? null)
 
   // ── Admired (Show mode) ──────────────────────────────────────────
   // One admired watch at a time: every frame belongs to the current one
@@ -335,18 +350,18 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWear
 
   // Leaving with frames still uploading or failed loses them silently — the
   // trial's first caseback frame went that way. Say so first.
-  function done() {
+  function done(leave: () => void = onClose) {
     const live = strip.filter((f) => f.status !== "removed")
     const uploading = live.filter((f) => f.status === "uploading").length
     const failed = live.filter((f) => f.status === "error").length
-    if (uploading === 0 && failed === 0) return onClose()
+    if (uploading === 0 && failed === 0) return leave()
     const parts = [
       uploading > 0 ? `${uploading} still uploading` : null,
       failed > 0 ? `${failed} failed to upload` : null,
     ].filter(Boolean)
     Alert.alert("Leave the camera?", `${parts.join(" and ")}.`, [
       { text: "Stay", style: "cancel" },
-      { text: "Leave", style: "destructive", onPress: onClose },
+      { text: "Leave", style: "destructive", onPress: leave },
     ])
   }
 
@@ -391,7 +406,7 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWear
 
       {/* Top bar: what you're shooting, and the way out. */}
       <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={done} hitSlop={12} style={styles.topButton}>
+        <Pressable onPress={() => done()} hitSlop={12} style={styles.topButton}>
           <Text style={styles.topButtonText}>Done</Text>
         </Pressable>
         <View style={{ flex: 1, alignItems: "center" }}>
@@ -402,8 +417,10 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWear
                 ? `Admired · ${mode.event}`
                 : `${mode.watch.brand} ${mode.watch.nickname || mode.watch.model}`}
           </Text>
-          {mode.kind === "capture" && doneCount > 0 && (
-            <Text style={styles.topSub}>{doneCount} uploaded</Text>
+          {mode.kind === "capture" && (run || doneCount > 0) && (
+            <Text style={styles.topSub}>
+              {[run?.label, doneCount > 0 ? `${doneCount} uploaded` : null].filter(Boolean).join(" · ")}
+            </Text>
           )}
           {mode.kind === "admired" && (
             <Text style={styles.topSub}>
@@ -414,7 +431,13 @@ export function CameraScreen({ mode, watches, onClose, onSwitchToCapture, onWear
             </Text>
           )}
         </View>
-        <View style={styles.topButton} />
+        {run ? (
+          <Pressable onPress={() => done(run.onNext)} hitSlop={12} style={[styles.topButton, { alignItems: "flex-end" }]}>
+            <Text style={styles.topButtonText}>{run.nextLabel}</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.topButton} />
+        )}
       </View>
 
       {/* The fine-grained reading, kept on screen at Marc's request — the

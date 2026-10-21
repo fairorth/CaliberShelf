@@ -100,6 +100,59 @@ export function rankWatches(ids: string[], picks: RatingPick[]): RankedWatch[] {
     }))
 }
 
+export interface RankedWithGap extends RankedWatch {
+  /** Natural-log strength, and its standard error (from the Fisher information). */
+  logStrength: number
+  se: number
+  /** Against the NEXT watch down: the model's chance this rater picks this
+   *  one over it, and whether the lead is clear (≈84% confidence) or too
+   *  close to call. Null for the last watch. */
+  vsNext: { winChance: number; clear: boolean } | null
+}
+
+/**
+ * The ranking with the gaps made readable. Bradley–Terry's strengths turn
+ * straight into head-to-head odds — P(i over j) = p_i / (p_i + p_j) — and the
+ * curvature of the fit gives each strength an uncertainty, so a lead can be
+ * called clear or not. A watch seen twice has a wide error bar; one seen ten
+ * times a narrow one.
+ */
+export function rankWithGaps(ids: string[], picks: RatingPick[]): RankedWithGap[] {
+  const strengths = fitStrengths(ids, picks)
+  const ranked = rankWatches(ids, picks)
+  // Fisher information for log-strength: Σ n_ij · π_ij · (1 − π_ij), plus the
+  // prior's two virtual games against an average watch.
+  const info = new Map(ids.map((id) => [id, 0]))
+  for (const id of ids) {
+    const pi = strengths.get(id)!
+    const pPrior = pi / (pi + 1)
+    info.set(id, 2 * PRIOR * pPrior * (1 - pPrior))
+  }
+  for (const pk of picks) {
+    const pa = strengths.get(pk.a)
+    const pb = strengths.get(pk.b)
+    if (pa === undefined || pb === undefined || pk.a === pk.b) continue
+    const pi = pa / (pa + pb)
+    const w = pi * (1 - pi)
+    info.set(pk.a, info.get(pk.a)! + w)
+    info.set(pk.b, info.get(pk.b)! + w)
+  }
+  return ranked.map((r, i) => {
+    const logStrength = Math.log(strengths.get(r.watchId)!)
+    const se = 1 / Math.sqrt(Math.max(1e-9, info.get(r.watchId)!))
+    const next = ranked[i + 1]
+    let vsNext: RankedWithGap["vsNext"] = null
+    if (next) {
+      const pThis = strengths.get(r.watchId)!
+      const pNext = strengths.get(next.watchId)!
+      const nextSe = 1 / Math.sqrt(Math.max(1e-9, info.get(next.watchId)!))
+      const gap = Math.log(pThis) - Math.log(pNext)
+      vsNext = { winChance: pThis / (pThis + pNext), clear: gap > Math.sqrt(se * se + nextSe * nextSe) }
+    }
+    return { ...r, logStrength, se, vsNext }
+  })
+}
+
 /** Every watch is compared at least this many times before a segment can end. */
 export const MIN_COMPARISONS = 3
 
@@ -109,7 +162,8 @@ export function estimatePicks(n: number): number {
   return Math.max(MIN_COMPARISONS, Math.ceil(2.5 * n))
 }
 
-const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`)
+/** Order-independent key for a pair (the Skip set uses it too). */
+export const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`)
 
 /**
  * The next pair to show: the one that teaches the model most.
@@ -124,7 +178,10 @@ const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`)
 export function nextPair(
   ids: string[],
   picks: RatingPick[],
-  rand: () => number = Math.random
+  rand: () => number = Math.random,
+  /** Pairs the rater SKIPPED ("can't judge these") — not offered again while
+   *  any other pair is left. A skip records nothing in the model. */
+  skipped: Set<string> = new Set()
 ): [string, string] | null {
   if (ids.length < 2) return null
   const strengths = fitStrengths(ids, picks)
@@ -159,8 +216,9 @@ export function nextPair(
     if (ids.length > 2 && justShown.has(b) && justShown.has(a)) continue
     const closeness = Math.abs(Math.log(strengths.get(a)!) - Math.log(strengths.get(b)!))
     const repeat = !allPairsSeen && seen.has(pairKey(a, b)) ? 3 : 0
+    const skip = skipped.has(pairKey(a, b)) ? 6 : 0
     const busy = (0.6 * counts.get(b)!) / maxCount
-    const cost = closeness + repeat + busy + rand() * 0.2
+    const cost = closeness + repeat + skip + busy + rand() * 0.2
     if (cost < bestCost) {
       bestCost = cost
       best = b
