@@ -69,7 +69,7 @@ export function GalleryGrid({ watches, itemSize, showCost = false, guideNames, s
           : sale
             ? formatCurrency(sale.netProceedsCents)
             : watch.purchase_price_cents !== null
-              ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
+              ? formatCurrency(watch.cost_basis_cents, watch.purchase_currency)
               : null
         const showFooter = Boolean(caliberLine) || priceLabel !== null
         const wearCount = watch.wear_count ?? 0

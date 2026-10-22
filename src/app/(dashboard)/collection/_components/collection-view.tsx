@@ -88,7 +88,7 @@ const DROPDOWN_SORT_KEYS: SortKey[] = [
 const SORT_LABELS: Record<SortKey, string> = {
   default: "Sort: Default",
   brand: "Sort: Brand",
-  price: "Sort: Price",
+  price: "Sort: Cost",
   purchaseDate: "Sort: Purchase date",
   dateAdded: "Sort: Date added",
   caseDiameter: "Sort: Case size",
@@ -216,7 +216,7 @@ function sortValue(
     case "brand":
       return w.brand.name.toLowerCase()
     case "price":
-      return w.purchase_price_cents
+      return w.purchase_price_cents !== null ? w.cost_basis_cents : null
     case "purchaseDate":
       return w.purchase_date // "YYYY-MM-DD" sorts lexically
     case "dateAdded":
@@ -512,26 +512,28 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
   )
   const soldShown = displayed.length - displayedUnsold.length
 
-  // Total cost of the watches currently shown (filters + search applied).
-  // Only rendered when the per-device "show cost" preference is on.
-  const displayedTotalCents = useMemo(
-    () => displayedUnsold.reduce((sum, w) => sum + (w.purchase_price_cents ?? 0), 0),
-    [displayedUnsold]
+  // The header's money figure is what the watches shown are WORTH now (the
+  // current value valuation.ts picks — research, logged or static), not what
+  // they cost: the Cost column carries cost. Wish-list rows are left out —
+  // you don't own them. Only rendered when the per-device "show cost"
+  // preference is on.
+  const valuedShown = useMemo(
+    () => displayedUnsold.filter((w) => !w.is_wishlist && valuationMids[w.id] != null),
+    [displayedUnsold, valuationMids]
   )
-
-  // In "Tracked Only" mode, also total the latest market values of the
-  // displayed watches so the header can show current value and gain/loss.
   const displayedValueCents = useMemo(
-    () =>
-      filters.priceTracking === "tracked"
-        ? displayedUnsold.reduce((sum, w) => sum + (valuationMids[w.id] ?? 0), 0)
-        : 0,
-    [displayedUnsold, filters.priceTracking, valuationMids]
+    () => valuedShown.reduce((sum, w) => sum + valuationMids[w.id], 0),
+    [valuedShown, valuationMids]
   )
-  const gainPct =
-    displayedValueCents > 0 && displayedTotalCents > 0
-      ? ((displayedValueCents - displayedTotalCents) / displayedTotalCents) * 100
-      : null
+  // "Tracked Only" adds the delta vs cost basis — over watches with BOTH a
+  // value and a known price, never a value against an unknown basis.
+  const gainPct = useMemo(() => {
+    if (filters.priceTracking !== "tracked") return null
+    const both = valuedShown.filter((w) => w.purchase_price_cents !== null)
+    const basis = both.reduce((sum, w) => sum + w.cost_basis_cents, 0)
+    const value = both.reduce((sum, w) => sum + valuationMids[w.id], 0)
+    return basis > 0 ? ((value - basis) / basis) * 100 : null
+  }, [filters.priceTracking, valuedShown, valuationMids])
 
   // Band 2 carries the chips and the view-specific controls. It renders only
   // when it has something to hold — never an empty band, never a lone
@@ -552,10 +554,7 @@ export function CollectionView({ watches, categories, valuationMids, tierBands, 
         <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
           <Stat label="Showing" value={`${displayed.length}/${ownershipTotal}`} />
           {soldShown > 0 && <Stat label="Sold" value={String(soldShown)} />}
-          {showCost && displayedTotalCents > 0 && (
-            <Stat label="Cost" value={formatCurrency(displayedTotalCents, "USD", true)} />
-          )}
-          {showCost && filters.priceTracking === "tracked" && displayedValueCents > 0 && (
+          {showCost && displayedValueCents > 0 && (
             <>
               <Stat label="Value" value={formatCurrency(displayedValueCents, "USD", true)} />
               {gainPct !== null && (

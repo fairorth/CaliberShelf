@@ -200,7 +200,9 @@ export default async function MarketPage() {
         <div>
           <h1 className="font-display text-lg font-semibold tracking-tight">Market</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {overview.ownedCount} owned · {onTheBlock} on the block ·{" "}
+            {overview.ownedCount} owned
+            {overview.comingSoonCount > 0 && ` (incl. ${overview.comingSoonCount} coming soon)`} ·{" "}
+            {onTheBlock} on the block ·{" "}
             {overview.salesCount} sold lifetime
           </p>
         </div>
@@ -216,7 +218,7 @@ export default async function MarketPage() {
         <Stat
           eyebrow="Cost basis"
           value={formatCurrency(overview.costBasisCents, "USD", true)}
-          context="purchase + shipping, tax, duty"
+          context="purchase + sales tax, import fees, shipping"
         />
         <Stat
           eyebrow="Current value"

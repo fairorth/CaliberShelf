@@ -716,7 +716,9 @@ export async function getAnnualSummary(
   ])
 
   const watches = ((watchesRes.data ?? []) as unknown as AnnualWatchRow[]).filter(
-    (w) => !w.is_wishlist && !w.is_coming_soon
+    // Coming soon counts: it is bought and paid for (v1.11.18), and its sales
+    // tax belongs in that year's figures.
+    (w) => !w.is_wishlist
   )
   const sales = (salesRes.data ?? []) as unknown as (WatchSale & {
     watch: JoinedWatch

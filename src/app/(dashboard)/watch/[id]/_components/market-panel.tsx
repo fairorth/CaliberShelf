@@ -50,8 +50,10 @@ function formatValuedAt(iso: string): string {
 }
 
 /**
- * The watch page's Valuation panel (§3.3; called "Market" until v1.10.3).
- * Four zones: the current value with the SOURCE that produced it, the three
+ * The watch page's Financials panel (§3.3; "Market" until v1.10.3, then
+ * "Valuation" until v1.11.18, when the cost moved in from Ownership).
+ * Five zones: what it cost (cost basis, then its parts), the current value
+ * with the SOURCE that produced it, the three
  * actions that can change it, the evidence and history behind it, and the sale
  * record (still here — a sale is what a valuation is ultimately for, and it
  * carries its own "Sale" eyebrow inside the card).
@@ -84,6 +86,19 @@ export function MarketPanel({
       ? (current.row.method_notes?.split(". ")[0] ?? null)
       : null
   const today = todayDate()
+
+  // The parts of the cost basis, each shown only when it is non-zero — three
+  // rows of $0.00 is the sparseness the edit form's collapsed control exists
+  // to avoid. With none of them the basis IS the purchase price, so the parts
+  // line is left off rather than printing the same number twice.
+  const costParts = (
+    [
+      ["Sales tax", watch.acq_tax_cents],
+      ["Import fees", watch.acq_duty_cents],
+      ["Shipping", watch.acq_shipping_cents],
+    ] as const
+  ).filter(([, cents]) => (cents ?? 0) > 0)
+  const hasPrice = watch.purchase_price_cents != null
 
   // Only a dated observation can be stale. A static estimate is not a snapshot
   // of anything, so it never ages into a warning.
@@ -128,17 +143,42 @@ export function MarketPanel({
     <SectionCard
       id="market"
       icon={TrendingUp}
-      title="Valuation"
+      title="Financials"
       action={statusPill}
       contentClassName="space-y-[18px]"
     >
-      {/* ── What it is worth ──────────────────────────────────
-          Cost basis used to lead this section and has moved to Ownership: it
-          restated the purchase price sitting a card above it, and the two are
-          the same number unless there are acquisition costs. The gain stays
-          here — it is this estimate measured against that basis, which is a
-          third fact, not a repeat of either.
+      {/* ── What it cost ───────────────────────────────────────
+          The cost basis leads (00043 generates it: price + sales tax + import
+          fees + shipping); its parts sit on the line beneath. A wish-list
+          watch's price is the expected price, so it says so. */}
+      <div className="flex flex-col gap-1">
+        <p className={EYEBROW}>
+          {watch.is_wishlist ? "Expected price" : costParts.length > 0 ? "Cost basis" : "Cost basis · purchase price"}
+        </p>
+        <span className="font-mono text-xs tabular-nums text-foreground">
+          {hasPrice ? formatCurrency(watch.cost_basis_cents, watch.purchase_currency) : "—"}
+        </span>
+        {hasPrice && costParts.length > 0 && (
+          <span className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span>
+              Purchase price{" "}
+              <span className="font-mono tabular-nums">
+                {formatCurrency(watch.purchase_price_cents!, watch.purchase_currency)}
+              </span>
+            </span>
+            {costParts.map(([label, cents]) => (
+              <span key={label}>
+                {label}{" "}
+                <span className="font-mono tabular-nums">
+                  {formatCurrency(cents ?? 0, watch.purchase_currency)}
+                </span>
+              </span>
+            ))}
+          </span>
+        )}
+      </div>
 
+      {/* ── What it is worth ──────────────────────────────────
           One value leads, whatever produced it, and it says which kind it is.
           Three sources with three different claims to truth used to mean three
           screens showing three numbers for one watch. */}

@@ -13,7 +13,7 @@ import { localDateIso } from "@/lib/dates"
 // Mirrors the on-screen table: the caller passes the columns currently
 // visible and the rows currently displayed (filtered + sorted), and each
 // cell exports what the table shows — including a sold row's net proceeds
-// in the Price column. Money is dollars with cents; dates are ISO.
+// in the Cost column. Money is dollars with cents; dates are ISO.
 
 function cell(v: string | number | null): string {
   if (v == null) return ""
@@ -65,7 +65,9 @@ function columnValue(
       // Matches the table: a sold row shows what it returned (§3.6).
       return sold && saleSummaries?.[w.id]
         ? dollars(saleSummaries[w.id].netProceedsCents)
-        : dollars(w.purchase_price_cents)
+        : w.purchase_price_cents !== null
+          ? dollars(w.cost_basis_cents)
+          : null
     case "value":
       return !sold ? dollars(valuationMids?.[w.id] ?? null) : null
     case "gain": {

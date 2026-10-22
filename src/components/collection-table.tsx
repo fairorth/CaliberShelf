@@ -65,9 +65,11 @@ interface CollectionTableProps {
   valuationMids?: Record<string, number>
 }
 
+/** The Cost column: the full cost basis (price + sales tax, import fees,
+ *  shipping — generated in 00043), "—" when the price was never entered. */
 function priceLabel(watch: WatchWithCover): string {
   return watch.purchase_price_cents !== null
-    ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
+    ? formatCurrency(watch.cost_basis_cents, watch.purchase_currency)
     : "—"
 }
 
@@ -213,7 +215,8 @@ export const COLUMN_LABELS: Record<ColumnId, string> = {
   worn: "Worn",
   purchased: "Purchased",
   added: "Added",
-  price: "Price",
+  // The column id stays "price" so saved column choices and widths survive.
+  price: "Cost",
   value: "Value",
   gain: "Gain",
 }
@@ -802,7 +805,7 @@ export function CollectionTable({
                 {isVisible("purchased") && <SortableHeader label="Purchased" sortKey="purchaseDate" colId="purchased" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
                 {isVisible("added") && <SortableHeader label="Added" sortKey="dateAdded" colId="added" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
                 {isVisible("price") && (
-                  <SortableHeader label="Price" sortKey="price" colId="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />
+                  <SortableHeader label="Cost" sortKey="price" colId="price" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />
                 )}
                 {isVisible("value") && <SortableHeader label="Value" sortKey="value" colId="value" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}
                 {isVisible("gain") && <SortableHeader label="Gain" sortKey="gain" colId="gain" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} onResizeStart={handleResizeStart} onKeyResize={handleKeyResize} className="text-right" alignRight />}

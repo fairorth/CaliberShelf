@@ -256,14 +256,6 @@ export default async function WatchViewPage({
   // call has been made, and a wish-list watch has nothing to keep.
   const showKeepDecision = !watch.is_wishlist && watch.sale_status === "owned"
 
-  const acquisitionCosts = (
-    [
-      ["Sales tax", watch.acq_tax_cents],
-      ["Import fees", watch.acq_duty_cents],
-      ["Shipping", watch.acq_shipping_cents],
-    ] as const
-  ).filter(([, cents]) => (cents ?? 0) > 0)
-
   // A measure, not the whole monitor. Without the max-width the 38%/1fr split
   // is computed against the full window — on a wide screen that is a
   // thousand-pixel column holding a four-hundred-pixel photograph, and the two
@@ -442,29 +434,6 @@ export default async function WatchViewPage({
             <ViewField label="Purchase Date" mono>
               {watch.purchase_date ? formatDate(watch.purchase_date) : null}
             </ViewField>
-            <ViewField label="Purchase Price" mono>
-              {watch.purchase_price_cents != null
-                ? formatCurrency(watch.purchase_price_cents, watch.purchase_currency)
-                : null}
-            </ViewField>
-            {/* Shown only when there are any — three rows of $0.00 is the
-                sparseness the edit form's collapsed control exists to avoid. */}
-            {acquisitionCosts.length > 0 && (
-              <div className="grid gap-x-4 gap-y-3 sm:col-span-2 sm:grid-cols-4">
-                {acquisitionCosts.map(([label, cents]) => (
-                  <ViewField key={label} label={label} mono>
-                    {formatCurrency(cents ?? 0, watch.purchase_currency)}
-                  </ViewField>
-                ))}
-                {/* The generated total, shown only when there is something to
-                    total. With no acquisition costs it IS the purchase price
-                    two fields up, and printing it twice is how the two come to
-                    disagree later. */}
-                <ViewField label="Cost basis" mono>
-                  {formatCurrency(watch.cost_basis_cents, watch.purchase_currency)}
-                </ViewField>
-              </div>
-            )}
             <ViewField label="Box">
               {watch.box ? boxLabel(watch.box, boxConfig.descriptions) : null}
             </ViewField>
@@ -611,7 +580,7 @@ export default async function WatchViewPage({
             </SectionCard>
           )}
 
-          {/* Valuation panel (§3.3) — value, actions, and the sale record.
+          {/* Financials panel (§3.3) — cost, value, actions, and the sale record.
               The sale controls are passed in rather than imported there so
               the panel stays a Server Component. */}
           <MarketPanel

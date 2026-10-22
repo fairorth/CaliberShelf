@@ -153,8 +153,10 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
   coverage targets and never-worn prompts; they stay in counts, search and every report.
 - **Market section** owns `/market` (portfolio strip, value-over-time chart, pipeline,
   attention) and `/market/sold` (the archive with footer totals). The watch page's
-  **Valuation panel** (titled "Market" until v1.10.3) leads with the current value and the
-  source pill, and still **owns the sale record** — status, venue, dates, ask, net proceeds
+  **Financials panel** (titled "Market" until v1.10.3, "Valuation" until v1.11.18) leads
+  with the COST BASIS (its parts — price, sales tax, import fees, shipping — on the line
+  beneath, only when any is non-zero; cost moved out of Ownership in v1.11.18), then the
+  current value and the source pill, and still **owns the sale record** — status, venue, dates, ask, net proceeds
   and every control — injected as `saleControls` so the panel stays a Server Component. The
   sale zone carries its own "Sale" eyebrow inside the card.
 - **`/reports/watch-values` (Watch Values) is the portfolio examination**: one row per
@@ -207,6 +209,10 @@ A personal watch collection tracking app built with Next.js 16 (App Router), Sup
 - The **Sale status** filter (`?sale=`) has view-specific defaults: an *absent* param means "Owned only" in tiles and "All" in the table, so `""` is unset and `"all"` is the explicit everything choice (clearing the chip writes `all`, otherwise the default would silently reapply). Sold watches always sort to the bottom, whatever the active sort.
 - The Brand and Category **cells** filter the collection; the rest of the row opens the watch. This deliberately narrows "one row, one destination" — see DECISIONS.md §8.
 - Column widths are explicit pixels, resizable, persisted per device. Any column may be resized; the table sizes itself to their sum.
+- The **Cost** column (id still `price`, so saved prefs survive) shows the full
+  `cost_basis_cents` since v1.11.18, and sorts by it; tiles and the CSV match. The
+  header's money stat is **Value** (current value of the unsold, non-wish-list rows
+  shown), not cost — the column carries cost. Tracked Only adds Delta vs basis.
 - **Purchased / Value / Gain** are optional picker columns (v1.9.24). `MONEY_COLUMNS` (Price, Value, Gain) are **no longer gated by the show-cost setting** (v1.10.5) — the Columns menu is the only thing that decides which columns show. The Config → Settings **"Include Cost in Collection Listing"** preference now covers only the places with no other control: the Cost / Value / Delta stats on the summary line, tile prices, and the table's narrow (<1200px) card list, which ignores the column picker. It no longer greys out the picker, and the /about collection-value stat is no longer gated at all. **Photo is a normal toggleable column and is OFF by default since v1.10.2** (untick = no thumbnails mount — the render-perf lever, and first paint is the whole point). Devices with saved column prefs have it dropped once, guarded by the `collection-columns-photo-default-off` marker, so ticking it back on sticks. A NEW ColumnId never auto-appears on a device with saved column prefs — users must tick it in the Columns menu.
 - The **price-tracked marker** (`CircleDollarSign`, brass) lives in the **Value cell**, not
   beside the model (v1.10.4): it qualifies the number next to it — researched rather than

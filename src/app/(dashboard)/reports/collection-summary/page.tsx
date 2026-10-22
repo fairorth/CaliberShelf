@@ -52,6 +52,8 @@ export default async function CollectionSummaryPage() {
   const soldCount = portfolio.salesCount
   const ownedNotSoldCount = totalWatches - soldCount
   const comingSoonCount = owned.filter((w) => w.is_coming_soon).length
+  // Totals include coming-soon watches (paid for) and say so.
+  const incl = portfolio.comingSoonCount > 0 ? ` (incl. ${portfolio.comingSoonCount} coming soon)` : ""
   const unknownBrandCount = owned.filter((w) => needsBrandEditing(w.brand?.name)).length
 
   return (
@@ -92,12 +94,12 @@ export default async function CollectionSummaryPage() {
           <SummaryRow
             label="Cost Basis"
             value={formatCurrency(portfolio.costBasisCents, "USD")}
-            hint="Owned, unsold watches — purchase price plus acquisition costs"
+            hint={`Owned, unsold watches${incl} — purchase price plus sales tax, import fees and shipping`}
           />
           <SummaryRow
             label="Current Value"
             value={formatCurrency(portfolio.currentValueCents, "USD")}
-            hint={`${portfolio.valuedCount} of ${portfolio.ownedCount} owned valued — ${valueMixLabel(portfolio)}`}
+            hint={`${portfolio.valuedCount} of ${portfolio.ownedCount} owned valued${incl} — ${valueMixLabel(portfolio)}`}
           />
           <SummaryRow
             label="Unrealized"

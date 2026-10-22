@@ -9,7 +9,10 @@ import type { ValuationSource } from "@/lib/types/watch"
 // number comes from. The arithmetic lives in ./gain and is re-exported here.
 //
 // Set rules, applied consistently:
-// - "Owned" = not wishlist, not coming-soon. "Unsold" = sale_status ≠ 'sold'.
+// - "Owned" = not wishlist. COMING SOON COUNTS (v1.11.18): it is paid for, so
+//   its cost and value are in every total — the same set Watch Values uses,
+//   so the Market, Collection Summary and Watch Values totals agree. Screens
+//   say "incl. N coming soon". "Unsold" = sale_status ≠ 'sold'.
 // - COST BASIS sums every owned, unsold watch (an unknown purchase price
 //   contributes its acquisition costs, usually 0 — money actually spent).
 // - CURRENT VALUE sums the current value of every owned, unsold watch, exactly
@@ -74,7 +77,7 @@ async function fetchPortfolioData(): Promise<{
     console.error("Failed to fetch valuations:", valuationsRes.error.message)
   }
   const owned = ((watchesRes.data ?? []) as PortfolioWatch[]).filter(
-    (w) => !w.is_wishlist && !w.is_coming_soon
+    (w) => !w.is_wishlist
   )
   const estimates = (valuationsRes.data ?? []) as EstimateRow[]
   return {
@@ -98,8 +101,11 @@ export interface PortfolioOverview {
   researchedCount: number
   /** of those, how many are values you logged by hand. */
   loggedCount: number
-  /** owned & unsold watches — the denominator for "40 of 42 valued". */
+  /** owned & unsold watches (coming soon included) — the denominator for
+   *  "40 of 42 valued". */
   ownedCount: number
+  /** of ownedCount, how many are coming soon — screens say "incl. N". */
+  comingSoonCount: number
   unrealized: GainFigure | null
   /** lifetime realized gain over sales with a known basis. */
   realized: GainFigure | null
@@ -182,6 +188,7 @@ export async function getPortfolioOverview(): Promise<PortfolioOverview> {
     researchedCount: valued.filter((w) => sourceOf.get(w.id) === "agent").length,
     loggedCount: valued.filter((w) => sourceOf.get(w.id) === "manual").length,
     ownedCount: unsold.length,
+    comingSoonCount: unsold.filter((w) => w.is_coming_soon).length,
     latestRunDate,
     unrealized: aggregateGain(
       valued.map((w) => ({ valueCents: latestMid.get(w.id) ?? 0, watch: w }))
