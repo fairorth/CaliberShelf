@@ -74,28 +74,39 @@ function transformKey(path: string, t: ImageTransform): string {
  * symptom was a home-page count that read 121, then 118, then 112 across
  * reloads of the same unchanged collection.
  */
-const SIGN_CONCURRENCY = 12
-/** One retry: these failures are load-related, so a second ask usually wins. */
-const SIGN_ATTEMPTS = 2
+//
+// The cap is GLOBAL to the server process, not per call (v1.11.19). Per call
+// it was 12, but getWatches signs two sizes at once and other renders run
+// alongside, so 24–48 signatures were in flight together — and each one is a
+// database connection on Storage's side, which answered "Too many connections
+// issued to the database". Retries now back off, because an instant retry
+// lands in the same crowd.
+const SIGN_CONCURRENCY = 8
+/** These failures are load-related; a later ask usually wins. */
+const SIGN_ATTEMPTS = 3
+const SIGN_BACKOFF_MS = [0, 300, 900]
 
-/** Run `fn` over `items` with at most `limit` in flight, preserving order. */
-async function mapWithLimit<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>
-): Promise<R[]> {
-  const results = new Array<R>(items.length)
-  let next = 0
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    for (;;) {
-      const i = next++
-      if (i >= items.length) return
-      results[i] = await fn(items[i])
-    }
-  })
-  await Promise.all(workers)
-  return results
+let signing = 0
+const signQueue: Array<() => void> = []
+
+/** Run `fn` with at most SIGN_CONCURRENCY signatures in flight process-wide. */
+async function withSignSlot<R>(fn: () => Promise<R>): Promise<R> {
+  if (signing >= SIGN_CONCURRENCY) {
+    await new Promise<void>((resolve) => signQueue.push(resolve))
+  }
+  signing++
+  try {
+    return await fn()
+  } finally {
+    signing--
+    signQueue.shift()?.()
+  }
 }
+
+/** Signatures in flight, so two renders asking for one photo share one request. */
+const inFlight = new Map<string, Promise<string | null>>()
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export async function getTransformedSignedUrls(
   storagePaths: string[],
@@ -105,37 +116,39 @@ export async function getTransformedSignedUrls(
 
   const now = Date.now()
   const supabase = await createClient()
-  const entries = await mapWithLimit(
-    storagePaths,
-    SIGN_CONCURRENCY,
-    async (path) => {
+
+  async function sign(path: string, key: string): Promise<string | null> {
+    for (let attempt = 1; attempt <= SIGN_ATTEMPTS; attempt++) {
+      if (SIGN_BACKOFF_MS[attempt - 1]) await sleep(SIGN_BACKOFF_MS[attempt - 1])
+      const { data, error } = await withSignSlot(() =>
+        supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_EXPIRY, { transform })
+      )
+      if (!error && data) {
+        signedUrlCache.set(key, { url: data.signedUrl, expiresAt: Date.now() + CACHE_TTL_MS })
+        return data.signedUrl
+      }
+      if (attempt === SIGN_ATTEMPTS) {
+        // Loud on the way out: a dropped signature silently removes a watch
+        // from the home rotation, which is exactly the kind of disappearance
+        // that is impossible to notice from the outside.
+        console.error(`Signed URL failed after ${SIGN_ATTEMPTS} attempts: ${path}`, error?.message)
+      }
+    }
+    return null
+  }
+
+  const entries = await Promise.all(
+    storagePaths.map(async (path) => {
       const key = transformKey(path, transform)
       const hit = signedUrlCache.get(key)
       if (hit && hit.expiresAt > now) return [path, hit.url] as const
-
-      for (let attempt = 1; attempt <= SIGN_ATTEMPTS; attempt++) {
-        const { data, error } = await supabase.storage
-          .from(BUCKET)
-          .createSignedUrl(path, SIGNED_URL_EXPIRY, { transform })
-        if (!error && data) {
-          signedUrlCache.set(key, {
-            url: data.signedUrl,
-            expiresAt: now + CACHE_TTL_MS,
-          })
-          return [path, data.signedUrl] as const
-        }
-        if (attempt === SIGN_ATTEMPTS) {
-          // Loud on the way out: a dropped signature silently removes a watch
-          // from the home rotation, which is exactly the kind of disappearance
-          // that is impossible to notice from the outside.
-          console.error(
-            `Signed URL failed after ${SIGN_ATTEMPTS} attempts: ${path}`,
-            error?.message
-          )
-        }
+      let pending = inFlight.get(key)
+      if (!pending) {
+        pending = sign(path, key).finally(() => inFlight.delete(key))
+        inFlight.set(key, pending)
       }
-      return [path, null] as const
-    }
+      return [path, await pending] as const
+    })
   )
 
   const urlMap = new Map<string, string>()
