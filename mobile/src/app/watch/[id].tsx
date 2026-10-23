@@ -21,7 +21,7 @@ import type { KeepDecision } from "@/lib/validations/keep"
 import { ATTACHMENT_LEVELS, attachmentLabels } from "@/lib/validations/watch"
 import type { KeepFields } from "@/lib/validations/watch"
 import { useApp } from "../../lib/app-context"
-import { formatPrice, useShowPurchasePrice } from "../../lib/price-visibility"
+import { formatPrice, useShowPersonalSettings, useShowPurchasePrice } from "../../lib/price-visibility"
 import { fetchWatchDetail, setKeepFields } from "../../lib/watch-detail"
 import type { WatchDetail } from "../../lib/watch-detail"
 import type { PhoneWatch } from "../../lib/watches"
@@ -37,9 +37,10 @@ const STATUS_LABEL: Record<PhoneWatch["status"], string> = {
 const GUTTER = 16
 
 /**
- * The watch card: every photo (swipe), what it is, the keep judgements —
- * attachment, keep / maybe / sell, sentimental, the same fields The Edit
- * reads — and, if More allows, the purchase price. The rest lives on the web.
+ * The watch card: every photo (swipe, "2 / 5" on the photo), what it is, and
+ * — each only if More allows — the purchase price and the keep judgements
+ * (attachment, keep / maybe / sell, sentimental: the fields The Edit reads).
+ * The rest lives on the web.
  */
 export default function WatchScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -47,6 +48,7 @@ export default function WatchScreen() {
   const { width } = useWindowDimensions()
   const { watches } = useApp()
   const showPrice = useShowPurchasePrice()
+  const showPersonal = useShowPersonalSettings()
   const watch = watches?.find((w) => w.id === id)
 
   const [detail, setDetail] = useState<WatchDetail | null>(null)
@@ -118,14 +120,20 @@ export default function WatchScreen() {
             )}
           />
           {photos.length > 1 && (
-            <View style={styles.dots} accessibilityLabel={`Photo ${page + 1} of ${photos.length}`}>
-              {photos.map((p, i) => (
-                <View key={p.id} style={[styles.dot, i === page && styles.dotActive]} />
-              ))}
-              <Text style={styles.counter}>
-                {page + 1} / {photos.length}
-              </Text>
-            </View>
+            <>
+              {/* On the photo, where the eye already is — under it, beside
+                  the dots, it was easy to miss that there were more. */}
+              <View style={styles.counter} pointerEvents="none" accessibilityLabel={`Photo ${page + 1} of ${photos.length}, swipe for more`}>
+                <Text style={styles.counterText}>
+                  {page + 1} / {photos.length}
+                </Text>
+              </View>
+              <View style={styles.dots} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                {photos.map((p, i) => (
+                  <View key={p.id} style={[styles.dot, i === page && styles.dotActive]} />
+                ))}
+              </View>
+            </>
           )}
         </View>
       ) : (
@@ -157,8 +165,9 @@ export default function WatchScreen() {
 
       {loadError && <Text style={styles.error}>{loadError}</Text>}
 
-      {/* Keep judgements — the fields The Edit reads. */}
-      {detail && canJudge && (
+      {/* Keep judgements — the fields The Edit reads. Hidden entirely when
+          More → "Show personal settings" is off (someone else is browsing). */}
+      {detail && canJudge && showPersonal && (
         <View style={styles.card}>
           <Text style={styles.section}>ATTACHMENT</Text>
           <View style={styles.segment}>
@@ -230,7 +239,16 @@ const styles = StyleSheet.create({
   dots: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 10 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: color.border },
   dotActive: { backgroundColor: color.foreground },
-  counter: { fontSize: text.xxs, color: color.mutedForeground, marginLeft: 6, fontVariant: ["tabular-nums"] },
+  counter: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    backgroundColor: color.scrim,
+  },
+  counterText: { fontSize: text.xs, fontWeight: "600", color: color.foreground, fontVariant: ["tabular-nums"] },
   brand: { fontSize: text.sm, color: color.mutedForeground },
   model: { fontSize: text.lg, fontWeight: "600", color: color.foreground },
   meta: { fontSize: text.xs, color: color.mutedForeground },

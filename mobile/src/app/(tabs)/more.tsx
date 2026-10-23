@@ -8,7 +8,12 @@ import { ShowModeSection } from "../../components/show-mode-section"
 import { useApp } from "../../lib/app-context"
 import { canUseBiometrics, isLockEnabled, setLockEnabled, unlock } from "../../lib/app-lock"
 import { API_BASE } from "../../lib/config"
-import { setShowPurchasePrice, useShowPurchasePrice } from "../../lib/price-visibility"
+import {
+  setShowPersonalSettings,
+  setShowPurchasePrice,
+  useShowPersonalSettings,
+  useShowPurchasePrice,
+} from "../../lib/price-visibility"
 import { supabase } from "../../lib/supabase"
 import { color, radius, text, TOUCH } from "../../theme"
 
@@ -22,6 +27,7 @@ export default function MoreScreen() {
   const [lockOn, setLockOn] = useState(false)
   const [biometrics, setBiometrics] = useState<boolean | null>(null)
   const showPrice = useShowPurchasePrice()
+  const showPersonal = useShowPersonalSettings()
 
   useFocusEffect(
     useCallback(() => {
@@ -85,6 +91,21 @@ export default function MoreScreen() {
             <Switch
               value={showPrice}
               onValueChange={(v) => void setShowPurchasePrice(v)}
+              trackColor={{ true: color.brass, false: color.muted }}
+            />
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Show personal settings</Text>
+              <Text style={styles.rowHint}>
+                Attachment, keep or sell, and sentimental on the watch page. Turn off before handing the phone to
+                someone to browse.
+              </Text>
+            </View>
+            <Switch
+              value={showPersonal}
+              onValueChange={(v) => void setShowPersonalSettings(v)}
               trackColor={{ true: color.brass, false: color.muted }}
             />
           </View>

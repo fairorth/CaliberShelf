@@ -1,5 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { useEffect, useState } from "react"
+import { deviceSetting } from "./device-setting"
 
 /**
  * More → "Show watch purchase price". Off by default: the phone is used in
@@ -7,40 +6,19 @@ import { useEffect, useState } from "react"
  * business. When on, the collection tiles and the watch card show what was
  * paid. Per device.
  */
-const KEY = "tenten.showPurchasePrice"
+const showPurchasePrice = deviceSetting("tenten.showPurchasePrice", false)
+export const setShowPurchasePrice = showPurchasePrice.set
+export const useShowPurchasePrice = showPurchasePrice.useSetting
 
-let state = false
-const listeners = new Set<() => void>()
-
-void AsyncStorage.getItem(KEY)
-  .then((v) => {
-    state = v === "on"
-    for (const l of listeners) l()
-  })
-  .catch(() => {})
-
-export async function setShowPurchasePrice(on: boolean): Promise<void> {
-  state = on
-  for (const l of listeners) l()
-  try {
-    await AsyncStorage.setItem(KEY, on ? "on" : "off")
-  } catch {
-    // in-memory for this session
-  }
-}
-
-export function useShowPurchasePrice(): boolean {
-  const [on, setOn] = useState(state)
-  useEffect(() => {
-    const l = () => setOn(state)
-    listeners.add(l)
-    l()
-    return () => {
-      listeners.delete(l)
-    }
-  }, [])
-  return on
-}
+/**
+ * More → "Show personal settings": the watch card's keep judgements —
+ * attachment, keep or sell, sentimental. On by default (it is the owner's
+ * phone); off before handing it to someone to flip through the collection,
+ * so they can neither see nor change them. Per device.
+ */
+const showPersonalSettings = deviceSetting("tenten.showPersonalSettings", true)
+export const setShowPersonalSettings = showPersonalSettings.set
+export const useShowPersonalSettings = showPersonalSettings.useSetting
 
 /** "$1,250" — whole dollars, as the web's tiles show it. */
 export function formatPrice(cents: number | null): string | null {
