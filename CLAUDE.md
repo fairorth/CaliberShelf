@@ -433,6 +433,13 @@ service role, which bypasses RLS.
   Resume (`/rate-game?rater=<id>`), picks it up. Cleared by Best in Show,
   Discard, or 30 days idle. Deliberately not on the server: only finished
   segments are data; a half-played segment is a bookmark.
+- **Removing ratings** (v1.11.21): Reports → Ratings removes a player
+  (`deleteRater`) or one result (`deleteRatingSession`, `actions/rating-
+  actions.ts`); the phone's Rate tab removes a player only (straight to
+  Supabase, also clearing their saved game and queued sessions). Both lean on
+  the 00057 cascade (rater → sessions → picks). Removing a result lets the
+  rater's previous play of that segment count again (`earlierPlays` says
+  whether there is one). Never offered inside the locked game.
 - Web **Reports → Ratings** (`/reports/ratings?rater=&scheme=`): Everyone =
   consensus (all raters' latest picks re-fitted) + most divisive; per rater =
   rankings, Best in Show, agreement with the owner. Every row shows the

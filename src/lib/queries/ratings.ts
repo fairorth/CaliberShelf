@@ -43,6 +43,8 @@ export interface SessionView {
   ranking: RankRow[]
   /** Share of pairs ordered the same as the owner's latest ranking of this segment. */
   agreementWithOwner: number | null
+  /** Earlier plays of this segment by this rater — removing this one brings the newest back. */
+  earlierPlays: number
 }
 
 export interface ConsensusView {
@@ -97,10 +99,12 @@ export async function getRatingsReport(): Promise<RatingsReport> {
 
   // Latest per rater per segment (rows arrive newest first).
   const latest = new Map<string, SessionRow>()
+  const plays = new Map<string, number>()
   const keyOf = (r: SessionRow) => `${r.segment_scheme}|${r.segment_key}`
   for (const row of (sessionRows ?? []) as SessionRow[]) {
     const key = `${row.rater_id}|${keyOf(row)}`
     if (!latest.has(key)) latest.set(key, row)
+    plays.set(key, (plays.get(key) ?? 0) + 1)
   }
   const rows = [...latest.values()]
 
@@ -156,6 +160,7 @@ export async function getRatingsReport(): Promise<RatingsReport> {
       pickCount: r.pick_count,
       ranking,
       agreementWithOwner: agree && agree.pairs > 0 ? agree.pct : null,
+      earlierPlays: (plays.get(`${r.rater_id}|${keyOf(r)}`) ?? 1) - 1,
     }
   })
 

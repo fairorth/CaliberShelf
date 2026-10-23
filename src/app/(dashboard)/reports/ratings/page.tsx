@@ -5,7 +5,7 @@ import { Trophy } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatusPill } from "@/components/ui/status-pill"
 import { getRatingsReport } from "@/lib/queries/ratings"
-import type { RankRow, SessionView } from "@/lib/queries/ratings"
+import type { RankRow, RaterView as RaterInfo, SessionView } from "@/lib/queries/ratings"
 import { getTierBands } from "@/lib/queries/tier-config"
 import { getWatches } from "@/lib/queries/watches"
 import { SEGMENT_SCHEMES, segmentSchemeLabels, tierLabelForKey } from "@/lib/rating-segments"
@@ -13,6 +13,7 @@ import type { SegmentScheme } from "@/lib/rating-segments"
 import type { TierBand } from "@/lib/tiers"
 import type { WatchWithCover } from "@/lib/types/watch"
 import { cn } from "@/lib/utils"
+import { RemoveRatingButton } from "./_components/remove-rating-button"
 
 export const metadata: Metadata = {
   title: "Ratings | TenTenLoupe",
@@ -120,11 +121,13 @@ export default async function RatingsPage({
         </div>
       ) : (
         <RaterView
+          rater={selected}
           sessions={report.sessions.filter((s) => s.raterId === selected.id && s.scheme === scheme)}
+          totalSegments={report.sessions.filter((s) => s.raterId === selected.id && s.kind === "segment").length}
           byId={byId}
           bands={bands}
           ownerName={owner?.name ?? "the owner"}
-          isOwner={selected.isOwner}
+          everyoneHref={hrefFor(null, scheme)}
         />
       )}
     </div>
@@ -132,23 +135,47 @@ export default async function RatingsPage({
 }
 
 function RaterView({
+  rater,
   sessions,
+  totalSegments,
   byId,
   bands,
   ownerName,
-  isOwner,
+  everyoneHref,
 }: {
+  rater: RaterInfo
   sessions: SessionView[]
+  /** Across every scheme — what removing the player takes with them. */
+  totalSegments: number
   byId: Map<string, WatchWithCover>
   bands: TierBand[]
   ownerName: string
-  isOwner: boolean
+  everyoneHref: string
 }) {
+  const isOwner = rater.isOwner
   const final = sessions.find((s) => s.kind === "final")
   const segments = sessions.filter((s) => s.kind === "segment").sort((a, b) => a.segmentName.localeCompare(b.segmentName))
   const champion = final ? byId.get(final.ranking[0]?.watchId ?? "") : undefined
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <RemoveRatingButton
+          target="rater"
+          id={rater.id}
+          label={`Remove ${rater.name}`}
+          title={`Remove ${rater.name}?`}
+          description={
+            `Deletes ${rater.name} and every rating they made` +
+            (totalSegments > 0 ? ` (${totalSegments} segment${totalSegments === 1 ? "" : "s"}, every scheme)` : "") +
+            ". The consensus is re-fitted without them." +
+            (isOwner
+              ? ` ${rater.name} is the owner — "you agree with …" has no yardstick until someone plays as the owner again.`
+              : "") +
+            " This can't be undone."
+          }
+          afterHref={everyoneHref}
+        />
+      </div>
       {champion && final && (
         <Card>
           <CardContent className="flex items-center gap-4 py-4">
@@ -157,11 +184,19 @@ function RaterView({
               <p className="text-xs text-muted-foreground">Best in Show</p>
               <p className="truncate text-sm text-foreground">{label(champion)}</p>
             </div>
-            {final.agreementWithOwner !== null && (
-              <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
-                {Math.round(final.agreementWithOwner * 100)}% with {ownerName}
-              </span>
-            )}
+            <span className="ml-auto flex items-center gap-2">
+              {final.agreementWithOwner !== null && (
+                <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                  {Math.round(final.agreementWithOwner * 100)}% with {ownerName}
+                </span>
+              )}
+              <RemoveRatingButton
+                target="session"
+                id={final.id}
+                title={`Remove ${rater.name}'s Best in Show?`}
+                description={removeSessionText(final, rater.name)}
+              />
+            </span>
           </CardContent>
         </Card>
       )}
@@ -180,6 +215,12 @@ function RaterView({
                   <span className="font-mono text-xs font-normal text-muted-foreground">
                     {new Date(s.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </span>
+                  <RemoveRatingButton
+                    target="session"
+                    id={s.id}
+                    title={`Remove ${rater.name}'s ${s.segmentName} result?`}
+                    description={removeSessionText(s, rater.name)}
+                  />
                 </span>
               </CardTitle>
             </CardHeader>
@@ -192,6 +233,16 @@ function RaterView({
       {segments.length === 0 && <p className="text-sm text-muted-foreground">No completed segments for this rater.</p>}
     </div>
   )
+}
+
+/** What removing one result does — including what takes its place. */
+function removeSessionText(s: SessionView, raterName: string): string {
+  const played = new Date(s.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+  const after =
+    s.earlierPlays > 0
+      ? ` ${raterName}'s previous play of it takes its place.`
+      : ` ${raterName} will have no result for it until they play it again.`
+  return `Deletes the ${s.pickCount} picks from ${played}.${after} Their other results are kept. This can't be undone.`
 }
 
 /** The segment's game name, plus (tier segments) the owner's real tier label. */

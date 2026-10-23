@@ -81,6 +81,20 @@ export async function getOrCreateRater(name: string, isOwner: boolean, existing:
   return rater
 }
 
+/**
+ * Remove a player and every rating they made — the cascade (00057) takes
+ * their sessions and picks. Also forgets their unfinished game and anything
+ * of theirs still queued, or the queue would retry a session whose rater is
+ * gone (an FK failure, forever).
+ */
+export async function deleteRater(raterId: string): Promise<void> {
+  const { error } = await supabase.from("raters").delete().eq("id", raterId)
+  if (error) throw new Error(error.message)
+  await discardSavedGame(raterId)
+  const pending = await readPending()
+  await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(pending.filter((s) => s.raterId !== raterId)))
+}
+
 /** Key for one segment of one scheme — how rankings are compared like for like. */
 export const rankingKey = (scheme: SegmentScheme, segmentKey: string) => `${scheme}|${segmentKey}`
 

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { ScreenHeader } from "../../components/screen-header"
 import { useApp } from "../../lib/app-context"
 import { startCasebackRun, watchesMissingCaseback } from "../../lib/caseback-run"
-import { discardSavedGame, listSavedGames } from "../../lib/rate-game"
+import { deleteRater, discardSavedGame, listSavedGames } from "../../lib/rate-game"
 import type { SavedGame } from "../../lib/rate-game"
 import { supabase } from "../../lib/supabase"
 import { color, radius, text, TOUCH } from "../../theme"
@@ -35,29 +35,28 @@ export default function RateScreen() {
     .map((w) => w.id)
     .join(",")
 
-  useFocusEffect(
-    useCallback(() => {
-      supabase
-        .from("raters")
-        .select("id, name, is_owner, rating_sessions(id, kind)")
-        .order("name")
-        .then(({ data }) => {
-          setRaters(
-            ((data ?? []) as unknown as Array<{
-              id: string
-              name: string
-              is_owner: boolean
-              rating_sessions: Array<{ id: string; kind: string }> | null
-            }>).map((r) => ({
-              id: r.id,
-              name: r.name,
-              isOwner: r.is_owner,
-              segments: (r.rating_sessions ?? []).filter((s) => s.kind === "segment").length,
-            }))
-          )
-        })
-    }, [])
-  )
+  const loadRaters = useCallback(() => {
+    supabase
+      .from("raters")
+      .select("id, name, is_owner, rating_sessions(id, kind)")
+      .order("name")
+      .then(({ data }) => {
+        setRaters(
+          ((data ?? []) as unknown as Array<{
+            id: string
+            name: string
+            is_owner: boolean
+            rating_sessions: Array<{ id: string; kind: string }> | null
+          }>).map((r) => ({
+            id: r.id,
+            name: r.name,
+            isOwner: r.is_owner,
+            segments: (r.rating_sessions ?? []).filter((s) => s.kind === "segment").length,
+          }))
+        )
+      })
+  }, [])
+  useFocusEffect(loadRaters)
   // Games left part-way on this phone — each resumes where it stopped.
   const [unfinished, setUnfinished] = useState<SavedGame[]>([])
   useFocusEffect(
@@ -82,6 +81,33 @@ export default function RateScreen() {
 
   const owner = raters?.find((r) => r.isOwner)
   const nameOf = (id: string) => raters?.find((r) => r.id === id)?.name ?? null
+
+  // Out here, never inside the locked game — a friend can't remove anyone.
+  function removePlayer(r: RaterSummary) {
+    Alert.alert(
+      `Remove ${r.name}?`,
+      `Deletes ${r.name} and every rating they made` +
+        (r.segments > 0 ? ` (${r.segments} segment${r.segments === 1 ? "" : "s"})` : "") +
+        "." +
+        (r.isOwner ? " You're the owner — \"you agree with …\" has no yardstick until you play as the owner again." : "") +
+        " This can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => {
+            deleteRater(r.id)
+              .then(() => {
+                loadRaters()
+                return listSavedGames().then(setUnfinished)
+              })
+              .catch((e: Error) => Alert.alert("Couldn't remove", e.message))
+          },
+        },
+      ]
+    )
+  }
 
   function discard(game: SavedGame, name: string) {
     Alert.alert(
@@ -179,16 +205,30 @@ export default function RateScreen() {
             <Text style={styles.eyebrow}>WHO HAS PLAYED</Text>
             {raters.map((r) => (
               <View key={r.id} style={styles.row}>
-                <Text style={styles.rowName}>
-                  {r.name}
-                  {r.isOwner ? " (you)" : ""}
-                </Text>
-                <Text style={styles.rowMeta}>
-                  {r.segments} segment{r.segments === 1 ? "" : "s"}
-                </Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowName}>
+                    {r.name}
+                    {r.isOwner ? " (you)" : ""}
+                  </Text>
+                  <Text style={styles.rowMeta}>
+                    {r.segments} segment{r.segments === 1 ? "" : "s"}
+                  </Text>
+                </View>
+                <Pressable
+                  hitSlop={6}
+                  style={styles.rowAction}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove ${r.name} and their ratings`}
+                  onPress={() => removePlayer(r)}
+                >
+                  <Text style={styles.rowMeta}>Remove</Text>
+                </Pressable>
               </View>
             ))}
-            <Text style={styles.hint}>Their full rankings are on the web: Reports → Ratings.</Text>
+            <Text style={styles.hint}>
+              Their full rankings are on the web: Reports → Ratings — where you can also remove a single segment&rsquo;s
+              result.
+            </Text>
           </View>
         )}
       </ScrollView>
