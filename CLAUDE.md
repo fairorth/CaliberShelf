@@ -362,8 +362,13 @@ service role, which bypasses RLS.
   web's quick add and the phone's `POST /api/watches`. Wear logs are written
   by the phone straight to Supabase (`mobile/src/lib/wear.ts`), dated with
   the phone's local day.
-- **Over-the-air vs build:** JS-only changes ship with `eas update --channel
-  preview` from `mobile/`. Adding a native module/permission needs a new
+- **Over-the-air vs build:** JS-only changes ship from `mobile/` with
+  `npx eas-cli update --channel preview --environment production --platform ios
+  --message "…" --non-interactive`. **`--environment production`, never
+  `preview`** — the preview build reads production's variables, and an update
+  published against the empty preview environment ships without the Supabase
+  URL/key and locks the phone out at sign-in (happened v1.11.20). The CLI's
+  first line must list both `EXPO_PUBLIC_SUPABASE_*` variables. Adding a native module/permission needs a new
   `eas build --profile preview --platform ios --non-interactive` AND a bump of
   `mobile/app.json` "version" (runtimeVersion = appVersion), or an update
   could reach a build without the native code and crash it. Builds need no

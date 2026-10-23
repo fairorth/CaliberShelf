@@ -31,7 +31,20 @@ Five tabs — **Today · Collection · ◉ Camera · Rate · More** — on Expo 
 `eas update --channel preview` and reach the phone on next launch ("An update
 is ready · Restart"). Anything that adds a native module or permission needs
 a new build — **and a version bump**, so updates for it can never land on an
-older build that lacks the native code. v0.2.0 pre-installs every native
+older build that lacks the native code. The exact update command is:
+
+```bash
+npx eas-cli update --channel preview --environment production --platform ios --message "..." --non-interactive
+```
+
+`--environment production` is not a typo: the preview BUILD profile reads its
+variables from the production environment (eas.json), and that is the only
+environment holding the Supabase settings. `--environment preview` publishes a
+bundle with no Supabase URL/key — the phone drops to sign-in with "This build
+is missing its Supabase settings" (v1.11.20). Check the CLI's first line names
+both `EXPO_PUBLIC_SUPABASE_*` variables before trusting a publish.
+`--platform ios` because the app has no web target (the default `all` fails
+on react-native-web). v0.2.0 pre-installs every native
 package v1 is expected to need (router, gestures, reanimated, worklets, svg,
 netinfo, image picker) so the next features can ship as updates.
 
