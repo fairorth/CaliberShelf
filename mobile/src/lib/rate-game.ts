@@ -192,6 +192,96 @@ export async function flushPendingSessions(): Promise<number> {
   return left.length
 }
 
+// ── Unfinished games ───────────────────────────────────────────────
+// A game lives on the phone between sittings, one per rater: the segments
+// finished in it (so the checkmarks and Best in Show survive) and the picks
+// of any segment left half-played. Written after every pick, so quitting a
+// segment, handing the phone back or the app being killed loses nothing.
+// Cleared when Best in Show is played, when the owner discards it, or after
+// GAME_TTL_DAYS of no play. Phone-only on purpose: friends play on this
+// phone, and a finished segment is already on the server.
+
+export interface DoneSegment {
+  scheme: SegmentScheme
+  key: string
+  name: string
+  ranking: RankedWatch[]
+}
+
+export interface SegmentInProgress {
+  name: string
+  picks: PlayedPick[]
+  /** pairKey()s the rater skipped — not offered again while others remain. */
+  skipped: string[]
+  startedAt: string
+}
+
+export interface SavedGame {
+  raterId: string
+  scheme: SegmentScheme
+  done: DoneSegment[]
+  /** Keyed by rankingKey(scheme, segmentKey). */
+  inProgress: Record<string, SegmentInProgress>
+  updatedAt: string
+}
+
+const GAMES_KEY = "tenten.rateGame.games.v1"
+const GAME_TTL_DAYS = 30
+
+async function readGames(): Promise<Record<string, SavedGame>> {
+  try {
+    const raw = await AsyncStorage.getItem(GAMES_KEY)
+    const all = raw ? (JSON.parse(raw) as Record<string, SavedGame>) : {}
+    const cutoff = Date.now() - GAME_TTL_DAYS * 86_400_000
+    for (const [id, g] of Object.entries(all)) if (Date.parse(g.updatedAt) < cutoff) delete all[id]
+    return all
+  } catch {
+    return {}
+  }
+}
+
+// Writes go one at a time: a pick lands every second or two, and two
+// overlapping read-modify-writes would drop one of them.
+let gamesWrite: Promise<void> = Promise.resolve()
+function writeGames(change: (all: Record<string, SavedGame>) => void): Promise<void> {
+  gamesWrite = gamesWrite.then(async () => {
+    try {
+      const all = await readGames()
+      change(all)
+      await AsyncStorage.setItem(GAMES_KEY, JSON.stringify(all))
+    } catch {
+      // Best effort — the game itself never waits on, or fails with, this.
+    }
+  })
+  return gamesWrite
+}
+
+/** Every unfinished game on this phone, newest first. */
+export async function listSavedGames(): Promise<SavedGame[]> {
+  await gamesWrite
+  return Object.values(await readGames()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+}
+
+export async function loadSavedGame(raterId: string): Promise<SavedGame | null> {
+  await gamesWrite
+  return (await readGames())[raterId] ?? null
+}
+
+/** Save the game — or forget it when there is nothing left to resume. */
+export function storeSavedGame(game: SavedGame): Promise<void> {
+  const empty = game.done.length === 0 && Object.keys(game.inProgress).length === 0
+  return writeGames((all) => {
+    if (empty) delete all[game.raterId]
+    else all[game.raterId] = game
+  })
+}
+
+export function discardSavedGame(raterId: string): Promise<void> {
+  return writeGames((all) => {
+    delete all[raterId]
+  })
+}
+
 /** The owner's price tiers (Config → Tiers) as bands — for the Tier segments. */
 export async function fetchTierBands(): Promise<TierBand[]> {
   const { data: auth } = await supabase.auth.getUser()

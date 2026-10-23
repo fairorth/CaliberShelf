@@ -1,12 +1,12 @@
 import * as Haptics from "expo-haptics"
 import { Image } from "expo-image"
 import { useEffect, useRef, useState } from "react"
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native"
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native"
 import type { LayoutChangeEvent } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { isSegmentComplete, nextPair, pairKey, segmentProgress } from "@/lib/rating"
 import type { RatingPick } from "@/lib/rating"
-import type { PlayedPick } from "../../lib/rate-game"
+import type { PlayedPick, SegmentInProgress } from "../../lib/rate-game"
 import { fetchWatchPhotos } from "../../lib/watch-detail"
 import type { PhoneWatch } from "../../lib/watches"
 import { color, radius, text, TOUCH } from "../../theme"
@@ -34,33 +34,61 @@ function splitPhotos(photos: Photo[]): Slots {
  * Equal  = a tie (half a win each).
  * Skip   = "I can't judge these" — records nothing, and the pair isn't
  *          offered again while any other is left.
+ *
+ * A segment can be left and picked up later: `resume` restores the picks and
+ * skips so far, and `onProgress` reports them after every change so the game
+ * can keep them on the phone (lib/rate-game.ts, unfinished games).
  */
 export function Duel({
   raterName,
   segmentName,
   watches,
+  resume,
+  onProgress,
   onComplete,
   onQuit,
 }: {
   raterName: string
   segmentName: string
   watches: PhoneWatch[]
+  resume?: SegmentInProgress
+  onProgress: (state: SegmentInProgress) => void
   onComplete: (picks: PlayedPick[], startedAt: string) => void
   onQuit: () => void
 }) {
   const insets = useSafeAreaInsets()
   const ids = watches.map((w) => w.id)
   const byId = new Map(watches.map((w) => [w.id, w]))
-  const [picks, setPicks] = useState<PlayedPick[]>([])
-  const skipped = useRef(new Set<string>())
-  const [pair, setPair] = useState<[string, string] | null>(() => nextPair(ids, []))
+  const asModel = (list: PlayedPick[]): RatingPick[] => list.map((p) => ({ a: p.left, b: p.right, winner: p.winner }))
+
+  // Restored picks keep only watches still in the segment — one sold or
+  // re-categorised since the last sitting drops out with its picks.
+  const [picks, setPicks] = useState<PlayedPick[]>(() => {
+    const here = new Set(ids)
+    return (resume?.picks ?? []).filter(
+      (p) => here.has(p.left) && here.has(p.right) && (p.winner === null || here.has(p.winner))
+    )
+  })
+  const skipped = useRef(new Set<string>(resume?.skipped ?? []))
+  const [pair, setPair] = useState<[string, string] | null>(() =>
+    nextPair(ids, asModel(picks), Math.random, skipped.current)
+  )
   const [chosen, setChosen] = useState<string | null>(null)
   const shownAt = useRef(Date.now())
-  const startedAt = useRef(new Date().toISOString())
+  const startedAt = useRef(resume?.startedAt ?? new Date().toISOString())
   const photoCache = useRef(new Map<string, Slots>())
   const [, bump] = useState(0)
 
-  const asModel = (list: PlayedPick[]): RatingPick[] => list.map((p) => ({ a: p.left, b: p.right, winner: p.winner }))
+  function report(list: PlayedPick[]) {
+    onProgress({ name: segmentName, picks: list, skipped: [...skipped.current], startedAt: startedAt.current })
+  }
+
+  // A resumed segment whose watches changed may already be settled.
+  useEffect(() => {
+    if (picks.length > 0 && isSegmentComplete(ids, asModel(picks))) onComplete(picks, startedAt.current)
+    // Once, on mount — later picks go through advance().
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // The pair's photo sets, fetched in the background (the cover thumbnail
   // shows until they arrive).
@@ -83,6 +111,7 @@ export function Duel({
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       onComplete(next, startedAt.current)
     } else {
+      report(next)
       setPair(nextPair(ids, asModel(next), Math.random, skipped.current))
     }
   }
@@ -105,21 +134,17 @@ export function Duel({
     if (!pair || chosen) return
     void Haptics.selectionAsync()
     skipped.current.add(pairKey(pair[0], pair[1]))
+    report(picks)
     setPair(nextPair(ids, asModel(picks), Math.random, skipped.current))
   }
 
   function undo() {
     const last = picks[picks.length - 1]
     if (!last) return
-    setPicks(picks.slice(0, -1))
+    const next = picks.slice(0, -1)
+    setPicks(next)
+    report(next)
     setPair([last.left, last.right])
-  }
-
-  function quit() {
-    Alert.alert("Leave this segment?", "The picks so far in this segment won't be saved.", [
-      { text: "Keep playing", style: "cancel" },
-      { text: "Leave", style: "destructive", onPress: onQuit },
-    ])
   }
 
   const progress = segmentProgress(ids, asModel(picks))
@@ -136,7 +161,8 @@ export function Duel({
         <Text style={styles.headerText} numberOfLines={1}>
           {raterName} · {segmentName}
         </Text>
-        <Pressable onPress={quit} hitSlop={10}>
+        {/* Leaving keeps the picks — the segment resumes where it stopped. */}
+        <Pressable onPress={onQuit} hitSlop={10} accessibilityHint="Your picks so far are kept">
           <Text style={styles.headerLink}>Segments</Text>
         </Pressable>
       </View>

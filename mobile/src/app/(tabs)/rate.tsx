@@ -1,13 +1,15 @@
 import { router, useFocusEffect } from "expo-router"
 import { Camera, Trophy } from "lucide-react-native"
 import { useCallback, useState } from "react"
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { ScreenHeader } from "../../components/screen-header"
 import { useApp } from "../../lib/app-context"
 import { startCasebackRun, watchesMissingCaseback } from "../../lib/caseback-run"
+import { discardSavedGame, listSavedGames } from "../../lib/rate-game"
+import type { SavedGame } from "../../lib/rate-game"
 import { supabase } from "../../lib/supabase"
-import { color, radius, text } from "../../theme"
+import { color, radius, text, TOUCH } from "../../theme"
 
 interface RaterSummary {
   id: string
@@ -56,6 +58,13 @@ export default function RateScreen() {
         })
     }, [])
   )
+  // Games left part-way on this phone — each resumes where it stopped.
+  const [unfinished, setUnfinished] = useState<SavedGame[]>([])
+  useFocusEffect(
+    useCallback(() => {
+      void listSavedGames().then(setUnfinished)
+    }, [])
+  )
   useFocusEffect(
     useCallback(() => {
       if (!ownedKey) return
@@ -72,6 +81,24 @@ export default function RateScreen() {
   }
 
   const owner = raters?.find((r) => r.isOwner)
+  const nameOf = (id: string) => raters?.find((r) => r.id === id)?.name ?? null
+
+  function discard(game: SavedGame, name: string) {
+    Alert.alert(
+      `Discard ${name}'s game?`,
+      "Finished segments stay saved. Any half-played segment is lost.",
+      [
+        { text: "Keep it", style: "cancel" },
+        {
+          text: "Discard",
+          style: "destructive",
+          onPress: () => {
+            void discardSavedGame(game.raterId).then(() => listSavedGames().then(setUnfinished))
+          },
+        },
+      ]
+    )
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: color.background }}>
@@ -95,6 +122,44 @@ export default function RateScreen() {
             </Text>
           )}
         </View>
+
+        {raters && unfinished.some((g) => nameOf(g.raterId)) && (
+          <View style={{ gap: 8 }}>
+            <Text style={styles.eyebrow}>UNFINISHED GAMES</Text>
+            {unfinished.map((g) => {
+              const name = nameOf(g.raterId)
+              if (!name) return null
+              const partial = Object.values(g.inProgress)
+              const parts = [
+                g.done.length > 0 ? `${g.done.length} segment${g.done.length === 1 ? "" : "s"} done` : null,
+                ...partial.map((p) => `${p.name} in progress`),
+              ].filter(Boolean)
+              return (
+                <View key={g.raterId} style={styles.row}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowName}>{name}</Text>
+                    <Text style={styles.rowMeta}>{parts.join(" · ")}</Text>
+                  </View>
+                  <Pressable
+                    hitSlop={6}
+                    style={styles.rowAction}
+                    accessibilityLabel={`Discard ${name}'s game`}
+                    onPress={() => discard(g, name)}
+                  >
+                    <Text style={styles.rowMeta}>Discard</Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.resume}
+                    accessibilityLabel={`Resume ${name}'s game`}
+                    onPress={() => router.push({ pathname: "/rate-game", params: { rater: g.raterId } })}
+                  >
+                    <Text style={styles.resumeText}>Resume</Text>
+                  </Pressable>
+                </View>
+              )
+            })}
+          </View>
+        )}
 
         {missingBack && missingBack.length > 0 && (
           <Pressable style={styles.card} onPress={startRun} accessibilityRole="button">
@@ -157,4 +222,13 @@ const styles = StyleSheet.create({
   },
   rowName: { fontSize: text.sm, color: color.foreground },
   rowMeta: { fontSize: text.xs, color: color.mutedForeground },
+  rowAction: { minHeight: TOUCH, justifyContent: "center", paddingHorizontal: 10 },
+  resume: {
+    minHeight: 36,
+    paddingHorizontal: 14,
+    borderRadius: radius.control,
+    backgroundColor: color.brass,
+    justifyContent: "center",
+  },
+  resumeText: { fontSize: text.sm, fontWeight: "600", color: color.brassForeground },
 })

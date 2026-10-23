@@ -1,11 +1,10 @@
 import * as Haptics from "expo-haptics"
-import { router } from "expo-router"
+import { router, useLocalSearchParams } from "expo-router"
 import { Check, Lock } from "lucide-react-native"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { estimatePicks, finalists, hotTake, pairwiseAgreement, rankWatches } from "@/lib/rating"
-import type { RankedWatch } from "@/lib/rating"
 import { buildSegments, SEGMENT_SCHEMES, segmentSchemeLabels } from "@/lib/rating-segments"
 import type { SegmentScheme } from "@/lib/rating-segments"
 import type { TierBand } from "@/lib/tiers"
@@ -13,16 +12,20 @@ import { ATTACHMENT_LEVELS } from "@/lib/validations/watch"
 import { useApp } from "../lib/app-context"
 import { canUseBiometrics, unlock } from "../lib/app-lock"
 import {
+  discardSavedGame,
   fetchOwnerRankings,
   fetchRaters,
   fetchTierBands,
   flushPendingSessions,
   getOrCreateRater,
+  listSavedGames,
+  loadSavedGame,
   newId,
   rankingKey,
   saveSession,
+  storeSavedGame,
 } from "../lib/rate-game"
-import type { PlayedPick, Rater } from "../lib/rate-game"
+import type { DoneSegment, PlayedPick, Rater, SegmentInProgress } from "../lib/rate-game"
 import type { PhoneWatch } from "../lib/watches"
 import { Duel } from "../screens/rate-game/duel"
 import { Reveal } from "../screens/rate-game/reveal"
@@ -51,27 +54,68 @@ type Stage =
  * out is Face ID (or the passcode). Flow: who's rating → pick a segment →
  * head-to-heads until the model has their ranking → the reveal → next
  * segment, or Best in Show (top three of each segment played) → hand back.
+ *
+ * A game survives between sittings: choosing a rater with an unfinished game
+ * on this phone picks it up — finished segments ticked, a half-played segment
+ * resuming at its next pair. `?rater=<id>` (the Rate tab's Resume) skips the
+ * "who's rating" step.
  */
 export default function RateGameScreen() {
   const insets = useSafeAreaInsets()
   const { watches } = useApp()
+  const params = useLocalSearchParams<{ rater?: string }>()
   const [stage, setStage] = useState<Stage>({ kind: "who" })
   const [raters, setRaters] = useState<Rater[] | null>(null)
   const [rater, setRater] = useState<Rater | null>(null)
   const [ownerRankings, setOwnerRankings] = useState<Map<string, string[]>>(new Map())
-  const [done, setDone] = useState<Array<{ segment: Segment; ranking: RankedWatch[] }>>([])
+  const [done, setDone] = useState<DoneSegment[]>([])
+  // Half-played segments, keyed by rankingKey(scheme, key).
+  const [inProgress, setInProgress] = useState<Record<string, SegmentInProgress>>({})
+  // The rater whose saved game has been loaded — nothing is written back
+  // until it has, or an empty game would overwrite the saved one.
+  const [loadedFor, setLoadedFor] = useState<string | null>(null)
+  const [savedRaterIds, setSavedRaterIds] = useState<Set<string>>(new Set())
   const [saveState, setSaveState] = useState<"saving" | "saved" | "queued">("saving")
   // How the collection is cut into segments for this game (Type / Tier /
   // Type + Tier). Switching scheme mid-game starts its own set of segments.
   const [scheme, setScheme] = useState<SegmentScheme>("type")
   const [bands, setBands] = useState<TierBand[] | null>(null)
+  const autoStarted = useRef(false)
 
   useEffect(() => {
     void flushPendingSessions()
     fetchRaters().then(setRaters).catch(() => setRaters([]))
     void fetchOwnerRankings().then(setOwnerRankings)
     fetchTierBands().then(setBands).catch(() => setBands([]))
+    void listSavedGames().then((games) => setSavedRaterIds(new Set(games.map((g) => g.raterId))))
   }, [])
+
+  // Keep the game on the phone after every change, so it can be picked up.
+  useEffect(() => {
+    if (!rater || loadedFor !== rater.id) return
+    void storeSavedGame({ raterId: rater.id, scheme, done, inProgress, updatedAt: new Date().toISOString() })
+  }, [rater, loadedFor, scheme, done, inProgress])
+
+  async function beginAs(r: Rater) {
+    const saved = await loadSavedGame(r.id)
+    setRater(r)
+    setDone(saved?.done ?? [])
+    setInProgress(saved?.inProgress ?? {})
+    if (saved) setScheme(saved.scheme)
+    setLoadedFor(r.id)
+    setStage({ kind: "segments" })
+  }
+
+  // Resume from the Rate tab: straight into that rater's game.
+  useEffect(() => {
+    if (autoStarted.current || !params.rater || !raters) return
+    const r = raters.find((x) => x.id === params.rater)
+    if (!r) return
+    autoStarted.current = true
+    void beginAs(r)
+    // beginAs only reads setters and the rater it is given.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.rater, raters])
 
   // The players: owned + coming soon — never wish list, never sold.
   const players = useMemo(
@@ -100,7 +144,7 @@ export default function RateGameScreen() {
     [players, byId, scheme, bands]
   )
   // Segments finished in THIS game under the current scheme.
-  const doneHere = done.filter((d) => d.segment.scheme === scheme)
+  const doneHere = done.filter((d) => d.scheme === scheme)
 
   const owner = raters?.find((r) => r.isOwner) ?? null
   const ownerName = owner?.name ?? "the owner"
@@ -144,11 +188,21 @@ export default function RateGameScreen() {
     }
 
     const isFinal = segment.key === "final"
-    if (!isFinal)
+    if (isFinal) {
+      // Best in Show ends the game — nothing left to resume.
+      setLoadedFor(null)
+      void discardSavedGame(rater.id)
+    } else {
       setDone((prev) => [
-        ...prev.filter((d) => !(d.segment.key === segment.key && d.segment.scheme === segment.scheme)),
-        { segment, ranking },
+        ...prev.filter((d) => !(d.key === segment.key && d.scheme === segment.scheme)),
+        { scheme: segment.scheme, key: segment.key, name: segment.name, ranking },
       ])
+      setInProgress((prev) => {
+        const next = { ...prev }
+        delete next[yardstick]
+        return next
+      })
+    }
     setStage({
       kind: "reveal",
       segment,
@@ -189,6 +243,10 @@ export default function RateGameScreen() {
         raterName={rater.name}
         segmentName={stage.segment.name}
         watches={stage.segment.watches}
+        resume={inProgress[rankingKey(stage.segment.scheme, stage.segment.key)]}
+        onProgress={(state) =>
+          setInProgress((prev) => ({ ...prev, [rankingKey(stage.segment.scheme, stage.segment.key)]: state }))
+        }
         onComplete={(picks, startedAt) => finishSegment(stage.segment, picks, startedAt)}
         onQuit={() => setStage({ kind: "segments" })}
       />
@@ -197,7 +255,7 @@ export default function RateGameScreen() {
 
   if (stage.kind === "reveal" && rater) {
     const isFinal = stage.data.isFinal
-    const remaining = segments.filter((s) => !doneHere.some((d) => d.segment.key === s.key))
+    const remaining = segments.filter((s) => !doneHere.some((d) => d.key === s.key))
     const canFinal = !isFinal && doneHere.length >= 2
     return (
       <Reveal
@@ -242,11 +300,8 @@ export default function RateGameScreen() {
         <WhoIsRating
           raters={raters}
           hasOwner={!!owner}
-          onStart={async (name, isOwner) => {
-            const r = await getOrCreateRater(name, isOwner, raters ?? [])
-            setRater(r)
-            setStage({ kind: "segments" })
-          }}
+          unfinished={savedRaterIds}
+          onStart={async (name, isOwner) => beginAs(await getOrCreateRater(name, isOwner, raters ?? []))}
         />
       )}
 
@@ -273,21 +328,45 @@ export default function RateGameScreen() {
           </View>
           {scheme !== "type" && bands === null && <ActivityIndicator color={color.brass} />}
           {segments.map((s) => {
-            const played = doneHere.some((d) => d.segment.key === s.key)
+            const played = doneHere.some((d) => d.key === s.key)
+            const key = rankingKey(s.scheme, s.key)
+            const partial = inProgress[key]
             const minutes = Math.max(1, Math.round((estimatePicks(s.watches.length) * 4) / 60))
             return (
               <Pressable
                 key={s.key}
                 style={({ pressed }) => [styles.segment, pressed && { opacity: 0.85 }]}
                 onPress={() => setStage({ kind: "duel", segment: s })}
+                accessibilityHint={partial ? "Resumes where you left off" : undefined}
               >
                 <View style={{ flex: 1 }}>
                   <Text style={styles.segName}>{s.name}</Text>
                   <Text style={styles.segMeta}>
-                    {s.watches.length} watches · about {minutes} min
+                    {partial
+                      ? `In progress · ${partial.picks.length} pick${partial.picks.length === 1 ? "" : "s"} — tap to resume`
+                      : `${s.watches.length} watches · about ${minutes} min`}
                   </Text>
                 </View>
-                {played && <Check color={color.brass} size={20} aria-hidden />}
+                {partial ? (
+                  <Pressable
+                    hitSlop={10}
+                    style={styles.restart}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Start ${s.name} over`}
+                    onPress={() => {
+                      void Haptics.selectionAsync()
+                      setInProgress((prev) => {
+                        const next = { ...prev }
+                        delete next[key]
+                        return next
+                      })
+                    }}
+                  >
+                    <Text style={styles.restartText}>Start over</Text>
+                  </Pressable>
+                ) : (
+                  played && <Check color={color.brass} size={20} aria-hidden />
+                )}
               </Pressable>
             )
           })}
@@ -315,10 +394,15 @@ export default function RateGameScreen() {
             style={styles.secondary}
             onPress={() => {
               void Haptics.selectionAsync()
+              // This rater's game stays saved on the phone; the next one
+              // starts from (or resumes) their own.
+              setLoadedFor(null)
               setDone([])
+              setInProgress({})
               setRater(null)
               setStage({ kind: "who" })
               fetchRaters().then(setRaters).catch(() => {})
+              void listSavedGames().then((games) => setSavedRaterIds(new Set(games.map((g) => g.raterId))))
             }}
           >
             <Text style={styles.secondaryText}>Someone else wants to play</Text>
@@ -332,10 +416,13 @@ export default function RateGameScreen() {
 function WhoIsRating({
   raters,
   hasOwner,
+  unfinished,
   onStart,
 }: {
   raters: Rater[] | null
   hasOwner: boolean
+  /** Raters with a game saved on this phone — their chip resumes it. */
+  unfinished: Set<string>
   onStart: (name: string, isOwner: boolean) => Promise<void>
 }) {
   const [name, setName] = useState("")
@@ -382,6 +469,7 @@ function WhoIsRating({
                 <Text style={styles.chipText}>
                   {r.name}
                   {r.isOwner ? " (owner)" : ""}
+                  {unfinished.has(r.id) ? " · resume" : ""}
                 </Text>
               </Pressable>
             ))}
@@ -472,6 +560,8 @@ const styles = StyleSheet.create({
   },
   segName: { fontSize: text.sm, fontWeight: "600", color: color.foreground },
   segMeta: { fontSize: text.xs, color: color.mutedForeground, marginTop: 2 },
+  restart: { minHeight: TOUCH, justifyContent: "center", paddingLeft: 8 },
+  restartText: { fontSize: text.xs, fontWeight: "600", color: color.brass },
   final: { minHeight: 56, borderRadius: radius.card, borderWidth: 1, borderColor: color.brass, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
   finalText: { fontSize: text.sm, fontWeight: "600", color: color.brass, textAlign: "center" },
   handback: { flex: 1, justifyContent: "center", gap: 14 },

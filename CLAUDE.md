@@ -420,6 +420,14 @@ service role, which bypasses RLS.
 - Tables `raters` (one `is_owner` — the yardstick), `rating_sessions` (frozen
   `result`, latest per rater per segment counts), `rating_picks`; client
   UUIDs, saved on segment completion, retried from the phone if offline.
+- **Unfinished games resume** (v1.11.20): one game per rater is kept on the
+  PHONE (AsyncStorage, `SavedGame` in `mobile/src/lib/rate-game.ts`) —
+  finished segments plus the picks/skips of any half-played one, written
+  after every pick. Leaving a segment no longer discards it. Choosing that
+  rater again (chip says "· resume"), or Rate tab → Unfinished games →
+  Resume (`/rate-game?rater=<id>`), picks it up. Cleared by Best in Show,
+  Discard, or 30 days idle. Deliberately not on the server: only finished
+  segments are data; a half-played segment is a bookmark.
 - Web **Reports → Ratings** (`/reports/ratings?rater=&scheme=`): Everyone =
   consensus (all raters' latest picks re-fitted) + most divisive; per rater =
   rankings, Best in Show, agreement with the owner. Every row shows the
