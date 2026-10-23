@@ -5,6 +5,14 @@
 - Each migration is a single logical change (one table or set of related policies)
 - Always include `IF NOT EXISTS` guards for idempotency
 - After creating a migration: run SQL in Supabase SQL Editor (no CLI push — hosted Supabase). Migrations are applied BY HAND, so always tell the user which file to run.
+- **`00060_admired_vendors.sql` APPLIED 2026-10-23** (user confirmed). Latest
+  applied migration is now 00060. Adds
+  `admired_vendors`, `admired_watches.vendor_id`, and vendor-owned frames on
+  `admired_photos` (`vendor_id`, `admired_id` now nullable, kinds widened to
+  booth | name with an owner-shape CHECK; the 00056 kind CHECK is dropped by
+  DEFINITION). Rewrites the insert/update policies on watches and photos so a
+  row can only point at the owner's own vendor / watch. Backfills one vendor
+  per (owner, event, maker). Re-runnable.
 - **`00059_rating_segment_schemes.sql` APPLIED 2026-10-21** (user confirmed).
   Latest applied migration is now 00059. Adds `rating_sessions.segment_scheme`
   (type|tier|type_tier, CHECK) and `segment_key` (backfilled from

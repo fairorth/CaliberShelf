@@ -17,8 +17,25 @@ export const admiredTagLabels: Record<AdmiredTag, string> = {
   photography: "Photography",
 }
 
-export const ADMIRED_PHOTO_KINDS = ["watch", "placard"] as const
+/**
+ * Frame kinds (00060). watch / placard belong to an admired WATCH; booth /
+ * name belong to its VENDOR. The phone shoots watch, booth and name; placard
+ * is kept for frames already stored (Watch Week NYC), no longer shot.
+ */
+export const ADMIRED_PHOTO_KINDS = ["watch", "placard", "booth", "name"] as const
 export type AdmiredPhotoKind = (typeof ADMIRED_PHOTO_KINDS)[number]
+export const WATCH_PHOTO_KINDS = ["watch", "placard"] as const
+export const VENDOR_PHOTO_KINDS = ["booth", "name"] as const
+export type VendorPhotoKind = (typeof VENDOR_PHOTO_KINDS)[number]
+export const isVendorKind = (k: AdmiredPhotoKind): k is VendorPhotoKind => k === "booth" || k === "name"
+/** What the phone's camera offers, in its order. */
+export const SHOW_SHOT_KINDS = ["watch", "booth", "name"] as const
+export const admiredPhotoKindLabels: Record<AdmiredPhotoKind, string> = {
+  watch: "Watch",
+  placard: "Placard",
+  booth: "Booth",
+  name: "Name",
+}
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD")
 const optText = (max: number) => z.string().trim().max(max).nullable().optional()
@@ -43,10 +60,45 @@ export type AdmiredFields = z.input<typeof admiredFieldsSchema>
 export const admiredCreateSchema = admiredFieldsSchema.extend({
   id: z.string().uuid(),
   seen_on: isoDate,
+  /** The booth it was seen at (00060). Absent for the pre-vendor phone. */
+  vendor_id: z.string().uuid().nullable().optional(),
 })
 export type AdmiredCreate = z.input<typeof admiredCreateSchema>
 
-/** POST /api/admired/:id/photos — one frame; `id` client-generated, as above. */
+// ── Vendors (00060) ────────────────────────────────────────────────
+
+/** The editable vendor fields (phone rename, web edit). */
+export const vendorFieldsSchema = z.object({
+  name: optText(120),
+  notes: optText(2000),
+  event: optText(120),
+})
+export type VendorFields = z.input<typeof vendorFieldsSchema>
+
+/** POST /api/admired/vendors — `id` client-generated, like every Admired row. */
+export const vendorCreateSchema = vendorFieldsSchema.extend({
+  id: z.string().uuid(),
+  seen_on: isoDate,
+})
+export type VendorCreate = z.input<typeof vendorCreateSchema>
+
+/**
+ * PATCH /api/admired/photos/:id — move a frame: to another watch, or change
+ * what it is (a Watch frame that was really the booth). Watch kinds need
+ * `admired_id`; booth / name need `vendor_id`.
+ */
+export const admiredPhotoMoveSchema = z
+  .object({
+    kind: z.enum(ADMIRED_PHOTO_KINDS),
+    admired_id: z.string().uuid().nullable().optional(),
+    vendor_id: z.string().uuid().nullable().optional(),
+  })
+  .refine((v) => (isVendorKind(v.kind) ? !!v.vendor_id && !v.admired_id : !!v.admired_id && !v.vendor_id), {
+    message: "A watch or placard frame needs a watch; a booth or name frame needs a vendor.",
+  })
+export type AdmiredPhotoMove = z.input<typeof admiredPhotoMoveSchema>
+
+/** POST /api/admired/:id/photos and /api/admired/vendors/:id/photos — one frame; `id` client-generated, as above. */
 export const admiredPhotoUploadSchema = z.object({
   id: z.string().uuid(),
   kind: z.enum(ADMIRED_PHOTO_KINDS),
@@ -74,7 +126,21 @@ export const placardReadSchema = z.object({
 })
 export type PlacardRead = z.infer<typeof placardReadSchema>
 
-/** What the photo route returns. */
+/**
+ * What the vendor-name reader must return from a NAME frame — the booth's
+ * sign, banner or business card. Only what is printed; never a guess.
+ */
+export const vendorNameReadSchema = z.object({
+  /** False when the image shows no readable name (a person, a crowd, a blur). */
+  legible: z.boolean(),
+  /** The brand / workshop / watchmaker name as printed. */
+  name: z.string().nullable(),
+  /** Other printed lines worth keeping: a tagline, city, the watchmakers named. One short line. */
+  details: z.string().nullable(),
+})
+export type VendorNameRead = z.infer<typeof vendorNameReadSchema>
+
+/** What the photo routes return. */
 export interface AdmiredPhotoResponse {
   photoId: string
   /** Set when this frame was a placard and was read. */
@@ -86,4 +152,12 @@ export interface AdmiredPhotoResponse {
   }
   /** A placard that couldn't be read — the frame is still saved. */
   placardError?: string
+  /** Set when this frame was a vendor's NAME frame and was read. */
+  vendorName?: {
+    read: VendorNameRead
+    /** True when the read set the vendor's name (it was empty). */
+    filled: boolean
+    cost_usd: number
+  }
+  vendorNameError?: string
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
-import { readPlacardFor, storeAdmiredPhotoFor } from "@/lib/admired-store"
+import { NOT_FOUND_WATCH, readPlacardFor, storeAdmiredPhotoFor } from "@/lib/admired-store"
 import { getRequestAuth } from "@/lib/supabase/request"
-import { admiredPhotoUploadSchema } from "@/lib/validations/admired"
+import { admiredPhotoUploadSchema, isVendorKind } from "@/lib/validations/admired"
 import type { AdmiredPhotoResponse } from "@/lib/validations/admired"
 
 // A placard read is one short vision call; keep headroom over identify's.
@@ -24,6 +24,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 422 })
   }
   const d = parsed.data
+  // Booth / name frames belong to the vendor (00060) — a wrong request, not
+  // a transient one, so 422: the phone's queue must not retry it forever.
+  if (isVendorKind(d.kind)) {
+    return NextResponse.json({ error: "Booth and name frames go to /api/admired/vendors/:id/photos." }, { status: 422 })
+  }
 
   const stored = await storeAdmiredPhotoFor(supabase, user.id, admiredId, {
     id: d.id,
@@ -35,7 +40,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if ("error" in stored) {
     // 404 = the watch's create hasn't landed yet; 500 = storage/DB trouble.
     // Both are RETRIED by the phone's queue; only 422 makes it give up.
-    const status = stored.error === "Admired watch not found." ? 404 : 500
+    const status = stored.error === NOT_FOUND_WATCH ? 404 : 500
     return NextResponse.json({ error: stored.error }, { status })
   }
 

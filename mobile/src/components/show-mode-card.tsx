@@ -7,9 +7,9 @@ import { useShowMode } from "../lib/show-mode"
 import { color, radius, text } from "../theme"
 
 /**
- * Today, while Show mode is on: the event, the way into Admired capture, and
- * the offline queue's state — so "is that shot safe?" is answerable at a
- * glance on a show floor with no signal.
+ * Today, while Show mode is on: the event, the way into booth-by-booth
+ * capture, the way into the review (Vendors), and the offline queue's state
+ * — so "is that shot safe?" is answerable at a glance with no signal.
  */
 export function ShowModeCard() {
   const show = useShowMode()
@@ -35,7 +35,10 @@ export function ShowModeCard() {
         onPress={() => router.push({ pathname: "/camera", params: { mode: "admired" } })}
       >
         <Camera color={color.brassForeground} size={20} aria-hidden />
-        <Text style={styles.actionText}>Admire a watch</Text>
+        <Text style={styles.actionText}>Shoot at a booth</Text>
+      </Pressable>
+      <Pressable style={styles.secondary} onPress={() => router.push("/show")} accessibilityRole="button">
+        <Text style={styles.secondaryText}>Review vendors and photos</Text>
       </Pressable>
     </View>
   )
@@ -64,4 +67,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   actionText: { fontSize: text.sm, fontWeight: "600", color: color.brassForeground },
+  secondary: { minHeight: 44, alignItems: "center", justifyContent: "center" },
+  secondaryText: { fontSize: text.sm, fontWeight: "600", color: color.brass },
 })

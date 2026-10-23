@@ -388,10 +388,26 @@ service role, which bypasses RLS.
   independents seen once don't belong there). Web: Imagery → Inspiration →
   **Admired** tab (`?tab=admired`), grouped by event, edited via
   `actions/admired-actions.ts`. ONE implementation: `lib/admired-store.ts`.
-- iPhone **Show mode** (More): the camera button opens Admired capture, one
-  watch at a time until "Next watch"; each frame is **Watch** or **Placard**.
-  A placard is read SERVER-side on upload (vision, `placard-read` in
-  agent_runs) and fills only EMPTY fields — the owner's edits always win.
+- **Vendor-first since v1.11.23 (migration 00060).** At a show you walk up
+  to a booth, so the VENDOR (`admired_vendors`) is the unit: its watches
+  (`admired_watches.vendor_id`) and its own frames. A frame belongs to a
+  watch (kind `watch` | `placard`) XOR a vendor (`booth` | `name`) — a DB
+  CHECK enforces it. iPhone **Show mode** camera: shot types **Watch ·
+  Booth · Name**, "+ Watch" (next watch at the same booth), **Next vendor**,
+  and **Vendors** (review). A NAME frame (their sign / banner / card) is read
+  SERVER-side (`vendor-name-read` in agent_runs) and sets the vendor's name
+  only if empty; booth frames are never read (they're mostly people).
+  `placard` is no longer shot — kept for Watch Week NYC's frames, still read
+  and shown. Vendors are numbered by visit order ("Vendor 3") until named.
+- **Review on the phone** (`/show`, `/show/[vendorId]`): vendors list, then a
+  vendor's photos by Booth / Watch N; tap → full-screen, pinch to 5× to judge
+  sharpness (the ORIGINAL 2000px upload, deliberately untransformed). Move a
+  frame (another watch, a new watch, Booth ↔ Name — turning one into Name
+  reads it), delete, rename, **Shoot more here** (resumes ANY vendor, even
+  one only the server knows). It all works offline: `lib/show-session.ts`
+  is the phone's record of the event (vendors, watches, frames with local
+  copies); `lib/show-data.ts` merges it with the server's rows. Every edit
+  is a queue item, never a direct call.
 - **Offline queue** (`mobile/src/lib/admired-queue.ts`): every frame is saved
   on the phone before it is sent; ids are client-generated and the server
   treats repeats as done. The queue gives up ONLY on 422/413 — routes must

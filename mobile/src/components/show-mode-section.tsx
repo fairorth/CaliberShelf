@@ -1,5 +1,7 @@
+import { router } from "expo-router"
+import { ChevronRight } from "lucide-react-native"
 import { useEffect, useState } from "react"
-import { StyleSheet, Switch, Text, TextInput, View } from "react-native"
+import { Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native"
 import { DEFAULT_SHOW_EVENT, setShowMode, useShowMode } from "../lib/show-mode"
 import { color, radius, text, TOUCH } from "../theme"
 
@@ -25,8 +27,8 @@ export function ShowModeSection() {
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>At a watch show</Text>
           <Text style={styles.hint}>
-            The camera button opens Admired: watches you admire but won&rsquo;t own, with their placards. Kept
-            off the wish list.
+            The camera button shoots booth by booth: the watches you admire, the booth, and a Name photo of their
+            sign that names the vendor. Kept off the wish list.
           </Text>
         </View>
         <Switch
@@ -50,6 +52,14 @@ export function ShowModeSection() {
           placeholderTextColor={color.mutedForeground}
         />
       </View>
+      <View style={styles.divider} />
+      <Pressable style={styles.row} onPress={() => router.push("/show")} accessibilityRole="button">
+        <View style={{ flex: 1 }}>
+          <Text style={styles.label}>Vendors</Text>
+          <Text style={styles.hint}>Check this event&rsquo;s photos, name a vendor, or shoot more at one.</Text>
+        </View>
+        <ChevronRight color={color.mutedForeground} size={18} aria-hidden />
+      </Pressable>
     </View>
   )
 }

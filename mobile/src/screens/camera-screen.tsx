@@ -24,7 +24,16 @@ import { scheduleOnRN } from "react-native-worklets"
 import { FOCUS_WAIT_MS, useCameraSettings } from "../lib/camera-settings"
 import { centreSharpness, nextFocusState } from "../lib/focus"
 import * as admiredQueue from "../lib/admired-queue"
-import { localDateIso } from "@/lib/dates"
+import {
+  nextVendor,
+  nextWatch,
+  removeFrame as removeShowFrame,
+  shootFrame,
+  useShowSession,
+  vendorsFor,
+} from "../lib/show-session"
+import type { LocalVendor } from "../lib/show-session"
+import { admiredPhotoKindLabels, SHOW_SHOT_KINDS } from "@/lib/validations/admired"
 import type { AdmiredPhotoKind } from "@/lib/validations/admired"
 import type { FocusState } from "../lib/focus"
 import { ANGLE_LABELS, PHOTO_ANGLES } from "@/lib/photo-lab"
@@ -38,7 +47,7 @@ import { color, radius, text, TOUCH } from "../theme"
 export type CameraMode =
   | { kind: "capture"; watch: PhoneWatch }
   | { kind: "identify" }
-  /** Show mode: watches admired, not owned (00056) — stamped with the event. */
+  /** Show mode: vendors visited and watches admired, not owned (00056, 00060) — stamped with the event. */
   | { kind: "admired"; event: string }
 
 interface CameraScreenProps {
@@ -59,6 +68,8 @@ interface CameraScreenProps {
   /** Capture as part of a run through several watches (Rate → caseback run):
    *  its label under the title, and the top-right "Next" button. */
   run?: { label: string; nextLabel: string; onNext: () => void }
+  /** Show mode: the top-right Vendors button (review what's been shot). */
+  onOpenVendors?: () => void
 }
 
 type FrameStatus = "uploading" | "done" | "error" | "removed"
@@ -107,6 +118,7 @@ export function CameraScreen({
   intent,
   initialAngle,
   run,
+  onOpenVendors,
 }: CameraScreenProps) {
   const insets = useSafeAreaInsets()
   const permission = useCameraPermission()
@@ -181,55 +193,62 @@ export function CameraScreen({
 
   const [angle, setAngle] = useState<PhotoAngle | null>(initialAngle ?? null)
 
-  // ── Admired (Show mode) ──────────────────────────────────────────
-  // One admired watch at a time: every frame belongs to the current one
-  // until "Next watch". A Placard frame is read on the server and fills that
-  // watch's details, whatever order it was shot in.
-  const [admiredId, setAdmiredId] = useState<string | null>(null)
-  const [admiredNumber, setAdmiredNumber] = useState(1)
+  // ── Admired (Show mode, vendor-first since 00060) ────────────────
+  // A booth at a time: every frame goes to the CURRENT VENDOR — Watch frames
+  // to its current watch, Booth / Name frames to the vendor itself — until
+  // "Next vendor". "Next watch" starts another watch at the same booth. A
+  // Name frame (their sign, banner or card) is read on the server and names
+  // the vendor. Everything lives in the show session (show-session.ts) and
+  // the offline queue, so nothing here waits on signal.
   const [frameKind, setFrameKind] = useState<AdmiredPhotoKind>("watch")
-  const [admiredFrames, setAdmiredFrames] = useState<
-    Array<{ photoId: string; uri: string; kind: AdmiredPhotoKind; soft: boolean; removed?: boolean }>
-  >([])
+  const session = useShowSession()
   const [, setQueueTick] = useState(0)
   useEffect(() => admiredQueue.subscribe(() => setQueueTick((t) => t + 1)), [])
   const queue = admiredQueue.getStatus()
+  const event = mode.kind === "admired" ? mode.event : ""
+  const showVendors = mode.kind === "admired" ? vendorsFor(session, event) : []
+  const currentVendor = session.currentVendorId ? session.vendors[session.currentVendorId] : undefined
+  const vendorNumber = currentVendor
+    ? showVendors.findIndex((v) => v.id === currentVendor.id) + 1
+    : showVendors.length + 1
+  const watchNumber = currentVendor
+    ? session.currentWatchId
+      ? currentVendor.watches.findIndex((w) => w.id === session.currentWatchId) + 1
+      : currentVendor.watches.length + 1
+    : 1
+  const currentWatchHasFrames =
+    !!currentVendor && !!session.currentWatchId && currentVendor.frames.some((f) => f.watchId === session.currentWatchId)
 
   async function shootAdmired(uri: string) {
     if (mode.kind !== "admired") return
-    let id = admiredId
-    if (!id) {
-      id = admiredQueue.newId()
-      setAdmiredId(id)
-      await admiredQueue.enqueueCreate({ id, event: mode.event, seen_on: localDateIso() })
-    }
     const kind = frameKind
-    const photoId = admiredQueue.newId()
-    const soft = kind === "watch" && sharpnessOn && focusRef.current === "soft"
-    const order = admiredFrames.length
-    setAdmiredFrames((prev) => [{ photoId, uri, kind, soft }, ...prev])
-    // After the placard, the next shot is almost always the watch again.
-    if (kind === "placard") setFrameKind("watch")
+    const soft = sharpnessOn && focusRef.current === "soft"
+    // The sign is one shot; the booth shots usually follow it.
+    if (kind === "name") setFrameKind("booth")
     const prepared = await prepareFrame(uri, UPLOAD_LONG_EDGE, { compress: 0.9, base64: true })
     if (!prepared.base64) throw new Error("Couldn't read the photo.")
-    await admiredQueue.enqueuePhoto({ admiredId: id, photoId, kind, order, base64: prepared.base64 })
+    await shootFrame({ event: mode.event, kind, uri: prepared.uri, base64: prepared.base64, soft })
   }
 
-  function nextAdmired() {
-    if (!admiredId) return
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-    setAdmiredId(null)
-    setAdmiredFrames([])
+  function nextWatchHere() {
+    if (!currentWatchHasFrames) return
+    void Haptics.selectionAsync()
+    nextWatch()
     setFrameKind("watch")
-    setAdmiredNumber((n) => n + 1)
+  }
+
+  function nextVendorNow() {
+    if (!currentVendor) return
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    nextVendor()
+    setFrameKind("watch")
   }
 
   async function undoAdmired(photoId: string) {
-    setAdmiredFrames((prev) => prev.map((f) => (f.photoId === photoId ? { ...f, removed: true } : f)))
+    if (!currentVendor) return
     try {
-      await admiredQueue.removeFrame(photoId)
+      await removeShowFrame(currentVendor.id, photoId)
     } catch (e) {
-      setAdmiredFrames((prev) => prev.map((f) => (f.photoId === photoId ? { ...f, removed: false } : f)))
       Alert.alert("Couldn't remove that frame", (e as Error).message)
     }
   }
@@ -414,7 +433,7 @@ export function CameraScreen({
             {mode.kind === "identify"
               ? "Identify"
               : mode.kind === "admired"
-                ? `Admired · ${mode.event}`
+                ? `Vendor ${vendorNumber}${currentVendor?.name ? ` · ${currentVendor.name}` : ""}`
                 : `${mode.watch.brand} ${mode.watch.nickname || mode.watch.model}`}
           </Text>
           {mode.kind === "capture" && (run || doneCount > 0) && (
@@ -424,7 +443,7 @@ export function CameraScreen({
           )}
           {mode.kind === "admired" && (
             <Text style={styles.topSub}>
-              Watch {admiredNumber}
+              {currentVendor ? `Watch ${watchNumber} · ${currentVendor.frames.length} photos` : "New vendor — shoot to start"}
               {queue.pendingFrames > 0
                 ? ` · ${queue.pendingFrames} waiting${queue.online ? " — sending" : " — no signal, saved on phone"}`
                 : " · all sent"}
@@ -434,6 +453,15 @@ export function CameraScreen({
         {run ? (
           <Pressable onPress={() => done(run.onNext)} hitSlop={12} style={[styles.topButton, { alignItems: "flex-end" }]}>
             <Text style={styles.topButtonText}>{run.nextLabel}</Text>
+          </Pressable>
+        ) : mode.kind === "admired" && onOpenVendors ? (
+          <Pressable
+            onPress={onOpenVendors}
+            hitSlop={12}
+            style={[styles.topButton, { alignItems: "flex-end" }]}
+            accessibilityLabel="Review vendors and their photos"
+          >
+            <Text style={styles.topButtonText}>Vendors</Text>
           </Pressable>
         ) : (
           <View style={styles.topButton} />
@@ -493,11 +521,12 @@ export function CameraScreen({
 
         {mode.kind === "admired" && (
           <AdmiredControls
-            admiredId={admiredId}
-            frames={admiredFrames.filter((f) => !f.removed)}
+            vendor={currentVendor}
             frameKind={frameKind}
             onKind={setFrameKind}
-            onNext={nextAdmired}
+            canNextWatch={currentWatchHasFrames}
+            onNextWatch={nextWatchHere}
+            onNextVendor={nextVendorNow}
             onUndo={(id) => void undoAdmired(id)}
           />
         )}
@@ -562,32 +591,38 @@ export function CameraScreen({
 }
 
 /**
- * The Admired strip: the current watch's frames (a spinner until sent,
- * placards marked), what its placard said once read, the Watch / Placard
- * choice for the next frame, and Next watch.
+ * The Show strip: the current vendor's frames, newest first (a spinner until
+ * sent; Watch frames numbered by watch, Booth / Name labelled), what their
+ * Name frame said once read, the Watch / Booth / Name choice for the next
+ * frame, then Next watch (same booth) and Next vendor.
  */
 function AdmiredControls({
-  admiredId,
-  frames,
+  vendor,
   frameKind,
   onKind,
-  onNext,
+  canNextWatch,
+  onNextWatch,
+  onNextVendor,
   onUndo,
 }: {
-  admiredId: string | null
-  frames: Array<{ photoId: string; uri: string; kind: AdmiredPhotoKind; soft: boolean }>
+  vendor: LocalVendor | undefined
   frameKind: AdmiredPhotoKind
   onKind: (k: AdmiredPhotoKind) => void
-  onNext: () => void
+  canNextWatch: boolean
+  onNextWatch: () => void
+  onNextVendor: () => void
   onUndo: (photoId: string) => void
 }) {
-  const placard = admiredId ? admiredQueue.placardFor(admiredId) : undefined
+  const frames = [...(vendor?.frames ?? [])].reverse()
+  const watchNo = new Map((vendor?.watches ?? []).map((w, i) => [w.id, i + 1]))
+  const nameRead = vendor ? admiredQueue.vendorNameFor(vendor.id) : undefined
+  const nameWaiting = vendor ? !vendor.name && admiredQueue.isNameQueued(vendor.id) : false
   return (
     <View style={{ gap: 10, alignSelf: "stretch" }}>
       {frames.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
           {frames.map((f) => {
-            const sent = admiredQueue.isUploaded(f.photoId)
+            const sent = !admiredQueue.isQueued(f.photoId)
             return (
               <View key={f.photoId} style={styles.frame}>
                 <Image source={{ uri: f.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
@@ -599,49 +634,57 @@ function AdmiredControls({
                 <Pressable style={styles.undo} onPress={() => onUndo(f.photoId)} hitSlop={8}>
                   <Text style={styles.undoText}>Undo</Text>
                 </Pressable>
-                {f.soft && <View style={styles.softDot} accessibilityLabel="Dial was soft — consider a retake" />}
-                {f.kind === "placard" && <Text style={styles.frameAngle}>Placard</Text>}
+                {f.soft && <View style={styles.softDot} accessibilityLabel="Looked soft when shot — consider a retake" />}
+                <Text style={styles.frameAngle}>
+                  {f.watchId ? `Watch ${watchNo.get(f.watchId) ?? ""}` : admiredPhotoKindLabels[f.kind]}
+                </Text>
               </View>
             )
           })}
         </ScrollView>
       )}
 
-      {placard && (
+      {(nameWaiting || (nameRead && !vendor?.name)) && (
         <Text style={styles.placardBanner} numberOfLines={2}>
-          {placard.error
-            ? `Placard: ${placard.error}`
-            : placard.legible
-              ? `Placard: ${[placard.maker, placard.model, placard.price_text].filter(Boolean).join(" · ") || "read, no name on it"}`
-              : "Placard couldn't be read — add the details later on the web."}
+          {nameWaiting
+            ? "Reading their name when the photo sends…"
+            : nameRead?.error
+              ? `Name: ${nameRead.error}`
+              : "Couldn't read a name — type it in Vendors."}
         </Text>
       )}
 
       <View style={styles.admiredRow}>
-        <View style={styles.kindToggle}>
-          {(["watch", "placard"] as const).map((k) => (
+        <View style={styles.kindToggle} accessibilityRole="radiogroup" accessibilityLabel="Next photo is">
+          {SHOW_SHOT_KINDS.map((k) => (
             <Pressable
               key={k}
               onPress={() => onKind(k)}
               style={[styles.kindItem, frameKind === k && styles.kindItemActive]}
-              accessibilityRole="button"
+              accessibilityRole="radio"
               accessibilityState={{ selected: frameKind === k }}
             >
-              <Text style={[styles.chipText, frameKind === k && styles.chipTextActive]}>
-                {k === "watch" ? "Watch" : "Placard"}
-              </Text>
+              <Text style={[styles.chipText, frameKind === k && styles.chipTextActive]}>{admiredPhotoKindLabels[k]}</Text>
             </Pressable>
           ))}
         </View>
         <Pressable
-          onPress={onNext}
-          disabled={!admiredId}
-          style={[styles.nextButton, !admiredId && { opacity: 0.4 }]}
-          accessibilityLabel="Finish this watch and start the next"
+          onPress={onNextWatch}
+          disabled={!canNextWatch}
+          style={[styles.smallNext, !canNextWatch && { opacity: 0.4 }]}
+          accessibilityLabel="Start the next watch at this vendor"
         >
-          <Text style={styles.nextButtonText}>Next watch →</Text>
+          <Text style={styles.nextButtonText}>+ Watch</Text>
         </Pressable>
       </View>
+      <Pressable
+        onPress={onNextVendor}
+        disabled={!vendor}
+        style={[styles.nextButton, !vendor && { opacity: 0.4 }]}
+        accessibilityLabel="Finish this vendor and start the next"
+      >
+        <Text style={styles.nextButtonText}>Next vendor →</Text>
+      </Pressable>
     </View>
   )
 }
@@ -821,12 +864,22 @@ const styles = StyleSheet.create({
   },
   kindItem: { minHeight: 36, paddingHorizontal: 16, justifyContent: "center" },
   kindItemActive: { backgroundColor: color.brass },
-  nextButton: {
+  smallNext: {
     minHeight: 36,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     borderRadius: radius.pill,
     borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.4)",
+    justifyContent: "center",
+  },
+  // Next vendor: the step that ends a booth — full width, hard to miss.
+  nextButton: {
+    minHeight: TOUCH,
+    marginHorizontal: 16,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
     borderColor: color.viewfinderText,
+    alignItems: "center",
     justifyContent: "center",
   },
   nextButtonText: { color: color.viewfinderText, fontSize: text.xs, fontWeight: "600" },

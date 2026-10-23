@@ -13,7 +13,8 @@ import type { CameraMode } from "../screens/camera-screen"
  * /camera?mode=identify[&intent=wear] — "which watch is this?" (intent=wear
  *   when opened from Today: "Wearing it" leads).
  * /camera?watchId=…                  — shoot frames for that watch.
- * /camera?mode=admired               — Show mode: admired watches + placards.
+ * /camera?mode=admired               — Show mode: vendor by vendor — watches,
+ *   booth shots and the Name shot; "Vendors" opens the review (/show).
  * /camera?watchId=…&run=caseback     — the caseback run (Rate tab): Caseback
  *   preselected, "Next" walks to the next watch missing one.
  * Full-screen over the tabs; Done returns to wherever you came from.
@@ -59,6 +60,7 @@ export default function CameraRoute() {
               }
             : undefined
         }
+        onOpenVendors={mode.kind === "admired" ? () => router.push("/show") : undefined}
         onClose={close}
         onSwitchToCapture={(w) => router.setParams({ mode: "capture", watchId: w.id })}
         onWearing={(w) => {

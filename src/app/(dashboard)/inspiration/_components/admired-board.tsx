@@ -1,6 +1,6 @@
 "use client"
 
-import { ImageIcon, ScrollText, Trash2 } from "lucide-react"
+import { ImageIcon, Pencil, Signpost } from "lucide-react"
 import { useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -9,69 +9,204 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { StatusPill } from "@/components/ui/status-pill"
-import { deleteAdmired, deleteAdmiredPhoto, updateAdmired } from "@/lib/actions/admired-actions"
-import type { AdmiredWatchView } from "@/lib/queries/admired"
-import { ADMIRED_TAGS, admiredTagLabels } from "@/lib/validations/admired"
+import { deleteAdmired, updateAdmired } from "@/lib/actions/admired-actions"
+import type { AdmiredBoardView, AdmiredVendorView, AdmiredWatchView } from "@/lib/queries/admired"
+import { ADMIRED_TAGS, admiredPhotoKindLabels, admiredTagLabels } from "@/lib/validations/admired"
 import type { AdmiredTag } from "@/lib/validations/admired"
 import { cn } from "@/lib/utils"
+import { AdmiredPhotoViewer } from "./admired-photo-viewer"
+import { AdmiredVendorDialog } from "./admired-vendor-dialog"
+import { DeleteVendorButton } from "./delete-vendor-button"
 
 /**
  * Admired — watches seen in the metal and admired, not to be owned (00056).
- * Captured on the iPhone in Show mode; grouped here by event for the
- * Monday-morning tidy-up: correct what the placard reader filled, add notes,
- * tag why it caught the eye.
+ * Captured on the iPhone in Show mode, booth by booth (00060): grouped here by
+ * event, then by vendor in visit order, for the Monday-morning tidy-up —
+ * name the booths, correct what the readers filled, add notes, tag why a
+ * watch caught the eye.
  */
-export function AdmiredBoard({ watches }: { watches: AdmiredWatchView[] }) {
+export function AdmiredBoard({ board }: { board: AdmiredBoardView }) {
   const [openId, setOpenId] = useState<string | null>(null)
-  const open = watches.find((w) => w.id === openId) ?? null
+  const [vendorOpen, setVendorOpen] = useState<{ id: string; photoId: string | null } | null>(null)
 
-  const groups = useMemo(() => {
-    const m = new Map<string, AdmiredWatchView[]>()
-    for (const w of watches) {
-      const key = w.event?.trim() || "No event"
-      m.set(key, [...(m.get(key) ?? []), w])
-    }
-    return [...m.entries()]
-  }, [watches])
+  const allWatches = useMemo(
+    () => board.events.flatMap((e) => [...e.vendors.flatMap((v) => v.watches), ...e.unlinked]),
+    [board]
+  )
+  const allVendors = useMemo(() => board.events.flatMap((e) => e.vendors), [board])
+  const open = allWatches.find((w) => w.id === openId) ?? null
+  const openVendor = allVendors.find((v) => v.id === vendorOpen?.id) ?? null
 
-  if (watches.length === 0) {
+  if (board.events.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card p-8 text-center">
         <p className="text-sm text-foreground">Nothing admired yet.</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          On the iPhone, turn on Show mode in More, then shoot watches and their placards — they land here,
-          grouped by event.
+          On the iPhone, turn on Show mode in More, then shoot each booth and the watches that catch your eye —
+          they land here, grouped by event and vendor.
         </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      {groups.map(([event, list]) => (
-        <section key={event} className="space-y-3">
+    <div className="space-y-10">
+      {board.events.map((event) => (
+        <section key={event.key} className="space-y-6">
           <div className="flex items-baseline gap-3">
-            <h2 className="font-display text-md font-semibold tracking-tight">{event}</h2>
+            <h2 className="font-display text-md font-semibold tracking-tight">{event.label}</h2>
             <span className="font-mono text-xs text-muted-foreground">
-              {list.length} {list.length === 1 ? "watch" : "watches"}
+              {event.vendors.length > 0 &&
+                `${event.vendors.length} ${event.vendors.length === 1 ? "vendor" : "vendors"} · `}
+              {event.watch_count} {event.watch_count === 1 ? "watch" : "watches"}
             </span>
           </div>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-            {list.map((w) => (
-              <AdmiredCard key={w.id} watch={w} onOpen={() => setOpenId(w.id)} />
-            ))}
-          </div>
+
+          {event.vendors.map((vendor) => (
+            <VendorSection
+              key={vendor.id}
+              vendor={vendor}
+              onOpenWatch={setOpenId}
+              onOpenVendor={(photoId) => setVendorOpen({ id: vendor.id, photoId })}
+            />
+          ))}
+
+          {event.unlinked.length > 0 && (
+            <div className={cn("space-y-3", event.vendors.length > 0 && "border-t border-border pt-4")}>
+              {/* Only worth a heading when there are vendors to be distinct from. */}
+              {event.vendors.length > 0 && (
+                <h3 className="text-sm font-medium text-muted-foreground">Not linked to a vendor</h3>
+              )}
+              <WatchGrid watches={event.unlinked} onOpen={setOpenId} />
+            </div>
+          )}
         </section>
       ))}
 
       <AdmiredDialog watch={open} onClose={() => setOpenId(null)} />
+      <AdmiredVendorDialog
+        vendor={openVendor}
+        photoId={vendorOpen?.photoId}
+        onClose={() => setVendorOpen(null)}
+      />
     </div>
   )
 }
 
-function AdmiredCard({ watch, onOpen }: { watch: AdmiredWatchView; onOpen: () => void }) {
+function VendorSection({
+  vendor,
+  onOpenWatch,
+  onOpenVendor,
+}: {
+  vendor: AdmiredVendorView
+  onOpenWatch: (id: string) => void
+  onOpenVendor: (photoId: string | null) => void
+}) {
+  return (
+    <div className="space-y-3 border-t border-border pt-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className={cn("text-sm font-medium", vendor.name ? "text-foreground" : "text-muted-foreground")}>
+            {vendor.display_name}
+          </h3>
+          {/* Where the name came from — only when it could be wrong (read off their sign by the model). */}
+          {vendor.name_source === "read" && <p className="text-xs text-muted-foreground">Read from their sign</p>}
+          {vendor.notes && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{vendor.notes}</p>}
+        </div>
+        <div className="flex shrink-0 items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenVendor(null)}
+            aria-label={`Edit ${vendor.display_name}`}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Pencil className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <DeleteVendorButton vendor={vendor} />
+        </div>
+      </div>
+
+      {vendor.photos.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {vendor.photos.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onOpenVendor(p.id)}
+              aria-label={`${admiredPhotoKindLabels[p.kind]} photo`}
+              className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-photo transition-colors duration-150 hover:border-foreground/20"
+            >
+              {p.thumb_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.thumb_url} alt="" loading="lazy" className="h-full w-full object-cover" />
+              ) : (
+                <span className="flex h-full items-center justify-center text-muted-foreground">
+                  <ImageIcon className="h-4 w-4" aria-hidden="true" />
+                </span>
+              )}
+              {p.kind === "name" && (
+                <span className="absolute inset-x-0 bottom-0 flex justify-center bg-background/80 py-0.5">
+                  <Signpost className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {vendor.watches.length > 0 ? (
+        <WatchGrid watches={vendor.watches} vendorName={vendor.name} onOpen={onOpenWatch} />
+      ) : (
+        <p className="text-xs text-muted-foreground">No watches shot at this booth.</p>
+      )}
+    </div>
+  )
+}
+
+function WatchGrid({
+  watches,
+  vendorName,
+  onOpen,
+}: {
+  watches: AdmiredWatchView[]
+  /** Set (even to null) when the grid sits under a vendor heading. */
+  vendorName?: string | null
+  onOpen: (id: string) => void
+}) {
+  return (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+      {watches.map((w) => (
+        <AdmiredCard key={w.id} watch={w} vendorName={vendorName} onOpen={() => onOpen(w.id)} />
+      ))}
+    </div>
+  )
+}
+
+/**
+ * The card's maker line. Under a vendor heading an empty maker — or one that
+ * just repeats the vendor's name — is left off: the heading already says it.
+ */
+function makerLine(watch: AdmiredWatchView, vendorName: string | null | undefined): string | null {
+  const maker = watch.maker?.trim()
+  if (vendorName === undefined) return maker || "Unknown maker"
+  if (!maker) return null
+  if (vendorName && maker.toLocaleLowerCase() === vendorName.trim().toLocaleLowerCase()) return null
+  return maker
+}
+
+function AdmiredCard({
+  watch,
+  vendorName,
+  onOpen,
+}: {
+  watch: AdmiredWatchView
+  vendorName?: string | null
+  onOpen: () => void
+}) {
   const cover = watch.photos.find((p) => p.kind === "watch") ?? watch.photos[0]
   const placards = watch.photos.filter((p) => p.kind === "placard").length
+  const maker = makerLine(watch, vendorName)
   return (
     <button
       type="button"
@@ -89,7 +224,7 @@ function AdmiredCard({ watch, onOpen }: { watch: AdmiredWatchView; onOpen: () =>
         )}
       </div>
       <div className="space-y-1 px-3 py-2.5">
-        <p className="truncate text-xs text-muted-foreground">{watch.maker || "Unknown maker"}</p>
+        {maker && <p className="truncate text-xs text-muted-foreground">{maker}</p>}
         <p className="truncate text-sm text-foreground">{watch.model || "Untitled"}</p>
         <div className="flex flex-wrap items-center gap-1.5 pt-1">
           {watch.price_text && (
@@ -130,8 +265,6 @@ function AdmiredEditor({ watch, onClose }: { watch: AdmiredWatchView; onClose: (
   const [seenOn, setSeenOn] = useState(watch.seen_on)
   const [notes, setNotes] = useState(watch.notes ?? "")
   const [tags, setTags] = useState<AdmiredTag[]>(watch.tags)
-  const [viewing, setViewing] = useState(watch.photos[0]?.id ?? null)
-  const current = watch.photos.find((p) => p.id === viewing) ?? watch.photos[0]
 
   function save() {
     startTransition(async () => {
@@ -162,14 +295,6 @@ function AdmiredEditor({ watch, onClose }: { watch: AdmiredWatchView; onClose: (
     })
   }
 
-  function removePhoto(photoId: string) {
-    if (!confirm("Delete this photo?")) return
-    startTransition(async () => {
-      const result = await deleteAdmiredPhoto(photoId)
-      if (result.error) toast.error(result.error)
-    })
-  }
-
   return (
     <div className="space-y-5">
       <div>
@@ -184,47 +309,7 @@ function AdmiredEditor({ watch, onClose }: { watch: AdmiredWatchView; onClose: (
       </div>
 
       {/* Photos: the large view, then the strip (watch shots, then placards). */}
-      {current?.full_url && (
-        <div className="relative overflow-hidden rounded-xl bg-surface-photo">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={current.full_url} alt="" className="max-h-[50dvh] w-full object-contain" />
-        </div>
-      )}
-      {watch.photos.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {watch.photos.map((p) => (
-            <div key={p.id} className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() => setViewing(p.id)}
-                className={cn(
-                  "relative block h-16 w-16 overflow-hidden rounded-lg border",
-                  p.id === current?.id ? "border-brass" : "border-border"
-                )}
-                aria-label={p.kind === "placard" ? "Placard photo" : "Watch photo"}
-              >
-                {p.thumb_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.thumb_url} alt="" className="h-full w-full object-cover" />
-                )}
-                {p.kind === "placard" && (
-                  <span className="absolute inset-x-0 bottom-0 flex justify-center bg-background/80 py-0.5">
-                    <ScrollText className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
-                  </span>
-                )}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      {current && (
-        <div className="-mt-3 flex justify-end">
-          <Button variant="ghost" size="sm" onClick={() => removePhoto(current.id)} disabled={isPending}>
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-            Delete this photo
-          </Button>
-        </div>
-      )}
+      <AdmiredPhotoViewer photos={watch.photos} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="adm-maker" label="Maker">

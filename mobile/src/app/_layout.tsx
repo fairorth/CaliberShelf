@@ -77,6 +77,31 @@ function Shell() {
               headerStyle: { backgroundColor: color.background },
             }}
           />
+          {/* Show mode's review: Vendors, then one vendor. Pushed over the
+              camera ("Vendors") or from Today / More; both return to the
+              camera with "Shoot more here" / "Start next vendor". */}
+          <Stack.Screen
+            name="show/index"
+            options={{
+              headerShown: true,
+              title: "Vendors",
+              headerBackTitle: "Back",
+              headerTintColor: color.brass,
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: color.background },
+            }}
+          />
+          <Stack.Screen
+            name="show/[vendorId]"
+            options={{
+              headerShown: true,
+              title: "",
+              headerBackTitle: "Vendors",
+              headerTintColor: color.brass,
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: color.background },
+            }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={!session}>
           <Stack.Screen name="sign-in" />

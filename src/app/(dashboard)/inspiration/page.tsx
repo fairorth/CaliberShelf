@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { getAdmiredWatches } from "@/lib/queries/admired"
+import { getAdmiredBoard } from "@/lib/queries/admired"
 import { getInspirationImages } from "@/lib/queries/inspiration"
 import { cn } from "@/lib/utils"
 import { AdmiredBoard } from "./_components/admired-board"
@@ -80,14 +80,14 @@ async function PhotographyTab() {
 }
 
 async function AdmiredTab() {
-  const watches = await getAdmiredWatches()
+  const board = await getAdmiredBoard()
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Watches seen in the metal and admired — not the wish list. Captured on the iPhone in Show mode; the
-        placard fills in what it can.
+        Watches seen in the metal and admired — not the wish list. Captured on the iPhone in Show mode, booth by
+        booth; a vendor&rsquo;s sign names the booth.
       </p>
-      <AdmiredBoard watches={watches} />
+      <AdmiredBoard board={board} />
     </div>
   )
 }
