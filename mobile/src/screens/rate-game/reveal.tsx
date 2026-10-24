@@ -1,5 +1,5 @@
 import { Image } from "expo-image"
-import { Trophy } from "lucide-react-native"
+import { ImageOff, Trophy } from "lucide-react-native"
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import type { RankedWatch } from "@/lib/rating"
@@ -10,6 +10,8 @@ export interface RevealData {
   segmentName: string
   isFinal: boolean
   ranking: RankedWatch[]
+  /** The segment's watches with no photo — not played, listed last as not rated. */
+  unrated: string[]
   /** null when there's no yardstick (or the owner is the one playing). */
   agreement: { pct: number; approximate: boolean } | null
   hotTake: { watchId: string; raterRank: number; referenceRank: number } | null
@@ -112,6 +114,28 @@ export function Reveal({
           </View>
         )
       })}
+      {/* No photo, no judgement: listed so the ranking doesn't quietly drop
+          them, but unnumbered and out of the order. */}
+      {data.unrated.map((id) => {
+        const w = byId.get(id)
+        return (
+          <View key={id} style={styles.row}>
+            <Text style={styles.rank}>–</Text>
+            <View style={[styles.rowThumb, styles.noPhoto]}>
+              <ImageOff color={color.mutedForeground} size={18} aria-hidden />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowBrand} numberOfLines={1}>
+                {w?.brand ?? ""}
+              </Text>
+              <Text style={[styles.rowModel, styles.unratedModel]} numberOfLines={1}>
+                {w?.model ?? ""}
+              </Text>
+              <Text style={styles.rowBrand}>No photo · not rated</Text>
+            </View>
+          </View>
+        )
+      })}
 
       <Text style={styles.saved}>
         {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved" : "Saved on the phone — it will upload when there's signal"}
@@ -181,6 +205,8 @@ const styles = StyleSheet.create({
   rowThumb: { width: 44, height: 44, borderRadius: radius.control },
   rowBrand: { fontSize: text.xs, color: color.mutedForeground },
   rowModel: { fontSize: text.sm, color: color.foreground },
+  unratedModel: { color: color.mutedForeground },
+  noPhoto: { backgroundColor: color.surfacePhoto, alignItems: "center", justifyContent: "center" },
   saved: { fontSize: text.xs, color: color.mutedForeground, textAlign: "center", marginTop: 8 },
   primary: { minHeight: 52, borderRadius: radius.card, backgroundColor: color.brass, alignItems: "center", justifyContent: "center" },
   primaryText: { fontSize: text.sm, fontWeight: "600", color: color.brassForeground },

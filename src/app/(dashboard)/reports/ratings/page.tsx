@@ -1,14 +1,14 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { Trophy } from "lucide-react"
+import { ImageOff, Trophy } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatusPill } from "@/components/ui/status-pill"
 import { getRatingsReport } from "@/lib/queries/ratings"
 import type { RankRow, RaterView as RaterInfo, SessionView } from "@/lib/queries/ratings"
 import { getTierBands } from "@/lib/queries/tier-config"
 import { getWatches } from "@/lib/queries/watches"
-import { SEGMENT_SCHEMES, segmentSchemeLabels, tierLabelForKey } from "@/lib/rating-segments"
+import { buildSegments, SEGMENT_SCHEMES, segmentSchemeLabels, tierLabelForKey } from "@/lib/rating-segments"
 import type { SegmentScheme } from "@/lib/rating-segments"
 import type { TierBand } from "@/lib/tiers"
 import type { WatchWithCover } from "@/lib/types/watch"
@@ -52,6 +52,7 @@ export default async function RatingsPage({
     return qs ? `/reports/ratings?${qs}` : "/reports/ratings"
   }
   const consensus = report.consensus.filter((c) => c.scheme === scheme)
+  const unrated = unratedBySegment(watches, scheme, bands)
 
   return (
     <div className="space-y-6">
@@ -111,7 +112,7 @@ export default async function RatingsPage({
                     Most divisive: <span className="text-foreground">{label(byId.get(c.divisive.watchId)!)}</span>
                   </p>
                 )}
-                <RankList ranking={c.ranking} byId={byId} />
+                <RankList ranking={c.ranking} byId={byId} unrated={unrated.get(c.segmentKey)} />
               </CardContent>
             </Card>
           ))}
@@ -126,6 +127,7 @@ export default async function RatingsPage({
           totalSegments={report.sessions.filter((s) => s.raterId === selected.id && s.kind === "segment").length}
           byId={byId}
           bands={bands}
+          unrated={unrated}
           ownerName={owner?.name ?? "the owner"}
           everyoneHref={hrefFor(null, scheme)}
         />
@@ -140,6 +142,7 @@ function RaterView({
   totalSegments,
   byId,
   bands,
+  unrated,
   ownerName,
   everyoneHref,
 }: {
@@ -149,6 +152,7 @@ function RaterView({
   totalSegments: number
   byId: Map<string, WatchWithCover>
   bands: TierBand[]
+  unrated: Map<string, WatchWithCover[]>
   ownerName: string
   everyoneHref: string
 }) {
@@ -225,7 +229,7 @@ function RaterView({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <RankList ranking={s.ranking} byId={byId} />
+              <RankList ranking={s.ranking} byId={byId} unrated={unrated.get(s.segmentKey)} />
             </CardContent>
           </Card>
         ))}
@@ -256,7 +260,44 @@ function SegmentTitle({ name, segmentKey, bands }: { name: string; segmentKey: s
   )
 }
 
-function RankList({ ranking, byId }: { ranking: RankRow[]; byId: Map<string, WatchWithCover> }) {
+/**
+ * Per segment key, the members with no photo — never played (the game is
+ * visual), listed under the ranking as not rated. Cut with the game's own
+ * rules over today's owned + coming-soon watches.
+ */
+function unratedBySegment(watches: WatchWithCover[], scheme: SegmentScheme, bands: TierBand[]): Map<string, WatchWithCover[]> {
+  const players = watches.filter((w) => !w.is_wishlist && w.sale_status !== "sold")
+  const byId = new Map(players.map((w) => [w.id, w]))
+  const segments = buildSegments(
+    players.map((w) => ({
+      id: w.id,
+      categoryId: w.category_id,
+      categoryName: w.category?.name ?? null,
+      priceCents: w.purchase_price_cents,
+      hasPhoto: !!w.cover_photo_url,
+    })),
+    scheme,
+    bands
+  )
+  return new Map(
+    segments
+      .filter((s) => s.unratedIds.length > 0)
+      .map((s) => [s.key, s.unratedIds.map((id) => byId.get(id)).filter((w): w is WatchWithCover => !!w)])
+  )
+}
+
+function RankList({
+  ranking,
+  byId,
+  unrated = [],
+}: {
+  ranking: RankRow[]
+  byId: Map<string, WatchWithCover>
+  unrated?: WatchWithCover[]
+}) {
+  const ranked = new Set(ranking.map((r) => r.watchId))
+  // A watch rated before it lost its photo keeps its place; only the never-rated are listed.
+  const notRated = unrated.filter((w) => !ranked.has(w.id))
   return (
     <ol className="divide-y divide-border">
       {ranking.map((r) => {
@@ -285,6 +326,18 @@ function RankList({ ranking, byId }: { ranking: RankRow[]; byId: Map<string, Wat
           </li>
         )
       })}
+      {notRated.map((w) => (
+        <li key={w.id} className="flex items-center gap-3 py-1.5">
+          <span className="w-6 shrink-0 text-right font-mono text-xs text-muted-foreground">–</span>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-photo">
+            <ImageOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          </span>
+          <Link href={`/watch/${w.id}`} className="min-w-0 truncate text-sm text-muted-foreground hover:text-brass">
+            {label(w)}
+          </Link>
+          <span className="ml-auto shrink-0 text-xs text-muted-foreground">No photo · not rated</span>
+        </li>
+      ))}
     </ol>
   )
 }

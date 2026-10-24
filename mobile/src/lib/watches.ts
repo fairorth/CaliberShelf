@@ -10,6 +10,8 @@ export interface PhoneWatch {
   status: "owned" | "coming" | "wish" | "sold"
   /** Signed URL of the cover's ~600px thumbnail, or null. */
   thumbUrl: string | null
+  /** It has at least one photo — Rate My Watches plays only these. */
+  hasPhoto: boolean
   /** When it was added to TenTenLoupe (ISO timestamp) — not when it was bought. */
   createdAt: string
   purchasePriceCents: number | null
@@ -85,6 +87,7 @@ export async function fetchWatches(): Promise<PhoneWatch[]> {
             ? "sold"
             : "owned",
       thumbUrl: thumb ? (urlByPath.get(thumb) ?? null) : null,
+      hasPhoto: (r.watch_photos?.length ?? 0) > 0,
       createdAt: r.created_at,
       purchasePriceCents: r.purchase_price_cents,
       categoryId: r.categories?.id ?? null,

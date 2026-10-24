@@ -38,7 +38,10 @@ interface Segment {
   key: string
   name: string
   categoryId: string | null
+  /** The watches played (every member with a photo). */
   watches: PhoneWatch[]
+  /** Members with no photo — never played, listed in the reveal as not rated. */
+  unrated: PhoneWatch[]
 }
 
 type Stage =
@@ -117,7 +120,8 @@ export default function RateGameScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.rater, raters])
 
-  // The players: owned + coming soon — never wish list, never sold.
+  // The players: owned + coming soon — never wish list, never sold. Those
+  // without a photo are cut into segments too (stable keys) but never played.
   const players = useMemo(
     () => (watches ?? []).filter((w) => w.status === "owned" || w.status === "coming"),
     [watches]
@@ -131,6 +135,7 @@ export default function RateGameScreen() {
           categoryId: w.categoryId,
           categoryName: w.categoryName,
           priceCents: w.purchasePriceCents,
+          hasPhoto: w.hasPhoto,
         })),
         scheme,
         bands ?? []
@@ -140,6 +145,7 @@ export default function RateGameScreen() {
         name: g.name,
         categoryId: g.categoryId,
         watches: g.watchIds.map((id) => byId.get(id)).filter((w): w is PhoneWatch => !!w),
+        unrated: g.unratedIds.map((id) => byId.get(id)).filter((w): w is PhoneWatch => !!w),
       })),
     [players, byId, scheme, bands]
   )
@@ -206,7 +212,7 @@ export default function RateGameScreen() {
     setStage({
       kind: "reveal",
       segment,
-      data: { segmentName: segment.name, isFinal, ranking, agreement, hotTake: take },
+      data: { segmentName: segment.name, isFinal, ranking, unrated: segment.unrated.map((w) => w.id), agreement, hotTake: take },
     })
 
     setSaveState("saving")
@@ -231,7 +237,7 @@ export default function RateGameScreen() {
     const watchesInFinal = ids.map((id) => byId.get(id)).filter((w): w is PhoneWatch => !!w)
     setStage({
       kind: "duel",
-      segment: { scheme, key: "final", name: "Best in Show", categoryId: null, watches: watchesInFinal },
+      segment: { scheme, key: "final", name: "Best in Show", categoryId: null, watches: watchesInFinal, unrated: [] },
     })
   }
 
@@ -346,6 +352,11 @@ export default function RateGameScreen() {
                       ? `In progress · ${partial.picks.length} pick${partial.picks.length === 1 ? "" : "s"} — tap to resume`
                       : `${s.watches.length} watches · about ${minutes} min`}
                   </Text>
+                  {s.unrated.length > 0 && (
+                    <Text style={styles.segMeta}>
+                      {s.unrated.length} without a photo — left out
+                    </Text>
+                  )}
                 </View>
                 {partial ? (
                   <Pressable

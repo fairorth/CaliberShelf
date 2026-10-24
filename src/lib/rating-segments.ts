@@ -15,6 +15,11 @@ import type { TierBand } from "@/lib/tiers"
  * Small groups merge with their neighbour so every segment is a real game
  * (MIN_SEGMENT watches); unpriced watches get their own "Unpriced" group in
  * the tier schemes rather than being guessed into a tier.
+ *
+ * A watch with NO PHOTO can't be judged — the game is entirely visual — so it
+ * is never played (v1.11.24). It still counts toward which segment is which
+ * (segments are cut from every watch, so adding a photo later never renames
+ * or reshuffles a segment), and is listed under the ranking as not rated.
  */
 
 export const SEGMENT_SCHEMES = ["type", "tier", "type_tier"] as const
@@ -33,6 +38,8 @@ export interface SegmentWatch {
   categoryId: string | null
   categoryName: string | null
   priceCents: number | null
+  /** False = no photo: kept out of the game. Absent counts as having one. */
+  hasPhoto?: boolean
 }
 
 export interface GameSegment {
@@ -41,7 +48,10 @@ export interface GameSegment {
    *  "tier:unpriced"; or "<categoryId>|tier:…". */
   key: string
   name: string
+  /** The watches played — every member with a photo. */
   watchIds: string[]
+  /** Members with no photo: not played, listed under the ranking as not rated. */
+  unratedIds: string[]
   /** The category, for type and type_tier segments. */
   categoryId: string | null
 }
@@ -95,6 +105,23 @@ const tierName = (g: TierGroup) =>
   g.from === 0 ? "Unpriced" : g.from === g.to ? `Tier ${g.from}` : `Tiers ${g.from}–${g.to}`
 
 export function buildSegments(watches: SegmentWatch[], scheme: SegmentScheme, bands: TierBand[]): GameSegment[] {
+  const noPhoto = new Set(watches.filter((w) => w.hasPhoto === false).map((w) => w.id))
+  // Cut from EVERY watch (stable keys), then split each segment into the
+  // played and the not-rated; a segment needs two playable watches.
+  return cutSegments(watches, scheme, bands)
+    .map(({ watchIds, ...s }) => ({
+      ...s,
+      watchIds: watchIds.filter((id) => !noPhoto.has(id)),
+      unratedIds: watchIds.filter((id) => noPhoto.has(id)),
+    }))
+    .filter((s) => s.watchIds.length >= 2)
+}
+
+function cutSegments(
+  watches: SegmentWatch[],
+  scheme: SegmentScheme,
+  bands: TierBand[]
+): Array<Omit<GameSegment, "unratedIds">> {
   const byCategory = new Map<string, { name: string; watches: SegmentWatch[] }>()
   for (const w of watches) {
     if (!w.categoryId) continue
@@ -104,7 +131,7 @@ export function buildSegments(watches: SegmentWatch[], scheme: SegmentScheme, ba
   }
   const categories = [...byCategory.entries()].sort((a, b) => a[1].name.localeCompare(b[1].name))
 
-  let out: GameSegment[] = []
+  let out: Array<Omit<GameSegment, "unratedIds">> = []
   if (scheme === "type") {
     out = categories.map(([id, c]) => ({
       scheme,
@@ -134,7 +161,7 @@ export function buildSegments(watches: SegmentWatch[], scheme: SegmentScheme, ba
       }
     }
   }
-  return out.filter((s) => s.watchIds.length >= 2)
+  return out
 }
 
 /** The owner's real tier label(s) for a tier key — for the owner's own report only. */

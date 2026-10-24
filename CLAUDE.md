@@ -420,6 +420,11 @@ service role, which bypasses RLS.
   two watches, one SEGMENT at a time; owned + coming soon only, never wish list
   or sold; NO prices shown. Then a reveal (podium, "you agree with <owner>",
   hot take), next segment, and Best in Show (top 3 per segment played).
+  **Watches with no photo are never played** (v1.11.24): segments are still
+  cut from EVERY player (`buildSegments` — so adding a photo never renames or
+  reshuffles a segment), then split into `watchIds` (played) and `unratedIds`;
+  the reveal and Reports → Ratings list the unrated last, "No photo · not
+  rated", unnumbered.
 - **Segments** come from `src/lib/rating-segments.ts` (pure, shared): scheme
   **Type** (category), **Tier** or **Type + Tier**, chosen on the segments
   screen. Tiers are named NEUTRALLY in the game ("Tier 2", "Tiers 1–2") — the
