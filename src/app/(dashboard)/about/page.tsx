@@ -55,7 +55,7 @@ import { FeatureCard, FeatureGrid, SectionHeading, type Feature, type FeatureSec
 import { PhotoPipeline } from "./_components/photo-pipeline"
 import { RateGameSpotlight, type CrowdFavourite } from "./_components/rate-game-spotlight"
 import { ShowModeSpotlight } from "./_components/show-mode-spotlight"
-import { ShowcasePhoto, type ShowcaseWatch } from "./_components/showcase-watch"
+import type { ShowcaseWatch } from "./_components/showcase-watch"
 
 export const metadata: Metadata = {
   title: "About TenTenLoupe",
@@ -364,8 +364,6 @@ const PRINCIPLES: { title: string; text: string }[] = [
   { title: "The frame fits the photograph", text: "A watch photo is shown whole." },
 ]
 
-const AGENT_COUNT = AGENTS.features.filter((f) => f.cost).length
-
 export default async function AboutPage() {
   const [watches, portfolio, counts, ratings] = await Promise.all([
     getWatches(),
@@ -375,15 +373,14 @@ export default async function AboutPage() {
   ])
   const byId = new Map(watches.map((w) => [w.id, w]))
 
-  // Today's contact sheet: six owned, unsold watches with photos, reshuffled
-  // daily (seeded by the date, so a refresh doesn't reshuffle mid-visit).
+  // Owned, unsold watches with photos in a daily order (seeded by the date, so
+  // a refresh doesn't reshuffle mid-visit) — the duel mock's fallback pair.
   const today = localDateIso()
   const shelf = watches
     .filter((w) => !w.is_wishlist && w.sale_status !== "sold" && w.cover_photo_url)
     .map((w) => ({ w, k: seededRank(w.id, today) }))
     .sort((a, b) => a.k - b.k)
     .map(({ w }) => toShowcase(w))
-  const contactSheet = shelf.slice(0, 6)
 
   // The crowd's #1 in each Type segment, live from the Ratings consensus.
   const favourites: CrowdFavourite[] = ratings.consensus
@@ -401,8 +398,7 @@ export default async function AboutPage() {
     .filter((w): w is WatchWithCover => Boolean(w?.cover_photo_url))
     .slice(0, 2)
     .map(toShowcase)
-  const spare = shelf.length >= 8 ? shelf.slice(6, 8) : shelf.slice(0, 2)
-  const duelPair = consensusPair.length === 2 ? consensusPair : spare
+  const duelPair = consensusPair.length === 2 ? consensusPair : shelf.slice(0, 2)
   const duel: [ShowcaseWatch, ShowcaseWatch] | null = duelPair.length === 2 ? [duelPair[0], duelPair[1]] : null
 
   const ownedCount = watches.filter((w) => !w.is_wishlist && w.sale_status !== "sold").length
@@ -442,7 +438,7 @@ export default async function AboutPage() {
     <div className="mx-auto max-w-5xl space-y-12 pb-16">
       {/* Hero */}
       <section className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="px-6 pb-8 pt-12 text-center sm:pt-16">
+        <div className="px-6 py-12 text-center sm:py-16">
           {/* The real lockup, not the mark beside plain text — this is the one
               screen that is purely about the brand. aria-label carries the
               product name: BRAND.md forbids "Ten:Ten Loupe" in alt text. */}
@@ -456,10 +452,10 @@ export default async function AboutPage() {
           </p>
           <nav aria-label="On this page" className="mt-5 flex flex-wrap justify-center gap-2">
             {[
-              { href: "#iphone", label: "TenTen for iPhone" },
-              { href: "#collection", label: "The desk" },
+              { href: "#iphone", label: "On your phone" },
+              { href: "#collection", label: "At your desk" },
               { href: "#photo-lab", label: "Photo Lab" },
-              { href: "#agents", label: `${AGENT_COUNT} AI agents` },
+              { href: "#agents", label: "Agents" },
             ].map((l) => (
               <a
                 key={l.href}
@@ -475,13 +471,6 @@ export default async function AboutPage() {
             <span className="h-px w-8 bg-border" />
           </div>
         </div>
-        {contactSheet.length >= 3 && (
-          <div className="grid grid-cols-3 gap-px border-t border-border bg-border sm:grid-cols-6">
-            {contactSheet.map((w) => (
-              <ShowcasePhoto key={w.id} watch={w} sizes="(min-width: 640px) 170px, 33vw" className="aspect-square" />
-            ))}
-          </div>
-        )}
       </section>
 
       <AboutStats stats={stats} />

@@ -510,9 +510,9 @@ boot, so a restart is needed before the badge changes.
 `/about` is the app's showcase for any interested viewer (rebuilt v1.11.26).
 When a change ships a feature worth showing off — web OR iPhone — add or
 update its card in `src/app/(dashboard)/about/page.tsx` in the same change.
-Its stats are live (`queries/about.ts`, `getPortfolioOverview`), the agent
-count is derived from the fleet list, and the Rate My Watches / Show mode
-spotlights read real data — never hardcode a number there.
+Its stats are live (`queries/about.ts`, `getPortfolioOverview`) and the
+Rate My Watches / Show mode spotlights read real data — never hardcode a
+number there.
 
 ## Git — straight to master
 This is a one-person project: commit and push straight to `master`, which
