@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Camera, Check, ChevronDown, Copy, ImageOff, Smartphone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PhotoDrop } from "@/components/photo-drop"
@@ -59,22 +59,24 @@ export function SessionView({
   presetAngle,
 }: SessionViewProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [copied, setCopied] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [resumeId, setResumeId] = useState<string | null>(null)
 
-  // Persist / resume the active session watch so Capture inherits it (D1/D3).
+  // Persist the active session watch so Capture inherits it (D1/D3). With no
+  // watch chosen, the stored one is OFFERED as a Continue card, never jumped
+  // to: this screen supplies the EOS Utility folder, so the watch must be a
+  // deliberate pick (v1.11.25).
   useEffect(() => {
     if (selected) {
       localStorage.setItem(SESSION_WATCH_KEY, selected.id)
-    } else if (!searchParams.get("watch")) {
+    } else {
       const stored = localStorage.getItem(SESSION_WATCH_KEY)
-      if (stored && watches.some((w) => w.id === stored)) {
-        router.replace(`/photo-lab/session?watch=${stored}`)
-      }
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage hydration
+      setResumeId(stored && watches.some((w) => w.id === stored) ? stored : null)
     }
-  }, [selected, searchParams, router, watches])
+  }, [selected, watches])
 
   function pick(id: string) {
     setPickerOpen(false)
@@ -119,11 +121,43 @@ export function SessionView({
 
   // ── Watch picker (no session watch yet) ──────────────────────────
   if (!selected) {
+    const resume = resumeId ? watches.find((w) => w.id === resumeId) ?? null : null
     return (
       <div className="max-w-2xl space-y-4">
+        {resume && (
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+            <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+              {resume.coverUrl ? (
+                <Image src={resume.coverUrl} alt="" fill className="object-cover" sizes="48px" unoptimized />
+              ) : (
+                <span className="flex h-full items-center justify-center text-muted-foreground">
+                  <ImageOff className="h-4 w-4" aria-hidden="true" />
+                </span>
+              )}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-mono text-2xs uppercase tracking-[0.1em] text-muted-foreground">
+                Last session
+              </p>
+              <p className="truncate text-sm font-medium">
+                {resume.brand}{" "}
+                <span className="font-normal text-muted-foreground">
+                  {resume.nickname || resume.model}
+                </span>
+              </p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => pick(resume.id)}
+              className="bg-brass text-brass-foreground hover:bg-brass/90"
+            >
+              Continue
+            </Button>
+          </div>
+        )}
         <p className="text-sm text-muted-foreground">
-          Choose the watch for this session. Every frame you shoot files to it
-          automatically.
+          {resume ? "Or choose another watch" : "Choose the watch for this session"}. Every
+          frame you shoot files to it automatically.
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {watches.map((w) => (

@@ -129,7 +129,10 @@ The shoot is the unit of work. Pick one watch; everything else follows.
 
 - **Session watch** persists to `localStorage` under `photo-lab-session-watch`,
   and Quick Capture inherits it. Reopening `/photo-lab/session` with no `?watch=`
-  redirects to the stored one.
+  always shows the picker, with the stored watch offered first as a **Continue**
+  card. It never redirects (v1.11.25): this screen supplies the EOS Utility
+  folder, so a silent jump to a watch you did not choose was a wrong-folder
+  risk. A Coverage cell still opens a Session on its watch directly.
 - **The destination path** is the prominent element:
   `<images path>\<Brand> <Model> [<8-char id>]`, with a copy button. This is
   what you paste into EOS Utility at the start of each watch.
